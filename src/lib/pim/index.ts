@@ -3,3 +3,7 @@ export * from "./detectors";
 export * from "./risk";
 export * from "./processing";
 export * from "./policy";
+export * from "./flags";
+export * from "./secureMapping";
+export * from "./egressGuard";
+export * from "./runtimeHardening";
