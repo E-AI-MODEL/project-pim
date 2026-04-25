@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TryRouteImport } from './routes/try'
 import { Route as PipelineRouteImport } from './routes/pipeline'
 import { Route as ModesRouteImport } from './routes/modes'
+import { Route as FlagsRouteImport } from './routes/flags'
 import { Route as ComplianceRouteImport } from './routes/compliance'
 import { Route as ArchitectureRouteImport } from './routes/architecture'
 import { Route as IndexRouteImport } from './routes/index'
@@ -29,6 +30,11 @@ const PipelineRoute = PipelineRouteImport.update({
 const ModesRoute = ModesRouteImport.update({
   id: '/modes',
   path: '/modes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FlagsRoute = FlagsRouteImport.update({
+  id: '/flags',
+  path: '/flags',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ComplianceRoute = ComplianceRouteImport.update({
@@ -51,6 +57,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/architecture': typeof ArchitectureRoute
   '/compliance': typeof ComplianceRoute
+  '/flags': typeof FlagsRoute
   '/modes': typeof ModesRoute
   '/pipeline': typeof PipelineRoute
   '/try': typeof TryRoute
@@ -59,6 +66,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/architecture': typeof ArchitectureRoute
   '/compliance': typeof ComplianceRoute
+  '/flags': typeof FlagsRoute
   '/modes': typeof ModesRoute
   '/pipeline': typeof PipelineRoute
   '/try': typeof TryRoute
@@ -68,6 +76,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/architecture': typeof ArchitectureRoute
   '/compliance': typeof ComplianceRoute
+  '/flags': typeof FlagsRoute
   '/modes': typeof ModesRoute
   '/pipeline': typeof PipelineRoute
   '/try': typeof TryRoute
@@ -78,16 +87,25 @@ export interface FileRouteTypes {
     | '/'
     | '/architecture'
     | '/compliance'
+    | '/flags'
     | '/modes'
     | '/pipeline'
     | '/try'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/architecture' | '/compliance' | '/modes' | '/pipeline' | '/try'
+  to:
+    | '/'
+    | '/architecture'
+    | '/compliance'
+    | '/flags'
+    | '/modes'
+    | '/pipeline'
+    | '/try'
   id:
     | '__root__'
     | '/'
     | '/architecture'
     | '/compliance'
+    | '/flags'
     | '/modes'
     | '/pipeline'
     | '/try'
@@ -97,6 +115,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ArchitectureRoute: typeof ArchitectureRoute
   ComplianceRoute: typeof ComplianceRoute
+  FlagsRoute: typeof FlagsRoute
   ModesRoute: typeof ModesRoute
   PipelineRoute: typeof PipelineRoute
   TryRoute: typeof TryRoute
@@ -123,6 +142,13 @@ declare module '@tanstack/react-router' {
       path: '/modes'
       fullPath: '/modes'
       preLoaderRoute: typeof ModesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/flags': {
+      id: '/flags'
+      path: '/flags'
+      fullPath: '/flags'
+      preLoaderRoute: typeof FlagsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/compliance': {
@@ -153,6 +179,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ArchitectureRoute: ArchitectureRoute,
   ComplianceRoute: ComplianceRoute,
+  FlagsRoute: FlagsRoute,
   ModesRoute: ModesRoute,
   PipelineRoute: PipelineRoute,
   TryRoute: TryRoute,
