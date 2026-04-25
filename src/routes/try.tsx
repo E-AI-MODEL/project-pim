@@ -1,17 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PageHero } from "@/components/pim/PageHero";
 import {
-  computeSignals, anonymize, pseudonymize, draftCheck, decide,
-  type Mode, type Action, type Verdict, type AuditEvent,
+  computeSignals, anonymize, pseudonymize, draftCheck, decide, executeAction,
+  createMappingContainer, restoreFromContainer, destroyContainer,
+  installRuntimeHardening, onViolations,
+  type Mode, type Action, type Verdict, type AuditEvent, type MappingHandle,
 } from "@/lib/pim";
-import { Shield, ShieldAlert, ShieldCheck, ShieldX, Copy, Eye, Save, RotateCcw, Send, Download, Printer, Share2 } from "lucide-react";
+import { Shield, ShieldAlert, ShieldCheck, ShieldX, Copy, Eye, Save, RotateCcw, Send, Download, Printer, Share2, Lock, AlertTriangle } from "lucide-react";
 
 export const Route = createFileRoute("/try")({
   head: () => ({
     meta: [
       { title: "Try-it — Project PIM" },
-      { name: "description", content: "Test de PIM privacy pipeline live op je eigen tekst. Detectie, generalisatie, draft check en PIM-besluit — alles in jouw browser." },
+      { name: "description", content: "Test de PIM privacy pipeline live op je eigen tekst. Detectie, generalisatie, AES-GCM mapping, egress guard — alles in jouw browser." },
       { property: "og:title", content: "Try Project PIM live" },
       { property: "og:description", content: "Live PIM privacy pipeline — alles lokaal." },
     ],
@@ -26,9 +28,9 @@ Postcode 3511AB, Bredestraat 12. Mail: jansen@example.com. BSN 123456782.`;
 const ACTIONS: { id: Action; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { id: "display", label: "Display", icon: Eye },
   { id: "copy", label: "Copy", icon: Copy },
-  { id: "save_local", label: "Save local", icon: Save },
+  { id: "save_local", label: "Save", icon: Save },
   { id: "restore", label: "Restore", icon: RotateCcw },
-  { id: "export_file", label: "Export file", icon: Download },
+  { id: "export_file", label: "Export", icon: Download },
   { id: "send_external_ai", label: "Send AI", icon: Send },
   { id: "print", label: "Print", icon: Printer },
   { id: "share", label: "Share", icon: Share2 },
@@ -39,13 +41,46 @@ function TryPage() {
   const [mode, setMode] = useState<Mode>("anonymous");
   const [action, setAction] = useState<Action>("display");
   const [audit, setAudit] = useState<AuditEvent[]>([]);
+  const [handle, setHandle] = useState<MappingHandle | null>(null);
+  const [restored, setRestored] = useState<string | null>(null);
+  const [egress, setEgress] = useState<{ ok: boolean; msg: string } | null>(null);
+  const [violations, setViolations] = useState<string[]>([]);
+
+  // Install runtime hardening once on mount.
+  useEffect(() => {
+    installRuntimeHardening();
+    const off = onViolations(setViolations);
+    return off;
+  }, []);
 
   const signals = useMemo(() => computeSignals(text), [text]);
+
+  // For pseudonymous: generate plain mapping in-memory once, then push to AES container async
   const processed = useMemo(() => {
-    if (mode === "anonymous") return { draft: anonymize(text, signals), mapping: null as Map<string, string> | null };
+    if (mode === "anonymous") return { draft: anonymize(text, signals), plainMap: null as Map<string, string> | null };
     const r = pseudonymize(text, signals);
-    return { draft: r.draft, mapping: r.mapping };
+    return { draft: r.draft, plainMap: r.mapping };
   }, [text, mode, signals]);
+
+  // Async: encrypt mapping into AES-GCM container whenever pseudonymous draft changes
+  useEffect(() => {
+    setRestored(null);
+    if (mode !== "pseudonymous" || !processed.plainMap || processed.plainMap.size === 0) {
+      if (handle) { destroyContainer(handle); setHandle(null); }
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const h = await createMappingContainer(processed.plainMap!);
+      if (cancelled) destroyContainer(h);
+      else {
+        if (handle) destroyContainer(handle);
+        setHandle(h);
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [processed.draft.text, mode]);
 
   const guard = useMemo(() => draftCheck(processed.draft, mode), [processed.draft, mode]);
   const decision = useMemo(
@@ -53,7 +88,24 @@ function TryPage() {
     [mode, action, signals, guard],
   );
 
-  const onAct = () => {
+  const onAct = async () => {
+    setEgress(null);
+    setRestored(null);
+    let payloadText = processed.draft.text;
+
+    // Restore-actie: alleen lokaal, alleen via AES container
+    if (decision.action === "restore" && decision.verdict !== "BLOCK") {
+      if (!handle) {
+        setEgress({ ok: false, msg: "Geen mapping container — restore onmogelijk." });
+        return;
+      }
+      payloadText = await restoreFromContainer(handle, processed.draft.text);
+      setRestored(payloadText);
+    }
+
+    const result = await executeAction(decision, { text: payloadText, mode });
+    setEgress({ ok: result.executed, msg: result.reason });
+
     setAudit((a) => [{
       ts: decision.timestamp,
       action: decision.action,
@@ -69,13 +121,26 @@ function TryPage() {
   return (
     <>
       <PageHero
-        eyebrow="Try-it · live, lokaal"
+        eyebrow="Try-it · live, lokaal, AES-GCM"
         title={<>Test de pipeline op <span className="text-primary">echte tekst</span></>}
-        description="Type of plak een fragment, kies modus en actie. Alles draait lokaal in jouw browser. Geen netwerk, geen logging van inhoud."
+        description="Type of plak een fragment, kies modus en actie. Mapping wordt versleuteld met AES-GCM. Egress wordt écht uitgevoerd via clipboard, print, share of download — maar alleen na PIM ALLOW."
       />
 
+      {violations.length > 0 && (
+        <div className="mx-auto max-w-7xl px-6 mt-4">
+          <div className="panel p-4 border-orange/50 flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-orange flex-shrink-0 mt-0.5" />
+            <div className="text-xs">
+              <div className="font-semibold text-orange mb-1">Runtime hardening detecteerde {violations.length} egress-poging(en):</div>
+              <ul className="font-mono text-muted-foreground space-y-0.5">
+                {violations.slice(-3).map((v, i) => <li key={i}>· {v}</li>)}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
+
       <section className="mx-auto max-w-7xl px-6 py-10 grid gap-5 lg:grid-cols-[1fr_420px]">
-        {/* LEFT: input + processing */}
         <div className="space-y-5">
           <div className="panel p-5">
             <div className="flex items-center justify-between mb-3">
@@ -83,7 +148,7 @@ function TryPage() {
                 <div className="font-mono text-[11px] uppercase tracking-wider text-cyan">01 · Raw input</div>
                 <h3 className="font-display font-bold">Onderwijsfragment</h3>
               </div>
-              <button onClick={() => setText(SAMPLE)} className="text-xs px-2.5 py-1 rounded-md border border-border hover:bg-accent">Reset voorbeeld</button>
+              <button onClick={() => setText(SAMPLE)} className="text-xs px-2.5 py-1 rounded-md border border-border hover:bg-accent">Reset</button>
             </div>
             <textarea
               value={text}
@@ -94,7 +159,6 @@ function TryPage() {
             />
           </div>
 
-          {/* Detection */}
           <div className="panel p-5">
             <div className="font-mono text-[11px] uppercase tracking-wider text-cyan mb-1">02 · Detectie & signals</div>
             <h3 className="font-display font-bold mb-4">Privacy signals</h3>
@@ -104,17 +168,13 @@ function TryPage() {
               <Stat label="Risk score" value={`${(signals.riskScore * 100).toFixed(0)}%`} accent={signals.riskScore > 0.4 ? "red" : signals.riskScore > 0.18 ? "orange" : "green"} />
             </div>
             <div className="mb-3">
-              <div className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-2">Risk level</div>
+              <div className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-2">Risk level: <span className="text-foreground capitalize">{signals.riskLevel}</span></div>
               <div className="h-2 rounded-full bg-card overflow-hidden border border-border/40">
-                <div
-                  className="h-full transition-all"
-                  style={{
-                    width: `${signals.riskScore * 100}%`,
-                    background: signals.riskScore > 0.4 ? "var(--red)" : signals.riskScore > 0.18 ? "var(--orange)" : "var(--green)",
-                  }}
-                />
+                <div className="h-full transition-all" style={{
+                  width: `${signals.riskScore * 100}%`,
+                  background: signals.riskScore > 0.4 ? "var(--red)" : signals.riskScore > 0.18 ? "var(--orange)" : "var(--green)",
+                }} />
               </div>
-              <div className="mt-1.5 text-xs text-muted-foreground capitalize">{signals.riskLevel}</div>
             </div>
             {signals.directPii.length + signals.contextualPii.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
@@ -132,7 +192,6 @@ function TryPage() {
             )}
           </div>
 
-          {/* Processed output */}
           <div className="panel p-5">
             <div className="flex items-center justify-between mb-1">
               <div className="font-mono text-[11px] uppercase tracking-wider text-purple">03 · Processed draft ({mode})</div>
@@ -153,38 +212,39 @@ function TryPage() {
                 {guard.issues.map((i, k) => <li key={k}>⚠ {i}</li>)}
               </ul>
             )}
-            {processed.mapping && (
-              <details className="mt-3">
-                <summary className="text-xs cursor-pointer text-muted-foreground hover:text-foreground">
-                  Secure Mapping Container ({processed.mapping.size} entries) — alleen lokaal
-                </summary>
-                <div className="mt-2 grid grid-cols-1 gap-1 text-[11px] font-mono bg-background/40 p-2 rounded-md max-h-40 overflow-auto">
-                  {[...processed.mapping.entries()].map(([k, v]) => (
-                    <div key={k} className="flex gap-2 items-center"><span className="text-cyan">{k}</span><span className="text-muted-foreground">→</span><span>{v}</span></div>
-                  ))}
+            {handle && (
+              <div className="mt-4 panel p-3 border-cyan/40 bg-cyan/5">
+                <div className="flex items-center gap-2 mb-1">
+                  <Lock className="h-3.5 w-3.5 text-cyan" />
+                  <span className="font-mono text-[11px] text-cyan uppercase tracking-wider">Secure Mapping Container</span>
                 </div>
-              </details>
+                <div className="font-mono text-[11px] text-muted-foreground">
+                  Handle: <span className="text-foreground">{handle.id.slice(0, 12)}…</span> · {handle.tokenCount} tokens · AES-GCM 256
+                </div>
+                <div className="font-mono text-[10px] text-muted-foreground mt-1">
+                  Originelen versleuteld in module-private register. UI heeft geen directe toegang.
+                </div>
+              </div>
+            )}
+            {restored !== null && (
+              <div className="mt-3 panel p-3 border-cyan/40">
+                <div className="font-mono text-[11px] text-cyan uppercase tracking-wider mb-1">Restored (alleen lokaal)</div>
+                <pre className="font-mono text-xs whitespace-pre-wrap text-foreground/90">{restored}</pre>
+              </div>
             )}
           </div>
         </div>
 
-        {/* RIGHT: control + verdict + audit */}
         <aside className="space-y-5 lg:sticky lg:top-24 lg:self-start">
           <div className="panel p-5">
             <div className="font-mono text-[11px] uppercase tracking-wider text-orange mb-2">04 · Mode</div>
             <div className="grid grid-cols-2 gap-2">
               {(["anonymous", "pseudonymous"] as Mode[]).map((m) => (
-                <button
-                  key={m}
-                  onClick={() => setMode(m)}
-                  className={`px-3 py-2.5 rounded-lg text-sm font-semibold transition-all border ${
-                    mode === m
-                      ? m === "anonymous" ? "bg-purple/15 border-purple text-purple" : "bg-cyan/15 border-cyan text-cyan"
-                      : "bg-card/40 border-border/60 text-muted-foreground hover:border-border"
-                  }`}
-                >
-                  {m}
-                </button>
+                <button key={m} onClick={() => setMode(m)} className={`px-3 py-2.5 rounded-lg text-sm font-semibold transition-all border ${
+                  mode === m
+                    ? m === "anonymous" ? "bg-purple/15 border-purple text-purple" : "bg-cyan/15 border-cyan text-cyan"
+                    : "bg-card/40 border-border/60 text-muted-foreground hover:border-border"
+                }`}>{m}</button>
               ))}
             </div>
           </div>
@@ -195,14 +255,9 @@ function TryPage() {
               {ACTIONS.map((a) => {
                 const Icon = a.icon;
                 return (
-                  <button
-                    key={a.id}
-                    onClick={() => setAction(a.id)}
-                    className={`flex flex-col items-center gap-1 px-2 py-2.5 rounded-lg text-[10px] font-medium transition-all border ${
-                      action === a.id ? "bg-primary/15 border-primary text-primary" : "bg-card/40 border-border/50 text-muted-foreground hover:border-border"
-                    }`}
-                    title={a.label}
-                  >
+                  <button key={a.id} onClick={() => setAction(a.id)} className={`flex flex-col items-center gap-1 px-2 py-2.5 rounded-lg text-[10px] font-medium transition-all border ${
+                    action === a.id ? "bg-primary/15 border-primary text-primary" : "bg-card/40 border-border/50 text-muted-foreground hover:border-border"
+                  }`} title={a.label}>
                     <Icon className="h-4 w-4" />
                     <span className="leading-none">{a.label}</span>
                   </button>
@@ -211,19 +266,15 @@ function TryPage() {
             </div>
           </div>
 
-          {/* Verdict */}
-          <VerdictCard verdict={decision.verdict} reason={decision.reason} reasonCode={decision.reasonCode} ruleId={decision.ruleId} onAct={onAct} />
+          <VerdictCard verdict={decision.verdict} reason={decision.reason} reasonCode={decision.reasonCode} ruleId={decision.ruleId} flag={decision.flag} onAct={onAct} egress={egress} />
 
-          {/* Audit */}
           <div className="panel p-5">
             <div className="flex items-center justify-between mb-3">
               <div>
                 <div className="font-mono text-[11px] uppercase tracking-wider text-green">07 · Minimal audit</div>
                 <h3 className="font-display font-bold text-sm">Metadata only — geen inhoud</h3>
               </div>
-              {audit.length > 0 && (
-                <button onClick={() => setAudit([])} className="text-[11px] text-muted-foreground hover:text-foreground">Wis</button>
-              )}
+              {audit.length > 0 && <button onClick={() => setAudit([])} className="text-[11px] text-muted-foreground hover:text-foreground">Wis</button>}
             </div>
             {audit.length === 0 ? (
               <p className="text-xs text-muted-foreground">Geen events. Klik "Voer actie uit" om een audit-record te maken.</p>
@@ -256,8 +307,9 @@ function Stat({ label, value, accent }: { label: string; value: string | number;
   );
 }
 
-function VerdictCard({ verdict, reason, reasonCode, ruleId, onAct }: {
-  verdict: Verdict; reason: string; reasonCode: string; ruleId: string; onAct: () => void;
+function VerdictCard({ verdict, reason, reasonCode, ruleId, flag, onAct, egress }: {
+  verdict: Verdict; reason: string; reasonCode: string; ruleId: string; flag?: string;
+  onAct: () => void; egress: { ok: boolean; msg: string } | null;
 }) {
   const cfg = {
     ALLOW: { Icon: ShieldCheck, klass: "verdict-allow", bar: "bar-green", border: "border-green/50", glow: "shadow-[var(--shadow-glow-green)]" },
@@ -273,19 +325,23 @@ function VerdictCard({ verdict, reason, reasonCode, ruleId, onAct }: {
       </div>
       <div className="flex items-start gap-3">
         <Icon className={`h-10 w-10 ${cfg.klass} flex-shrink-0`} />
-        <div>
+        <div className="min-w-0">
           <div className={`font-display font-black text-2xl leading-none ${cfg.klass}`}>{verdict}</div>
-          <div className="font-mono text-[10px] text-muted-foreground mt-1">{ruleId}</div>
+          {flag && <div className="font-mono text-[10px] text-primary mt-1 truncate">{flag}</div>}
+          <div className="font-mono text-[10px] text-muted-foreground">{ruleId}</div>
         </div>
       </div>
       <p className="mt-4 text-sm text-foreground/90 leading-relaxed">{reason}</p>
       <div className="mt-3 font-mono text-[10px] text-muted-foreground">reasonCode: {reasonCode}</div>
-      <button
-        onClick={onAct}
-        className="mt-5 w-full py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors"
-      >
-        Voer actie uit (audit log)
+      <button onClick={onAct} className="mt-5 w-full py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors">
+        Voer actie uit (egress + audit)
       </button>
+      {egress && (
+        <div className={`mt-3 p-3 rounded-lg border text-xs ${egress.ok ? "border-green/40 bg-green/5 text-green" : "border-red/40 bg-red/5 text-red"}`}>
+          <div className="font-semibold mb-0.5">{egress.ok ? "Egress uitgevoerd" : "Egress geblokkeerd"}</div>
+          <div className="text-foreground/80">{egress.msg}</div>
+        </div>
+      )}
     </div>
   );
 }
