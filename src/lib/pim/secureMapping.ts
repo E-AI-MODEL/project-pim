@@ -12,7 +12,7 @@ export interface MappingHandle {
 interface InternalContainer {
   key: CryptoKey;
   // Map<token, ciphertext>; iv per entry
-  entries: Map<string, { iv: Uint8Array; ct: ArrayBuffer }>;
+  entries: Map<string, { iv: Uint8Array<ArrayBuffer>; ct: ArrayBuffer }>;
 }
 
 // Module-private register — niet exporteerbaar, niet in React state.
@@ -33,9 +33,9 @@ const dec = new TextDecoder();
 
 export async function createMappingContainer(plain: Map<string, string>): Promise<MappingHandle> {
   const key = await generateKey();
-  const entries = new Map<string, { iv: Uint8Array; ct: ArrayBuffer }>();
+  const entries = new Map<string, { iv: Uint8Array<ArrayBuffer>; ct: ArrayBuffer }>();
   for (const [token, original] of plain) {
-    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const iv = crypto.getRandomValues(new Uint8Array(new ArrayBuffer(12)));
     const ct = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, enc.encode(original));
     entries.set(token, { iv, ct });
   }
