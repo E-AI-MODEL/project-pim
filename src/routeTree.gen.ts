@@ -9,12 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TryRouteImport } from './routes/try'
 import { Route as PipelineRouteImport } from './routes/pipeline'
 import { Route as ModesRouteImport } from './routes/modes'
 import { Route as ComplianceRouteImport } from './routes/compliance'
 import { Route as ArchitectureRouteImport } from './routes/architecture'
 import { Route as IndexRouteImport } from './routes/index'
 
+const TryRoute = TryRouteImport.update({
+  id: '/try',
+  path: '/try',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PipelineRoute = PipelineRouteImport.update({
   id: '/pipeline',
   path: '/pipeline',
@@ -47,6 +53,7 @@ export interface FileRoutesByFullPath {
   '/compliance': typeof ComplianceRoute
   '/modes': typeof ModesRoute
   '/pipeline': typeof PipelineRoute
+  '/try': typeof TryRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +61,7 @@ export interface FileRoutesByTo {
   '/compliance': typeof ComplianceRoute
   '/modes': typeof ModesRoute
   '/pipeline': typeof PipelineRoute
+  '/try': typeof TryRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,12 +70,19 @@ export interface FileRoutesById {
   '/compliance': typeof ComplianceRoute
   '/modes': typeof ModesRoute
   '/pipeline': typeof PipelineRoute
+  '/try': typeof TryRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/architecture' | '/compliance' | '/modes' | '/pipeline'
+  fullPaths:
+    | '/'
+    | '/architecture'
+    | '/compliance'
+    | '/modes'
+    | '/pipeline'
+    | '/try'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/architecture' | '/compliance' | '/modes' | '/pipeline'
+  to: '/' | '/architecture' | '/compliance' | '/modes' | '/pipeline' | '/try'
   id:
     | '__root__'
     | '/'
@@ -75,6 +90,7 @@ export interface FileRouteTypes {
     | '/compliance'
     | '/modes'
     | '/pipeline'
+    | '/try'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -83,10 +99,18 @@ export interface RootRouteChildren {
   ComplianceRoute: typeof ComplianceRoute
   ModesRoute: typeof ModesRoute
   PipelineRoute: typeof PipelineRoute
+  TryRoute: typeof TryRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/try': {
+      id: '/try'
+      path: '/try'
+      fullPath: '/try'
+      preLoaderRoute: typeof TryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pipeline': {
       id: '/pipeline'
       path: '/pipeline'
@@ -131,6 +155,7 @@ const rootRouteChildren: RootRouteChildren = {
   ComplianceRoute: ComplianceRoute,
   ModesRoute: ModesRoute,
   PipelineRoute: PipelineRoute,
+  TryRoute: TryRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
