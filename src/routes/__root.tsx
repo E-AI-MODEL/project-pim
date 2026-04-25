@@ -39,9 +39,6 @@ export const Route = createRootRoute({
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" },
       {
         rel: "stylesheet",
         href: appCss,
@@ -84,6 +81,7 @@ const navLinks = [
   { to: "/pipeline", label: "Pipeline" },
   { to: "/architecture", label: "Architectuur" },
   { to: "/modes", label: "Modi" },
+  { to: "/flags", label: "Flags" },
   { to: "/compliance", label: "Compliance" },
   { to: "/try", label: "Try-it" },
 ] as const;

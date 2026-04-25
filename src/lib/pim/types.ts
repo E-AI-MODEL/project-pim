@@ -70,6 +70,7 @@ export interface PimDecision {
   mode: Mode;
   action: Action;
   timestamp: string;
+  flag?: string; // PIM_* flag code
 }
 
 export interface AuditEvent {
