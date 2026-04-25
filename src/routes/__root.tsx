@@ -30,13 +30,17 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Project PIM — Privacy Integrity Monitor" },
+      { title: "Project PIM — Privacy Integrity Monitor (by EAI)" },
       { name: "description", content: "Browser-first privacy pipeline voor onderwijsdata. Lokale detectie, deterministische besluitvorming, fail-closed handhaving." },
       { name: "author", content: "Project PIM" },
-      { property: "og:title", content: "Project PIM — Privacy Integrity Monitor" },
-      { property: "og:description", content: "Browser-first privacy pipeline voor onderwijsdata." },
+      { property: "og:title", content: "Project PIM — Privacy Integrity Monitor (by EAI)" },
+      { property: "og:description", content: "Browser-first privacy pipeline voor onderwijsdata. Lokale detectie, deterministische besluitvorming, fail-closed handhaving." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Project PIM — Privacy Integrity Monitor (by EAI)" },
+      { name: "twitter:description", content: "Browser-first privacy pipeline voor onderwijsdata. Lokale detectie, deterministische besluitvorming, fail-closed handhaving." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/39dcf18b-d97a-40d8-b7d4-ea9221b8d6bf" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/39dcf18b-d97a-40d8-b7d4-ea9221b8d6bf" },
     ],
     links: [
       {
