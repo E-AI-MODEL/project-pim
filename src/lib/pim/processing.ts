@@ -1,4 +1,5 @@
 import type { DraftCandidate, Mode, PrivacySignals, PiiSpan, DraftCheckResult } from "./types";
+import { detectPii } from "./detectors";
 
 const GENERALIZATIONS: Record<string, string> = {
   email: "[email]",
@@ -67,9 +68,6 @@ export function pseudonymize(text: string, signals: PrivacySignals): PseudoResul
 // Draft Check Guard — runs detection on the OUTPUT
 export function draftCheck(draft: DraftCandidate, mode: Mode): DraftCheckResult {
   const issues: string[] = [];
-  // Re-run detection on output: any direct PII is a hard fail
-  // (use lazy import to avoid circular)
-  const { detectPii } = require("./detectors") as typeof import("./detectors");
   const residual = detectPii(draft.text).filter((s) => !s.contextual);
 
   if (residual.length > 0) {
