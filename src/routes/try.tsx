@@ -256,7 +256,7 @@ function TryPage() {
             {restored !== null && (
               <div className="mt-3 panel p-3 border-cyan/40">
                 <div className="font-mono text-[11px] text-cyan uppercase tracking-wider mb-1">Restored (alleen lokaal)</div>
-                <pre className="font-mono text-xs whitespace-pre-wrap text-foreground/90">{restored}</pre>
+                <pre className="font-mono text-xs whitespace-pre-wrap text-foreground leading-relaxed">{restored}</pre>
               </div>
             )}
           </div>
@@ -361,12 +361,12 @@ function TryPage() {
             ) : (
               <div className="space-y-1.5 max-h-72 overflow-auto">
                 {audit.map((e, i) => (
-                  <div key={i} className="font-mono text-[10.5px] p-2 rounded-md bg-background/50 border border-border/40 grid grid-cols-[auto_1fr] gap-x-2">
+                  <div key={i} className="font-mono text-[11px] p-2 rounded-md bg-background/60 border border-border/50 grid grid-cols-[auto_1fr] gap-x-2 items-center">
                     <span className={
                       e.verdict === "ALLOW" ? "text-green" :
                       e.verdict === "ALLOW_WITH_WARNING" ? "text-orange" : "text-red"
                     }>{e.verdict}</span>
-                    <span className="text-muted-foreground truncate">{e.action} · {e.mode} · {e.ruleId}</span>
+                    <span className="text-foreground/85 truncate">{e.action} · {e.mode} · {e.ruleId}</span>
                   </div>
                 ))}
               </div>
