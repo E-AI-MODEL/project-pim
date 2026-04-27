@@ -255,6 +255,59 @@ function TryPage() {
 
         <aside className="space-y-5 lg:sticky lg:top-24 lg:self-start">
           <div className="panel p-5">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <div className="font-mono text-[11px] uppercase tracking-wider text-cyan flex items-center gap-1.5">
+                  <Cpu className="h-3 w-3" /> Browser SLM (NER)
+                </div>
+                <h3 className="font-display font-bold text-sm mt-0.5">Lokale namen-detectie</h3>
+              </div>
+              <button
+                onClick={() => setSlmEnabled((v) => !v)}
+                className={`relative h-6 w-11 rounded-full transition-colors ${slmEnabled ? "bg-cyan" : "bg-card border border-border"}`}
+                aria-label="Toggle SLM"
+              >
+                <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-background transition-transform ${slmEnabled ? "translate-x-5" : "translate-x-0.5"}`} />
+              </button>
+            </div>
+            {!slmEnabled && (
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Aan: laadt <span className="font-mono text-foreground/80">bert-base-multilingual-cased-ner-hrl</span> via @huggingface/transformers (WebGPU → WASM). ±150 MB eerste keer, dan gecached.
+              </p>
+            )}
+            {slmEnabled && slmStatus && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-[11px] font-mono">
+                  {slmStatus.loading && <Loader2 className="h-3 w-3 animate-spin text-cyan" />}
+                  {slmStatus.ready && <ShieldCheck className="h-3 w-3 text-green" />}
+                  {slmStatus.error && <ShieldX className="h-3 w-3 text-red" />}
+                  <span className={slmStatus.ready ? "text-green" : slmStatus.error ? "text-red" : "text-cyan"}>
+                    {slmStatus.ready ? `READY · ${slmStatus.runtime?.toUpperCase()}` :
+                     slmStatus.error ? "ERROR" :
+                     slmStatus.loading ? "LOADING…" : "IDLE"}
+                  </span>
+                </div>
+                {slmStatus.progress && (
+                  <div>
+                    <div className="font-mono text-[10px] text-muted-foreground truncate mb-1">{slmStatus.progress.file}</div>
+                    <div className="h-1.5 rounded-full bg-card overflow-hidden border border-border/40">
+                      <div className="h-full bg-cyan transition-all" style={{ width: `${slmStatus.progress.pct ?? 0}%` }} />
+                    </div>
+                  </div>
+                )}
+                {slmStatus.error && (
+                  <p className="text-[10px] text-red font-mono break-words">{slmStatus.error}</p>
+                )}
+                {slmStatus.ready && (
+                  <p className="text-[10px] text-muted-foreground">
+                    {slmSpans.length} entiteit(en) gevonden door SLM. Gefuseerd met regex-detectoren.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="panel p-5">
             <div className="font-mono text-[11px] uppercase tracking-wider text-orange mb-2">04 · Mode</div>
             <div className="grid grid-cols-2 gap-2">
               {(["anonymous", "pseudonymous"] as Mode[]).map((m) => (
