@@ -213,7 +213,7 @@ function TryPage() {
               </div>
             )}
             {signals.reasons.length > 0 && (
-              <ul className="mt-3 text-xs text-muted-foreground space-y-1">
+              <ul className="mt-3 text-xs text-foreground/80 space-y-1">
                 {signals.reasons.map((r, i) => <li key={i}>· {r}</li>)}
               </ul>
             )}
@@ -380,8 +380,8 @@ function TryPage() {
 
 function Stat({ label, value, accent }: { label: string; value: string | number; accent: "orange" | "cyan" | "green" | "red" }) {
   return (
-    <div className={`rounded-lg border p-3 bg-card/40 border-${accent}/30`}>
-      <div className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">{label}</div>
+    <div className={`rounded-lg border p-3 bg-card/60 border-${accent}/40`}>
+      <div className="text-[11px] font-mono uppercase tracking-wider text-foreground/70">{label}</div>
       <div className={`font-display text-2xl font-bold text-${accent} mt-0.5`}>{value}</div>
     </div>
   );
