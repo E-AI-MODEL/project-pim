@@ -197,14 +197,23 @@ function TryPage() {
             {signals.directPii.length + signals.contextualPii.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
                 {[...signals.directPii, ...signals.contextualPii].map((s, i) => (
-                  <span key={i} className={`font-mono text-[11px] px-2 py-0.5 rounded-full border ${s.contextual ? "border-cyan/40 bg-cyan/10 text-cyan" : "border-orange/40 bg-orange/10 text-orange"}`}>
-                    {s.category}: {s.text.length > 24 ? s.text.slice(0, 22) + "…" : s.text}
+                  <span key={i} className={`font-mono text-[11.5px] px-2.5 py-1 rounded-full border inline-flex items-center gap-1.5 ${
+                    s.contextual
+                      ? "border-cyan/60 bg-cyan/15 text-foreground"
+                      : "border-orange/60 bg-orange/15 text-foreground"
+                  }`}>
+                    <span className={`font-semibold uppercase tracking-wide text-[10px] ${s.contextual ? "text-cyan" : "text-orange"}`}>
+                      {s.category}
+                    </span>
+                    <span className="text-foreground/95">
+                      {s.text.length > 28 ? s.text.slice(0, 26) + "…" : s.text}
+                    </span>
                   </span>
                 ))}
               </div>
             )}
             {signals.reasons.length > 0 && (
-              <ul className="mt-3 text-xs text-muted-foreground space-y-1">
+              <ul className="mt-3 text-xs text-foreground/80 space-y-1">
                 {signals.reasons.map((r, i) => <li key={i}>· {r}</li>)}
               </ul>
             )}
@@ -222,7 +231,7 @@ function TryPage() {
               </span>
             </div>
             <h3 className="font-display font-bold mb-3">{mode === "anonymous" ? "Anonymous candidate" : "Pseudonymous candidate"}</h3>
-            <pre className="font-mono text-sm whitespace-pre-wrap bg-background/60 border border-border/60 rounded-lg p-3 max-h-64 overflow-auto">
+            <pre className="font-mono text-sm whitespace-pre-wrap bg-background/70 border border-border/60 rounded-lg p-3 max-h-64 overflow-auto text-foreground/95 leading-relaxed">
 {processed.draft.text}
             </pre>
             {guard.issues.length > 0 && (
@@ -247,7 +256,7 @@ function TryPage() {
             {restored !== null && (
               <div className="mt-3 panel p-3 border-cyan/40">
                 <div className="font-mono text-[11px] text-cyan uppercase tracking-wider mb-1">Restored (alleen lokaal)</div>
-                <pre className="font-mono text-xs whitespace-pre-wrap text-foreground/90">{restored}</pre>
+                <pre className="font-mono text-xs whitespace-pre-wrap text-foreground leading-relaxed">{restored}</pre>
               </div>
             )}
           </div>
@@ -352,12 +361,12 @@ function TryPage() {
             ) : (
               <div className="space-y-1.5 max-h-72 overflow-auto">
                 {audit.map((e, i) => (
-                  <div key={i} className="font-mono text-[10.5px] p-2 rounded-md bg-background/50 border border-border/40 grid grid-cols-[auto_1fr] gap-x-2">
+                  <div key={i} className="font-mono text-[11px] p-2 rounded-md bg-background/60 border border-border/50 grid grid-cols-[auto_1fr] gap-x-2 items-center">
                     <span className={
                       e.verdict === "ALLOW" ? "text-green" :
                       e.verdict === "ALLOW_WITH_WARNING" ? "text-orange" : "text-red"
                     }>{e.verdict}</span>
-                    <span className="text-muted-foreground truncate">{e.action} · {e.mode} · {e.ruleId}</span>
+                    <span className="text-foreground/85 truncate">{e.action} · {e.mode} · {e.ruleId}</span>
                   </div>
                 ))}
               </div>
@@ -371,8 +380,8 @@ function TryPage() {
 
 function Stat({ label, value, accent }: { label: string; value: string | number; accent: "orange" | "cyan" | "green" | "red" }) {
   return (
-    <div className={`rounded-lg border p-3 bg-card/40 border-${accent}/30`}>
-      <div className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">{label}</div>
+    <div className={`rounded-lg border p-3 bg-card/60 border-${accent}/40`}>
+      <div className="text-[11px] font-mono uppercase tracking-wider text-foreground/70">{label}</div>
       <div className={`font-display text-2xl font-bold text-${accent} mt-0.5`}>{value}</div>
     </div>
   );
