@@ -5,9 +5,11 @@ import {
   computeSignals, anonymize, pseudonymize, draftCheck, decide, executeAction,
   createMappingContainer, restoreFromContainer, destroyContainer,
   installRuntimeHardening, onViolations,
+  detectPersonsSlm, loadNerSlm, onNerStatus, type NerStatus,
   type Mode, type Action, type Verdict, type AuditEvent, type MappingHandle,
+  type PiiSpan,
 } from "@/lib/pim";
-import { Shield, ShieldAlert, ShieldCheck, ShieldX, Copy, Eye, Save, RotateCcw, Send, Download, Printer, Share2, Lock, AlertTriangle } from "lucide-react";
+import { Shield, ShieldAlert, ShieldCheck, ShieldX, Copy, Eye, Save, RotateCcw, Send, Download, Printer, Share2, Lock, AlertTriangle, Cpu, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/try")({
   head: () => ({
@@ -45,15 +47,35 @@ function TryPage() {
   const [restored, setRestored] = useState<string | null>(null);
   const [egress, setEgress] = useState<{ ok: boolean; msg: string } | null>(null);
   const [violations, setViolations] = useState<string[]>([]);
+  const [slmEnabled, setSlmEnabled] = useState(false);
+  const [slmStatus, setSlmStatus] = useState<NerStatus | null>(null);
+  const [slmSpans, setSlmSpans] = useState<PiiSpan[]>([]);
 
   // Install runtime hardening once on mount.
   useEffect(() => {
     installRuntimeHardening();
     const off = onViolations(setViolations);
-    return off;
+    const offS = onNerStatus(setSlmStatus);
+    return () => { off(); offS(); };
   }, []);
 
-  const signals = useMemo(() => computeSignals(text), [text]);
+  // Trigger model load on enable.
+  useEffect(() => {
+    if (slmEnabled) loadNerSlm().catch(() => {});
+  }, [slmEnabled]);
+
+  // Run SLM inference (debounced) when enabled and ready.
+  useEffect(() => {
+    if (!slmEnabled || !slmStatus?.ready) { setSlmSpans([]); return; }
+    let cancelled = false;
+    const t = setTimeout(async () => {
+      const spans = await detectPersonsSlm(text);
+      if (!cancelled) setSlmSpans(spans);
+    }, 250);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [text, slmEnabled, slmStatus?.ready]);
+
+  const signals = useMemo(() => computeSignals(text, slmEnabled ? slmSpans : []), [text, slmEnabled, slmSpans]);
 
   // For pseudonymous: generate plain mapping in-memory once, then push to AES container async
   const processed = useMemo(() => {
@@ -66,20 +88,16 @@ function TryPage() {
   useEffect(() => {
     setRestored(null);
     if (mode !== "pseudonymous" || !processed.plainMap || processed.plainMap.size === 0) {
-      if (handle) { destroyContainer(handle); setHandle(null); }
+      setHandle((prev) => { if (prev) destroyContainer(prev); return null; });
       return;
     }
     let cancelled = false;
     (async () => {
       const h = await createMappingContainer(processed.plainMap!);
-      if (cancelled) destroyContainer(h);
-      else {
-        if (handle) destroyContainer(handle);
-        setHandle(h);
-      }
+      if (cancelled) { destroyContainer(h); return; }
+      setHandle((prev) => { if (prev) destroyContainer(prev); return h; });
     })();
     return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [processed.draft.text, mode]);
 
   const guard = useMemo(() => draftCheck(processed.draft, mode), [processed.draft, mode]);
@@ -236,6 +254,59 @@ function TryPage() {
         </div>
 
         <aside className="space-y-5 lg:sticky lg:top-24 lg:self-start">
+          <div className="panel p-5">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <div className="font-mono text-[11px] uppercase tracking-wider text-cyan flex items-center gap-1.5">
+                  <Cpu className="h-3 w-3" /> Browser SLM (NER)
+                </div>
+                <h3 className="font-display font-bold text-sm mt-0.5">Lokale namen-detectie</h3>
+              </div>
+              <button
+                onClick={() => setSlmEnabled((v) => !v)}
+                className={`relative h-6 w-11 rounded-full transition-colors ${slmEnabled ? "bg-cyan" : "bg-card border border-border"}`}
+                aria-label="Toggle SLM"
+              >
+                <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-background transition-transform ${slmEnabled ? "translate-x-5" : "translate-x-0.5"}`} />
+              </button>
+            </div>
+            {!slmEnabled && (
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Aan: laadt <span className="font-mono text-foreground/80">bert-base-multilingual-cased-ner-hrl</span> via @huggingface/transformers (WebGPU → WASM). ±150 MB eerste keer, dan gecached.
+              </p>
+            )}
+            {slmEnabled && slmStatus && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-[11px] font-mono">
+                  {slmStatus.loading && <Loader2 className="h-3 w-3 animate-spin text-cyan" />}
+                  {slmStatus.ready && <ShieldCheck className="h-3 w-3 text-green" />}
+                  {slmStatus.error && <ShieldX className="h-3 w-3 text-red" />}
+                  <span className={slmStatus.ready ? "text-green" : slmStatus.error ? "text-red" : "text-cyan"}>
+                    {slmStatus.ready ? `READY · ${slmStatus.runtime?.toUpperCase()}` :
+                     slmStatus.error ? "ERROR" :
+                     slmStatus.loading ? "LOADING…" : "IDLE"}
+                  </span>
+                </div>
+                {slmStatus.progress && (
+                  <div>
+                    <div className="font-mono text-[10px] text-muted-foreground truncate mb-1">{slmStatus.progress.file}</div>
+                    <div className="h-1.5 rounded-full bg-card overflow-hidden border border-border/40">
+                      <div className="h-full bg-cyan transition-all" style={{ width: `${slmStatus.progress.pct ?? 0}%` }} />
+                    </div>
+                  </div>
+                )}
+                {slmStatus.error && (
+                  <p className="text-[10px] text-red font-mono break-words">{slmStatus.error}</p>
+                )}
+                {slmStatus.ready && (
+                  <p className="text-[10px] text-muted-foreground">
+                    {slmSpans.length} entiteit(en) gevonden door SLM. Gefuseerd met regex-detectoren.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+
           <div className="panel p-5">
             <div className="font-mono text-[11px] uppercase tracking-wider text-orange mb-2">04 · Mode</div>
             <div className="grid grid-cols-2 gap-2">

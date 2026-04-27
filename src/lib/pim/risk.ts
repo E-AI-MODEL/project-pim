@@ -3,8 +3,16 @@ import { detectPii } from "./detectors";
 
 const HIGH_SEVERITY: ReadonlySet<string> = new Set(["bsn", "iban", "email", "phone", "address"]);
 
-export function computeSignals(text: string): PrivacySignals {
-  const spans = detectPii(text);
+export function computeSignals(text: string, extraSpans: PiiSpan[] = []): PrivacySignals {
+  const ruleSpans = detectPii(text);
+  // Merge SLM spans, drop overlaps with existing rule spans (rules win on tie).
+  const merged: PiiSpan[] = [...ruleSpans];
+  for (const ext of extraSpans) {
+    const overlaps = merged.some((m) => !(ext.end <= m.start || ext.start >= m.end));
+    if (!overlaps) merged.push(ext);
+  }
+  merged.sort((a, b) => a.start - b.start);
+  const spans = merged;
   const direct = spans.filter((s) => !s.contextual);
   const ctx = spans.filter((s) => s.contextual);
 

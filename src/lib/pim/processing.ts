@@ -44,15 +44,17 @@ export interface PseudoResult {
 export function pseudonymize(text: string, signals: PrivacySignals): PseudoResult {
   const mapping = new Map<string, string>();
   const counters: Record<string, number> = {};
+  const seen = new Map<string, string>(); // dedup key → token
   const all = [...signals.directPii, ...signals.contextualPii];
   const tokens: string[] = [];
 
   const out = applySpans(text, all, (s) => {
     const key = `${s.category}:${s.text.toLowerCase()}`;
-    let token = [...mapping.entries()].find(([, v]) => v === s.text && mapping.get(key))?.[0];
+    let token = seen.get(key);
     if (!token) {
       counters[s.category] = (counters[s.category] ?? 0) + 1;
       token = `[${s.category.toUpperCase()}_${String(counters[s.category]).padStart(3, "0")}]`;
+      seen.set(key, token);
       mapping.set(token, s.text);
     }
     tokens.push(token);
