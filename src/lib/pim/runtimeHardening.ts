@@ -5,6 +5,18 @@
 // Logt naar console en biedt een hook voor de UI-banner.
 
 let installed = false;
+// Spec hfst 13: Modeltoegang naar publieke mirrors mag (read-only, GET).
+// Detecteer wel, maar markeer als "model" in plaats van privacy-violation.
+const MODEL_HOSTS = new Set([
+  "huggingface.co",
+  "cdn-lfs.huggingface.co",
+  "cdn-lfs.hf.co",
+  "cdn-lfs-us-1.huggingface.co",
+  "cdn-lfs-eu-1.huggingface.co",
+  "cas-bridge.xethub.hf.co",
+  "cdn.jsdelivr.net",
+  "unpkg.com",
+]);
 const violations: string[] = [];
 const listeners = new Set<(v: string[]) => void>();
 
@@ -26,12 +38,16 @@ export function installRuntimeHardening() {
     try { return new URL(url, location.href).origin === location.origin; }
     catch { return true; }
   };
+  const isModelHost = (url: string) => {
+    try { return MODEL_HOSTS.has(new URL(url, location.href).host); }
+    catch { return false; }
+  };
 
   // 1. fetch wrapper
   const origFetch = window.fetch.bind(window);
   window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
-    if (!sameOrigin(url)) {
+    if (!sameOrigin(url) && !isModelHost(url)) {
       const msg = `[PIM hardening] external fetch detected → ${new URL(url).origin}`;
       violations.push(msg); notify(); console.warn(msg);
     }
@@ -43,7 +59,7 @@ export function installRuntimeHardening() {
     const origBeacon = navigator.sendBeacon.bind(navigator);
     navigator.sendBeacon = (url: string | URL, data?: BodyInit | null) => {
       const u = typeof url === "string" ? url : url.toString();
-      if (!sameOrigin(u)) {
+      if (!sameOrigin(u) && !isModelHost(u)) {
         const msg = `[PIM hardening] sendBeacon to external origin BLOCKED → ${new URL(u).origin}`;
         violations.push(msg); notify(); console.warn(msg);
         return false;
@@ -56,7 +72,7 @@ export function installRuntimeHardening() {
   const OrigOpen = XMLHttpRequest.prototype.open;
   XMLHttpRequest.prototype.open = function (method: string, url: string | URL, ...rest: unknown[]) {
     const u = typeof url === "string" ? url : url.toString();
-    if (!sameOrigin(u)) {
+    if (!sameOrigin(u) && !isModelHost(u)) {
       const msg = `[PIM hardening] XHR to external origin → ${new URL(u).origin}`;
       violations.push(msg); notify(); console.warn(msg);
     }
