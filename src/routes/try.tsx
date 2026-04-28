@@ -8,10 +8,11 @@ import {
   detectPersonsSlm, loadNerSlm, onNerStatus, type NerStatus,
   PIPELINE_PROFILES, RELEASE_1_PROFILES, DEFAULT_PROFILE, type PipelineProfileId,
   onModelIntegrity, type ModelIntegrityRecord,
+  repairAnonymousDraft,
   type Mode, type Action, type Verdict, type AuditEvent, type MappingHandle,
   type PiiSpan,
 } from "@/lib/pim";
-import { Shield, ShieldAlert, ShieldCheck, ShieldX, Copy, Eye, Save, RotateCcw, Send, Download, Printer, Share2, Lock, AlertTriangle, Cpu, Loader2, Layers } from "lucide-react";
+import { Shield, ShieldAlert, ShieldCheck, ShieldX, Copy, Eye, Save, RotateCcw, Send, Download, Printer, Share2, Lock, AlertTriangle, Cpu, Loader2, Layers, Wrench } from "lucide-react";
 
 export const Route = createFileRoute("/try")({
   head: () => ({
@@ -112,16 +113,39 @@ function TryPage() {
     return () => { cancelled = true; };
   }, [processed.draft.text, mode]);
 
-  const guard = useMemo(() => draftCheck(processed.draft, mode), [processed.draft, mode]);
+  // Initial guard on the raw draft.
+  const initialGuard = useMemo(() => draftCheck(processed.draft, mode), [processed.draft, mode]);
+
+  // Auto-repair: alleen anonymous; alleen als initial guard niet "pass".
+  // Spec hfst 31: contextuele generalisatie + brede fallback patronen.
+  const repaired = useMemo(() => {
+    if (mode !== "anonymous" || initialGuard.status === "pass") return null;
+    const repairedText = repairAnonymousDraft(processed.draft.text, signals);
+    if (repairedText === processed.draft.text) return null;
+    const newDraft = { ...processed.draft, text: repairedText };
+    const newGuard = draftCheck(newDraft, mode);
+    return { draft: newDraft, guard: newGuard };
+  }, [mode, initialGuard.status, processed.draft, signals]);
+
+  const finalDraft = repaired?.draft ?? processed.draft;
+  const guard = repaired?.guard ?? initialGuard;
+
+  // Spec hfst 32: PIM beslist op de DRAFT, niet op de input. Recompute
+  // signals over de uiteindelijke draft (na anonimize + eventuele repair).
+  // Anonieme drafts zonder ruwe PII krijgen nu de risk-score van de output.
+  const decisionSignals = useMemo(
+    () => mode === "anonymous" ? computeSignals(finalDraft.text, []) : signals,
+    [mode, finalDraft.text, signals],
+  );
   const decision = useMemo(
-    () => decide({ mode, action, signals, draftCheck: guard, modelVerified: true }),
-    [mode, action, signals, guard],
+    () => decide({ mode, action, signals: decisionSignals, draftCheck: guard, modelVerified: true }),
+    [mode, action, decisionSignals, guard],
   );
 
   const onAct = async () => {
     setEgress(null);
     setRestored(null);
-    let payloadText = processed.draft.text;
+    let payloadText = finalDraft.text;
 
     // Restore-actie: alleen lokaal, alleen via AES container
     if (decision.action === "restore" && decision.verdict !== "BLOCK") {
@@ -129,7 +153,7 @@ function TryPage() {
         setEgress({ ok: false, msg: "Geen mapping container — restore onmogelijk." });
         return;
       }
-      payloadText = await restoreFromContainer(handle, processed.draft.text);
+      payloadText = await restoreFromContainer(handle, finalDraft.text);
       setRestored(payloadText);
     }
 
@@ -277,8 +301,19 @@ function TryPage() {
               </span>
             </div>
             <h3 className="font-display font-bold mb-3">{mode === "anonymous" ? "Anonymous candidate" : "Pseudonymous candidate"}</h3>
+            {repaired && (
+              <div className="mb-3 panel p-3 border-orange/40 bg-orange/5">
+                <div className="flex items-center gap-2 mb-1">
+                  <Wrench className="h-3.5 w-3.5 text-orange" />
+                  <span className="font-mono text-[11px] text-orange uppercase tracking-wider">Auto-repair toegepast</span>
+                </div>
+                <div className="font-mono text-[10px] text-muted-foreground">
+                  Initial guard: {initialGuard.status} → contextual generalization + brede fallback patronen → guard nu: <span className="text-foreground">{guard.status}</span>
+                </div>
+              </div>
+            )}
             <pre className="font-mono text-sm whitespace-pre-wrap bg-background/70 border border-border/60 rounded-lg p-3 max-h-64 overflow-auto text-foreground/95 leading-relaxed">
-{processed.draft.text}
+{finalDraft.text}
             </pre>
             {guard.issues.length > 0 && (
               <ul className="mt-3 text-xs text-orange space-y-1">
