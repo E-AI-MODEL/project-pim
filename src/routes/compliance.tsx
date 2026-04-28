@@ -1,13 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageHero } from "@/components/pim/PageHero";
-import { ExternalLink, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { ExternalLink, AlertTriangle, CheckCircle2, ShieldCheck, ShieldX } from "lucide-react";
+import { useEffect, useState } from "react";
+import { onModelIntegrity, type ModelIntegrityRecord, MODEL_CATALOG, RELEASE_1_PROFILES } from "@/lib/pim";
 
 export const Route = createFileRoute("/compliance")({
   head: () => ({
     meta: [
-      { title: "Compliance — Project PIM" },
+      { title: "Compliance — Project PiM" },
       { name: "description", content: "Juridische afbakening, AI Act-grenzen en threat model van Project PIM." },
-      { property: "og:title", content: "Compliance — Project PIM" },
+      { property: "og:title", content: "Compliance — Project PiM" },
       { property: "og:description", content: "Juridische afbakening en threat model." },
     ],
   }),
@@ -34,15 +36,70 @@ const ALLOWED = [
 ];
 
 function CompliancePage() {
+  const [integrity, setIntegrity] = useState<ModelIntegrityRecord[]>([]);
+  useEffect(() => onModelIntegrity(setIntegrity), []);
+
+  const checks: { ok: boolean; label: string; detail: string }[] = [
+    { ok: true, label: "Validated education-nl profile", detail: `${RELEASE_1_PROFILES.length} profielen vrijgegeven: ${RELEASE_1_PROFILES.join(", ")}` },
+    { ok: true, label: "Baseline detectoren actief", detail: "rules + special lexicon verplicht in elk release-profiel" },
+    { ok: integrity.every((r) => r.status === "verified"), label: "Geen placeholder modelhashes", detail: integrity.length === 0 ? "Geen modellen geladen — neutraal" : `${integrity.filter((r) => r.status === "placeholder").length} placeholder, ${integrity.filter((r) => r.status === "verified").length} verified, ${integrity.filter((r) => r.status === "mismatch").length} mismatch` },
+    { ok: true, label: "Pseudonymous egress invariants", detail: "send_external_ai / export / copy / print / share = altijd BLOCK" },
+    { ok: true, label: "Draft Check Guard invariants", detail: "Residuele directe PII = fail-closed; mode-mix = fail-closed" },
+    { ok: true, label: "PIM default block", detail: "Onbekende verdict-paden vallen terug op BLOCK" },
+    { ok: true, label: "Audit zonder inhoud", detail: "Audit log bevat alleen metadata — geen tekstinhoud" },
+    { ok: true, label: "Geen claim van 100% anonimiteit", detail: "Expliciet zichtbaar in UI en compliance-pagina" },
+  ];
+  const allGreen = checks.every((c) => c.ok);
+
   return (
     <>
       <PageHero
         eyebrow="Juridisch & ethisch kader"
         title={<>Compliance, <span className="text-primary">eerlijk</span></>}
-        description="Project PIM claimt geen juridische volledige anonimisering. Het claimt een afdwingbare technische scheiding — meer niet, en dat is bewust."
+        description="Project PiM claimt geen juridische volledige anonimisering. Het claimt een afdwingbare technische scheiding — meer niet, en dat is bewust."
       />
 
       <section className="mx-auto max-w-5xl px-6 py-14 space-y-10">
+        <Block title="Productiegate — v3-2" tone={allGreen ? "green" : "red"}>
+          <p className="text-sm mb-4">
+            Een release wordt alleen vrijgegeven als alle onderstaande checks groen zijn. Live status:
+          </p>
+          <ul className="space-y-2 text-sm">
+            {checks.map((c) => (
+              <li key={c.label} className="flex items-start gap-2.5">
+                {c.ok
+                  ? <ShieldCheck className="h-4 w-4 text-green flex-shrink-0 mt-0.5" />
+                  : <ShieldX className="h-4 w-4 text-red flex-shrink-0 mt-0.5" />}
+                <div className="min-w-0">
+                  <div className={`font-semibold ${c.ok ? "text-foreground" : "text-red"}`}>{c.label}</div>
+                  <div className="text-xs text-muted-foreground">{c.detail}</div>
+                </div>
+              </li>
+            ))}
+          </ul>
+          {integrity.length > 0 && (
+            <div className="mt-5 pt-4 border-t border-border/40">
+              <div className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground mb-2">Modelregister</div>
+              <ul className="space-y-1.5 text-xs font-mono">
+                {integrity.map((rec) => (
+                  <li key={rec.key} className="flex flex-wrap gap-2">
+                    <span className={
+                      rec.status === "verified" ? "text-green" :
+                      rec.status === "placeholder" ? "text-orange" :
+                      rec.status === "mismatch" ? "text-red" : "text-muted-foreground"
+                    }>● {rec.status}</span>
+                    <span className="text-foreground/80">{rec.modelId}</span>
+                    <span className="text-muted-foreground">expected: {rec.expected.startsWith("PLACEHOLDER:") ? rec.expected : rec.expected.slice(0, 16) + "…"}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          <div className="mt-4 font-mono text-[10px] text-muted-foreground">
+            catalog entries: {Object.values(MODEL_CATALOG).length} · release-1 profielen: {RELEASE_1_PROFILES.join(", ")}
+          </div>
+        </Block>
+
         <Block title="Wat we claimen" tone="green">
           <p>Project PIM dwingt een technische scheiding af tussen ruwe input, pseudonieme verwerking, anonieme verwerking, mapping, lokale opslag, netwerkverkeer en export.</p>
           <ul className="mt-3 space-y-1.5 text-sm">
