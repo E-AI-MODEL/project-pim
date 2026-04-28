@@ -172,6 +172,40 @@ function TryPage() {
 
       <section className="mx-auto max-w-7xl px-6 py-10 grid gap-5 lg:grid-cols-[1fr_420px]">
         <div className="space-y-5">
+          <div className="panel p-4 flex items-start gap-3 border-primary/40">
+            <Layers className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <div className="font-mono text-[10px] uppercase tracking-wider text-primary mb-1">Pipeline profile</div>
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {(Object.values(PIPELINE_PROFILES)).map((p) => {
+                  const selectable = RELEASE_1_PROFILES.includes(p.id);
+                  const active = profileId === p.id;
+                  return (
+                    <button
+                      key={p.id}
+                      disabled={!selectable}
+                      onClick={() => selectable && setProfileId(p.id)}
+                      className={`text-[11px] font-mono px-2.5 py-1 rounded-full border transition-colors ${
+                        active
+                          ? "bg-primary/20 border-primary text-primary"
+                          : selectable
+                            ? "bg-card/40 border-border/60 text-foreground/80 hover:border-border"
+                            : "bg-card/20 border-border/30 text-muted-foreground/50 cursor-not-allowed"
+                      }`}
+                      title={selectable ? p.description : "Design-only — niet vrijgegeven in release 1"}
+                    >
+                      {p.label}{!selectable && " ·  design"}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">{profile.description}</p>
+              <div className="mt-1.5 font-mono text-[10px] text-muted-foreground">
+                detectors: {Object.entries(profile.detectors).filter(([, v]) => v).map(([k]) => k).join(" · ") || "—"} · egress: {profile.egressPolicy}
+              </div>
+            </div>
+          </div>
+
           <div className="panel p-5">
             <div className="flex items-center justify-between mb-3">
               <div>
