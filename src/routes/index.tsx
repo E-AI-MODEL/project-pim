@@ -6,9 +6,9 @@ import { PrincipleBadge } from "@/components/pim/PrincipleBadge";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Project PIM — Privacy Integrity Monitor voor onderwijsdata" },
+      { title: "Project PiM — Privacy Integrity Monitor voor onderwijsdata" },
       { name: "description", content: "Browser-first privacy pipeline. Lokale detectie, deterministische beslissingen, fail-closed handhaving. Voor onderwijsorganisaties die echt willen anonimiseren." },
-      { property: "og:title", content: "Project PIM — Privacy Integrity Monitor" },
+      { property: "og:title", content: "Project PiM — Privacy Integrity Monitor" },
       { property: "og:description", content: "Browser-first privacy pipeline voor onderwijsdata." },
     ],
   }),
@@ -33,8 +33,8 @@ function HomePage() {
   return (
     <>
       <PageHero
-        eyebrow="Privacy Integrity Monitor · v2.0"
-        title={<>Project <span className="text-primary">PIM</span><br />Browser-first privacy voor onderwijsdata.</>}
+        eyebrow="Privacy Integrity Monitor · v3-2 · education-nl"
+        title={<>Project <span className="text-primary">PiM</span><br />Browser-first privacy voor onderwijsdata.</>}
         description="Een lokale pipeline die ruwe input, pseudonieme verwerking, anonieme verwerking, mapping en netwerkverkeer technisch scheidt — zodat schijnanonimisering geen optie meer is."
       >
         <div className="flex flex-wrap gap-3">
@@ -66,7 +66,7 @@ function HomePage() {
       {/* Pillars */}
       <section className="mx-auto max-w-7xl px-6 py-12">
         <div className="text-xs font-mono uppercase tracking-wider text-cyan mb-2">02 · Architectuur in drie zinnen</div>
-        <h2 className="font-display text-3xl md:text-4xl font-bold mb-10">Models. PIM. Egress.</h2>
+        <h2 className="font-display text-3xl md:text-4xl font-bold mb-10">Modellen. PIM. Egress.</h2>
         <div className="grid gap-5 md:grid-cols-3">
           {PILLARS.map((p, i) => (
             <div key={p.title} className="panel-glow p-7 relative overflow-hidden">
