@@ -30,14 +30,14 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Project PIM — Privacy Integrity Monitor (by EAI)" },
+      { title: "Project PiM — Privacy Integrity Monitor (by EAI)" },
       { name: "description", content: "Browser-first privacy pipeline voor onderwijsdata. Lokale detectie, deterministische besluitvorming, fail-closed handhaving." },
-      { name: "author", content: "Project PIM" },
-      { property: "og:title", content: "Project PIM — Privacy Integrity Monitor (by EAI)" },
+      { name: "author", content: "Project PiM" },
+      { property: "og:title", content: "Project PiM — Privacy Integrity Monitor (by EAI)" },
       { property: "og:description", content: "Browser-first privacy pipeline voor onderwijsdata. Lokale detectie, deterministische besluitvorming, fail-closed handhaving." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Project PIM — Privacy Integrity Monitor (by EAI)" },
+      { name: "twitter:title", content: "Project PiM — Privacy Integrity Monitor (by EAI)" },
       { name: "twitter:description", content: "Browser-first privacy pipeline voor onderwijsdata. Lokale detectie, deterministische besluitvorming, fail-closed handhaving." },
       { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/39dcf18b-d97a-40d8-b7d4-ea9221b8d6bf" },
       { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/39dcf18b-d97a-40d8-b7d4-ea9221b8d6bf" },
@@ -100,7 +100,7 @@ function SiteHeader() {
             <Shield className="relative h-6 w-6 text-primary" strokeWidth={2.2} />
           </div>
           <div className="font-display font-bold text-base tracking-tight">
-            Project <span className="text-primary">PIM</span>
+            Project <span className="text-primary">PiM</span>
           </div>
         </Link>
         <nav className="hidden md:flex items-center gap-1">
@@ -149,10 +149,10 @@ function SiteFooter() {
         <div>
           <div className="flex items-center gap-2 font-display font-bold">
             <Shield className="h-4 w-4 text-primary" />
-            Project PIM
+            Project PiM
           </div>
           <p className="mt-2 text-muted-foreground text-xs leading-relaxed max-w-sm">
-            Browser-first privacy pipeline voor onderwijsdata. Models are sensors. PIM is the decision layer.
+            Browser-first privacy pipeline voor onderwijsdata. Models zijn sensors. PIM is de beslislaag.
           </p>
         </div>
         <div>
@@ -174,7 +174,7 @@ function SiteFooter() {
         </div>
       </div>
       <div className="border-t border-border/40 py-4 text-center text-[11px] text-muted-foreground">
-        Specificatie v2.0 · Geen tracking · Geen netwerkverzoeken voor verwerking
+        Specificatie v3-2 · education-nl · Geen tracking · Geen netwerkverzoeken voor verwerking
       </div>
     </footer>
   );

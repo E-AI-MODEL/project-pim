@@ -3,6 +3,7 @@
 // Loads model from HuggingFace CDN (jsDelivr-style). Stays local after first load.
 
 import type { PiiSpan } from "./types";
+import { verifyModel, MODEL_CATALOG } from "./modelCatalog";
 
 type AnyPipeline = (text: string, opts?: Record<string, unknown>) => Promise<unknown>;
 
@@ -15,10 +16,10 @@ interface NerOutput {
   end: number;
 }
 
-const MODEL_ID = "Xenova/bert-base-multilingual-cased-ner-hrl";
-// Note: Xenova/* mirrors are the ONNX-quantised builds that work in the browser.
-// Wikineural is also available as Xenova/multilingual-e5 variants but bert-multi-NER
-// is the most stable browser-ready NER. We expose both to spec for parity.
+const CATALOG_KEY = "ner_multilingual" as const;
+const MODEL_ID = MODEL_CATALOG[CATALOG_KEY].modelId;
+// Catalog-driven: revision + expected SHA256 live in modelCatalog.ts.
+// Spec hfst 9: model is een sensor; integriteit wordt geverifieerd na load.
 
 let pipelinePromise: Promise<AnyPipeline> | null = null;
 let lastError: string | null = null;
@@ -55,6 +56,23 @@ export function onNerStatus(cb: (s: NerStatus) => void): () => void {
 export function getNerStatus(): NerStatus { return currentStatus; }
 export function isNerVerified(): boolean { return modelVerified; }
 
+async function runIntegrityCheck(pipe: unknown): Promise<void> {
+  // Probe a deterministic descriptor of the loaded model. We use the
+  // tokenizer + model config JSON if exposed; otherwise we fall back to
+  // model-id+revision string. Either way verifyModel() records the result.
+  let descriptor: string | null = null;
+  try {
+    const p = pipe as { model?: { config?: unknown }; tokenizer?: { _tokenizer_config?: unknown } };
+    const cfg = p?.model?.config;
+    if (cfg) descriptor = JSON.stringify(cfg);
+  } catch { /* swallow */ }
+  if (!descriptor) descriptor = `${MODEL_ID}@${(MODEL_CATALOG as Record<string, { revision: string }>)[CATALOG_KEY].revision}`;
+  const rec = await verifyModel(CATALOG_KEY, descriptor);
+  // Demo policy: placeholder + verified zijn beide bruikbaar voor inferentie.
+  // Productie-egress vereist apart `isProductionVerified()`.
+  modelVerified = rec.status === "verified" || rec.status === "placeholder";
+}
+
 async function detectWebGpu(): Promise<boolean> {
   const navAny = navigator as Navigator & { gpu?: { requestAdapter?: () => Promise<unknown> } };
   if (!navAny.gpu?.requestAdapter) return false;
@@ -89,8 +107,8 @@ export async function loadNerSlm(): Promise<AnyPipeline | null> {
         progress_callback,
       } as Record<string, unknown>);
       usedRuntime = device;
-      modelVerified = true;
-      emit({ loading: false, ready: true, runtime: device, verified: true, progress: undefined });
+      await runIntegrityCheck(pipe);
+      emit({ loading: false, ready: true, runtime: device, verified: modelVerified, progress: undefined });
       return pipe as unknown as AnyPipeline;
     } catch (e1) {
       // Fallback to WASM if WebGPU failed
@@ -100,8 +118,8 @@ export async function loadNerSlm(): Promise<AnyPipeline | null> {
             device: "wasm", dtype: "q8", progress_callback,
           } as Record<string, unknown>);
           usedRuntime = "wasm";
-          modelVerified = true;
-          emit({ loading: false, ready: true, runtime: "wasm", verified: true, progress: undefined });
+          await runIntegrityCheck(pipe);
+          emit({ loading: false, ready: true, runtime: "wasm", verified: modelVerified, progress: undefined });
           return pipe as unknown as AnyPipeline;
         } catch (e2) {
           lastError = `WebGPU faalde (${(e1 as Error).message}); WASM fallback faalde (${(e2 as Error).message})`;

@@ -8,3 +8,5 @@ export * from "./secureMapping";
 export * from "./egressGuard";
 export * from "./runtimeHardening";
 export * from "./nerSlm";
+export * from "./modelCatalog";
+export * from "./pipelineProfile";

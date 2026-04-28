@@ -6,17 +6,19 @@ import {
   createMappingContainer, restoreFromContainer, destroyContainer,
   installRuntimeHardening, onViolations,
   detectPersonsSlm, loadNerSlm, onNerStatus, type NerStatus,
+  PIPELINE_PROFILES, RELEASE_1_PROFILES, DEFAULT_PROFILE, type PipelineProfileId,
+  onModelIntegrity, type ModelIntegrityRecord,
   type Mode, type Action, type Verdict, type AuditEvent, type MappingHandle,
   type PiiSpan,
 } from "@/lib/pim";
-import { Shield, ShieldAlert, ShieldCheck, ShieldX, Copy, Eye, Save, RotateCcw, Send, Download, Printer, Share2, Lock, AlertTriangle, Cpu, Loader2 } from "lucide-react";
+import { Shield, ShieldAlert, ShieldCheck, ShieldX, Copy, Eye, Save, RotateCcw, Send, Download, Printer, Share2, Lock, AlertTriangle, Cpu, Loader2, Layers } from "lucide-react";
 
 export const Route = createFileRoute("/try")({
   head: () => ({
     meta: [
-      { title: "Try-it — Project PIM" },
+      { title: "Try-it — Project PiM" },
       { name: "description", content: "Test de PIM privacy pipeline live op je eigen tekst. Detectie, generalisatie, AES-GCM mapping, egress guard — alles in jouw browser." },
-      { property: "og:title", content: "Try Project PIM live" },
+      { property: "og:title", content: "Try Project PiM live" },
       { property: "og:description", content: "Live PIM privacy pipeline — alles lokaal." },
     ],
   }),
@@ -50,19 +52,29 @@ function TryPage() {
   const [slmEnabled, setSlmEnabled] = useState(false);
   const [slmStatus, setSlmStatus] = useState<NerStatus | null>(null);
   const [slmSpans, setSlmSpans] = useState<PiiSpan[]>([]);
+  const [profileId, setProfileId] = useState<PipelineProfileId>(DEFAULT_PROFILE);
+  const [integrity, setIntegrity] = useState<ModelIntegrityRecord[]>([]);
+
+  const profile = PIPELINE_PROFILES[profileId];
 
   // Install runtime hardening once on mount.
   useEffect(() => {
     installRuntimeHardening();
     const off = onViolations(setViolations);
     const offS = onNerStatus(setSlmStatus);
-    return () => { off(); offS(); };
+    const offI = onModelIntegrity(setIntegrity);
+    return () => { off(); offS(); offI(); };
   }, []);
+
+  // Profile dictates SLM availability. rules-only profiel forceert SLM uit.
+  useEffect(() => {
+    if (!profile.detectors.nerSlm) setSlmEnabled(false);
+  }, [profile.detectors.nerSlm]);
 
   // Trigger model load on enable.
   useEffect(() => {
-    if (slmEnabled) loadNerSlm().catch(() => {});
-  }, [slmEnabled]);
+    if (slmEnabled && profile.detectors.nerSlm) loadNerSlm().catch(() => {});
+  }, [slmEnabled, profile.detectors.nerSlm]);
 
   // Run SLM inference (debounced) when enabled and ready.
   useEffect(() => {
@@ -160,6 +172,40 @@ function TryPage() {
 
       <section className="mx-auto max-w-7xl px-6 py-10 grid gap-5 lg:grid-cols-[1fr_420px]">
         <div className="space-y-5">
+          <div className="panel p-4 flex items-start gap-3 border-primary/40">
+            <Layers className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <div className="font-mono text-[10px] uppercase tracking-wider text-primary mb-1">Pipeline profile</div>
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {(Object.values(PIPELINE_PROFILES)).map((p) => {
+                  const selectable = RELEASE_1_PROFILES.includes(p.id);
+                  const active = profileId === p.id;
+                  return (
+                    <button
+                      key={p.id}
+                      disabled={!selectable}
+                      onClick={() => selectable && setProfileId(p.id)}
+                      className={`text-[11px] font-mono px-2.5 py-1 rounded-full border transition-colors ${
+                        active
+                          ? "bg-primary/20 border-primary text-primary"
+                          : selectable
+                            ? "bg-card/40 border-border/60 text-foreground/80 hover:border-border"
+                            : "bg-card/20 border-border/30 text-muted-foreground/50 cursor-not-allowed"
+                      }`}
+                      title={selectable ? p.description : "Design-only — niet vrijgegeven in release 1"}
+                    >
+                      {p.label}{!selectable && " ·  design"}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">{profile.description}</p>
+              <div className="mt-1.5 font-mono text-[10px] text-muted-foreground">
+                detectors: {Object.entries(profile.detectors).filter(([, v]) => v).map(([k]) => k).join(" · ") || "—"} · egress: {profile.egressPolicy}
+              </div>
+            </div>
+          </div>
+
           <div className="panel p-5">
             <div className="flex items-center justify-between mb-3">
               <div>
@@ -272,14 +318,23 @@ function TryPage() {
                 <h3 className="font-display font-bold text-sm mt-0.5">Lokale namen-detectie</h3>
               </div>
               <button
-                onClick={() => setSlmEnabled((v) => !v)}
-                className={`relative h-6 w-11 rounded-full transition-colors ${slmEnabled ? "bg-cyan" : "bg-card border border-border"}`}
+                onClick={() => profile.detectors.nerSlm && setSlmEnabled((v) => !v)}
+                disabled={!profile.detectors.nerSlm}
+                className={`relative h-6 w-11 rounded-full transition-colors ${
+                  !profile.detectors.nerSlm ? "bg-card border border-border/40 opacity-40 cursor-not-allowed" :
+                  slmEnabled ? "bg-cyan" : "bg-card border border-border"
+                }`}
                 aria-label="Toggle SLM"
               >
                 <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-background transition-transform ${slmEnabled ? "translate-x-5" : "translate-x-0.5"}`} />
               </button>
             </div>
-            {!slmEnabled && (
+            {!profile.detectors.nerSlm && (
+              <p className="text-[11px] text-orange leading-relaxed">
+                Profiel <span className="font-mono">{profile.id}</span> bevat geen SLM. Toggle uitgeschakeld.
+              </p>
+            )}
+            {profile.detectors.nerSlm && !slmEnabled && (
               <p className="text-[11px] text-muted-foreground leading-relaxed">
                 Aan: laadt <span className="font-mono text-foreground/80">bert-base-multilingual-cased-ner-hrl</span> via @huggingface/transformers (WebGPU → WASM). ±150 MB eerste keer, dan gecached.
               </p>
@@ -311,6 +366,23 @@ function TryPage() {
                   <p className="text-[10px] text-muted-foreground">
                     {slmSpans.length} entiteit(en) gevonden door SLM. Gefuseerd met regex-detectoren.
                   </p>
+                )}
+                {integrity.length > 0 && (
+                  <div className="mt-2 pt-2 border-t border-border/40">
+                    {integrity.map((rec) => (
+                      <div key={rec.key} className="font-mono text-[10px] flex items-start gap-1.5">
+                        <span className={
+                          rec.status === "verified" ? "text-green" :
+                          rec.status === "placeholder" ? "text-orange" :
+                          rec.status === "mismatch" ? "text-red" : "text-muted-foreground"
+                        }>●</span>
+                        <div className="min-w-0">
+                          <div className="text-foreground/80 truncate">{rec.modelId}</div>
+                          <div className="text-muted-foreground">integrity: {rec.status}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
             )}
