@@ -137,7 +137,7 @@ function TryPage() {
   const onAct = async () => {
     setEgress(null);
     setRestored(null);
-    let payloadText = processed.draft.text;
+    let payloadText = finalDraft.text;
 
     // Restore-actie: alleen lokaal, alleen via AES container
     if (decision.action === "restore" && decision.verdict !== "BLOCK") {
@@ -145,7 +145,7 @@ function TryPage() {
         setEgress({ ok: false, msg: "Geen mapping container — restore onmogelijk." });
         return;
       }
-      payloadText = await restoreFromContainer(handle, processed.draft.text);
+      payloadText = await restoreFromContainer(handle, finalDraft.text);
       setRestored(payloadText);
     }
 
@@ -293,8 +293,19 @@ function TryPage() {
               </span>
             </div>
             <h3 className="font-display font-bold mb-3">{mode === "anonymous" ? "Anonymous candidate" : "Pseudonymous candidate"}</h3>
+            {repaired && (
+              <div className="mb-3 panel p-3 border-orange/40 bg-orange/5">
+                <div className="flex items-center gap-2 mb-1">
+                  <Wrench className="h-3.5 w-3.5 text-orange" />
+                  <span className="font-mono text-[11px] text-orange uppercase tracking-wider">Auto-repair toegepast</span>
+                </div>
+                <div className="font-mono text-[10px] text-muted-foreground">
+                  Initial guard: {initialGuard.status} → contextual generalization + brede fallback patronen → guard nu: <span className="text-foreground">{guard.status}</span>
+                </div>
+              </div>
+            )}
             <pre className="font-mono text-sm whitespace-pre-wrap bg-background/70 border border-border/60 rounded-lg p-3 max-h-64 overflow-auto text-foreground/95 leading-relaxed">
-{processed.draft.text}
+{finalDraft.text}
             </pre>
             {guard.issues.length > 0 && (
               <ul className="mt-3 text-xs text-orange space-y-1">
