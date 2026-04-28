@@ -318,14 +318,23 @@ function TryPage() {
                 <h3 className="font-display font-bold text-sm mt-0.5">Lokale namen-detectie</h3>
               </div>
               <button
-                onClick={() => setSlmEnabled((v) => !v)}
-                className={`relative h-6 w-11 rounded-full transition-colors ${slmEnabled ? "bg-cyan" : "bg-card border border-border"}`}
+                onClick={() => profile.detectors.nerSlm && setSlmEnabled((v) => !v)}
+                disabled={!profile.detectors.nerSlm}
+                className={`relative h-6 w-11 rounded-full transition-colors ${
+                  !profile.detectors.nerSlm ? "bg-card border border-border/40 opacity-40 cursor-not-allowed" :
+                  slmEnabled ? "bg-cyan" : "bg-card border border-border"
+                }`}
                 aria-label="Toggle SLM"
               >
                 <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-background transition-transform ${slmEnabled ? "translate-x-5" : "translate-x-0.5"}`} />
               </button>
             </div>
-            {!slmEnabled && (
+            {!profile.detectors.nerSlm && (
+              <p className="text-[11px] text-orange leading-relaxed">
+                Profiel <span className="font-mono">{profile.id}</span> bevat geen SLM. Toggle uitgeschakeld.
+              </p>
+            )}
+            {profile.detectors.nerSlm && !slmEnabled && (
               <p className="text-[11px] text-muted-foreground leading-relaxed">
                 Aan: laadt <span className="font-mono text-foreground/80">bert-base-multilingual-cased-ner-hrl</span> via @huggingface/transformers (WebGPU → WASM). ±150 MB eerste keer, dan gecached.
               </p>
@@ -357,6 +366,23 @@ function TryPage() {
                   <p className="text-[10px] text-muted-foreground">
                     {slmSpans.length} entiteit(en) gevonden door SLM. Gefuseerd met regex-detectoren.
                   </p>
+                )}
+                {integrity.length > 0 && (
+                  <div className="mt-2 pt-2 border-t border-border/40">
+                    {integrity.map((rec) => (
+                      <div key={rec.key} className="font-mono text-[10px] flex items-start gap-1.5">
+                        <span className={
+                          rec.status === "verified" ? "text-green" :
+                          rec.status === "placeholder" ? "text-orange" :
+                          rec.status === "mismatch" ? "text-red" : "text-muted-foreground"
+                        }>●</span>
+                        <div className="min-w-0">
+                          <div className="text-foreground/80 truncate">{rec.modelId}</div>
+                          <div className="text-muted-foreground">integrity: {rec.status}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
             )}
