@@ -129,9 +129,17 @@ function TryPage() {
 
   const finalDraft = repaired?.draft ?? processed.draft;
   const guard = repaired?.guard ?? initialGuard;
+
+  // Spec hfst 32: PIM beslist op de DRAFT, niet op de input. Recompute
+  // signals over de uiteindelijke draft (na anonimize + eventuele repair).
+  // Anonieme drafts zonder ruwe PII krijgen nu de risk-score van de output.
+  const decisionSignals = useMemo(
+    () => mode === "anonymous" ? computeSignals(finalDraft.text, []) : signals,
+    [mode, finalDraft.text, signals],
+  );
   const decision = useMemo(
-    () => decide({ mode, action, signals, draftCheck: guard, modelVerified: true }),
-    [mode, action, signals, guard],
+    () => decide({ mode, action, signals: decisionSignals, draftCheck: guard, modelVerified: true }),
+    [mode, action, decisionSignals, guard],
   );
 
   const onAct = async () => {
