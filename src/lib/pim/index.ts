@@ -10,3 +10,4 @@ export * from "./runtimeHardening";
 export * from "./nerSlm";
 export * from "./modelCatalog";
 export * from "./pipelineProfile";
+export * from "./contextualGeneralization";
