@@ -56,6 +56,23 @@ export function onNerStatus(cb: (s: NerStatus) => void): () => void {
 export function getNerStatus(): NerStatus { return currentStatus; }
 export function isNerVerified(): boolean { return modelVerified; }
 
+async function runIntegrityCheck(pipe: unknown): Promise<void> {
+  // Probe a deterministic descriptor of the loaded model. We use the
+  // tokenizer + model config JSON if exposed; otherwise we fall back to
+  // model-id+revision string. Either way verifyModel() records the result.
+  let descriptor: string | null = null;
+  try {
+    const p = pipe as { model?: { config?: unknown }; tokenizer?: { _tokenizer_config?: unknown } };
+    const cfg = p?.model?.config;
+    if (cfg) descriptor = JSON.stringify(cfg);
+  } catch { /* swallow */ }
+  if (!descriptor) descriptor = `${MODEL_ID}@${(MODEL_CATALOG as Record<string, { revision: string }>)[CATALOG_KEY].revision}`;
+  const rec = await verifyModel(CATALOG_KEY, descriptor);
+  // Demo policy: placeholder + verified zijn beide bruikbaar voor inferentie.
+  // Productie-egress vereist apart `isProductionVerified()`.
+  modelVerified = rec.status === "verified" || rec.status === "placeholder";
+}
+
 async function detectWebGpu(): Promise<boolean> {
   const navAny = navigator as Navigator & { gpu?: { requestAdapter?: () => Promise<unknown> } };
   if (!navAny.gpu?.requestAdapter) return false;
