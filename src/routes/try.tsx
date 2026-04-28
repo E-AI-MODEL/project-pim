@@ -6,17 +6,19 @@ import {
   createMappingContainer, restoreFromContainer, destroyContainer,
   installRuntimeHardening, onViolations,
   detectPersonsSlm, loadNerSlm, onNerStatus, type NerStatus,
+  PIPELINE_PROFILES, RELEASE_1_PROFILES, DEFAULT_PROFILE, type PipelineProfileId,
+  onModelIntegrity, type ModelIntegrityRecord,
   type Mode, type Action, type Verdict, type AuditEvent, type MappingHandle,
   type PiiSpan,
 } from "@/lib/pim";
-import { Shield, ShieldAlert, ShieldCheck, ShieldX, Copy, Eye, Save, RotateCcw, Send, Download, Printer, Share2, Lock, AlertTriangle, Cpu, Loader2 } from "lucide-react";
+import { Shield, ShieldAlert, ShieldCheck, ShieldX, Copy, Eye, Save, RotateCcw, Send, Download, Printer, Share2, Lock, AlertTriangle, Cpu, Loader2, Layers } from "lucide-react";
 
 export const Route = createFileRoute("/try")({
   head: () => ({
     meta: [
-      { title: "Try-it — Project PIM" },
+      { title: "Try-it — Project PiM" },
       { name: "description", content: "Test de PIM privacy pipeline live op je eigen tekst. Detectie, generalisatie, AES-GCM mapping, egress guard — alles in jouw browser." },
-      { property: "og:title", content: "Try Project PIM live" },
+      { property: "og:title", content: "Try Project PiM live" },
       { property: "og:description", content: "Live PIM privacy pipeline — alles lokaal." },
     ],
   }),
@@ -50,19 +52,29 @@ function TryPage() {
   const [slmEnabled, setSlmEnabled] = useState(false);
   const [slmStatus, setSlmStatus] = useState<NerStatus | null>(null);
   const [slmSpans, setSlmSpans] = useState<PiiSpan[]>([]);
+  const [profileId, setProfileId] = useState<PipelineProfileId>(DEFAULT_PROFILE);
+  const [integrity, setIntegrity] = useState<ModelIntegrityRecord[]>([]);
+
+  const profile = PIPELINE_PROFILES[profileId];
 
   // Install runtime hardening once on mount.
   useEffect(() => {
     installRuntimeHardening();
     const off = onViolations(setViolations);
     const offS = onNerStatus(setSlmStatus);
-    return () => { off(); offS(); };
+    const offI = onModelIntegrity(setIntegrity);
+    return () => { off(); offS(); offI(); };
   }, []);
+
+  // Profile dictates SLM availability. rules-only profiel forceert SLM uit.
+  useEffect(() => {
+    if (!profile.detectors.nerSlm) setSlmEnabled(false);
+  }, [profile.detectors.nerSlm]);
 
   // Trigger model load on enable.
   useEffect(() => {
-    if (slmEnabled) loadNerSlm().catch(() => {});
-  }, [slmEnabled]);
+    if (slmEnabled && profile.detectors.nerSlm) loadNerSlm().catch(() => {});
+  }, [slmEnabled, profile.detectors.nerSlm]);
 
   // Run SLM inference (debounced) when enabled and ready.
   useEffect(() => {
