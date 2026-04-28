@@ -8,10 +8,11 @@ import {
   detectPersonsSlm, loadNerSlm, onNerStatus, type NerStatus,
   PIPELINE_PROFILES, RELEASE_1_PROFILES, DEFAULT_PROFILE, type PipelineProfileId,
   onModelIntegrity, type ModelIntegrityRecord,
+  repairAnonymousDraft,
   type Mode, type Action, type Verdict, type AuditEvent, type MappingHandle,
   type PiiSpan,
 } from "@/lib/pim";
-import { Shield, ShieldAlert, ShieldCheck, ShieldX, Copy, Eye, Save, RotateCcw, Send, Download, Printer, Share2, Lock, AlertTriangle, Cpu, Loader2, Layers } from "lucide-react";
+import { Shield, ShieldAlert, ShieldCheck, ShieldX, Copy, Eye, Save, RotateCcw, Send, Download, Printer, Share2, Lock, AlertTriangle, Cpu, Loader2, Layers, Wrench } from "lucide-react";
 
 export const Route = createFileRoute("/try")({
   head: () => ({
@@ -112,7 +113,22 @@ function TryPage() {
     return () => { cancelled = true; };
   }, [processed.draft.text, mode]);
 
-  const guard = useMemo(() => draftCheck(processed.draft, mode), [processed.draft, mode]);
+  // Initial guard on the raw draft.
+  const initialGuard = useMemo(() => draftCheck(processed.draft, mode), [processed.draft, mode]);
+
+  // Auto-repair: alleen anonymous; alleen als initial guard niet "pass".
+  // Spec hfst 31: contextuele generalisatie + brede fallback patronen.
+  const repaired = useMemo(() => {
+    if (mode !== "anonymous" || initialGuard.status === "pass") return null;
+    const repairedText = repairAnonymousDraft(processed.draft.text, signals);
+    if (repairedText === processed.draft.text) return null;
+    const newDraft = { ...processed.draft, text: repairedText };
+    const newGuard = draftCheck(newDraft, mode);
+    return { draft: newDraft, guard: newGuard };
+  }, [mode, initialGuard.status, processed.draft, signals]);
+
+  const finalDraft = repaired?.draft ?? processed.draft;
+  const guard = repaired?.guard ?? initialGuard;
   const decision = useMemo(
     () => decide({ mode, action, signals, draftCheck: guard, modelVerified: true }),
     [mode, action, signals, guard],
