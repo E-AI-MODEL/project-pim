@@ -16,6 +16,9 @@ const MODEL_HOSTS = new Set([
   "cas-bridge.xethub.hf.co",
   "cdn.jsdelivr.net",
   "unpkg.com",
+  // @mlc-ai/web-llm fetcht weights/wasm vanuit deze hosts.
+  "raw.githubusercontent.com",
+  "github.com",
 ]);
 const violations: string[] = [];
 const listeners = new Set<(v: string[]) => void>();
