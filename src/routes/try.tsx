@@ -252,6 +252,35 @@ function TryPage() {
         </div>
       )}
 
+      {abuse && abuse.level !== "ok" && (
+        <div className="mx-auto max-w-7xl px-6 mt-4">
+          <div className={`panel p-4 flex items-start gap-3 ${
+            abuse.level === "block" ? "border-red/60 bg-red/5" :
+            abuse.level === "throttle" ? "border-orange/50 bg-orange/5" :
+            "border-cyan/40 bg-cyan/5"
+          }`}>
+            <Activity className={`h-5 w-5 flex-shrink-0 mt-0.5 ${
+              abuse.level === "block" ? "text-red" : abuse.level === "throttle" ? "text-orange" : "text-cyan"
+            }`} />
+            <div className="text-xs flex-1">
+              <div className={`font-semibold mb-1 uppercase font-mono text-[11px] tracking-wider ${
+                abuse.level === "block" ? "text-red" : abuse.level === "throttle" ? "text-orange" : "text-cyan"
+              }`}>
+                Abuse-detectie · level {abuse.level} · score {(abuse.score * 100).toFixed(0)}%
+              </div>
+              {abuse.reasons.length > 0 && (
+                <ul className="text-muted-foreground space-y-0.5">
+                  {abuse.reasons.map((r, i) => <li key={i}>· {r}</li>)}
+                </ul>
+              )}
+              <div className="mt-1 font-mono text-[10px] text-muted-foreground">
+                {abuse.metrics.submissionsPerMinute}/min · dup {(abuse.metrics.duplicateRatio * 100).toFixed(0)}% · pii-density {abuse.metrics.piiDensity.toFixed(1)} · {abuse.metrics.inputLengthChars} chars
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <section className="mx-auto max-w-7xl px-6 py-10 grid gap-5 lg:grid-cols-[1fr_420px]">
         <div className="space-y-5">
           <div className="panel p-4 flex items-start gap-3 border-primary/40">
