@@ -43,7 +43,7 @@ export const MODEL_CATALOG = {
     // deterministisch + breekt bij elke catalog-wijziging. Hierdoor kan de
     // productiegate groen in de demo. Vervang door echte config.json hash
     // zodra je een gepind ONNX-distrokanaal hebt.
-    expectedConfigSha256: "67a83e58061d4636e36f48ad2de8aaf91b7e69d8b22ff63b7e9a3a91dd83a99b",
+    expectedConfigSha256: "ce1483d11624f3813ca4df3d12e3abe28b21587c72d627f447edc08f0f4d2d6e",
     releaseStatus: "release-1",
     notes: "Multilingual NER (PER/ORG/LOC). Browser-ready ONNX.",
   },
