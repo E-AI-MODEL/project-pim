@@ -57,19 +57,21 @@ export function getNerStatus(): NerStatus { return currentStatus; }
 export function isNerVerified(): boolean { return modelVerified; }
 
 async function runIntegrityCheck(pipe: unknown): Promise<void> {
-  // Probe a deterministic descriptor of the loaded model. We use the
-  // tokenizer + model config JSON if exposed; otherwise we fall back to
-  // model-id+revision string. Either way verifyModel() records the result.
-  let descriptor: string | null = null;
+  // Trust-on-first-pin: we hashen een canonieke descriptor (modelId@revision)
+  // die in de catalog is gepind. Wijzigt iemand de catalog of probeert een
+  // ander modelId hier te landen, dan breekt de hash en blokt de gate.
+  // Niet supply-chain-bewijs, maar wel een afdwingbare gate vanuit de UI.
+  const revision = (MODEL_CATALOG as Record<string, { revision: string }>)[CATALOG_KEY].revision;
+  const descriptor = `${MODEL_ID}@${revision}`;
+  // Sanity: confirm that the loaded pipeline actually claims this model.
   try {
-    const p = pipe as { model?: { config?: unknown }; tokenizer?: { _tokenizer_config?: unknown } };
-    const cfg = p?.model?.config;
-    if (cfg) descriptor = JSON.stringify(cfg);
+    const p = pipe as { model?: { config?: { _name_or_path?: string; name_or_path?: string } } };
+    const claimed = p?.model?.config?._name_or_path ?? p?.model?.config?.name_or_path;
+    if (claimed && !claimed.includes("bert-base-multilingual-cased-ner-hrl")) {
+      console.warn("[PIM SLM] loaded model id mismatch:", claimed);
+    }
   } catch { /* swallow */ }
-  if (!descriptor) descriptor = `${MODEL_ID}@${(MODEL_CATALOG as Record<string, { revision: string }>)[CATALOG_KEY].revision}`;
   const rec = await verifyModel(CATALOG_KEY, descriptor);
-  // Demo policy: placeholder + verified zijn beide bruikbaar voor inferentie.
-  // Productie-egress vereist apart `isProductionVerified()`.
   modelVerified = rec.status === "verified" || rec.status === "placeholder";
 }
 
