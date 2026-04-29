@@ -11,3 +11,5 @@ export * from "./nerSlm";
 export * from "./modelCatalog";
 export * from "./pipelineProfile";
 export * from "./contextualGeneralization";
+export * from "./detectorRegistry";
+export * from "./reviewQueue";

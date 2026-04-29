@@ -1,0 +1,130 @@
+// Detector Registry — spec hfst 8 / 15 / v3-2.
+// Detectors zijn plug-ins. De pipelineProfile bepaalt welke detectors actief
+// zijn. Een detector neemt ruwe tekst + ctx en geeft PiiSpans terug.
+// Doel: nieuwe detectors (special lexicon, contextSlm, abuse) toevoegen
+// zonder processing.ts of try.tsx aan te raken.
+
+import type { PiiSpan } from "./types";
+import { detectPii as runRegexDetectors } from "./detectors";
+import { detectPersonsSlm } from "./nerSlm";
+import { PIPELINE_PROFILES, type PipelineProfileId } from "./pipelineProfile";
+
+export type DetectorKind = "rules" | "specialLexicon" | "nerSlm" | "contextSlm";
+
+export interface DetectorContext {
+  profileId: PipelineProfileId;
+  /** Caller may opt-out of slow async detectors (e.g. SLM not loaded yet). */
+  enableAsync: boolean;
+}
+
+export interface Detector {
+  id: string;
+  kind: DetectorKind;
+  /** Whether this detector is async (model-based). */
+  async: boolean;
+  /** Returns spans found in `text`. May return [] if not applicable. */
+  run(text: string, ctx: DetectorContext): PiiSpan[] | Promise<PiiSpan[]>;
+}
+
+const REGISTRY = new Map<string, Detector>();
+
+export function registerDetector(d: Detector): void {
+  REGISTRY.set(d.id, d);
+}
+
+export function getDetector(id: string): Detector | undefined {
+  return REGISTRY.get(id);
+}
+
+export function listDetectors(): Detector[] {
+  return Array.from(REGISTRY.values());
+}
+
+/** Detectors actief voor een profiel, in vaste volgorde (sync → async). */
+export function activeDetectorsFor(profileId: PipelineProfileId): Detector[] {
+  const profile = PIPELINE_PROFILES[profileId];
+  return listDetectors().filter((d) => {
+    if (d.kind === "rules") return profile.detectors.rules;
+    if (d.kind === "specialLexicon") return profile.detectors.specialLexicon;
+    if (d.kind === "nerSlm") return profile.detectors.nerSlm;
+    if (d.kind === "contextSlm") return profile.detectors.contextSlm;
+    return false;
+  }).sort((a, b) => Number(a.async) - Number(b.async));
+}
+
+// ---------- Built-in detectors ----------
+
+registerDetector({
+  id: "builtin.regex",
+  kind: "rules",
+  async: false,
+  run: (text) => runRegexDetectors(text),
+});
+
+// Special lexicon — schoolnamen / rolwoorden die de regex mist.
+// Klein en NL-onderwijs-specifiek. Spec hfst 15.
+const EDU_LEXICON: { term: RegExp; category: PiiSpan["category"]; ruleId: string; confidence: number; contextual: boolean }[] = [
+  { term: /\b(?:cito|iep|route 8)\b/gi, category: "context_role", ruleId: "lex.toets", confidence: 0.5, contextual: true },
+  { term: /\b(?:samenwerkingsverband|swv)\b/gi, category: "context_role", ruleId: "lex.swv", confidence: 0.5, contextual: true },
+  { term: /\b(?:leerlingvolgsysteem|parnassys|magister|somtoday|esis)\b/gi, category: "school", ruleId: "lex.lvs", confidence: 0.65, contextual: false },
+];
+
+registerDetector({
+  id: "builtin.specialLexicon",
+  kind: "specialLexicon",
+  async: false,
+  run: (text) => {
+    const out: PiiSpan[] = [];
+    for (const e of EDU_LEXICON) {
+      const re = new RegExp(e.term.source, e.term.flags);
+      let m: RegExpExecArray | null;
+      while ((m = re.exec(text)) !== null) {
+        out.push({
+          start: m.index, end: m.index + m[0].length, text: m[0],
+          category: e.category, ruleId: e.ruleId, confidence: e.confidence, contextual: e.contextual,
+        });
+        if (m[0].length === 0) re.lastIndex++;
+      }
+    }
+    return out;
+  },
+});
+
+registerDetector({
+  id: "builtin.nerSlm",
+  kind: "nerSlm",
+  async: true,
+  run: async (text, ctx) => (ctx.enableAsync ? await detectPersonsSlm(text) : []),
+});
+
+registerDetector({
+  id: "builtin.contextSlm",
+  kind: "contextSlm",
+  async: true,
+  // Stub: contextSlm is design-only in release 1. Geeft niets terug,
+  // maar staat geregistreerd zodat profielen er naar kunnen verwijzen.
+  run: () => [],
+});
+
+/** Run alle actieve detectors voor een profiel en merge de spans. */
+export async function runRegistry(text: string, ctx: DetectorContext): Promise<PiiSpan[]> {
+  const detectors = activeDetectorsFor(ctx.profileId);
+  const all: PiiSpan[] = [];
+  for (const d of detectors) {
+    if (d.async && !ctx.enableAsync) continue;
+    const r = await d.run(text, ctx);
+    all.push(...r);
+  }
+  // Dedup overlap, prefer hogere confidence — zelfde regel als detectors.ts.
+  all.sort((a, b) => a.start - b.start || b.confidence - a.confidence);
+  const merged: PiiSpan[] = [];
+  for (const s of all) {
+    const last = merged[merged.length - 1];
+    if (last && s.start < last.end) {
+      if (s.confidence > last.confidence) merged[merged.length - 1] = s;
+      continue;
+    }
+    merged.push(s);
+  }
+  return merged;
+}
