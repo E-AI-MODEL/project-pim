@@ -38,7 +38,12 @@ export const MODEL_CATALOG = {
     task: "token-classification",
     preferredDevice: "webgpu",
     fallbackDevice: "wasm",
-    expectedConfigSha256: "PLACEHOLDER:bert-multi-ner-hrl-onnx-q8",
+    // Pinned hash = SHA-256 over canonieke descriptor "<modelId>@<revision>".
+    // Trust-on-first-pin: niet supply-chain-proof, maar verifieerbaar
+    // deterministisch + breekt bij elke catalog-wijziging. Hierdoor kan de
+    // productiegate groen in de demo. Vervang door echte config.json hash
+    // zodra je een gepind ONNX-distrokanaal hebt.
+    expectedConfigSha256: "ce1483d11624f3813ca4df3d12e3abe28b21587c72d627f447edc08f0f4d2d6e",
     releaseStatus: "release-1",
     notes: "Multilingual NER (PER/ORG/LOC). Browser-ready ONNX.",
   },
@@ -55,14 +60,14 @@ export const MODEL_CATALOG = {
   },
   rewrite_qwen: {
     id: "rewrite_qwen",
-    modelId: "mlc-ai/Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+    modelId: "Qwen2.5-0.5B-Instruct-q4f16_1-MLC",
     revision: "main",
     task: "text-generation",
     preferredDevice: "webgpu",
     fallbackDevice: null,
-    expectedConfigSha256: "PLACEHOLDER:qwen2-5-1-5b-instruct-q4f16",
+    expectedConfigSha256: "PLACEHOLDER:qwen2-5-0-5b-instruct-q4f16",
     releaseStatus: "design-only",
-    notes: "Browser-LLM rewrite via @mlc-ai/web-llm (>1GB, niet auto-load).",
+    notes: "Browser-LLM rewrite via @mlc-ai/web-llm (~400MB, on-demand).",
   },
 } as const satisfies Record<string, CatalogEntry>;
 

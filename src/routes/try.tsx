@@ -11,10 +11,12 @@ import {
   repairAnonymousDraft,
   activeDetectorsFor,
   enqueueReview, onReviewQueue, resolveReview, clearReviewQueue, type ReviewItem,
+  recordSubmission, type AbuseSignal,
+  rewriteAnonymousDraft, onRewriteStatus, type RewriteStatus,
   type Mode, type Action, type Verdict, type AuditEvent, type MappingHandle,
   type PiiSpan,
 } from "@/lib/pim";
-import { Shield, ShieldAlert, ShieldCheck, ShieldX, Copy, Eye, Save, RotateCcw, Send, Download, Printer, Share2, Lock, AlertTriangle, Cpu, Loader2, Layers, Wrench, Inbox, Check } from "lucide-react";
+import { Shield, ShieldAlert, ShieldCheck, ShieldX, Copy, Eye, Save, RotateCcw, Send, Download, Printer, Share2, Lock, AlertTriangle, Cpu, Loader2, Layers, Wrench, Inbox, Check, Sparkles, Activity } from "lucide-react";
 
 export const Route = createFileRoute("/try")({
   head: () => ({
@@ -59,6 +61,10 @@ function TryPage() {
   const [integrity, setIntegrity] = useState<ModelIntegrityRecord[]>([]);
   const [reviewItems, setReviewItems] = useState<ReviewItem[]>([]);
   const [lastEnqueuedKey, setLastEnqueuedKey] = useState<string | null>(null);
+  const [abuse, setAbuse] = useState<AbuseSignal | null>(null);
+  const [llmStatus, setLlmStatus] = useState<RewriteStatus | null>(null);
+  const [llmDraft, setLlmDraft] = useState<{ text: string; reason: string } | null>(null);
+  const [llmBusy, setLlmBusy] = useState(false);
 
   const profile = PIPELINE_PROFILES[profileId];
   const activeDetectorIds = useMemo(() => activeDetectorsFor(profileId).map((d) => d.id), [profileId]);
@@ -70,7 +76,8 @@ function TryPage() {
     const offS = onNerStatus(setSlmStatus);
     const offI = onModelIntegrity(setIntegrity);
     const offR = onReviewQueue(setReviewItems);
-    return () => { off(); offS(); offI(); offR(); };
+    const offL = onRewriteStatus(setLlmStatus);
+    return () => { off(); offS(); offI(); offR(); offL(); };
   }, []);
 
   // Profile dictates SLM availability. rules-only profiel forceert SLM uit.
@@ -134,13 +141,23 @@ function TryPage() {
   }, [mode, initialGuard.status, processed.draft, signals]);
 
   const finalDraft = repaired?.draft ?? processed.draft;
-  const guard = repaired?.guard ?? initialGuard;
+  const generalizedGuard = repaired?.guard ?? initialGuard;
+
+  // Optionele LLM-rewrite bovenop generalisatie. Pas guard opnieuw toe.
+  const llmRepaired = useMemo(() => {
+    if (mode !== "anonymous" || !llmDraft) return null;
+    const newDraft = { ...processed.draft, text: llmDraft.text };
+    return { draft: newDraft, guard: draftCheck(newDraft, mode) };
+  }, [mode, llmDraft, processed.draft]);
+
+  const effectiveDraft = llmRepaired?.draft ?? finalDraft;
+  const guard = llmRepaired?.guard ?? generalizedGuard;
 
   // Auto-enqueue: als de finale guard niet "pass" is, zet item in review queue.
   // Dedup op (mode + draftText) zodat typen niet honderd items genereert.
   useEffect(() => {
     if (guard.status === "pass") return;
-    const key = `${mode}::${guard.status}::${finalDraft.text}`;
+    const key = `${mode}::${guard.status}::${effectiveDraft.text}`;
     if (key === lastEnqueuedKey) return;
     setLastEnqueuedKey(key);
     enqueueReview({
@@ -148,16 +165,27 @@ function TryPage() {
       riskLevel: signals.riskLevel,
       guardStatus: guard.status,
       issues: guard.issues,
-      draftPreview: finalDraft.text,
+      draftPreview: effectiveDraft.text,
     });
-  }, [guard.status, guard.issues, finalDraft.text, mode, signals.riskLevel, lastEnqueuedKey]);
+  }, [guard.status, guard.issues, effectiveDraft.text, mode, signals.riskLevel, lastEnqueuedKey]);
+
+  // Reset LLM-output bij significante input-wijziging.
+  useEffect(() => { setLlmDraft(null); }, [text, mode]);
+
+  const onTryLlmRewrite = async () => {
+    setLlmBusy(true);
+    try {
+      const r = await rewriteAnonymousDraft(finalDraft.text);
+      if (r.usedLlm) setLlmDraft({ text: r.text, reason: r.reason });
+    } finally { setLlmBusy(false); }
+  };
 
   // Spec hfst 32: PIM beslist op de DRAFT, niet op de input. Recompute
   // signals over de uiteindelijke draft (na anonimize + eventuele repair).
   // Anonieme drafts zonder ruwe PII krijgen nu de risk-score van de output.
   const decisionSignals = useMemo(
-    () => mode === "anonymous" ? computeSignals(finalDraft.text, []) : signals,
-    [mode, finalDraft.text, signals],
+    () => mode === "anonymous" ? computeSignals(effectiveDraft.text, []) : signals,
+    [mode, effectiveDraft.text, signals],
   );
   const decision = useMemo(
     () => decide({ mode, action, signals: decisionSignals, draftCheck: guard, modelVerified: true }),
@@ -167,7 +195,15 @@ function TryPage() {
   const onAct = async () => {
     setEgress(null);
     setRestored(null);
-    let payloadText = finalDraft.text;
+    let payloadText = effectiveDraft.text;
+
+    // AbuseDetection: hard-block bij level === "block".
+    const ab = recordSubmission(text, signals);
+    setAbuse(ab);
+    if (ab.level === "block") {
+      setEgress({ ok: false, msg: `Abuse-protectie BLOCK: ${ab.reasons.join("; ")}` });
+      return;
+    }
 
     // Restore-actie: alleen lokaal, alleen via AES container
     if (decision.action === "restore" && decision.verdict !== "BLOCK") {
@@ -175,7 +211,7 @@ function TryPage() {
         setEgress({ ok: false, msg: "Geen mapping container — restore onmogelijk." });
         return;
       }
-      payloadText = await restoreFromContainer(handle, finalDraft.text);
+      payloadText = await restoreFromContainer(handle, effectiveDraft.text);
       setRestored(payloadText);
     }
 
@@ -211,6 +247,35 @@ function TryPage() {
               <ul className="font-mono text-muted-foreground space-y-0.5">
                 {violations.slice(-3).map((v, i) => <li key={i}>· {v}</li>)}
               </ul>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {abuse && abuse.level !== "ok" && (
+        <div className="mx-auto max-w-7xl px-6 mt-4">
+          <div className={`panel p-4 flex items-start gap-3 ${
+            abuse.level === "block" ? "border-red/60 bg-red/5" :
+            abuse.level === "throttle" ? "border-orange/50 bg-orange/5" :
+            "border-cyan/40 bg-cyan/5"
+          }`}>
+            <Activity className={`h-5 w-5 flex-shrink-0 mt-0.5 ${
+              abuse.level === "block" ? "text-red" : abuse.level === "throttle" ? "text-orange" : "text-cyan"
+            }`} />
+            <div className="text-xs flex-1">
+              <div className={`font-semibold mb-1 uppercase font-mono text-[11px] tracking-wider ${
+                abuse.level === "block" ? "text-red" : abuse.level === "throttle" ? "text-orange" : "text-cyan"
+              }`}>
+                Abuse-detectie · level {abuse.level} · score {(abuse.score * 100).toFixed(0)}%
+              </div>
+              {abuse.reasons.length > 0 && (
+                <ul className="text-muted-foreground space-y-0.5">
+                  {abuse.reasons.map((r, i) => <li key={i}>· {r}</li>)}
+                </ul>
+              )}
+              <div className="mt-1 font-mono text-[10px] text-muted-foreground">
+                {abuse.metrics.submissionsPerMinute}/min · dup {(abuse.metrics.duplicateRatio * 100).toFixed(0)}% · pii-density {abuse.metrics.piiDensity.toFixed(1)} · {abuse.metrics.inputLengthChars} chars
+              </div>
             </div>
           </div>
         </div>
@@ -330,17 +395,63 @@ function TryPage() {
                   <span className="font-mono text-[11px] text-orange uppercase tracking-wider">Auto-repair toegepast</span>
                 </div>
                 <div className="font-mono text-[10px] text-muted-foreground">
-                  Initial guard: {initialGuard.status} → contextual generalization + brede fallback patronen → guard nu: <span className="text-foreground">{guard.status}</span>
+                  Initial guard: {initialGuard.status} → contextual generalization + brede fallback patronen → guard nu: <span className="text-foreground">{generalizedGuard.status}</span>
+                </div>
+              </div>
+            )}
+            {llmRepaired && (
+              <div className="mb-3 panel p-3 border-purple/40 bg-purple/5">
+                <div className="flex items-center gap-2 mb-1">
+                  <Sparkles className="h-3.5 w-3.5 text-purple" />
+                  <span className="font-mono text-[11px] text-purple uppercase tracking-wider">LLM-rewrite (Qwen, lokaal)</span>
+                </div>
+                <div className="font-mono text-[10px] text-muted-foreground">
+                  Generalized guard: {generalizedGuard.status} → Qwen rewrite → guard nu: <span className="text-foreground">{guard.status}</span>
                 </div>
               </div>
             )}
             <pre className="font-mono text-sm whitespace-pre-wrap bg-background/70 border border-border/60 rounded-lg p-3 max-h-64 overflow-auto text-foreground/95 leading-relaxed">
-{finalDraft.text}
+{effectiveDraft.text}
             </pre>
             {guard.issues.length > 0 && (
               <ul className="mt-3 text-xs text-orange space-y-1">
                 {guard.issues.map((i, k) => <li key={k}>⚠ {i}</li>)}
               </ul>
+            )}
+            {mode === "anonymous" && (
+              <div className="mt-4 panel p-3 border-purple/30 bg-purple/5">
+                <div className="flex items-center justify-between gap-3 mb-2">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-3.5 w-3.5 text-purple" />
+                    <span className="font-mono text-[11px] text-purple uppercase tracking-wider">Optioneel · LLM rewrite</span>
+                  </div>
+                  <button
+                    onClick={onTryLlmRewrite}
+                    disabled={llmBusy || (llmStatus?.loading ?? false)}
+                    className="text-[11px] font-mono px-2.5 py-1 rounded-md border border-purple/40 text-purple hover:bg-purple/10 disabled:opacity-50 inline-flex items-center gap-1.5"
+                  >
+                    {llmBusy || llmStatus?.loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                    {llmDraft ? "Opnieuw" : "Rewrite met Qwen"}
+                  </button>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Laadt <span className="font-mono text-foreground/80">Qwen2.5-0.5B-Instruct</span> via @mlc-ai/web-llm (~400MB, eerste keer). Lokaal, geen egress. Output gaat door dezelfde Draft Check Guard.
+                </p>
+                {llmStatus?.progress && (
+                  <div className="mt-2">
+                    <div className="font-mono text-[10px] text-muted-foreground truncate mb-1">{llmStatus.progress.text}</div>
+                    <div className="h-1.5 rounded-full bg-card overflow-hidden border border-border/40">
+                      <div className="h-full bg-purple transition-all" style={{ width: `${llmStatus.progress.pct ?? 0}%` }} />
+                    </div>
+                  </div>
+                )}
+                {llmStatus?.error && (
+                  <p className="mt-2 text-[10px] text-red font-mono break-words">{llmStatus.error}</p>
+                )}
+                {llmDraft && (
+                  <p className="mt-2 text-[10px] text-purple font-mono">{llmDraft.reason}</p>
+                )}
+              </div>
             )}
             {handle && (
               <div className="mt-4 panel p-3 border-cyan/40 bg-cyan/5">
