@@ -9,10 +9,12 @@ import {
   PIPELINE_PROFILES, RELEASE_1_PROFILES, DEFAULT_PROFILE, type PipelineProfileId,
   onModelIntegrity, type ModelIntegrityRecord,
   repairAnonymousDraft,
+  activeDetectorsFor,
+  enqueueReview, onReviewQueue, resolveReview, clearReviewQueue, type ReviewItem,
   type Mode, type Action, type Verdict, type AuditEvent, type MappingHandle,
   type PiiSpan,
 } from "@/lib/pim";
-import { Shield, ShieldAlert, ShieldCheck, ShieldX, Copy, Eye, Save, RotateCcw, Send, Download, Printer, Share2, Lock, AlertTriangle, Cpu, Loader2, Layers, Wrench } from "lucide-react";
+import { Shield, ShieldAlert, ShieldCheck, ShieldX, Copy, Eye, Save, RotateCcw, Send, Download, Printer, Share2, Lock, AlertTriangle, Cpu, Loader2, Layers, Wrench, Inbox, Check } from "lucide-react";
 
 export const Route = createFileRoute("/try")({
   head: () => ({
@@ -55,8 +57,11 @@ function TryPage() {
   const [slmSpans, setSlmSpans] = useState<PiiSpan[]>([]);
   const [profileId, setProfileId] = useState<PipelineProfileId>(DEFAULT_PROFILE);
   const [integrity, setIntegrity] = useState<ModelIntegrityRecord[]>([]);
+  const [reviewItems, setReviewItems] = useState<ReviewItem[]>([]);
+  const [lastEnqueuedKey, setLastEnqueuedKey] = useState<string | null>(null);
 
   const profile = PIPELINE_PROFILES[profileId];
+  const activeDetectorIds = useMemo(() => activeDetectorsFor(profileId).map((d) => d.id), [profileId]);
 
   // Install runtime hardening once on mount.
   useEffect(() => {
@@ -64,7 +69,8 @@ function TryPage() {
     const off = onViolations(setViolations);
     const offS = onNerStatus(setSlmStatus);
     const offI = onModelIntegrity(setIntegrity);
-    return () => { off(); offS(); offI(); };
+    const offR = onReviewQueue(setReviewItems);
+    return () => { off(); offS(); offI(); offR(); };
   }, []);
 
   // Profile dictates SLM availability. rules-only profiel forceert SLM uit.
@@ -129,6 +135,22 @@ function TryPage() {
 
   const finalDraft = repaired?.draft ?? processed.draft;
   const guard = repaired?.guard ?? initialGuard;
+
+  // Auto-enqueue: als de finale guard niet "pass" is, zet item in review queue.
+  // Dedup op (mode + draftText) zodat typen niet honderd items genereert.
+  useEffect(() => {
+    if (guard.status === "pass") return;
+    const key = `${mode}::${guard.status}::${finalDraft.text}`;
+    if (key === lastEnqueuedKey) return;
+    setLastEnqueuedKey(key);
+    enqueueReview({
+      mode,
+      riskLevel: signals.riskLevel,
+      guardStatus: guard.status,
+      issues: guard.issues,
+      draftPreview: finalDraft.text,
+    });
+  }, [guard.status, guard.issues, finalDraft.text, mode, signals.riskLevel, lastEnqueuedKey]);
 
   // Spec hfst 32: PIM beslist op de DRAFT, niet op de input. Recompute
   // signals over de uiteindelijke draft (na anonimize + eventuele repair).
@@ -225,7 +247,7 @@ function TryPage() {
               </div>
               <p className="text-[11px] text-muted-foreground leading-relaxed">{profile.description}</p>
               <div className="mt-1.5 font-mono text-[10px] text-muted-foreground">
-                detectors: {Object.entries(profile.detectors).filter(([, v]) => v).map(([k]) => k).join(" · ") || "—"} · egress: {profile.egressPolicy}
+                detectors actief ({activeDetectorIds.length}): {activeDetectorIds.join(" · ") || "—"} · egress: {profile.egressPolicy}
               </div>
             </div>
           </div>
@@ -480,6 +502,69 @@ function TryPage() {
             )}
           </div>
         </aside>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-6 pb-16">
+        <div className="panel p-5">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <div className="font-mono text-[11px] uppercase tracking-wider text-orange flex items-center gap-1.5">
+                <Inbox className="h-3 w-3" /> 08 · Review queue
+              </div>
+              <h3 className="font-display font-bold">Drafts die menselijke check vragen</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Alleen 'repair' of 'fail' guard-resultaten. Inhoud blijft lokaal — nooit egress. Originele tekst wordt niet bewaard, alleen de geredacteerde draft (max 400 tekens).
+              </p>
+            </div>
+            {reviewItems.length > 0 && (
+              <button onClick={() => clearReviewQueue()} className="text-[11px] text-muted-foreground hover:text-foreground">
+                Wis queue
+              </button>
+            )}
+          </div>
+          {reviewItems.length === 0 ? (
+            <p className="text-xs text-muted-foreground">Queue is leeg. Wijzig de input zodat de guard een 'repair' of 'fail' geeft om dit paneel te zien werken.</p>
+          ) : (
+            <ul className="space-y-2">
+              {reviewItems.map((it) => (
+                <li key={it.id} className={`p-3 rounded-lg border bg-background/60 ${
+                  it.resolved ? "border-green/30 opacity-60" :
+                  it.guardStatus === "fail" ? "border-red/40" : "border-orange/40"
+                }`}>
+                  <div className="flex items-center justify-between gap-3 mb-1.5">
+                    <div className="flex items-center gap-2 font-mono text-[10px]">
+                      <span className={
+                        it.guardStatus === "fail" ? "text-red" :
+                        it.guardStatus === "repair" ? "text-orange" : "text-green"
+                      }>
+                        ● {it.guardStatus.toUpperCase()}
+                      </span>
+                      <span className="text-muted-foreground">{it.mode}</span>
+                      <span className="text-muted-foreground">risk: {it.riskLevel}</span>
+                      <span className="text-muted-foreground">{new Date(it.ts).toLocaleTimeString()}</span>
+                    </div>
+                    {!it.resolved && (
+                      <button
+                        onClick={() => resolveReview(it.id)}
+                        className="text-[11px] font-mono px-2 py-0.5 rounded-md border border-green/40 text-green hover:bg-green/10 inline-flex items-center gap-1"
+                      >
+                        <Check className="h-3 w-3" /> Resolve
+                      </button>
+                    )}
+                  </div>
+                  {it.issues.length > 0 && (
+                    <ul className="mb-2 text-[11px] text-orange space-y-0.5">
+                      {it.issues.map((iss, k) => <li key={k}>⚠ {iss}</li>)}
+                    </ul>
+                  )}
+                  <pre className="font-mono text-[11px] whitespace-pre-wrap text-foreground/85 leading-relaxed bg-card/40 border border-border/40 rounded p-2 max-h-32 overflow-auto">
+{it.draftPreview}
+                  </pre>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </section>
     </>
   );
