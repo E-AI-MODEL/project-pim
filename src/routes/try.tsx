@@ -9,10 +9,12 @@ import {
   PIPELINE_PROFILES, RELEASE_1_PROFILES, DEFAULT_PROFILE, type PipelineProfileId,
   onModelIntegrity, type ModelIntegrityRecord,
   repairAnonymousDraft,
+  activeDetectorsFor,
+  enqueueReview, onReviewQueue, resolveReview, clearReviewQueue, type ReviewItem,
   type Mode, type Action, type Verdict, type AuditEvent, type MappingHandle,
   type PiiSpan,
 } from "@/lib/pim";
-import { Shield, ShieldAlert, ShieldCheck, ShieldX, Copy, Eye, Save, RotateCcw, Send, Download, Printer, Share2, Lock, AlertTriangle, Cpu, Loader2, Layers, Wrench } from "lucide-react";
+import { Shield, ShieldAlert, ShieldCheck, ShieldX, Copy, Eye, Save, RotateCcw, Send, Download, Printer, Share2, Lock, AlertTriangle, Cpu, Loader2, Layers, Wrench, Inbox, Check } from "lucide-react";
 
 export const Route = createFileRoute("/try")({
   head: () => ({
@@ -55,8 +57,11 @@ function TryPage() {
   const [slmSpans, setSlmSpans] = useState<PiiSpan[]>([]);
   const [profileId, setProfileId] = useState<PipelineProfileId>(DEFAULT_PROFILE);
   const [integrity, setIntegrity] = useState<ModelIntegrityRecord[]>([]);
+  const [reviewItems, setReviewItems] = useState<ReviewItem[]>([]);
+  const [lastEnqueuedKey, setLastEnqueuedKey] = useState<string | null>(null);
 
   const profile = PIPELINE_PROFILES[profileId];
+  const activeDetectorIds = useMemo(() => activeDetectorsFor(profileId).map((d) => d.id), [profileId]);
 
   // Install runtime hardening once on mount.
   useEffect(() => {
@@ -64,7 +69,8 @@ function TryPage() {
     const off = onViolations(setViolations);
     const offS = onNerStatus(setSlmStatus);
     const offI = onModelIntegrity(setIntegrity);
-    return () => { off(); offS(); offI(); };
+    const offR = onReviewQueue(setReviewItems);
+    return () => { off(); offS(); offI(); offR(); };
   }, []);
 
   // Profile dictates SLM availability. rules-only profiel forceert SLM uit.
@@ -129,6 +135,22 @@ function TryPage() {
 
   const finalDraft = repaired?.draft ?? processed.draft;
   const guard = repaired?.guard ?? initialGuard;
+
+  // Auto-enqueue: als de finale guard niet "pass" is, zet item in review queue.
+  // Dedup op (mode + draftText) zodat typen niet honderd items genereert.
+  useEffect(() => {
+    if (guard.status === "pass") return;
+    const key = `${mode}::${guard.status}::${finalDraft.text}`;
+    if (key === lastEnqueuedKey) return;
+    setLastEnqueuedKey(key);
+    enqueueReview({
+      mode,
+      riskLevel: signals.riskLevel,
+      guardStatus: guard.status,
+      issues: guard.issues,
+      draftPreview: finalDraft.text,
+    });
+  }, [guard.status, guard.issues, finalDraft.text, mode, signals.riskLevel, lastEnqueuedKey]);
 
   // Spec hfst 32: PIM beslist op de DRAFT, niet op de input. Recompute
   // signals over de uiteindelijke draft (na anonimize + eventuele repair).
@@ -225,7 +247,7 @@ function TryPage() {
               </div>
               <p className="text-[11px] text-muted-foreground leading-relaxed">{profile.description}</p>
               <div className="mt-1.5 font-mono text-[10px] text-muted-foreground">
-                detectors: {Object.entries(profile.detectors).filter(([, v]) => v).map(([k]) => k).join(" · ") || "—"} · egress: {profile.egressPolicy}
+                detectors actief ({activeDetectorIds.length}): {activeDetectorIds.join(" · ") || "—"} · egress: {profile.egressPolicy}
               </div>
             </div>
           </div>
