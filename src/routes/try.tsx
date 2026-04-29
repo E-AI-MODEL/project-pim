@@ -11,10 +11,12 @@ import {
   repairAnonymousDraft,
   activeDetectorsFor,
   enqueueReview, onReviewQueue, resolveReview, clearReviewQueue, type ReviewItem,
+  recordSubmission, type AbuseSignal,
+  rewriteAnonymousDraft, onRewriteStatus, type RewriteStatus,
   type Mode, type Action, type Verdict, type AuditEvent, type MappingHandle,
   type PiiSpan,
 } from "@/lib/pim";
-import { Shield, ShieldAlert, ShieldCheck, ShieldX, Copy, Eye, Save, RotateCcw, Send, Download, Printer, Share2, Lock, AlertTriangle, Cpu, Loader2, Layers, Wrench, Inbox, Check } from "lucide-react";
+import { Shield, ShieldAlert, ShieldCheck, ShieldX, Copy, Eye, Save, RotateCcw, Send, Download, Printer, Share2, Lock, AlertTriangle, Cpu, Loader2, Layers, Wrench, Inbox, Check, Sparkles, Activity } from "lucide-react";
 
 export const Route = createFileRoute("/try")({
   head: () => ({
@@ -59,6 +61,10 @@ function TryPage() {
   const [integrity, setIntegrity] = useState<ModelIntegrityRecord[]>([]);
   const [reviewItems, setReviewItems] = useState<ReviewItem[]>([]);
   const [lastEnqueuedKey, setLastEnqueuedKey] = useState<string | null>(null);
+  const [abuse, setAbuse] = useState<AbuseSignal | null>(null);
+  const [llmStatus, setLlmStatus] = useState<RewriteStatus | null>(null);
+  const [llmDraft, setLlmDraft] = useState<{ text: string; reason: string } | null>(null);
+  const [llmBusy, setLlmBusy] = useState(false);
 
   const profile = PIPELINE_PROFILES[profileId];
   const activeDetectorIds = useMemo(() => activeDetectorsFor(profileId).map((d) => d.id), [profileId]);
@@ -70,7 +76,8 @@ function TryPage() {
     const offS = onNerStatus(setSlmStatus);
     const offI = onModelIntegrity(setIntegrity);
     const offR = onReviewQueue(setReviewItems);
-    return () => { off(); offS(); offI(); offR(); };
+    const offL = onRewriteStatus(setLlmStatus);
+    return () => { off(); offS(); offI(); offR(); offL(); };
   }, []);
 
   // Profile dictates SLM availability. rules-only profiel forceert SLM uit.
@@ -134,13 +141,23 @@ function TryPage() {
   }, [mode, initialGuard.status, processed.draft, signals]);
 
   const finalDraft = repaired?.draft ?? processed.draft;
-  const guard = repaired?.guard ?? initialGuard;
+  const generalizedGuard = repaired?.guard ?? initialGuard;
+
+  // Optionele LLM-rewrite bovenop generalisatie. Pas guard opnieuw toe.
+  const llmRepaired = useMemo(() => {
+    if (mode !== "anonymous" || !llmDraft) return null;
+    const newDraft = { ...processed.draft, text: llmDraft.text };
+    return { draft: newDraft, guard: draftCheck(newDraft, mode) };
+  }, [mode, llmDraft, processed.draft]);
+
+  const effectiveDraft = llmRepaired?.draft ?? finalDraft;
+  const guard = llmRepaired?.guard ?? generalizedGuard;
 
   // Auto-enqueue: als de finale guard niet "pass" is, zet item in review queue.
   // Dedup op (mode + draftText) zodat typen niet honderd items genereert.
   useEffect(() => {
     if (guard.status === "pass") return;
-    const key = `${mode}::${guard.status}::${finalDraft.text}`;
+    const key = `${mode}::${guard.status}::${effectiveDraft.text}`;
     if (key === lastEnqueuedKey) return;
     setLastEnqueuedKey(key);
     enqueueReview({
@@ -148,16 +165,27 @@ function TryPage() {
       riskLevel: signals.riskLevel,
       guardStatus: guard.status,
       issues: guard.issues,
-      draftPreview: finalDraft.text,
+      draftPreview: effectiveDraft.text,
     });
-  }, [guard.status, guard.issues, finalDraft.text, mode, signals.riskLevel, lastEnqueuedKey]);
+  }, [guard.status, guard.issues, effectiveDraft.text, mode, signals.riskLevel, lastEnqueuedKey]);
+
+  // Reset LLM-output bij significante input-wijziging.
+  useEffect(() => { setLlmDraft(null); }, [text, mode]);
+
+  const onTryLlmRewrite = async () => {
+    setLlmBusy(true);
+    try {
+      const r = await rewriteAnonymousDraft(finalDraft.text);
+      if (r.usedLlm) setLlmDraft({ text: r.text, reason: r.reason });
+    } finally { setLlmBusy(false); }
+  };
 
   // Spec hfst 32: PIM beslist op de DRAFT, niet op de input. Recompute
   // signals over de uiteindelijke draft (na anonimize + eventuele repair).
   // Anonieme drafts zonder ruwe PII krijgen nu de risk-score van de output.
   const decisionSignals = useMemo(
-    () => mode === "anonymous" ? computeSignals(finalDraft.text, []) : signals,
-    [mode, finalDraft.text, signals],
+    () => mode === "anonymous" ? computeSignals(effectiveDraft.text, []) : signals,
+    [mode, effectiveDraft.text, signals],
   );
   const decision = useMemo(
     () => decide({ mode, action, signals: decisionSignals, draftCheck: guard, modelVerified: true }),
@@ -167,7 +195,15 @@ function TryPage() {
   const onAct = async () => {
     setEgress(null);
     setRestored(null);
-    let payloadText = finalDraft.text;
+    let payloadText = effectiveDraft.text;
+
+    // AbuseDetection: hard-block bij level === "block".
+    const ab = recordSubmission(text, signals);
+    setAbuse(ab);
+    if (ab.level === "block") {
+      setEgress({ ok: false, msg: `Abuse-protectie BLOCK: ${ab.reasons.join("; ")}` });
+      return;
+    }
 
     // Restore-actie: alleen lokaal, alleen via AES container
     if (decision.action === "restore" && decision.verdict !== "BLOCK") {
@@ -175,7 +211,7 @@ function TryPage() {
         setEgress({ ok: false, msg: "Geen mapping container — restore onmogelijk." });
         return;
       }
-      payloadText = await restoreFromContainer(handle, finalDraft.text);
+      payloadText = await restoreFromContainer(handle, effectiveDraft.text);
       setRestored(payloadText);
     }
 
