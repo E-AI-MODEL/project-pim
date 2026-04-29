@@ -366,17 +366,63 @@ function TryPage() {
                   <span className="font-mono text-[11px] text-orange uppercase tracking-wider">Auto-repair toegepast</span>
                 </div>
                 <div className="font-mono text-[10px] text-muted-foreground">
-                  Initial guard: {initialGuard.status} → contextual generalization + brede fallback patronen → guard nu: <span className="text-foreground">{guard.status}</span>
+                  Initial guard: {initialGuard.status} → contextual generalization + brede fallback patronen → guard nu: <span className="text-foreground">{generalizedGuard.status}</span>
+                </div>
+              </div>
+            )}
+            {llmRepaired && (
+              <div className="mb-3 panel p-3 border-purple/40 bg-purple/5">
+                <div className="flex items-center gap-2 mb-1">
+                  <Sparkles className="h-3.5 w-3.5 text-purple" />
+                  <span className="font-mono text-[11px] text-purple uppercase tracking-wider">LLM-rewrite (Qwen, lokaal)</span>
+                </div>
+                <div className="font-mono text-[10px] text-muted-foreground">
+                  Generalized guard: {generalizedGuard.status} → Qwen rewrite → guard nu: <span className="text-foreground">{guard.status}</span>
                 </div>
               </div>
             )}
             <pre className="font-mono text-sm whitespace-pre-wrap bg-background/70 border border-border/60 rounded-lg p-3 max-h-64 overflow-auto text-foreground/95 leading-relaxed">
-{finalDraft.text}
+{effectiveDraft.text}
             </pre>
             {guard.issues.length > 0 && (
               <ul className="mt-3 text-xs text-orange space-y-1">
                 {guard.issues.map((i, k) => <li key={k}>⚠ {i}</li>)}
               </ul>
+            )}
+            {mode === "anonymous" && (
+              <div className="mt-4 panel p-3 border-purple/30 bg-purple/5">
+                <div className="flex items-center justify-between gap-3 mb-2">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-3.5 w-3.5 text-purple" />
+                    <span className="font-mono text-[11px] text-purple uppercase tracking-wider">Optioneel · LLM rewrite</span>
+                  </div>
+                  <button
+                    onClick={onTryLlmRewrite}
+                    disabled={llmBusy || (llmStatus?.loading ?? false)}
+                    className="text-[11px] font-mono px-2.5 py-1 rounded-md border border-purple/40 text-purple hover:bg-purple/10 disabled:opacity-50 inline-flex items-center gap-1.5"
+                  >
+                    {llmBusy || llmStatus?.loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                    {llmDraft ? "Opnieuw" : "Rewrite met Qwen"}
+                  </button>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Laadt <span className="font-mono text-foreground/80">Qwen2.5-0.5B-Instruct</span> via @mlc-ai/web-llm (~400MB, eerste keer). Lokaal, geen egress. Output gaat door dezelfde Draft Check Guard.
+                </p>
+                {llmStatus?.progress && (
+                  <div className="mt-2">
+                    <div className="font-mono text-[10px] text-muted-foreground truncate mb-1">{llmStatus.progress.text}</div>
+                    <div className="h-1.5 rounded-full bg-card overflow-hidden border border-border/40">
+                      <div className="h-full bg-purple transition-all" style={{ width: `${llmStatus.progress.pct ?? 0}%` }} />
+                    </div>
+                  </div>
+                )}
+                {llmStatus?.error && (
+                  <p className="mt-2 text-[10px] text-red font-mono break-words">{llmStatus.error}</p>
+                )}
+                {llmDraft && (
+                  <p className="mt-2 text-[10px] text-purple font-mono">{llmDraft.reason}</p>
+                )}
+              </div>
             )}
             {handle && (
               <div className="mt-4 panel p-3 border-cyan/40 bg-cyan/5">
