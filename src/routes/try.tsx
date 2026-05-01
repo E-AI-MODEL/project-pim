@@ -334,7 +334,7 @@ function TryPage() {
         >
           <div className="grid gap-5 md:grid-cols-[auto_1fr_auto] items-center">
             <div className="flex justify-center md:justify-start">
-              <RiskGauge score={signals.riskScore} level={signals.riskLevel} />
+              <RiskGauge score={decisionSignals.riskScore} level={decisionSignals.riskLevel} />
             </div>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2 mb-2">
