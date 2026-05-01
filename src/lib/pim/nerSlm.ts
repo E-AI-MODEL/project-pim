@@ -143,33 +143,56 @@ export async function detectPersonsSlm(text: string): Promise<PiiSpan[]> {
   if (!pipe) return [];
   try {
     const out = (await pipe(text, { aggregation_strategy: "simple" } as Record<string, unknown>)) as NerOutput[];
-    const spans: PiiSpan[] = [];
+    // Stap 1: defensieve sub-word merge — opeenvolgende spans van zelfde tag aaneenplakken.
+    const aggregated: NerOutput[] = [];
     for (const ent of out) {
+      const last = aggregated[aggregated.length - 1];
+      const sameTag = last && (last.entity_group ?? last.entity) === (ent.entity_group ?? ent.entity);
+      if (last && sameTag && ent.start <= last.end + 1) {
+        last.end = ent.end;
+        last.word = (last.word + ent.word.replace(/^##/, "")).replace(/^##/, "");
+        last.score = Math.max(last.score, ent.score);
+      } else {
+        aggregated.push({ ...ent, word: ent.word.replace(/^##/, "") });
+      }
+    }
+    const spans: PiiSpan[] = [];
+    for (const ent of aggregated) {
       const tag = (ent.entity_group ?? ent.entity ?? "").toUpperCase();
-      // Persoonsnamen → name; Organisaties (incl. scholen) → school als 'school' / 'basisschool' nabij; anders skip.
-      // We mappen PER → name, ORG → school als context aanwezig is, anders ook name (organisatie kan PII zijn).
+      const surface = text.slice(ent.start, ent.end);
+      const around = text.slice(Math.max(0, ent.start - 60), Math.min(text.length, ent.end + 20)).toLowerCase();
+      const isSchoolish = /\b(basisschool|school|gymnasium|havo|vwo|vmbo|college|lyceum|onderwijs)\b/.test(around);
       if (tag.includes("PER")) {
+        if (ent.score < 0.45) continue;
         spans.push({
-          start: ent.start, end: ent.end, text: ent.word.replace(/^##/, ""),
+          start: ent.start, end: ent.end, text: surface,
           category: "name", ruleId: "slm.ner.per", confidence: ent.score, contextual: false,
         });
       } else if (tag.includes("ORG")) {
-        const around = text.slice(Math.max(0, ent.start - 30), ent.end + 5).toLowerCase();
-        const isSchool = /\b(basisschool|school|gymnasium|havo|vwo|vmbo|college|lyceum)\b/.test(around);
+        if (ent.score < 0.45) continue;
         spans.push({
-          start: ent.start, end: ent.end, text: ent.word.replace(/^##/, ""),
-          category: isSchool ? "school" : "name",
-          ruleId: isSchool ? "slm.ner.org_school" : "slm.ner.org",
+          start: ent.start, end: ent.end, text: surface,
+          category: isSchoolish ? "school" : "name",
+          ruleId: isSchoolish ? "slm.ner.org_school" : "slm.ner.org",
           confidence: ent.score, contextual: false,
         });
       } else if (tag.includes("LOC")) {
+        if (ent.score < 0.5) continue;
         spans.push({
-          start: ent.start, end: ent.end, text: ent.word.replace(/^##/, ""),
-          category: "address", ruleId: "slm.ner.loc", confidence: ent.score * 0.8, contextual: false,
+          start: ent.start, end: ent.end, text: surface,
+          category: "address", ruleId: "slm.ner.loc", confidence: ent.score, contextual: false,
+        });
+      } else if (tag.includes("MISC")) {
+        if (ent.score < 0.55) continue;
+        spans.push({
+          start: ent.start, end: ent.end, text: surface,
+          category: isSchoolish ? "school" : "name",
+          ruleId: isSchoolish ? "slm.ner.misc_school" : "slm.ner.misc_name",
+          confidence: ent.score * 0.9, contextual: false,
         });
       }
     }
-    return spans.filter(s => s.confidence >= 0.6);
+    return spans;
   } catch (e) {
     console.warn("[PIM SLM] inference failed:", (e as Error).message);
     return [];

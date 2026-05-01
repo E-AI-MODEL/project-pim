@@ -100,10 +100,37 @@ registerDetector({
 registerDetector({
   id: "builtin.contextSlm",
   kind: "contextSlm",
-  async: true,
-  // Stub: contextSlm is design-only in release 1. Geeft niets terug,
-  // maar staat geregistreerd zodat profielen er naar kunnen verwijzen.
-  run: () => [],
+  async: false,
+  // Heuristic context-classifier — zonder model-download.
+  // Markeert familie-relaties ("vader van X") en boost zorg/incident
+  // wanneer dichtbij een naam-achtige token staat. Spec hfst 8.
+  run: (text) => {
+    const out: PiiSpan[] = [];
+    // 1) Familie-relatie pattern → context_role
+    const family = /\b(?:vader|moeder|ouder|verzorger|opa|oma|broer|zus)\s+van\s+([A-Z][a-zà-ÿ]{2,})\b/g;
+    let m: RegExpExecArray | null;
+    while ((m = family.exec(text)) !== null) {
+      out.push({
+        start: m.index, end: m.index + m[0].length, text: m[0],
+        category: "context_role", ruleId: "ctx.family_relation",
+        confidence: 0.7, contextual: true,
+      });
+    }
+    // 2) Co-occurrence boost: zorg/incident binnen 80 chars van een Hoofdletterwoord (proxy voor naam).
+    const careRe = /\b(?:zorgleerling|dyslexie|dyscalculie|adhd|autisme|pleegzorg|jeugdzorg|incident|schorsing|geschorst|misbruik)\b/gi;
+    while ((m = careRe.exec(text)) !== null) {
+      const around = text.slice(Math.max(0, m.index - 80), Math.min(text.length, m.index + m[0].length + 80));
+      const hasNameish = /\b[A-Z][a-zà-ÿ]{2,}(?:\s+[A-Z][a-zà-ÿ]{2,})?\b/.test(around);
+      if (hasNameish) {
+        out.push({
+          start: m.index, end: m.index + m[0].length, text: m[0],
+          category: "context_care", ruleId: "ctx.cooccurrence_name_care",
+          confidence: 0.8, contextual: true,
+        });
+      }
+    }
+    return out;
+  },
 });
 
 /** Run alle actieve detectors voor een profiel en merge de spans. */
@@ -127,4 +154,33 @@ export async function runRegistry(text: string, ctx: DetectorContext): Promise<P
     merged.push(s);
   }
   return merged;
+}
+
+/** Synchroon pad — voert alleen sync detectors uit (regex + lexicon + heuristic context). */
+export function runRegistrySync(text: string, profileId: PipelineProfileId): PiiSpan[] {
+  const detectors = activeDetectorsFor(profileId).filter((d) => !d.async);
+  const all: PiiSpan[] = [];
+  for (const d of detectors) {
+    const r = d.run(text, { profileId, enableAsync: false }) as PiiSpan[];
+    all.push(...r);
+  }
+  all.sort((a, b) => a.start - b.start || b.confidence - a.confidence);
+  const merged: PiiSpan[] = [];
+  for (const s of all) {
+    const last = merged[merged.length - 1];
+    if (last && s.start < last.end) {
+      if (s.confidence > last.confidence) merged[merged.length - 1] = s;
+      continue;
+    }
+    merged.push(s);
+  }
+  return merged;
+}
+
+/** UI-helper: korte herkomst-tag op basis van ruleId. */
+export function detectorSourceLabel(ruleId: string): "regex" | "lex" | "slm" | "ctx" {
+  if (ruleId.startsWith("slm.")) return "slm";
+  if (ruleId.startsWith("lex.")) return "lex";
+  if (ruleId.startsWith("ctx.")) return "ctx";
+  return "regex";
 }

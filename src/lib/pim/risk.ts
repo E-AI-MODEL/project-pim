@@ -1,17 +1,28 @@
 import type { PiiSpan, PrivacySignals, RiskLevel } from "./types";
-import { detectPii } from "./detectors";
+import { runRegistrySync } from "./detectorRegistry";
+import { DEFAULT_PROFILE, type PipelineProfileId } from "./pipelineProfile";
 
 const HIGH_SEVERITY: ReadonlySet<string> = new Set(["bsn", "iban", "email", "phone", "address"]);
 
-export function computeSignals(text: string, extraSpans: PiiSpan[] = []): PrivacySignals {
-  const ruleSpans = detectPii(text);
-  // Merge SLM spans, drop overlaps with existing rule spans (rules win on tie).
-  const merged: PiiSpan[] = [...ruleSpans];
-  for (const ext of extraSpans) {
-    const overlaps = merged.some((m) => !(ext.end <= m.start || ext.start >= m.end));
-    if (!overlaps) merged.push(ext);
+export function computeSignals(
+  text: string,
+  extraSpans: PiiSpan[] = [],
+  profileId: PipelineProfileId = DEFAULT_PROFILE,
+): PrivacySignals {
+  // Sync registry: regex + special lexicon + heuristic contextSlm (per profiel).
+  const baseSpans = runRegistrySync(text, profileId);
+  // Merge alle spans (base + async/SLM extras). Bij overlap wint hoogste confidence.
+  const all: PiiSpan[] = [...baseSpans, ...extraSpans];
+  all.sort((a, b) => a.start - b.start || b.confidence - a.confidence);
+  const merged: PiiSpan[] = [];
+  for (const s of all) {
+    const last = merged[merged.length - 1];
+    if (last && s.start < last.end) {
+      if (s.confidence > last.confidence) merged[merged.length - 1] = s;
+      continue;
+    }
+    merged.push(s);
   }
-  merged.sort((a, b) => a.start - b.start);
   const spans = merged;
   const direct = spans.filter((s) => !s.contextual);
   const ctx = spans.filter((s) => s.contextual);
