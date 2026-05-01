@@ -39,7 +39,7 @@ export function onRewriteStatus(cb: (s: RewriteStatus) => void): () => void {
 export function getRewriteStatus(): RewriteStatus { return status; }
 
 type EngineLike = {
-  chat: { completions: { create: (req: Record<string, unknown>) => Promise<{ choices: { message: { content: string } }[] }> } };
+  chat: { completions: { create: (req: Record<string, unknown>) => Promise<unknown> } };
 };
 
 let engine: EngineLike | null = null;
@@ -89,17 +89,52 @@ export async function rewriteAnonymousDraft(draft: string): Promise<{ text: stri
   const eng = await loadRewriteLlm();
   if (!eng) return { text: draft, usedLlm: false, reason: "LLM niet beschikbaar" };
   try {
-    const res = await eng.chat.completions.create({
+    const res = (await eng.chat.completions.create({
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: draft },
       ],
       temperature: 0.2,
       max_tokens: 512,
-    });
+    })) as { choices: { message: { content: string } }[] };
     const out = res.choices?.[0]?.message?.content?.trim();
     if (!out || out.length < 10) return { text: draft, usedLlm: false, reason: "Lege LLM-output" };
     return { text: out, usedLlm: true, reason: "LLM-rewrite toegepast" };
+  } catch (e) {
+    return { text: draft, usedLlm: false, reason: `LLM-fout: ${(e as Error).message}` };
+  }
+}
+
+/**
+ * Streaming variant: roept onToken voor elke delta. Yieldt uiteindelijk de volledige tekst.
+ * Bij elke fout fallback naar originele draft.
+ */
+export async function rewriteAnonymousDraftStream(
+  draft: string,
+  onToken: (chunk: string, accumulated: string) => void,
+): Promise<{ text: string; usedLlm: boolean; reason: string }> {
+  const eng = await loadRewriteLlm();
+  if (!eng) return { text: draft, usedLlm: false, reason: "LLM niet beschikbaar" };
+  try {
+    const stream = (await eng.chat.completions.create({
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: draft },
+      ],
+      temperature: 0.2,
+      max_tokens: 512,
+      stream: true,
+    })) as AsyncIterable<{ choices: { delta?: { content?: string } }[] }>;
+    let acc = "";
+    for await (const chunk of stream) {
+      const piece = chunk.choices?.[0]?.delta?.content ?? "";
+      if (!piece) continue;
+      acc += piece;
+      onToken(piece, acc);
+    }
+    const out = acc.trim();
+    if (!out || out.length < 10) return { text: draft, usedLlm: false, reason: "Lege LLM-output" };
+    return { text: out, usedLlm: true, reason: "LLM-rewrite (streaming) toegepast" };
   } catch (e) {
     return { text: draft, usedLlm: false, reason: `LLM-fout: ${(e as Error).message}` };
   }

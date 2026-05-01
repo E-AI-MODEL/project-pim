@@ -1,6 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { PageHero } from "@/components/pim/PageHero";
+import { RiskGauge } from "@/components/pim/RiskGauge";
+import { PipelineTimeline } from "@/components/pim/PipelineTimeline";
+import { usePipelineHeartbeat, type StepId } from "@/hooks/usePipelineHeartbeat";
 import {
   computeSignals, anonymize, pseudonymize, draftCheck, decide, executeAction,
   createMappingContainer, restoreFromContainer, destroyContainer,
@@ -13,11 +16,11 @@ import {
   detectorSourceLabel,
   enqueueReview, onReviewQueue, resolveReview, clearReviewQueue, type ReviewItem,
   recordSubmission, type AbuseSignal,
-  rewriteAnonymousDraft, onRewriteStatus, type RewriteStatus,
+  rewriteAnonymousDraftStream, onRewriteStatus, type RewriteStatus,
   type Mode, type Action, type Verdict, type AuditEvent, type MappingHandle,
   type PiiSpan,
 } from "@/lib/pim";
-import { Shield, ShieldAlert, ShieldCheck, ShieldX, Copy, Eye, Save, RotateCcw, Send, Download, Printer, Share2, Lock, AlertTriangle, Cpu, Loader2, Layers, Wrench, Inbox, Check, Sparkles, Activity } from "lucide-react";
+import { Shield, ShieldAlert, ShieldCheck, ShieldX, Copy, Eye, Save, RotateCcw, Send, Download, Printer, Share2, Lock, AlertTriangle, Cpu, Loader2, Layers, Wrench, Inbox, Check, Sparkles, Activity, Radio } from "lucide-react";
 
 export const Route = createFileRoute("/try")({
   head: () => ({
@@ -46,6 +49,8 @@ const ACTIONS: { id: Action; label: string; icon: React.ComponentType<{ classNam
   { id: "share", label: "Share", icon: Share2 },
 ];
 
+const STEP_IDS: StepId[] = ["input", "regex", "lex", "slm", "ctx", "repair", "guard", "decide", "llm"];
+
 function TryPage() {
   const [text, setText] = useState(SAMPLE);
   const [mode, setMode] = useState<Mode>("anonymous");
@@ -65,10 +70,13 @@ function TryPage() {
   const [abuse, setAbuse] = useState<AbuseSignal | null>(null);
   const [llmStatus, setLlmStatus] = useState<RewriteStatus | null>(null);
   const [llmDraft, setLlmDraft] = useState<{ text: string; reason: string } | null>(null);
-  const [llmBusy, setLlmBusy] = useState(false);
+  const [llmStreaming, setLlmStreaming] = useState(false);
+  const [llmStreamText, setLlmStreamText] = useState("");
 
   const profile = PIPELINE_PROFILES[profileId];
   const activeDetectorIds = useMemo(() => activeDetectorsFor(profileId).map((d) => d.id), [profileId]);
+
+  const { steps, tick } = usePipelineHeartbeat(STEP_IDS);
 
   // Install runtime hardening once on mount.
   useEffect(() => {
@@ -91,21 +99,37 @@ function TryPage() {
     if (slmEnabled && profile.detectors.nerSlm) loadNerSlm().catch(() => {});
   }, [slmEnabled, profile.detectors.nerSlm]);
 
+  // Heartbeat: input
+  useEffect(() => {
+    tick("input", 0);
+  }, [text, tick]);
+
   // Run SLM inference (debounced) when enabled and ready.
   useEffect(() => {
     if (!slmEnabled || !slmStatus?.ready) { setSlmSpans([]); return; }
     let cancelled = false;
     const t = setTimeout(async () => {
+      const t0 = performance.now();
       const spans = await detectPersonsSlm(text);
-      if (!cancelled) setSlmSpans(spans);
+      if (!cancelled) {
+        setSlmSpans(spans);
+        tick("slm", performance.now() - t0);
+      }
     }, 250);
     return () => { cancelled = true; clearTimeout(t); };
-  }, [text, slmEnabled, slmStatus?.ready]);
+  }, [text, slmEnabled, slmStatus?.ready, tick]);
 
-  const signals = useMemo(
-    () => computeSignals(text, slmEnabled ? slmSpans : [], profileId),
-    [text, slmEnabled, slmSpans, profileId],
-  );
+  const signals = useMemo(() => {
+    const t0 = performance.now();
+    const s = computeSignals(text, slmEnabled ? slmSpans : [], profileId);
+    const dur = performance.now() - t0;
+    queueMicrotask(() => {
+      tick("regex", dur);
+      tick("lex", dur);
+      tick("ctx", dur);
+    });
+    return s;
+  }, [text, slmEnabled, slmSpans, profileId, tick]);
 
   const sourceCounts = useMemo(() => {
     const counts = { regex: 0, lex: 0, slm: 0, ctx: 0 } as Record<"regex" | "lex" | "slm" | "ctx", number>;
@@ -115,14 +139,14 @@ function TryPage() {
     return counts;
   }, [signals]);
 
-  // For pseudonymous: generate plain mapping in-memory once, then push to AES container async
+  // Pseudonymous: in-memory mapping
   const processed = useMemo(() => {
     if (mode === "anonymous") return { draft: anonymize(text, signals), plainMap: null as Map<string, string> | null };
     const r = pseudonymize(text, signals);
     return { draft: r.draft, plainMap: r.mapping };
   }, [text, mode, signals]);
 
-  // Async: encrypt mapping into AES-GCM container whenever pseudonymous draft changes
+  // Encrypt mapping into AES-GCM container
   useEffect(() => {
     setRestored(null);
     if (mode !== "pseudonymous" || !processed.plainMap || processed.plainMap.size === 0) {
@@ -136,26 +160,29 @@ function TryPage() {
       setHandle((prev) => { if (prev) destroyContainer(prev); return h; });
     })();
     return () => { cancelled = true; };
-  }, [processed.draft.text, mode]);
+  }, [processed.draft.text, mode, processed.plainMap]);
 
-  // Initial guard on the raw draft.
-  const initialGuard = useMemo(() => draftCheck(processed.draft, mode), [processed.draft, mode]);
+  const initialGuard = useMemo(() => {
+    const t0 = performance.now();
+    const g = draftCheck(processed.draft, mode);
+    queueMicrotask(() => tick("guard", performance.now() - t0));
+    return g;
+  }, [processed.draft, mode, tick]);
 
-  // Auto-repair: alleen anonymous; alleen als initial guard niet "pass".
-  // Spec hfst 31: contextuele generalisatie + brede fallback patronen.
   const repaired = useMemo(() => {
     if (mode !== "anonymous" || initialGuard.status === "pass") return null;
+    const t0 = performance.now();
     const repairedText = repairAnonymousDraft(processed.draft.text, signals);
     if (repairedText === processed.draft.text) return null;
     const newDraft = { ...processed.draft, text: repairedText };
     const newGuard = draftCheck(newDraft, mode);
+    queueMicrotask(() => tick("repair", performance.now() - t0));
     return { draft: newDraft, guard: newGuard };
-  }, [mode, initialGuard.status, processed.draft, signals]);
+  }, [mode, initialGuard.status, processed.draft, signals, tick]);
 
   const finalDraft = repaired?.draft ?? processed.draft;
   const generalizedGuard = repaired?.guard ?? initialGuard;
 
-  // Optionele LLM-rewrite bovenop generalisatie. Pas guard opnieuw toe.
   const llmRepaired = useMemo(() => {
     if (mode !== "anonymous" || !llmDraft) return null;
     const newDraft = { ...processed.draft, text: llmDraft.text };
@@ -165,8 +192,7 @@ function TryPage() {
   const effectiveDraft = llmRepaired?.draft ?? finalDraft;
   const guard = llmRepaired?.guard ?? generalizedGuard;
 
-  // Auto-enqueue: als de finale guard niet "pass" is, zet item in review queue.
-  // Dedup op (mode + draftText) zodat typen niet honderd items genereert.
+  // Auto-enqueue review (deduped)
   useEffect(() => {
     if (guard.status === "pass") return;
     const key = `${mode}::${guard.status}::${effectiveDraft.text}`;
@@ -182,42 +208,46 @@ function TryPage() {
   }, [guard.status, guard.issues, effectiveDraft.text, mode, signals.riskLevel, lastEnqueuedKey]);
 
   // Reset LLM-output bij significante input-wijziging.
-  useEffect(() => { setLlmDraft(null); }, [text, mode]);
+  useEffect(() => { setLlmDraft(null); setLlmStreamText(""); }, [text, mode]);
 
+  const llmAbortRef = useRef(false);
   const onTryLlmRewrite = async () => {
-    setLlmBusy(true);
+    setLlmStreaming(true);
+    setLlmStreamText("");
+    setLlmDraft(null);
+    llmAbortRef.current = false;
     try {
-      const r = await rewriteAnonymousDraft(finalDraft.text);
+      const r = await rewriteAnonymousDraftStream(finalDraft.text, (_chunk, acc) => {
+        if (llmAbortRef.current) return;
+        setLlmStreamText(acc);
+        tick("llm", 0);
+      });
       if (r.usedLlm) setLlmDraft({ text: r.text, reason: r.reason });
-    } finally { setLlmBusy(false); }
+    } finally { setLlmStreaming(false); }
   };
 
-  // Spec hfst 32: PIM beslist op de DRAFT, niet op de input. Recompute
-  // signals over de uiteindelijke draft (na anonimize + eventuele repair).
-  // Anonieme drafts zonder ruwe PII krijgen nu de risk-score van de output.
+  // Decision over draft
   const decisionSignals = useMemo(
     () => mode === "anonymous" ? computeSignals(effectiveDraft.text, [], profileId) : signals,
     [mode, effectiveDraft.text, signals, profileId],
   );
-  const decision = useMemo(
-    () => decide({ mode, action, signals: decisionSignals, draftCheck: guard, modelVerified: true }),
-    [mode, action, decisionSignals, guard],
-  );
+  const decision = useMemo(() => {
+    const t0 = performance.now();
+    const d = decide({ mode, action, signals: decisionSignals, draftCheck: guard, modelVerified: true });
+    queueMicrotask(() => tick("decide", performance.now() - t0));
+    return d;
+  }, [mode, action, decisionSignals, guard, tick]);
 
   const onAct = async () => {
     setEgress(null);
     setRestored(null);
     let payloadText = effectiveDraft.text;
-
-    // AbuseDetection: hard-block bij level === "block".
     const ab = recordSubmission(text, signals);
     setAbuse(ab);
     if (ab.level === "block") {
       setEgress({ ok: false, msg: `Abuse-protectie BLOCK: ${ab.reasons.join("; ")}` });
       return;
     }
-
-    // Restore-actie: alleen lokaal, alleen via AES container
     if (decision.action === "restore" && decision.verdict !== "BLOCK") {
       if (!handle) {
         setEgress({ ok: false, msg: "Geen mapping container — restore onmogelijk." });
@@ -226,10 +256,8 @@ function TryPage() {
       payloadText = await restoreFromContainer(handle, effectiveDraft.text);
       setRestored(payloadText);
     }
-
     const result = await executeAction(decision, { text: payloadText, mode });
     setEgress({ ok: result.executed, msg: result.reason });
-
     setAudit((a) => [{
       ts: decision.timestamp,
       action: decision.action,
@@ -242,14 +270,19 @@ function TryPage() {
     }, ...a].slice(0, 20));
   };
 
+  // Streaming preview tijdens LLM rewrite (vóór final llmDraft set).
+  const draftDisplay = llmStreaming && llmStreamText ? llmStreamText : effectiveDraft.text;
+  const totalSpans = signals.directPii.length + signals.contextualPii.length;
+
   return (
     <>
       <PageHero
         eyebrow="Try-it · live, lokaal, AES-GCM"
         title={<>Test de pipeline op <span className="text-primary">echte tekst</span></>}
-        description="Type of plak een fragment, kies modus en actie. Mapping wordt versleuteld met AES-GCM. Egress wordt écht uitgevoerd via clipboard, print, share of download — maar alleen na PIM ALLOW."
+        description="Type of plak een fragment. Elke pipeline-stap loopt live mee terwijl je typt. Qwen rewrite streamt token-per-token. Egress alleen na PIM ALLOW."
       />
 
+      {/* Banners */}
       {violations.length > 0 && (
         <div className="mx-auto max-w-7xl px-6 mt-4">
           <div className="panel p-4 border-orange/50 flex items-start gap-3">
@@ -285,216 +318,271 @@ function TryPage() {
                   {abuse.reasons.map((r, i) => <li key={i}>· {r}</li>)}
                 </ul>
               )}
-              <div className="mt-1 font-mono text-[10px] text-muted-foreground">
-                {abuse.metrics.submissionsPerMinute}/min · dup {(abuse.metrics.duplicateRatio * 100).toFixed(0)}% · pii-density {abuse.metrics.piiDensity.toFixed(1)} · {abuse.metrics.inputLengthChars} chars
-              </div>
             </div>
           </div>
         </div>
       )}
 
-      <section className="mx-auto max-w-7xl px-6 py-10 grid gap-5 lg:grid-cols-[1fr_420px]">
+      {/* HERO DASHBOARD: gauge + verdict + live timeline (glass) */}
+      <section className="mx-auto max-w-7xl px-6 mt-6">
+        <div
+          className="rounded-2xl border border-border/40 p-5 md:p-6 backdrop-blur-md"
+          style={{
+            background: "linear-gradient(135deg, oklch(0.22 0.05 252 / 0.55), oklch(0.16 0.04 250 / 0.45))",
+            boxShadow: "0 0 60px oklch(0.50 0.16 240 / 0.18), inset 0 1px 0 oklch(1 0 0 / 0.04)",
+          }}
+        >
+          <div className="grid gap-5 md:grid-cols-[auto_1fr_auto] items-center">
+            <div className="flex justify-center md:justify-start">
+              <RiskGauge score={decisionSignals.riskScore} level={decisionSignals.riskLevel} />
+            </div>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2 mb-2">
+                <VerdictPill verdict={decision.verdict} />
+                <span className={`font-mono text-[11px] px-2 py-0.5 rounded-full border ${
+                  guard.status === "pass" ? "border-green/40 bg-green/10 text-green" :
+                  guard.status === "repair" ? "border-orange/40 bg-orange/10 text-orange" :
+                  "border-red/50 bg-red/10 text-red"
+                }`}>guard: {guard.status}</span>
+                <span className="font-mono text-[11px] px-2 py-0.5 rounded-full border border-border/60 text-muted-foreground">
+                  {mode}
+                </span>
+                <span className="font-mono text-[11px] px-2 py-0.5 rounded-full border border-cyan/30 text-cyan flex items-center gap-1">
+                  <Radio className="h-3 w-3 animate-pulse" /> live
+                </span>
+              </div>
+              <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground mb-2">live pipeline</div>
+              <PipelineTimeline steps={steps} />
+            </div>
+            <div className="flex md:flex-col gap-3 md:gap-2 text-center md:text-right">
+              <CountTile label="spans" value={totalSpans} accent="orange" />
+              <CountTile label="detectors" value={activeDetectorIds.length} accent="cyan" />
+              <CountTile label="input risk" value={signals.riskLevel} accent={signals.riskLevel === "low" ? "green" : signals.riskLevel === "medium" ? "orange" : "red"} />
+            </div>
+          </div>
+
+          {/* counts strip */}
+          <div className="mt-4 pt-3 border-t border-border/30 grid grid-cols-2 md:grid-cols-4 gap-2">
+            <SourceTag label="regex" value={sourceCounts.regex} />
+            <SourceTag label="lex" value={sourceCounts.lex} />
+            <SourceTag label="slm" value={sourceCounts.slm} />
+            <SourceTag label="ctx" value={sourceCounts.ctx} />
+          </div>
+        </div>
+      </section>
+
+      {/* Profile selector */}
+      <section className="mx-auto max-w-7xl px-6 mt-5">
+        <div className="panel p-4 flex items-start gap-3 border-primary/40">
+          <Layers className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <div className="font-mono text-[10px] uppercase tracking-wider text-primary mb-1">Pipeline profile</div>
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {(Object.values(PIPELINE_PROFILES)).map((p) => {
+                const selectable = RELEASE_1_PROFILES.includes(p.id);
+                const active = profileId === p.id;
+                return (
+                  <button
+                    key={p.id}
+                    disabled={!selectable}
+                    onClick={() => selectable && setProfileId(p.id)}
+                    className={`text-[11px] font-mono px-2.5 py-1 rounded-full border transition-colors ${
+                      active
+                        ? "bg-primary/20 border-primary text-primary"
+                        : selectable
+                          ? "bg-card/40 border-border/60 text-foreground/80 hover:border-border"
+                          : "bg-card/20 border-border/30 text-muted-foreground/50 cursor-not-allowed"
+                    }`}
+                    title={selectable ? p.description : "Design-only — niet vrijgegeven in release 1"}
+                  >
+                    {p.label}{!selectable && " ·  design"}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">{profile.description}</p>
+            <div className="mt-1.5 font-mono text-[10px] text-muted-foreground">
+              detectors actief ({activeDetectorIds.length}): {activeDetectorIds.join(" · ") || "—"} · egress: {profile.egressPolicy}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* GRID: input + spans / draft + controls */}
+      <section className="mx-auto max-w-7xl px-6 mt-5 grid gap-5 lg:grid-cols-2">
+        {/* 01 Raw input */}
+        <div className="panel p-5">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <div className="font-mono text-[11px] uppercase tracking-wider text-cyan">01 · Raw input</div>
+              <h3 className="font-display font-bold">Onderwijsfragment</h3>
+            </div>
+            <button onClick={() => setText(SAMPLE)} className="text-xs px-2.5 py-1 rounded-md border border-border hover:bg-accent">Reset</button>
+          </div>
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            rows={9}
+            className="w-full font-mono text-sm bg-background/60 border border-border/60 rounded-lg p-3 resize-y focus:outline-none focus:ring-2 focus:ring-primary/50"
+            placeholder="Plak hier docentnotitie, leerlingtekst, dossierfragment..."
+          />
+        </div>
+
+        {/* 02 Spans */}
+        <div className="panel p-5">
+          <div className="font-mono text-[11px] uppercase tracking-wider text-cyan mb-1">02 · Spans</div>
+          <h3 className="font-display font-bold mb-3">Wat de detectoren zien</h3>
+          {totalSpans === 0 ? (
+            <p className="text-xs text-muted-foreground">Nog geen spans gevonden voor dit fragment.</p>
+          ) : (
+            <div className="flex flex-wrap gap-1.5">
+              {[...signals.directPii, ...signals.contextualPii].map((s, i) => (
+                <span key={i} className={`font-mono text-[11.5px] px-2.5 py-1 rounded-full border inline-flex items-center gap-1.5 ${
+                  s.contextual
+                    ? "border-cyan/60 bg-cyan/15 text-foreground"
+                    : "border-orange/60 bg-orange/15 text-foreground"
+                }`}>
+                  <span className={`font-semibold uppercase tracking-wide text-[10px] ${s.contextual ? "text-cyan" : "text-orange"}`}>
+                    {s.category}
+                  </span>
+                  <span className="text-foreground/95">
+                    {s.text.length > 28 ? s.text.slice(0, 26) + "…" : s.text}
+                  </span>
+                  <span className="text-[9px] uppercase tracking-wider text-muted-foreground border-l border-border/60 pl-1.5 ml-0.5">
+                    {detectorSourceLabel(s.ruleId)}
+                  </span>
+                </span>
+              ))}
+            </div>
+          )}
+          {signals.reasons.length > 0 && (
+            <ul className="mt-3 text-xs text-foreground/80 space-y-1">
+              {signals.reasons.map((r, i) => <li key={i}>· {r}</li>)}
+            </ul>
+          )}
+        </div>
+
+        {/* 03 Draft (spans full width on lg) */}
+        <div className="panel p-5 lg:col-span-2">
+          <div className="flex items-center justify-between mb-1 flex-wrap gap-2">
+            <div className="font-mono text-[11px] uppercase tracking-wider text-purple">03 · Processed draft ({mode})</div>
+            <div className="flex items-center gap-2">
+              {llmStreaming && (
+                <span className="font-mono text-[10px] text-purple flex items-center gap-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-purple animate-ping" />
+                  streaming…
+                </span>
+              )}
+              {repaired && !llmDraft && (
+                <span className="font-mono text-[10px] text-orange inline-flex items-center gap-1">
+                  <Wrench className="h-3 w-3" /> auto-repair
+                </span>
+              )}
+              {llmDraft && (
+                <span className="font-mono text-[10px] text-purple inline-flex items-center gap-1">
+                  <Sparkles className="h-3 w-3" /> Qwen rewrite
+                </span>
+              )}
+            </div>
+          </div>
+          <h3 className="font-display font-bold mb-3">{mode === "anonymous" ? "Anonymous candidate" : "Pseudonymous candidate"}</h3>
+          <pre className="font-mono text-sm whitespace-pre-wrap bg-background/70 border border-border/60 rounded-lg p-3 max-h-72 overflow-auto text-foreground/95 leading-relaxed">
+{draftDisplay}{llmStreaming && <span className="inline-block w-2 h-4 bg-purple/80 align-middle animate-pulse ml-0.5" />}
+          </pre>
+          {guard.issues.length > 0 && (
+            <ul className="mt-3 text-xs text-orange space-y-1">
+              {guard.issues.map((i, k) => <li key={k}>⚠ {i}</li>)}
+            </ul>
+          )}
+
+          {mode === "anonymous" && (
+            <div className="mt-4 panel p-3 border-purple/30 bg-purple/5">
+              <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-3.5 w-3.5 text-purple" />
+                  <span className="font-mono text-[11px] text-purple uppercase tracking-wider">Optioneel · LLM rewrite (streaming)</span>
+                </div>
+                <button
+                  onClick={onTryLlmRewrite}
+                  disabled={llmStreaming || (llmStatus?.loading ?? false)}
+                  className="text-[11px] font-mono px-2.5 py-1 rounded-md border border-purple/40 text-purple hover:bg-purple/10 disabled:opacity-50 inline-flex items-center gap-1.5"
+                >
+                  {llmStreaming || llmStatus?.loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                  {llmDraft ? "Opnieuw" : "Rewrite met Qwen"}
+                </button>
+              </div>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Laadt <span className="font-mono text-foreground/80">Qwen2.5-0.5B-Instruct</span> via @mlc-ai/web-llm (~400MB, eerste keer). Lokaal, geen egress. Tokens streamen woord-voor-woord.
+              </p>
+              {llmStatus?.progress && (
+                <div className="mt-2">
+                  <div className="font-mono text-[10px] text-muted-foreground truncate mb-1">{llmStatus.progress.text}</div>
+                  <div className="h-1.5 rounded-full bg-card overflow-hidden border border-border/40">
+                    <div className="h-full bg-purple transition-all" style={{ width: `${llmStatus.progress.pct ?? 0}%` }} />
+                  </div>
+                </div>
+              )}
+              {llmStatus?.error && <p className="mt-2 text-[10px] text-red font-mono break-words">{llmStatus.error}</p>}
+              {llmDraft && <p className="mt-2 text-[10px] text-purple font-mono">{llmDraft.reason}</p>}
+            </div>
+          )}
+
+          {handle && (
+            <div className="mt-4 panel p-3 border-cyan/40 bg-cyan/5">
+              <div className="flex items-center gap-2 mb-1">
+                <Lock className="h-3.5 w-3.5 text-cyan" />
+                <span className="font-mono text-[11px] text-cyan uppercase tracking-wider">Secure Mapping Container</span>
+              </div>
+              <div className="font-mono text-[11px] text-muted-foreground">
+                Handle: <span className="text-foreground">{handle.id.slice(0, 12)}…</span> · {handle.tokenCount} tokens · AES-GCM 256
+              </div>
+            </div>
+          )}
+          {restored !== null && (
+            <div className="mt-3 panel p-3 border-cyan/40">
+              <div className="font-mono text-[11px] text-cyan uppercase tracking-wider mb-1">Restored (alleen lokaal)</div>
+              <pre className="font-mono text-xs whitespace-pre-wrap text-foreground leading-relaxed">{restored}</pre>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Controls + Decision */}
+      <section className="mx-auto max-w-7xl px-6 mt-5 grid gap-5 lg:grid-cols-[1fr_420px]">
         <div className="space-y-5">
-          <div className="panel p-4 flex items-start gap-3 border-primary/40">
-            <Layers className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-            <div className="flex-1 min-w-0">
-              <div className="font-mono text-[10px] uppercase tracking-wider text-primary mb-1">Pipeline profile</div>
-              <div className="flex flex-wrap gap-1.5 mb-2">
-                {(Object.values(PIPELINE_PROFILES)).map((p) => {
-                  const selectable = RELEASE_1_PROFILES.includes(p.id);
-                  const active = profileId === p.id;
+          {/* Mode + Action grid */}
+          <div className="grid gap-5 md:grid-cols-2">
+            <div className="panel p-5">
+              <div className="font-mono text-[11px] uppercase tracking-wider text-orange mb-2">04 · Mode</div>
+              <div className="grid grid-cols-2 gap-2">
+                {(["anonymous", "pseudonymous"] as Mode[]).map((m) => (
+                  <button key={m} onClick={() => setMode(m)} className={`px-3 py-2.5 rounded-lg text-sm font-semibold transition-all border ${
+                    mode === m
+                      ? m === "anonymous" ? "bg-purple/15 border-purple text-purple" : "bg-cyan/15 border-cyan text-cyan"
+                      : "bg-card/40 border-border/60 text-muted-foreground hover:border-border"
+                  }`}>{m}</button>
+                ))}
+              </div>
+            </div>
+            <div className="panel p-5">
+              <div className="font-mono text-[11px] uppercase tracking-wider text-orange mb-2">05 · Action</div>
+              <div className="grid grid-cols-4 gap-1.5">
+                {ACTIONS.map((a) => {
+                  const Icon = a.icon;
                   return (
-                    <button
-                      key={p.id}
-                      disabled={!selectable}
-                      onClick={() => selectable && setProfileId(p.id)}
-                      className={`text-[11px] font-mono px-2.5 py-1 rounded-full border transition-colors ${
-                        active
-                          ? "bg-primary/20 border-primary text-primary"
-                          : selectable
-                            ? "bg-card/40 border-border/60 text-foreground/80 hover:border-border"
-                            : "bg-card/20 border-border/30 text-muted-foreground/50 cursor-not-allowed"
-                      }`}
-                      title={selectable ? p.description : "Design-only — niet vrijgegeven in release 1"}
-                    >
-                      {p.label}{!selectable && " ·  design"}
+                    <button key={a.id} onClick={() => setAction(a.id)} className={`flex flex-col items-center gap-1 px-2 py-2.5 rounded-lg text-[10px] font-medium transition-all border ${
+                      action === a.id ? "bg-primary/15 border-primary text-primary" : "bg-card/40 border-border/50 text-muted-foreground hover:border-border"
+                    }`} title={a.label}>
+                      <Icon className="h-4 w-4" />
+                      <span className="leading-none">{a.label}</span>
                     </button>
                   );
                 })}
               </div>
-              <p className="text-[11px] text-muted-foreground leading-relaxed">{profile.description}</p>
-              <div className="mt-1.5 font-mono text-[10px] text-muted-foreground">
-                detectors actief ({activeDetectorIds.length}): {activeDetectorIds.join(" · ") || "—"} · egress: {profile.egressPolicy}
-              </div>
-              <div className="mt-1 font-mono text-[10px] text-muted-foreground">
-                spans gevonden · regex: <span className="text-foreground/85">{sourceCounts.regex}</span> · lex: <span className="text-foreground/85">{sourceCounts.lex}</span> · slm: <span className="text-foreground/85">{sourceCounts.slm}</span> · ctx: <span className="text-foreground/85">{sourceCounts.ctx}</span>
-              </div>
             </div>
           </div>
 
-          <div className="panel p-5">
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <div className="font-mono text-[11px] uppercase tracking-wider text-cyan">01 · Raw input</div>
-                <h3 className="font-display font-bold">Onderwijsfragment</h3>
-              </div>
-              <button onClick={() => setText(SAMPLE)} className="text-xs px-2.5 py-1 rounded-md border border-border hover:bg-accent">Reset</button>
-            </div>
-            <textarea
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              rows={6}
-              className="w-full font-mono text-sm bg-background/60 border border-border/60 rounded-lg p-3 resize-y focus:outline-none focus:ring-2 focus:ring-primary/50"
-              placeholder="Plak hier docentnotitie, leerlingtekst, dossierfragment..."
-            />
-          </div>
-
-          <div className="panel p-5">
-            <div className="font-mono text-[11px] uppercase tracking-wider text-cyan mb-1">02 · Detectie & signals</div>
-            <h3 className="font-display font-bold mb-4">Privacy signals</h3>
-            <div className="grid sm:grid-cols-3 gap-3 mb-4">
-              <Stat label="Direct PII" value={signals.directPii.length} accent="orange" />
-              <Stat label="Contextueel" value={signals.contextualPii.length} accent="cyan" />
-              <Stat label="Risk score" value={`${(signals.riskScore * 100).toFixed(0)}%`} accent={signals.riskScore > 0.4 ? "red" : signals.riskScore > 0.18 ? "orange" : "green"} />
-            </div>
-            <div className="mb-3">
-              <div className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-2">Risk level: <span className="text-foreground capitalize">{signals.riskLevel}</span></div>
-              <div className="h-2 rounded-full bg-card overflow-hidden border border-border/40">
-                <div className="h-full transition-all" style={{
-                  width: `${signals.riskScore * 100}%`,
-                  background: signals.riskScore > 0.4 ? "var(--red)" : signals.riskScore > 0.18 ? "var(--orange)" : "var(--green)",
-                }} />
-              </div>
-            </div>
-            {signals.directPii.length + signals.contextualPii.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {[...signals.directPii, ...signals.contextualPii].map((s, i) => (
-                  <span key={i} className={`font-mono text-[11.5px] px-2.5 py-1 rounded-full border inline-flex items-center gap-1.5 ${
-                    s.contextual
-                      ? "border-cyan/60 bg-cyan/15 text-foreground"
-                      : "border-orange/60 bg-orange/15 text-foreground"
-                  }`}>
-                    <span className={`font-semibold uppercase tracking-wide text-[10px] ${s.contextual ? "text-cyan" : "text-orange"}`}>
-                      {s.category}
-                    </span>
-                    <span className="text-foreground/95">
-                      {s.text.length > 28 ? s.text.slice(0, 26) + "…" : s.text}
-                    </span>
-                    <span className="text-[9px] uppercase tracking-wider text-muted-foreground border-l border-border/60 pl-1.5 ml-0.5">
-                      {detectorSourceLabel(s.ruleId)}
-                    </span>
-                  </span>
-                ))}
-              </div>
-            )}
-            {signals.reasons.length > 0 && (
-              <ul className="mt-3 text-xs text-foreground/80 space-y-1">
-                {signals.reasons.map((r, i) => <li key={i}>· {r}</li>)}
-              </ul>
-            )}
-          </div>
-
-          <div className="panel p-5">
-            <div className="flex items-center justify-between mb-1">
-              <div className="font-mono text-[11px] uppercase tracking-wider text-purple">03 · Processed draft ({mode})</div>
-              <span className={`text-[11px] font-mono px-2 py-0.5 rounded-full border ${
-                guard.status === "pass" ? "border-green/40 bg-green/10 text-green" :
-                guard.status === "repair" ? "border-orange/40 bg-orange/10 text-orange" :
-                "border-red/50 bg-red/10 text-red"
-              }`}>
-                Draft Check: {guard.status}
-              </span>
-            </div>
-            <h3 className="font-display font-bold mb-3">{mode === "anonymous" ? "Anonymous candidate" : "Pseudonymous candidate"}</h3>
-            {repaired && (
-              <div className="mb-3 panel p-3 border-orange/40 bg-orange/5">
-                <div className="flex items-center gap-2 mb-1">
-                  <Wrench className="h-3.5 w-3.5 text-orange" />
-                  <span className="font-mono text-[11px] text-orange uppercase tracking-wider">Auto-repair toegepast</span>
-                </div>
-                <div className="font-mono text-[10px] text-muted-foreground">
-                  Initial guard: {initialGuard.status} → contextual generalization + brede fallback patronen → guard nu: <span className="text-foreground">{generalizedGuard.status}</span>
-                </div>
-              </div>
-            )}
-            {llmRepaired && (
-              <div className="mb-3 panel p-3 border-purple/40 bg-purple/5">
-                <div className="flex items-center gap-2 mb-1">
-                  <Sparkles className="h-3.5 w-3.5 text-purple" />
-                  <span className="font-mono text-[11px] text-purple uppercase tracking-wider">LLM-rewrite (Qwen, lokaal)</span>
-                </div>
-                <div className="font-mono text-[10px] text-muted-foreground">
-                  Generalized guard: {generalizedGuard.status} → Qwen rewrite → guard nu: <span className="text-foreground">{guard.status}</span>
-                </div>
-              </div>
-            )}
-            <pre className="font-mono text-sm whitespace-pre-wrap bg-background/70 border border-border/60 rounded-lg p-3 max-h-64 overflow-auto text-foreground/95 leading-relaxed">
-{effectiveDraft.text}
-            </pre>
-            {guard.issues.length > 0 && (
-              <ul className="mt-3 text-xs text-orange space-y-1">
-                {guard.issues.map((i, k) => <li key={k}>⚠ {i}</li>)}
-              </ul>
-            )}
-            {mode === "anonymous" && (
-              <div className="mt-4 panel p-3 border-purple/30 bg-purple/5">
-                <div className="flex items-center justify-between gap-3 mb-2">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="h-3.5 w-3.5 text-purple" />
-                    <span className="font-mono text-[11px] text-purple uppercase tracking-wider">Optioneel · LLM rewrite</span>
-                  </div>
-                  <button
-                    onClick={onTryLlmRewrite}
-                    disabled={llmBusy || (llmStatus?.loading ?? false)}
-                    className="text-[11px] font-mono px-2.5 py-1 rounded-md border border-purple/40 text-purple hover:bg-purple/10 disabled:opacity-50 inline-flex items-center gap-1.5"
-                  >
-                    {llmBusy || llmStatus?.loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
-                    {llmDraft ? "Opnieuw" : "Rewrite met Qwen"}
-                  </button>
-                </div>
-                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  Laadt <span className="font-mono text-foreground/80">Qwen2.5-0.5B-Instruct</span> via @mlc-ai/web-llm (~400MB, eerste keer). Lokaal, geen egress. Output gaat door dezelfde Draft Check Guard.
-                </p>
-                {llmStatus?.progress && (
-                  <div className="mt-2">
-                    <div className="font-mono text-[10px] text-muted-foreground truncate mb-1">{llmStatus.progress.text}</div>
-                    <div className="h-1.5 rounded-full bg-card overflow-hidden border border-border/40">
-                      <div className="h-full bg-purple transition-all" style={{ width: `${llmStatus.progress.pct ?? 0}%` }} />
-                    </div>
-                  </div>
-                )}
-                {llmStatus?.error && (
-                  <p className="mt-2 text-[10px] text-red font-mono break-words">{llmStatus.error}</p>
-                )}
-                {llmDraft && (
-                  <p className="mt-2 text-[10px] text-purple font-mono">{llmDraft.reason}</p>
-                )}
-              </div>
-            )}
-            {handle && (
-              <div className="mt-4 panel p-3 border-cyan/40 bg-cyan/5">
-                <div className="flex items-center gap-2 mb-1">
-                  <Lock className="h-3.5 w-3.5 text-cyan" />
-                  <span className="font-mono text-[11px] text-cyan uppercase tracking-wider">Secure Mapping Container</span>
-                </div>
-                <div className="font-mono text-[11px] text-muted-foreground">
-                  Handle: <span className="text-foreground">{handle.id.slice(0, 12)}…</span> · {handle.tokenCount} tokens · AES-GCM 256
-                </div>
-                <div className="font-mono text-[10px] text-muted-foreground mt-1">
-                  Originelen versleuteld in module-private register. UI heeft geen directe toegang.
-                </div>
-              </div>
-            )}
-            {restored !== null && (
-              <div className="mt-3 panel p-3 border-cyan/40">
-                <div className="font-mono text-[11px] text-cyan uppercase tracking-wider mb-1">Restored (alleen lokaal)</div>
-                <pre className="font-mono text-xs whitespace-pre-wrap text-foreground leading-relaxed">{restored}</pre>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <aside className="space-y-5 lg:sticky lg:top-24 lg:self-start">
+          {/* SLM panel */}
           <div className="panel p-5">
             <div className="flex items-center justify-between mb-3">
               <div>
@@ -522,7 +610,7 @@ function TryPage() {
             )}
             {profile.detectors.nerSlm && !slmEnabled && (
               <p className="text-[11px] text-muted-foreground leading-relaxed">
-                Aan: laadt <span className="font-mono text-foreground/80">bert-base-multilingual-cased-ner-hrl</span> via @huggingface/transformers (WebGPU → WASM). ±150 MB eerste keer, dan gecached.
+                Aan: laadt <span className="font-mono text-foreground/80">bert-base-multilingual-cased-ner-hrl</span> via @huggingface/transformers (WebGPU → WASM). ±150 MB eerste keer.
               </p>
             )}
             {slmEnabled && slmStatus && (
@@ -545,9 +633,7 @@ function TryPage() {
                     </div>
                   </div>
                 )}
-                {slmStatus.error && (
-                  <p className="text-[10px] text-red font-mono break-words">{slmStatus.error}</p>
-                )}
+                {slmStatus.error && <p className="text-[10px] text-red font-mono break-words">{slmStatus.error}</p>}
                 {slmStatus.ready && (
                   <p className="text-[10px] text-muted-foreground">
                     {slmSpans.length} entiteit(en) gevonden door SLM. Gefuseerd met regex-detectoren.
@@ -573,44 +659,17 @@ function TryPage() {
               </div>
             )}
           </div>
+        </div>
 
-          <div className="panel p-5">
-            <div className="font-mono text-[11px] uppercase tracking-wider text-orange mb-2">04 · Mode</div>
-            <div className="grid grid-cols-2 gap-2">
-              {(["anonymous", "pseudonymous"] as Mode[]).map((m) => (
-                <button key={m} onClick={() => setMode(m)} className={`px-3 py-2.5 rounded-lg text-sm font-semibold transition-all border ${
-                  mode === m
-                    ? m === "anonymous" ? "bg-purple/15 border-purple text-purple" : "bg-cyan/15 border-cyan text-cyan"
-                    : "bg-card/40 border-border/60 text-muted-foreground hover:border-border"
-                }`}>{m}</button>
-              ))}
-            </div>
-          </div>
-
-          <div className="panel p-5">
-            <div className="font-mono text-[11px] uppercase tracking-wider text-orange mb-2">05 · Action</div>
-            <div className="grid grid-cols-4 gap-1.5">
-              {ACTIONS.map((a) => {
-                const Icon = a.icon;
-                return (
-                  <button key={a.id} onClick={() => setAction(a.id)} className={`flex flex-col items-center gap-1 px-2 py-2.5 rounded-lg text-[10px] font-medium transition-all border ${
-                    action === a.id ? "bg-primary/15 border-primary text-primary" : "bg-card/40 border-border/50 text-muted-foreground hover:border-border"
-                  }`} title={a.label}>
-                    <Icon className="h-4 w-4" />
-                    <span className="leading-none">{a.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
+        {/* Sticky Decision card */}
+        <aside className="space-y-5 lg:sticky lg:top-24 lg:self-start">
           <VerdictCard verdict={decision.verdict} reason={decision.reason} reasonCode={decision.reasonCode} ruleId={decision.ruleId} flag={decision.flag} onAct={onAct} egress={egress} />
 
           <div className="panel p-5">
             <div className="flex items-center justify-between mb-3">
               <div>
-                <div className="font-mono text-[11px] uppercase tracking-wider text-green">07 · Minimal audit</div>
-                <h3 className="font-display font-bold text-sm">Metadata only — geen inhoud</h3>
+                <div className="font-mono text-[11px] uppercase tracking-wider text-green">Audit feed</div>
+                <h3 className="font-display font-bold text-sm">Metadata only</h3>
               </div>
               {audit.length > 0 && <button onClick={() => setAudit([])} className="text-[11px] text-muted-foreground hover:text-foreground">Wis</button>}
             </div>
@@ -633,16 +692,17 @@ function TryPage() {
         </aside>
       </section>
 
-      <section className="mx-auto max-w-7xl px-6 pb-16">
+      {/* Review queue */}
+      <section className="mx-auto max-w-7xl px-6 py-10">
         <div className="panel p-5">
           <div className="flex items-center justify-between mb-3">
             <div>
               <div className="font-mono text-[11px] uppercase tracking-wider text-orange flex items-center gap-1.5">
-                <Inbox className="h-3 w-3" /> 08 · Review queue
+                <Inbox className="h-3 w-3" /> Review queue
               </div>
               <h3 className="font-display font-bold">Drafts die menselijke check vragen</h3>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Alleen 'repair' of 'fail' guard-resultaten. Inhoud blijft lokaal — nooit egress. Originele tekst wordt niet bewaard, alleen de geredacteerde draft (max 400 tekens).
+                Alleen 'repair' of 'fail'. Inhoud blijft lokaal — nooit egress. Originele tekst wordt niet bewaard, alleen de geredacteerde draft (max 400 tekens).
               </p>
             </div>
             {reviewItems.length > 0 && (
@@ -652,7 +712,7 @@ function TryPage() {
             )}
           </div>
           {reviewItems.length === 0 ? (
-            <p className="text-xs text-muted-foreground">Queue is leeg. Wijzig de input zodat de guard een 'repair' of 'fail' geeft om dit paneel te zien werken.</p>
+            <p className="text-xs text-muted-foreground">Queue is leeg. Wijzig de input zodat de guard 'repair' of 'fail' geeft.</p>
           ) : (
             <ul className="space-y-2">
               {reviewItems.map((it) => (
@@ -660,23 +720,18 @@ function TryPage() {
                   it.resolved ? "border-green/30 opacity-60" :
                   it.guardStatus === "fail" ? "border-red/40" : "border-orange/40"
                 }`}>
-                  <div className="flex items-center justify-between gap-3 mb-1.5">
-                    <div className="flex items-center gap-2 font-mono text-[10px]">
+                  <div className="flex items-center justify-between gap-3 mb-1.5 flex-wrap">
+                    <div className="flex items-center gap-2 font-mono text-[10px] flex-wrap">
                       <span className={
                         it.guardStatus === "fail" ? "text-red" :
                         it.guardStatus === "repair" ? "text-orange" : "text-green"
-                      }>
-                        ● {it.guardStatus.toUpperCase()}
-                      </span>
+                      }>● {it.guardStatus.toUpperCase()}</span>
                       <span className="text-muted-foreground">{it.mode}</span>
                       <span className="text-muted-foreground">risk: {it.riskLevel}</span>
                       <span className="text-muted-foreground">{new Date(it.ts).toLocaleTimeString()}</span>
                     </div>
                     {!it.resolved && (
-                      <button
-                        onClick={() => resolveReview(it.id)}
-                        className="text-[11px] font-mono px-2 py-0.5 rounded-md border border-green/40 text-green hover:bg-green/10 inline-flex items-center gap-1"
-                      >
+                      <button onClick={() => resolveReview(it.id)} className="text-[11px] font-mono px-2 py-0.5 rounded-md border border-green/40 text-green hover:bg-green/10 inline-flex items-center gap-1">
                         <Check className="h-3 w-3" /> Resolve
                       </button>
                     )}
@@ -699,12 +754,43 @@ function TryPage() {
   );
 }
 
-function Stat({ label, value, accent }: { label: string; value: string | number; accent: "orange" | "cyan" | "green" | "red" }) {
+function CountTile({ label, value, accent }: { label: string; value: string | number; accent: "orange" | "cyan" | "green" | "red" | "purple" }) {
+  const colorMap: Record<typeof accent, string> = {
+    orange: "text-orange border-orange/30 bg-orange/5",
+    cyan: "text-cyan border-cyan/30 bg-cyan/5",
+    green: "text-green border-green/30 bg-green/5",
+    red: "text-red border-red/30 bg-red/5",
+    purple: "text-purple border-purple/30 bg-purple/5",
+  };
   return (
-    <div className={`rounded-lg border p-3 bg-card/60 border-${accent}/40`}>
-      <div className="text-[11px] font-mono uppercase tracking-wider text-foreground/70">{label}</div>
-      <div className={`font-display text-2xl font-bold text-${accent} mt-0.5`}>{value}</div>
+    <div className={`rounded-lg border px-3 py-2 backdrop-blur-sm ${colorMap[accent]}`}>
+      <div className="font-mono text-[10px] uppercase tracking-wider opacity-80">{label}</div>
+      <div className="font-display font-bold text-base leading-tight">{value}</div>
     </div>
+  );
+}
+
+function SourceTag({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-md border border-border/40 bg-background/40 px-2.5 py-1.5 flex items-center justify-between gap-2 backdrop-blur-sm">
+      <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">{label}</span>
+      <span className={`font-mono text-xs font-semibold ${value > 0 ? "text-foreground" : "text-muted-foreground/60"}`}>{value}</span>
+    </div>
+  );
+}
+
+function VerdictPill({ verdict }: { verdict: Verdict }) {
+  const cfg = {
+    ALLOW: { Icon: ShieldCheck, klass: "text-green border-green/50 bg-green/10" },
+    ALLOW_WITH_WARNING: { Icon: ShieldAlert, klass: "text-orange border-orange/50 bg-orange/10" },
+    BLOCK: { Icon: ShieldX, klass: "text-red border-red/60 bg-red/10" },
+  }[verdict];
+  const { Icon } = cfg;
+  return (
+    <span className={`inline-flex items-center gap-1.5 font-mono text-xs font-semibold px-2.5 py-1 rounded-full border ${cfg.klass}`}>
+      <Icon className="h-3.5 w-3.5" />
+      {verdict}
+    </span>
   );
 }
 
