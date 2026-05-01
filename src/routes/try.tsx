@@ -326,6 +326,9 @@ function TryPage() {
               <div className="mt-1.5 font-mono text-[10px] text-muted-foreground">
                 detectors actief ({activeDetectorIds.length}): {activeDetectorIds.join(" · ") || "—"} · egress: {profile.egressPolicy}
               </div>
+              <div className="mt-1 font-mono text-[10px] text-muted-foreground">
+                spans gevonden · regex: <span className="text-foreground/85">{sourceCounts.regex}</span> · lex: <span className="text-foreground/85">{sourceCounts.lex}</span> · slm: <span className="text-foreground/85">{sourceCounts.slm}</span> · ctx: <span className="text-foreground/85">{sourceCounts.ctx}</span>
+              </div>
             </div>
           </div>
 
@@ -376,6 +379,9 @@ function TryPage() {
                     </span>
                     <span className="text-foreground/95">
                       {s.text.length > 28 ? s.text.slice(0, 26) + "…" : s.text}
+                    </span>
+                    <span className="text-[9px] uppercase tracking-wider text-muted-foreground border-l border-border/60 pl-1.5 ml-0.5">
+                      {detectorSourceLabel(s.ruleId)}
                     </span>
                   </span>
                 ))}
