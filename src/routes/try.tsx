@@ -20,7 +20,7 @@ import {
   type Mode, type Action, type Verdict, type AuditEvent, type MappingHandle,
   type PiiSpan,
 } from "@/lib/pim";
-import { Shield, ShieldAlert, ShieldCheck, ShieldX, Copy, Eye, Save, RotateCcw, Send, Download, Printer, Share2, Lock, AlertTriangle, Cpu, Loader2, Layers, Wrench, Inbox, Check, Sparkles, Activity, Radio } from "lucide-react";
+import { Shield, ShieldAlert, ShieldCheck, ShieldX, Copy, Eye, Save, RotateCcw, Send, Download, Printer, Share2, Lock, AlertTriangle, Cpu, Loader2, Layers, Wrench, Inbox, Check, Activity, Radio } from "lucide-react";
 
 export const Route = createFileRoute("/try")({
   head: () => ({
@@ -480,7 +480,7 @@ function TryPage() {
               )}
               {llmDraft && (
                 <span className="font-mono text-[10px] text-purple inline-flex items-center gap-1">
-                  <Sparkles className="h-3 w-3" /> Qwen rewrite
+                  Qwen rewrite
                 </span>
               )}
             </div>
@@ -499,7 +499,6 @@ function TryPage() {
             <div className="mt-4 panel p-3 border-purple/30 bg-purple/5">
               <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="h-3.5 w-3.5 text-purple" />
                   <span className="font-mono text-[11px] text-purple uppercase tracking-wider">Optioneel · LLM rewrite (streaming)</span>
                 </div>
                 <button
@@ -507,7 +506,7 @@ function TryPage() {
                   disabled={llmStreaming || (llmStatus?.loading ?? false)}
                   className="text-[11px] font-mono px-2.5 py-1 rounded-md border border-purple/40 text-purple hover:bg-purple/10 disabled:opacity-50 inline-flex items-center gap-1.5"
                 >
-                  {llmStreaming || llmStatus?.loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                  {(llmStreaming || llmStatus?.loading) && <Loader2 className="h-3 w-3 animate-spin" />}
                   {llmDraft ? "Opnieuw" : "Rewrite met Qwen"}
                 </button>
               </div>

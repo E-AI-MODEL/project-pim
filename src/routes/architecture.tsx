@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageHero } from "@/components/pim/PageHero";
-import { Cpu, Brain, Sparkles, ShieldCheck, Scale, Network, FileCheck, ArrowRight } from "lucide-react";
+import { Cpu, Brain, Wand2, ShieldCheck, Scale, Network, FileCheck, ArrowRight } from "lucide-react";
 
 export const Route = createFileRoute("/architecture")({
   head: () => ({
@@ -17,7 +17,7 @@ export const Route = createFileRoute("/architecture")({
 const ROLES = [
   { icon: Cpu, name: "Code detectors", role: "Herkennen harde PII-patronen via regex en vaste regels.", decides: false, color: "cyan" },
   { icon: Brain, name: "Browser SLM", role: "Herkennen contextueel risico — kleine groepen, zorgcontext, incidenten.", decides: false, color: "cyan" },
-  { icon: Sparkles, name: "Browser LLM", role: "Herschrijft en repareert geschoonde tekst — alleen lokaal.", decides: false, color: "purple" },
+  { icon: Wand2, name: "Browser LLM", role: "Herschrijft en repareert geschoonde tekst — alleen lokaal.", decides: false, color: "purple" },
   { icon: ShieldCheck, name: "Guards", role: "Controleren per stap. Leveren signalen of lokale blokkade.", decides: false, color: "orange" },
   { icon: Scale, name: "PIM Policy Engine", role: "Deterministische code. Beslist per actie ALLOW / WARN / BLOCK.", decides: true, color: "orange" },
   { icon: Network, name: "Egress Guard", role: "Voert PIM-besluit technisch uit op alle uitgaande stromen.", decides: false, color: "green" },
