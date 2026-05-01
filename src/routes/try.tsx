@@ -10,6 +10,7 @@ import {
   onModelIntegrity, type ModelIntegrityRecord,
   repairAnonymousDraft,
   activeDetectorsFor,
+  detectorSourceLabel,
   enqueueReview, onReviewQueue, resolveReview, clearReviewQueue, type ReviewItem,
   recordSubmission, type AbuseSignal,
   rewriteAnonymousDraft, onRewriteStatus, type RewriteStatus,
@@ -101,7 +102,18 @@ function TryPage() {
     return () => { cancelled = true; clearTimeout(t); };
   }, [text, slmEnabled, slmStatus?.ready]);
 
-  const signals = useMemo(() => computeSignals(text, slmEnabled ? slmSpans : []), [text, slmEnabled, slmSpans]);
+  const signals = useMemo(
+    () => computeSignals(text, slmEnabled ? slmSpans : [], profileId),
+    [text, slmEnabled, slmSpans, profileId],
+  );
+
+  const sourceCounts = useMemo(() => {
+    const counts = { regex: 0, lex: 0, slm: 0, ctx: 0 } as Record<"regex" | "lex" | "slm" | "ctx", number>;
+    for (const s of [...signals.directPii, ...signals.contextualPii]) {
+      counts[detectorSourceLabel(s.ruleId)]++;
+    }
+    return counts;
+  }, [signals]);
 
   // For pseudonymous: generate plain mapping in-memory once, then push to AES container async
   const processed = useMemo(() => {
@@ -184,8 +196,8 @@ function TryPage() {
   // signals over de uiteindelijke draft (na anonimize + eventuele repair).
   // Anonieme drafts zonder ruwe PII krijgen nu de risk-score van de output.
   const decisionSignals = useMemo(
-    () => mode === "anonymous" ? computeSignals(effectiveDraft.text, []) : signals,
-    [mode, effectiveDraft.text, signals],
+    () => mode === "anonymous" ? computeSignals(effectiveDraft.text, [], profileId) : signals,
+    [mode, effectiveDraft.text, signals, profileId],
   );
   const decision = useMemo(
     () => decide({ mode, action, signals: decisionSignals, draftCheck: guard, modelVerified: true }),
