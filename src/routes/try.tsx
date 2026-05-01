@@ -357,7 +357,7 @@ function TryPage() {
             <div className="flex md:flex-col gap-3 md:gap-2 text-center md:text-right">
               <CountTile label="spans" value={totalSpans} accent="orange" />
               <CountTile label="detectors" value={activeDetectorIds.length} accent="cyan" />
-              <CountTile label="risk" value={signals.riskLevel} accent={signals.riskLevel === "low" ? "green" : signals.riskLevel === "medium" ? "orange" : "red"} />
+              <CountTile label="input risk" value={signals.riskLevel} accent={signals.riskLevel === "low" ? "green" : signals.riskLevel === "medium" ? "orange" : "red"} />
             </div>
           </div>
 
