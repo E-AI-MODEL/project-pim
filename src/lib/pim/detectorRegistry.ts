@@ -67,6 +67,12 @@ const EDU_LEXICON: { term: RegExp; category: PiiSpan["category"]; ruleId: string
   { term: /\b(?:cito|iep|route 8)\b/gi, category: "context_role", ruleId: "lex.toets", confidence: 0.5, contextual: true },
   { term: /\b(?:samenwerkingsverband|swv)\b/gi, category: "context_role", ruleId: "lex.swv", confidence: 0.5, contextual: true },
   { term: /\b(?:leerlingvolgsysteem|parnassys|magister|somtoday|esis)\b/gi, category: "school", ruleId: "lex.lvs", confidence: 0.65, contextual: false },
+  // NL onderwijskoepels / -stichtingen — strikt lokaal, geen externe lookup.
+  // Bron: publiek bekende koepelorganisaties primair + voortgezet onderwijs.
+  { term: /\b(?:Carmel(?:college)?|Ons Middelbaar Onderwijs|OMO|Stichting Lucas(?: Onderwijs)?|Stichting Carmelcollege|Onderwijsgroep Tilburg|Onderwijsgroep Amersfoort|Onderwijsgroep Galilei|SCOH|SKOzoK|SKPO|SKOFV|INOS|Delta-?onderwijs|Spaarnesant|Stichting Klasse|Stichting Florente|Stichting Conexus|Stichting Trinamiek|Stichting Sirius|Cedergroep|Stichting BOOR|Stichting LVO|LVO Limburg|Dunamare|Atlas Onderwijsgroep|Spinoza20first|Voila|Movare|Innovo|Kindante|Stichting Penta|Stichting Meerwerf)\b/g, category: "school", ruleId: "lex.school_koepel", confidence: 0.85, contextual: false },
+  // Generieke schoolnaam-patronen die regex.school mist (bv. "het Stedelijk Lyceum", "OBS De Regenboog").
+  { term: /\b(?:OBS|RKBS|PCBS|CBS|SBO|SO|VSO|ISK)\s+[A-Z][\wà-ÿ]+(?:\s+[A-Z]?[\wà-ÿ]+){0,3}\b/g, category: "school", ruleId: "lex.school_prefix", confidence: 0.8, contextual: false },
+  { term: /\b(?:Lyceum|Gymnasium|College|Scholengemeenschap|Praktijkschool|Mavo|Atheneum)\s+[A-Z][\wà-ÿ]+(?:\s+[A-Z]?[\wà-ÿ]+){0,2}\b/g, category: "school", ruleId: "lex.school_suffix", confidence: 0.75, contextual: false },
 ];
 
 registerDetector({

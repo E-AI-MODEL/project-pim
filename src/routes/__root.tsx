@@ -1,5 +1,7 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { Shield } from "lucide-react";
+import { useEffect } from "react";
+import { installRuntimeHardening } from "@/lib/pim/runtimeHardening";
 
 import appCss from "../styles.css?url";
 
@@ -30,6 +32,21 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
+      {
+        httpEquiv: "Content-Security-Policy",
+        content:
+          "default-src 'self'; " +
+          "script-src 'self' 'wasm-unsafe-eval'; " +
+          "style-src 'self' 'unsafe-inline'; " +
+          "img-src 'self' data: blob: https://storage.googleapis.com; " +
+          "font-src 'self' data:; " +
+          "connect-src 'self' https://huggingface.co https://*.huggingface.co https://*.hf.co https://cas-bridge.xethub.hf.co https://cdn.jsdelivr.net https://unpkg.com https://raw.githubusercontent.com https://github.com; " +
+          "worker-src 'self' blob:; " +
+          "object-src 'none'; " +
+          "base-uri 'self'; " +
+          "form-action 'self'; " +
+          "frame-ancestors 'none'",
+      },
       { title: "Project PiM — Privacy Integrity Monitor (by EAI)" },
       { name: "description", content: "Browser-first privacy pipeline voor onderwijsdata. Lokale detectie, deterministische besluitvorming, fail-closed handhaving." },
       { name: "author", content: "Project PiM" },
@@ -69,6 +86,12 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
+  // App-brede runtime hardening: patch fetch/XHR/sendBeacon/WebSocket
+  // bij de eerste render, niet pas wanneer Try-it geopend wordt.
+  useEffect(() => {
+    installRuntimeHardening();
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col">
       <SiteHeader />
@@ -170,6 +193,7 @@ function SiteFooter() {
             {navLinks.map((l) => (
               <li key={l.to}><Link to={l.to} className="hover:text-foreground">{l.label}</Link></li>
             ))}
+            <li><Link to="/trust" className="hover:text-foreground">Trust dashboard</Link></li>
           </ul>
         </div>
       </div>

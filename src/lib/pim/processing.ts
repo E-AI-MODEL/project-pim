@@ -11,6 +11,8 @@ const GENERALIZATIONS: Record<string, string> = {
   school: "[school]",
   date: "[datum]",
   address: "[adres]",
+  student_id: "[leerlingnummer]",
+  class_code: "[klas]",
   context_small_group: "[groep]",
   context_care: "[zorgcontext]",
   context_incident: "[incident]",

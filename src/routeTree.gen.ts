@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TryRouteImport } from './routes/try'
+import { Route as TrustRouteImport } from './routes/trust'
 import { Route as PipelineRouteImport } from './routes/pipeline'
 import { Route as ModesRouteImport } from './routes/modes'
 import { Route as FlagsRouteImport } from './routes/flags'
@@ -20,6 +21,11 @@ import { Route as IndexRouteImport } from './routes/index'
 const TryRoute = TryRouteImport.update({
   id: '/try',
   path: '/try',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TrustRoute = TrustRouteImport.update({
+  id: '/trust',
+  path: '/trust',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PipelineRoute = PipelineRouteImport.update({
@@ -60,6 +66,7 @@ export interface FileRoutesByFullPath {
   '/flags': typeof FlagsRoute
   '/modes': typeof ModesRoute
   '/pipeline': typeof PipelineRoute
+  '/trust': typeof TrustRoute
   '/try': typeof TryRoute
 }
 export interface FileRoutesByTo {
@@ -69,6 +76,7 @@ export interface FileRoutesByTo {
   '/flags': typeof FlagsRoute
   '/modes': typeof ModesRoute
   '/pipeline': typeof PipelineRoute
+  '/trust': typeof TrustRoute
   '/try': typeof TryRoute
 }
 export interface FileRoutesById {
@@ -79,6 +87,7 @@ export interface FileRoutesById {
   '/flags': typeof FlagsRoute
   '/modes': typeof ModesRoute
   '/pipeline': typeof PipelineRoute
+  '/trust': typeof TrustRoute
   '/try': typeof TryRoute
 }
 export interface FileRouteTypes {
@@ -90,6 +99,7 @@ export interface FileRouteTypes {
     | '/flags'
     | '/modes'
     | '/pipeline'
+    | '/trust'
     | '/try'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -99,6 +109,7 @@ export interface FileRouteTypes {
     | '/flags'
     | '/modes'
     | '/pipeline'
+    | '/trust'
     | '/try'
   id:
     | '__root__'
@@ -108,6 +119,7 @@ export interface FileRouteTypes {
     | '/flags'
     | '/modes'
     | '/pipeline'
+    | '/trust'
     | '/try'
   fileRoutesById: FileRoutesById
 }
@@ -118,6 +130,7 @@ export interface RootRouteChildren {
   FlagsRoute: typeof FlagsRoute
   ModesRoute: typeof ModesRoute
   PipelineRoute: typeof PipelineRoute
+  TrustRoute: typeof TrustRoute
   TryRoute: typeof TryRoute
 }
 
@@ -128,6 +141,13 @@ declare module '@tanstack/react-router' {
       path: '/try'
       fullPath: '/try'
       preLoaderRoute: typeof TryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/trust': {
+      id: '/trust'
+      path: '/trust'
+      fullPath: '/trust'
+      preLoaderRoute: typeof TrustRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pipeline': {
@@ -182,6 +202,7 @@ const rootRouteChildren: RootRouteChildren = {
   FlagsRoute: FlagsRoute,
   ModesRoute: ModesRoute,
   PipelineRoute: PipelineRoute,
+  TrustRoute: TrustRoute,
   TryRoute: TryRoute,
 }
 export const routeTree = rootRouteImport
