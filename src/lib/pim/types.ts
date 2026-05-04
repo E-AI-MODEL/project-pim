@@ -22,6 +22,8 @@ export type PiiCategory =
   | "school"
   | "date"
   | "address"
+  | "student_id"
+  | "class_code"
   | "context_small_group"
   | "context_care"
   | "context_incident"
