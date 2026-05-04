@@ -3,6 +3,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { PageHero } from "@/components/pim/PageHero";
 import { RiskGauge } from "@/components/pim/RiskGauge";
 import { PipelineTimeline } from "@/components/pim/PipelineTimeline";
+import { AnonymizedText } from "@/components/pim/AnonymizedText";
+import { RiskBanner } from "@/components/pim/RiskBanner";
 import { usePipelineHeartbeat, type StepId } from "@/hooks/usePipelineHeartbeat";
 import {
   computeSignals, anonymize, pseudonymize, draftCheck, decide, executeAction,
@@ -486,9 +488,8 @@ function TryPage() {
             </div>
           </div>
           <h3 className="font-display font-bold mb-3">{mode === "anonymous" ? "Anonymous candidate" : "Pseudonymous candidate"}</h3>
-          <pre className="font-mono text-sm whitespace-pre-wrap bg-background/70 border border-border/60 rounded-lg p-3 max-h-72 overflow-auto text-foreground/95 leading-relaxed">
-{draftDisplay}{llmStreaming && <span className="inline-block w-2 h-4 bg-purple/80 align-middle animate-pulse ml-0.5" />}
-          </pre>
+          <RiskBanner level={signals.riskLevel} reasons={signals.reasons} />
+          <AnonymizedText text={draftDisplay} streaming={llmStreaming} />
           {guard.issues.length > 0 && (
             <ul className="mt-3 text-xs text-orange space-y-1">
               {guard.issues.map((i, k) => <li key={k}>⚠ {i}</li>)}
