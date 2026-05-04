@@ -193,6 +193,7 @@ function SiteFooter() {
             {navLinks.map((l) => (
               <li key={l.to}><Link to={l.to} className="hover:text-foreground">{l.label}</Link></li>
             ))}
+            <li><Link to="/trust" className="hover:text-foreground">Trust dashboard</Link></li>
           </ul>
         </div>
       </div>
