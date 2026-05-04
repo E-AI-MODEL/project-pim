@@ -1,96 +1,81 @@
-# Try-it Live Pipeline Dashboard — herontwerp
+## Status check eerst
 
-Doel: de `/try` pagina omvormen van een verticale stapel van 8 panelen naar één samenhangend live-dashboard. Hybride stijl (PiM-engineering blijft, hero-elementen krijgen subtiele glass-accenten). Qwen rewrite gaat token-per-token streamen. Elke pipeline-stap krijgt een pulsing live-indicator zodat zichtbaar wordt dát alles meeloopt terwijl je typt.
+Ik heb je PvA naast de codebase gelegd. Een aantal stappen zijn al (deels) gedaan, andere niet. Het heeft geen zin om die opnieuw te doen — dat zou bestaande werking kapotmaken.
 
-## Layout (nieuw)
+| PvA-stap | Status nu | Actie |
+|---|---|---|
+| 0a CSP meta-tag | Niet aanwezig (geen `index.html`; TanStack Start beheert head via `__root.tsx`) | **Doen** via `__root.tsx` head meta |
+| 0b runtimeHardening eerst laden | Bestaat (`runtimeHardening.ts`), maar wordt pas in `/try` geïnstalleerd, niet app-breed | **Doen** — verplaatsen naar `__root.tsx` |
+| 0c externe afhankelijkheden weghalen | OG-image staat op `storage.googleapis.com`; verder geen externe scripts | **Doen** — OG-image lokaal serveren |
+| 1A extra detectoren (leerlingnummers, klascodes, schoollijst) | Niet aanwezig | **Doen** |
+| 1B UI: highlight anonieme tekst + risk banner | Risk gauge + verdict pill bestaan; per-span highlight in output ontbreekt | **Doen** |
+| 1C TrustDashboard `/trust` | Bestaat niet | **Doen** |
+| 1D draftCheck na anon: spans in audit log | `draftCheck` draait al op output (regel 71-96 `processing.ts`); residuele PII komt in `issues`, maar niet als gestructureerde spans in audit | **Verbeteren** (klein) |
 
-```text
-┌─────────────────── HERO (glass) ──────────────────────────┐
-│  Risk gauge (donut)    Verdict pill    Latency · spans/s   │
-│        47%              ALLOW           12ms · 4 detectors  │
-└────────────────────────────────────────────────────────────┘
+Niet doen: `runtimeHardening` opnieuw schrijven, egressGuard opnieuw schrijven, secureMapping aanraken, of hele Try-it pagina opnieuw bouwen.
 
-┌────────────── PIPELINE TIMELINE (horizontaal) ─────────────┐
-│ ●input  ●regex  ●lex  ○slm  ●ctx  ●repair  ●guard  ●decide │
-│  pulse  pulse   pulse idle  pulse pulse    pulse   pulse    │
-│  1ms    0ms     0ms   —     1ms   3ms      2ms     0ms      │
-└────────────────────────────────────────────────────────────┘
+---
 
-┌─────── 01 RAW INPUT ─────────┬─── 02 SPANS + COUNTS ──────┐
-│ textarea                      │ regex 6 · lex 2 · slm 3 ·  │
-│                               │ ctx 1                       │
-│                               │ chips met source-tag        │
-└───────────────────────────────┴────────────────────────────┘
+## Plan — 3 fases, jij keurt na elke fase af
 
-┌─────── 03 DRAFT (live) ──────┬─── 04 MODE + ACTION ───────┐
-│ <pre> generalised text        │ anonymous / pseudonymous    │
-│  Qwen tokens streamen erin    │ 8 action icons              │
-│  woord-voor-woord wanneer     │ [Voer actie uit]            │
-│  rewrite actief               │                             │
-├──────────────────────────────┴────────────────────────────┤
-│ guard issues · auto-repair badge · LLM-rewrite badge       │
-└────────────────────────────────────────────────────────────┘
+### Fase 1 — Hardening basis (veiligheid eerst)
 
-┌─────── 05 SLM PANEL ─────────┬─── 06 AUDIT FEED ──────────┐
-│ toggle, status, integrity     │ live tijdlijn van events    │
-└───────────────────────────────┴────────────────────────────┘
+1. **CSP meta toevoegen** in `src/routes/__root.tsx` `head().meta`:
+   `default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://huggingface.co https://*.huggingface.co https://*.hf.co https://cas-bridge.xethub.hf.co https://cdn.jsdelivr.net https://raw.githubusercontent.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'`
+   - `wasm-unsafe-eval` is nodig voor `@mlc-ai/web-llm` + transformers.js
+   - `connect-src` matcht exact de `MODEL_HOSTS` in `runtimeHardening.ts`
+   - `worker-src blob:` nodig voor web-llm worker
+2. **`installRuntimeHardening()` app-breed** in `RootComponent` (`__root.tsx`) i.p.v. alleen `/try`. Hardening moet aanstaan vóór elke route, niet pas als gebruiker naar Try-it navigeert.
+3. **OG-image lokaal**: huidige verwijst naar `storage.googleapis.com`. Optie: vervangen door pad in `/public` (vraag: heb je een lokale variant of mag deze blijven? google-storage is geen tracker maar staat los van project).
 
-┌──────────────── 07 REVIEW QUEUE ───────────────────────────┐
-│ (blijft, lichte restyle)                                   │
-└────────────────────────────────────────────────────────────┘
-```
+### Fase 2 — Detectie uitbreiden
 
-## Visueel idioom
+In `src/lib/pim/detectors.ts` en/of `detectorRegistry.ts`:
 
-- **Glass-accenten** alleen op: hero-card, pipeline timeline strip, verdict-pill. Implementatie: `bg-card/30 backdrop-blur-md border-border/40` + zachte schaduw. De rest blijft `panel` (solide).
-- **Pulsing indicators**: kleine cirkels per stap, `animate-ping` (Tailwind built-in) wanneer die stap binnen de laatste 400ms herrekend heeft; daarna `animate-pulse` zacht; idle = grijs.
-- **Risk gauge**: SVG donut (geen recharts overhead), kleur volgt bestaande logica (green/orange/red).
-- Geen pastel. Bestaande tokens (`--cyan`, `--orange`, `--purple`, `--green`, `--red`) blijven leidend.
+- **Leerlingnummer** (6–8 cijfers, niet samenvallend met BSN-9): regex met negative lookahead op 9-digits. Confidence 0.55, contextueel `false`, categorie `name` (of nieuw type — zie keuze hieronder).
+- **Klascode NL VO**: `\b[1-6][HVMG][a-zA-Z]?\d?\b` patroon (bv. `4H1`, `V5B`, `3V`, `2M`). Confidence 0.6, contextueel `true`, categorie `context_small_group`.
+- **Schoolnamenlijst**: nieuwe constante `NL_SCHOOL_NAMES` in `detectorRegistry.ts` (uitbreiding `EDU_LEXICON`) met ~30 bekende koepels (Carmel, OMO, Ons Middelbaar Onderwijs, Stichting Lucas, etc.). Strikt lokaal, geen externe fetch.
 
-## Live streaming
+Categorie-keuze: leerlingnummer past niet helemaal in bestaande `PiiCategory` enum. Twee opties tijdens implementatie:
+- (a) hergebruik `bsn` (semantisch vreemd) of `name` (te breed)
+- (b) nieuw type `student_id` toevoegen aan `types.ts` + `GENERALIZATIONS` map in `processing.ts`. **Voorkeur: (b)**, schoner.
 
-### Pipeline step indicators
-Nieuwe hook `usePipelineHeartbeat` registreert per stap een timestamp telkens als zijn `useMemo`/`useEffect` herrekent. Per stap (`input`, `regex`, `lex`, `slm`, `ctx`, `repair`, `guard`, `decide`) toont de timeline-strip:
-- `< 400ms geleden` → `animate-ping` ring + felle kleur
-- `< 2s` → zachte `animate-pulse`
-- ouder → grijs idle
+### Fase 3 — UI + transparantie
 
-### Qwen token-streaming
-`rewriteAnonymousDraft` krijgt een nieuwe variant `rewriteAnonymousDraftStream(draft, onToken)`. Roept `engine.chat.completions.create({ stream: true, ... })` aan en yieldt deltas. Op de UI wordt elke delta direct in `llmDraft.text` gezet zodat de `<pre>` letterlijk woord-voor-woord vult. De bestaande non-stream functie blijft bestaan voor compat.
+1. **Anonimisatie-highlight** in Try-it draft panel: render geanonimiseerde tokens (`[email]`, `[persoon]`, etc.) met een chip/badge-stijl (bv. `bg-accent/40 border border-primary/40 px-1 rounded`) zodat in één oogopslag zichtbaar is wat is vervangen. Pure UI-wijziging in `src/routes/try.tsx`, geen logica-aanpassing.
+2. **Risico-waarschuwingsbanner** boven draft als `riskLevel ∈ {high, critical}`: rode/oranje balk met icon + verdict-uitleg. Sluit aan op bestaande `RiskGauge` kleurlogica.
+3. **`/trust` route** = nieuwe `src/routes/trust.tsx` met `TrustDashboard` component:
+   - Pipeline actief (versie + profile)
+   - Hardening geladen (haakt op `installRuntimeHardening` flag)
+   - Egress-violations live tabel via `onViolations()` listener
+   - Modelintegriteit (haak op bestaande `modelCatalog`)
+   - Laatste audit events (laatste 10 uit reviewQueue/audit)
+   Linkje toevoegen in footer, niet in hoofdnav (om Try-it focus te bewaren).
+4. **draftCheck verfijning** (klein): residuele spans uitsplitsen als gestructureerde array in `DraftCheckResult` (i.p.v. alleen string `issues`), zodat `/trust` ze kan tonen zonder de inhoud zelf te lekken — alleen `category` + `ruleId`.
+
+---
 
 ## Bestanden
 
-**Nieuw**
-- `src/components/pim/RiskGauge.tsx` — SVG donut, props `{ score, level }`.
-- `src/components/pim/PipelineTimeline.tsx` — horizontale strip met step-pulses, props `{ steps: { id, label, lastTickMs, durationMs }[] }`.
-- `src/hooks/usePipelineHeartbeat.ts` — `tick(stepId)` + `getSteps()` + state-update via `useState`.
-
 **Edited**
-- `src/lib/pim/rewriteLlm.ts` — `rewriteAnonymousDraftStream` met async iterator over `stream: true` deltas; behoud `rewriteAnonymousDraft` als wrapper.
-- `src/routes/try.tsx` — volledige layout-restructure conform schema hierboven; integreer hero, timeline, herorganiseer 01–07; vervang on-demand rewrite-call door streaming variant; haal `tick()` aan in elke memo/effect die een pipeline-stap representeert.
+- `src/routes/__root.tsx` — CSP meta + `useEffect(installRuntimeHardening)` in `RootComponent`
+- `src/lib/pim/detectors.ts` — leerlingnummer + klascode regex
+- `src/lib/pim/detectorRegistry.ts` — uitgebreide `EDU_LEXICON` met schoollijst
+- `src/lib/pim/types.ts` — `student_id` toevoegen aan `PiiCategory` (als optie b gekozen)
+- `src/lib/pim/processing.ts` — `GENERALIZATIONS["student_id"]`, en `DraftCheckResult.residualSpans?: {category, ruleId}[]`
+- `src/routes/try.tsx` — highlight chips in draft, warning banner
+
+**New**
+- `src/routes/trust.tsx` — `/trust` route + `TrustDashboard` component
 
 **Niet aangeraakt**
-- `risk.ts`, `detectorRegistry.ts`, `nerSlm.ts`, `policy.ts`, `secureMapping.ts`, `egressGuard.ts`, `abuseDetection.ts` — geen functionele wijziging, alleen UI.
-- Andere routes (`/compliance`, `/pipeline`, `/architecture`, `/modes`, `/flags`, `/index`) — niet aangeraakt.
+- `runtimeHardening.ts`, `egressGuard.ts`, `secureMapping.ts`, `nerSlm.ts`, `rewriteLlm.ts`, `policy.ts`, `risk.ts` — werken al correct
+- Andere routes
 
-## Technisch
+---
 
-- Glass-laag is puur CSS (Tailwind). Geen extra deps.
-- `usePipelineHeartbeat` houdt timestamps in een `Map` + 1 timer (200ms `setInterval`) die een re-render forceert zodat ping/pulse-states accuraat blijven; cleanup op unmount.
-- Streaming gebruikt `for await (const chunk of stream)` met `chunk.choices[0]?.delta?.content`. Zelfde failure-pad: bij fout terug naar originele draft.
-- `lastEnqueuedKey` blijft werken: enqueue gebeurt pas op finale guard-status, niet per token.
-- Backwards compat: `rewriteAnonymousDraft` blijft exported, andere files breken niet.
+## Open vraag
 
-## UI-check (na build)
+OG-image (Fase 1 stap 3): vervangen door lokaal asset, of laten staan? google-storage levert hem maar is geen analytics/tracker. Mijn voorkeur: laten staan, lager prioriteit dan rest. Laat weten als je dit wel mee wilt nemen.
 
-Browser-tools: navigeer naar `/try` op desktop (1366) en mobile (390), screenshot beide, verifieer:
-1. Hero gauge + verdict zichtbaar zonder scroll.
-2. Pipeline timeline pulses bij typen.
-3. Qwen rewrite tokens verschijnen progressief in `<pre>`.
-4. Geen layout-overflow op 390px.
-
-## Out of scope
-
-- Recharts of d3 — overkill voor één donut.
-- Streaming van SLM (NER) — `@huggingface/transformers` pipeline geeft geen token-stream voor NER.
-- Wijzigingen aan andere routes of `mem://` opslag.
+Akkoord met deze 3 fases? Dan start ik met Fase 1 (hardening), pauzeer, en wacht op jouw verificatie voor Fase 2.
