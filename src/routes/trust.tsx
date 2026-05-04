@@ -56,7 +56,7 @@ function TrustPage() {
       <PageHero
         eyebrow="Transparantie"
         title="Trust Dashboard"
-        subtitle="Live status van de privacy-invarianten. Geen inhoud — alleen meta-informatie."
+        description="Live status van de privacy-invarianten. Geen inhoud — alleen meta-informatie."
       />
 
       <div className="grid md:grid-cols-2 gap-4 mt-8">
