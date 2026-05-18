@@ -1,15 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ShieldCheck, AlertTriangle, Cpu, Inbox, Activity } from "lucide-react";
+import { ShieldCheck, AlertTriangle, Cpu, Inbox, Activity, Radio, Info } from "lucide-react";
 import { PageHero } from "@/components/pim/PageHero";
 import {
   onViolations,
   onReviewQueue,
   onModelIntegrity,
+  onEgressReconsult,
   type ReviewItem,
   type ModelIntegrityRecord,
   PIPELINE_PROFILES,
   DEFAULT_PROFILE,
+  MODEL_CATALOG,
 } from "@/lib/pim";
 
 export const Route = createFileRoute("/trust")({
@@ -35,15 +37,18 @@ function TrustPage() {
   const [violations, setViolations] = useState<string[]>([]);
   const [reviews, setReviews] = useState<ReviewItem[]>([]);
   const [integrity, setIntegrity] = useState<ModelIntegrityRecord[]>([]);
+  const [reconsult, setReconsult] = useState<string[]>([]);
 
   useEffect(() => {
     const off1 = onViolations(setViolations);
     const off2 = onReviewQueue(setReviews);
     const off3 = onModelIntegrity(setIntegrity);
+    const off4 = onEgressReconsult(setReconsult);
     return () => {
       off1();
       off2();
       off3();
+      off4();
     };
   }, []);
 
@@ -81,30 +86,45 @@ function TrustPage() {
         </Card>
 
         <Card title="Modelintegriteit" icon={Cpu} accent="cyan">
-          {integrity.length === 0 ? (
-            <div className="text-xs text-muted-foreground">Nog geen modellen geladen in deze sessie.</div>
-          ) : (
-            <ul className="space-y-1.5">
-              {integrity.map((m, i) => (
-                <li key={i} className="font-mono text-[11px] flex justify-between gap-3">
-                  <span className="truncate text-foreground">{m.key}</span>
-                  <span
-                    className={
-                      m.status === "verified"
-                        ? "text-green"
-                        : m.status === "placeholder"
-                          ? "text-orange"
-                          : m.status === "mismatch" || m.status === "missing"
-                            ? "text-red"
-                            : "text-muted-foreground"
-                    }
-                  >
-                    {m.status}
-                  </span>
+          <div className="text-[11px] text-muted-foreground mb-2">
+            Catalog vs. runtime — alleen modellen die in deze sessie geladen zijn hebben een actuele hash.
+          </div>
+          <ul className="space-y-1.5">
+            {(Object.keys(MODEL_CATALOG) as (keyof typeof MODEL_CATALOG)[]).map((key) => {
+              const cat = MODEL_CATALOG[key];
+              const rec = integrity.find((m) => m.key === key);
+              const status = rec?.status ?? "unverified";
+              const statusClass =
+                status === "verified"
+                  ? "text-green"
+                  : status === "placeholder"
+                    ? "text-orange"
+                    : status === "mismatch" || status === "missing"
+                      ? "text-red"
+                      : "text-muted-foreground";
+              return (
+                <li key={key} className="border border-border/40 rounded p-2 space-y-1">
+                  <div className="flex justify-between items-center gap-2">
+                    <span className="font-mono text-[11px] truncate">{key}</span>
+                    <span className={`font-mono text-[10px] uppercase ${statusClass}`}>{status}</span>
+                  </div>
+                  <div className="font-mono text-[10px] text-muted-foreground truncate">{cat.modelId}</div>
+                  <div className="flex justify-between gap-2 font-mono text-[10px]">
+                    <span className="text-muted-foreground">release</span>
+                    <span>{cat.releaseStatus}</span>
+                  </div>
+                  <div className="flex justify-between gap-2 font-mono text-[10px]">
+                    <span className="text-muted-foreground">expected</span>
+                    <span className="truncate">{shortHash(cat.expectedConfigSha256)}</span>
+                  </div>
+                  <div className="flex justify-between gap-2 font-mono text-[10px]">
+                    <span className="text-muted-foreground">actual</span>
+                    <span className="truncate">{rec?.actual ? shortHash(rec.actual) : "—"}</span>
+                  </div>
                 </li>
-              ))}
-            </ul>
-          )}
+              );
+            })}
+          </ul>
         </Card>
 
         <Card title="Review queue" icon={Inbox} accent={reviews.length > 0 ? "orange" : "green"}>
@@ -123,6 +143,45 @@ function TrustPage() {
               </div>
             ))}
           </div>
+        </Card>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-4 mt-4">
+        <Card title="Egress re-consult" icon={Radio} accent={reconsult.some((r) => r.includes("BLOCK")) ? "red" : "green"}>
+          <Row label="Calls">{reconsult.length}</Row>
+          <Row label="Geblokkeerd">{reconsult.filter((r) => r.includes("BLOCK")).length}</Row>
+          <div className="mt-2 max-h-44 overflow-auto space-y-1">
+            {reconsult.length === 0 ? (
+              <div className="text-[11px] text-muted-foreground">Nog geen externe-AI egress aangevraagd in deze sessie.</div>
+            ) : (
+              reconsult.slice(-8).reverse().map((r, i) => (
+                <div
+                  key={i}
+                  className={
+                    "font-mono text-[10px] border border-border/40 rounded px-2 py-1 break-words " +
+                    (r.includes("BLOCK") ? "text-red" : "text-foreground/80")
+                  }
+                >
+                  {r}
+                </div>
+              ))
+            )}
+          </div>
+        </Card>
+
+        <Card title="Hash-policy disclaimer" icon={Info} accent="orange">
+          <p className="text-[11px] text-foreground/80 leading-relaxed">
+            De huidige hash-pin is een <span className="font-mono">trust-on-first-pin</span> over de canonieke
+            descriptor <span className="font-mono">{"<modelId>@<revision>"}</span>, niet over de gedownloade
+            ONNX-weights. Een gecompromitteerde mirror die dezelfde id+revision serveert met andere bytes wordt
+            hierdoor <em>niet</em> gevangen. Voor productie-release is een fetch-interceptor nodig die de
+            werkelijke weight-bytes hasht vóór instantiatie en faalt bij mismatch.
+          </p>
+          <p className="mt-2 text-[11px] text-muted-foreground leading-relaxed">
+            Status: <span className="text-orange font-mono">design-only</span> entries blokkeren productie-egress
+            via de release-gate; <span className="text-green font-mono">verified</span> entries passeren alleen
+            de demo-gate.
+          </p>
         </Card>
       </div>
 
@@ -182,4 +241,9 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
       <span className="text-foreground text-right break-words min-w-0">{children}</span>
     </div>
   );
+}
+
+function shortHash(h: string): string {
+  if (h.startsWith("PLACEHOLDER:")) return h.slice(0, 24) + "…";
+  return h.slice(0, 12) + "…" + h.slice(-4);
 }
