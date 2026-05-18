@@ -2,6 +2,53 @@
 // Spec hfst 28. Geen actie mag voorbij PIM zonder ALLOW.
 
 import type { PimDecision } from "./types";
+import { computeSignals } from "./risk";
+import { draftCheck } from "./processing";
+
+/** Logger so the trust dashboard / console can show re-consult outcomes. */
+const reconsultLog: string[] = [];
+const reconsultListeners = new Set<(v: string[]) => void>();
+function emitReconsult(msg: string) {
+  reconsultLog.push(`${new Date().toISOString()} ${msg}`);
+  if (reconsultLog.length > 50) reconsultLog.shift();
+  for (const l of reconsultListeners) l([...reconsultLog]);
+  console.info("[PIM egress]", msg);
+}
+export function onEgressReconsult(cb: (v: string[]) => void): () => void {
+  reconsultListeners.add(cb);
+  cb([...reconsultLog]);
+  return () => reconsultListeners.delete(cb);
+}
+export function getEgressReconsultLog(): string[] {
+  return [...reconsultLog];
+}
+
+/**
+ * Re-consult PIM on the actual payload right before egress.
+ * Spec hfst 28: een eerder ALLOW-besluit op de input geldt niet automatisch
+ * voor de output die naar buiten gaat. Daarom hier nogmaals detectie +
+ * draftCheck op de exacte string die over de lijn zou gaan.
+ */
+function reconsultPayload(text: string): { ok: true } | { ok: false; reason: string } {
+  const signals = computeSignals(text);
+  if (signals.directPii.length > 0) {
+    return {
+      ok: false,
+      reason: `Egress re-consult BLOCK: ${signals.directPii.length} directe PII in payload (${signals.directPii
+        .map((s) => s.category)
+        .slice(0, 3)
+        .join(", ")})`,
+    };
+  }
+  if (signals.riskLevel === "high" || signals.riskLevel === "critical") {
+    return { ok: false, reason: `Egress re-consult BLOCK: risk=${signals.riskLevel}` };
+  }
+  const check = draftCheck({ mode: "anonymous", text, rawHadPii: false }, "anonymous");
+  if (check.status === "fail") {
+    return { ok: false, reason: `Egress re-consult BLOCK: draftCheck fail (${check.issues.join("; ")})` };
+  }
+  return { ok: true };
+}
 
 export interface EgressResult {
   executed: boolean;
@@ -77,12 +124,21 @@ export async function executeAction(
     }
 
     case "send_external_ai": {
-      // We voeren GEEN echte externe call uit in de demo.
-      // Spec: alleen mag nadat PIM ALLOW én anonymous én risk laag.
-      // Dit is enforcement = simulatie + transparantie.
+      // Spec hfst 28: per egress-call OPNIEUW PIM consulteren op de
+      // werkelijke payload. Een eerder ALLOW op de input is niet genoeg —
+      // de string die over de lijn gaat moet zelfstandig schoon zijn.
+      const reconsult = reconsultPayload(payload.text);
+      if (!reconsult.ok) {
+        emitReconsult(reconsult.reason);
+        return { executed: false, reason: reconsult.reason };
+      }
+      emitReconsult(`Egress re-consult PASS (${payload.text.length} chars) — geen externe endpoint geconfigureerd, simulatie.`);
+      // In productie wordt hier een fetch gedaan naar de geconfigureerde
+      // externe AI. De runtimeHardening fetch-wrapper logt + filtert dat
+      // verkeer al; deze re-consult is de tweede sluis.
       return {
         executed: true,
-        reason: "DEMO: anonymous payload zou nu naar externe AI gaan. In productie: via fetch wrapper die per call PIM opnieuw consulteert.",
+        reason: "Anonymous payload zou nu naar externe AI gaan (re-consult PASS). Geen endpoint geconfigureerd in deze build — simulatie.",
       };
     }
 
