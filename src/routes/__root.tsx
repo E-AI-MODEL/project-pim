@@ -108,6 +108,7 @@ const navLinks = [
   { to: "/pipeline", label: "Pipeline" },
   { to: "/architecture", label: "Architectuur" },
   { to: "/modes", label: "Modi" },
+  { to: "/scenarios", label: "Scenarios" },
   { to: "/flags", label: "Flags" },
   { to: "/compliance", label: "Compliance" },
   { to: "/try", label: "Try-it" },
