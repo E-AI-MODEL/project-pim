@@ -33,6 +33,10 @@ export function onViolations(cb: (v: string[]) => void): () => void {
   return () => listeners.delete(cb);
 }
 
+export function getViolations(): string[] {
+  return [...violations];
+}
+
 export function installRuntimeHardening() {
   if (installed || typeof window === "undefined") return;
   installed = true;

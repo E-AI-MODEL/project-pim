@@ -1,14 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ShieldCheck, AlertTriangle, Cpu, Inbox, Activity, Radio, Info } from "lucide-react";
+import { ShieldCheck, AlertTriangle, Cpu, Inbox, Activity, Radio, Info, FlaskConical } from "lucide-react";
 import { PageHero } from "@/components/pim/PageHero";
 import {
   onViolations,
   onReviewQueue,
   onModelIntegrity,
   onEgressReconsult,
+  onSelfTest,
+  runSelfTest,
   type ReviewItem,
   type ModelIntegrityRecord,
+  type SelfTestReport,
   PIPELINE_PROFILES,
   DEFAULT_PROFILE,
   MODEL_CATALOG,
@@ -38,17 +41,20 @@ function TrustPage() {
   const [reviews, setReviews] = useState<ReviewItem[]>([]);
   const [integrity, setIntegrity] = useState<ModelIntegrityRecord[]>([]);
   const [reconsult, setReconsult] = useState<string[]>([]);
+  const [selfTest, setSelfTest] = useState<SelfTestReport | null>(null);
 
   useEffect(() => {
     const off1 = onViolations(setViolations);
     const off2 = onReviewQueue(setReviews);
     const off3 = onModelIntegrity(setIntegrity);
     const off4 = onEgressReconsult(setReconsult);
+    const off5 = onSelfTest(setSelfTest);
     return () => {
       off1();
       off2();
       off3();
       off4();
+      off5();
     };
   }, []);
 
@@ -147,6 +153,45 @@ function TrustPage() {
       </div>
 
       <div className="grid md:grid-cols-2 gap-4 mt-4">
+        <Card
+          title="Boot self-test"
+          icon={FlaskConical}
+          accent={selfTest?.status === "pass" ? "green" : selfTest?.status === "fail" ? "red" : "orange"}
+        >
+          <Row label="Status">{selfTest?.status ?? "running…"}</Row>
+          <Row label="Golden cases">
+            {selfTest ? `${selfTest.golden.filter((g) => g.ok).length}/${selfTest.golden.length}` : "—"}
+          </Row>
+          <Row label="Ruleset hash">
+            <span className="font-mono text-[10px]">{selfTest ? shortHash(selfTest.rulesetHash) : "—"}</span>
+          </Row>
+          <Row label="Hardening probe">
+            <span className={selfTest?.hardening.probeLogged ? "text-green" : "text-red"}>
+              {selfTest ? (selfTest.hardening.probeLogged ? "gelogd" : "NIET gelogd") : "—"}
+            </span>
+          </Row>
+          {selfTest && selfTest.golden.some((g) => !g.ok) && (
+            <div className="mt-2 max-h-32 overflow-auto space-y-1">
+              {selfTest.golden.filter((g) => !g.ok).map((g) => (
+                <div key={g.id} className="font-mono text-[10px] text-red border border-red/30 rounded px-2 py-1">
+                  {g.id} mist: {g.missing.join(", ")}
+                </div>
+              ))}
+            </div>
+          )}
+          <button
+            onClick={() => { void runSelfTest(); }}
+            className="mt-3 text-[11px] font-mono uppercase tracking-wider px-2 py-1 border border-border/60 rounded hover:bg-accent/40"
+          >
+            Opnieuw uitvoeren
+          </button>
+          <p className="mt-2 text-[10px] text-muted-foreground leading-relaxed">
+            Verifieert dat regex/lexicon/ctx-detectors een vaste synthetische
+            corpus correct herkennen en dat de fetch-wrapper externe pogingen
+            daadwerkelijk logt. Fail = niet vertrouwen op egress-laag.
+          </p>
+        </Card>
+
         <Card title="Egress re-consult" icon={Radio} accent={reconsult.some((r) => r.includes("BLOCK")) ? "red" : "green"}>
           <Row label="Calls">{reconsult.length}</Row>
           <Row label="Geblokkeerd">{reconsult.filter((r) => r.includes("BLOCK")).length}</Row>

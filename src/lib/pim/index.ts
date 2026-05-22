@@ -15,3 +15,4 @@ export * from "./detectorRegistry";
 export * from "./reviewQueue";
 export * from "./abuseDetection";
 export * from "./rewriteLlm";
+export * from "./selfTest";

@@ -2,6 +2,7 @@ import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/r
 import { Shield } from "lucide-react";
 import { useEffect } from "react";
 import { installRuntimeHardening } from "@/lib/pim/runtimeHardening";
+import { runSelfTest } from "@/lib/pim/selfTest";
 
 import appCss from "../styles.css?url";
 
@@ -90,6 +91,9 @@ function RootComponent() {
   // bij de eerste render, niet pas wanneer Try-it geopend wordt.
   useEffect(() => {
     installRuntimeHardening();
+    // Boot self-test: golden-set + ruleset-hash + hardening-probe.
+    // Niet-blokkerend; resultaat verschijnt op /trust.
+    runSelfTest().catch((e) => console.error("[PIM self-test] error", e));
   }, []);
 
   return (
