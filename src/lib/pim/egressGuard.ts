@@ -31,19 +31,31 @@ export function getEgressReconsultLog(): string[] {
  * voor de output die naar buiten gaat. Daarom hier nogmaals detectie +
  * draftCheck op de exacte string die over de lijn zou gaan.
  */
-function reconsultPayload(text: string): { ok: true } | { ok: false; reason: string } {
-  const signals = computeSignals(text);
-  if (signals.directPii.length > 0) {
+async function reconsultPayload(text: string): Promise<{ ok: true } | { ok: false; reason: string }> {
+  // Spec hfst 28 + verificatie-laag: forceer async NER zodat second-pass
+  // dezelfde detector-coverage heeft als de input-fase. Een sync-only
+  // re-consult zou namen die alleen door de SLM gevonden worden missen.
+  const spans = await runRegistry(text, { profileId: DEFAULT_PROFILE, enableAsync: true });
+  const directPii = spans.filter((s) => !s.contextual);
+  const HIGH: ReadonlySet<string> = new Set(["bsn", "iban", "email", "phone", "address", "student_id"]);
+  let score = 0;
+  for (const s of directPii) score += HIGH.has(s.category) ? 0.18 : 0.10;
+  for (const s of spans.filter((s) => s.contextual)) score += s.confidence * 0.12;
+  score = Math.min(1, score);
+  const riskLevel: RiskLevel =
+    score >= 0.65 ? "critical" : score >= 0.40 ? "high" : score >= 0.18 ? "medium" : "low";
+
+  if (directPii.length > 0) {
     return {
       ok: false,
-      reason: `Egress re-consult BLOCK: ${signals.directPii.length} directe PII in payload (${signals.directPii
+      reason: `Egress re-consult BLOCK: ${directPii.length} directe PII in payload (${directPii
         .map((s) => s.category)
         .slice(0, 3)
         .join(", ")})`,
     };
   }
-  if (signals.riskLevel === "high" || signals.riskLevel === "critical") {
-    return { ok: false, reason: `Egress re-consult BLOCK: risk=${signals.riskLevel}` };
+  if (riskLevel === "high" || riskLevel === "critical") {
+    return { ok: false, reason: `Egress re-consult BLOCK: risk=${riskLevel}` };
   }
   const check = draftCheck({ mode: "anonymous", text, rawHadPii: false }, "anonymous");
   if (check.status === "fail") {
@@ -129,12 +141,12 @@ export async function executeAction(
       // Spec hfst 28: per egress-call OPNIEUW PIM consulteren op de
       // werkelijke payload. Een eerder ALLOW op de input is niet genoeg —
       // de string die over de lijn gaat moet zelfstandig schoon zijn.
-      const reconsult = reconsultPayload(payload.text);
+      const reconsult = await reconsultPayload(payload.text);
       if (!reconsult.ok) {
         emitReconsult(reconsult.reason);
         return { executed: false, reason: reconsult.reason };
       }
-      emitReconsult(`Egress re-consult PASS (${payload.text.length} chars) — geen externe endpoint geconfigureerd, simulatie.`);
+      emitReconsult(`Egress re-consult PASS (async NER incl.) (${payload.text.length} chars) — geen externe endpoint geconfigureerd, simulatie.`);
       // In productie wordt hier een fetch gedaan naar de geconfigureerde
       // externe AI. De runtimeHardening fetch-wrapper logt + filtert dat
       // verkeer al; deze re-consult is de tweede sluis.
