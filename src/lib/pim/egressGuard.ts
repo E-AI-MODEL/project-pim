@@ -2,8 +2,10 @@
 // Spec hfst 28. Geen actie mag voorbij PIM zonder ALLOW.
 
 import type { PimDecision } from "./types";
-import { computeSignals } from "./risk";
 import { draftCheck } from "./processing";
+import { runRegistry } from "./detectorRegistry";
+import { DEFAULT_PROFILE } from "./pipelineProfile";
+import type { RiskLevel } from "./types";
 
 /** Logger so the trust dashboard / console can show re-consult outcomes. */
 const reconsultLog: string[] = [];
