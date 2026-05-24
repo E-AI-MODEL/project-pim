@@ -914,16 +914,20 @@ function ModelStatusCard(props: {
   activateLabel: string;
 }) {
   const { tone, status } = props;
-  const accent = tone === "cyan" ? "cyan" : "purple";
+  const loadingBorder = tone === "cyan" ? "border-cyan/40 bg-cyan/5" : "border-purple/40 bg-purple/5";
+  const loadingBadge = tone === "cyan" ? "border-cyan/50 text-cyan" : "border-purple/50 text-purple";
+  const loadingBar = tone === "cyan" ? "bg-cyan" : "bg-purple";
+  const actBtn = tone === "cyan" ? "bg-cyan text-background" : "bg-purple text-background";
+  const spinCls = tone === "cyan" ? "text-cyan" : "text-purple";
   const borderCls =
     status === "ready" ? "border-green/40 bg-green/5" :
-    status === "loading" ? `border-${accent}/40 bg-${accent}/5` :
+    status === "loading" ? loadingBorder :
     status === "error" ? "border-red/50 bg-red/5" :
     status === "disabled" ? "border-border/40 opacity-70" :
     "border-orange/40 bg-orange/5";
   const badgeCls =
     status === "ready" ? "border-green/50 text-green" :
-    status === "loading" ? `border-${accent}/50 text-${accent}` :
+    status === "loading" ? loadingBadge :
     status === "error" ? "border-red/50 text-red" :
     status === "disabled" ? "border-border/60 text-muted-foreground" :
     "border-orange/50 text-orange";
@@ -950,18 +954,18 @@ function ModelStatusCard(props: {
         <div className="space-y-1">
           {props.progressLabel && <div className="font-mono text-[9px] text-muted-foreground truncate">{props.progressLabel}</div>}
           <div className="h-1.5 rounded-full bg-card overflow-hidden border border-border/40">
-            <div className={`h-full bg-${accent} transition-all`} style={{ width: `${props.progressPct ?? 0}%` }} />
+            <div className={`h-full transition-all ${loadingBar}`} style={{ width: `${props.progressPct ?? 0}%` }} />
           </div>
         </div>
       )}
       <div className="flex items-center justify-between gap-2 mt-auto pt-1">
         <span className="font-mono text-[10px] text-muted-foreground">download {props.sizeLabel}</span>
         {status === "idle" && props.available && (
-          <button onClick={props.onActivate} className={`px-2.5 py-1 rounded-md bg-${accent} text-background font-semibold text-[10px] inline-flex items-center gap-1 hover:opacity-90`}>
+          <button onClick={props.onActivate} className={`px-2.5 py-1 rounded-md font-semibold text-[10px] inline-flex items-center gap-1 hover:opacity-90 ${actBtn}`}>
             <Zap className="h-3 w-3" /> {props.activateLabel}
           </button>
         )}
-        {status === "loading" && <Loader2 className={`h-3.5 w-3.5 text-${accent} animate-spin`} />}
+        {status === "loading" && <Loader2 className={`h-3.5 w-3.5 animate-spin ${spinCls}`} />}
         {status === "ready" && <ShieldCheck className="h-3.5 w-3.5 text-green" />}
         {status === "error" && (
           <button onClick={props.onActivate} className="px-2.5 py-1 rounded-md border border-red/50 text-red font-mono text-[10px]">opnieuw</button>
