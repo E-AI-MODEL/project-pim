@@ -894,3 +894,79 @@ function VerdictPill({ verdict }: { verdict: Verdict }) {
     </span>
   );
 }
+
+type ModelStatusKind = "idle" | "loading" | "ready" | "error" | "disabled";
+function ModelStatusCard(props: {
+  name: string;
+  sizeLabel: string;
+  tone: "cyan" | "purple";
+  available: boolean;
+  status: ModelStatusKind;
+  runtime: "webgpu" | "wasm" | null;
+  progressPct?: number;
+  progressLabel?: string;
+  errorMsg: string | null;
+  idleHint: string;
+  loadingHint: string;
+  readyHint: string;
+  disabledHint?: string;
+  onActivate: () => void;
+  activateLabel: string;
+}) {
+  const { tone, status } = props;
+  const accent = tone === "cyan" ? "cyan" : "purple";
+  const borderCls =
+    status === "ready" ? "border-green/40 bg-green/5" :
+    status === "loading" ? `border-${accent}/40 bg-${accent}/5` :
+    status === "error" ? "border-red/50 bg-red/5" :
+    status === "disabled" ? "border-border/40 opacity-70" :
+    "border-orange/40 bg-orange/5";
+  const badgeCls =
+    status === "ready" ? "border-green/50 text-green" :
+    status === "loading" ? `border-${accent}/50 text-${accent}` :
+    status === "error" ? "border-red/50 text-red" :
+    status === "disabled" ? "border-border/60 text-muted-foreground" :
+    "border-orange/50 text-orange";
+  const badgeLabel =
+    status === "disabled" ? "uit" :
+    status === "ready" ? `ACTIEF${props.runtime ? " · " + props.runtime.toUpperCase() : ""}` :
+    status === "loading" ? `LADEN ${props.progressPct != null ? Math.round(props.progressPct) + "%" : "…"}` :
+    status === "error" ? "FOUT" :
+    "niet geladen";
+  const body =
+    status === "ready" ? props.readyHint :
+    status === "loading" ? props.loadingHint :
+    status === "error" ? `Laden mislukt: ${props.errorMsg ?? "onbekende fout"}.` :
+    status === "disabled" ? (props.disabledHint ?? "Niet beschikbaar in huidig profiel.") :
+    props.idleHint;
+  return (
+    <div className={`p-2.5 rounded-lg border ${borderCls} flex flex-col gap-2`}>
+      <div className="flex items-center justify-between gap-2">
+        <div className="font-mono text-[11px] font-semibold text-foreground/90 truncate">{props.name}</div>
+        <span className={`font-mono text-[9px] px-1.5 py-0.5 rounded-full border ${badgeCls} flex-shrink-0`}>{badgeLabel}</span>
+      </div>
+      <p className="text-[11px] text-foreground/80 leading-snug">{body}</p>
+      {status === "loading" && (
+        <div className="space-y-1">
+          {props.progressLabel && <div className="font-mono text-[9px] text-muted-foreground truncate">{props.progressLabel}</div>}
+          <div className="h-1.5 rounded-full bg-card overflow-hidden border border-border/40">
+            <div className={`h-full bg-${accent} transition-all`} style={{ width: `${props.progressPct ?? 0}%` }} />
+          </div>
+        </div>
+      )}
+      <div className="flex items-center justify-between gap-2 mt-auto pt-1">
+        <span className="font-mono text-[10px] text-muted-foreground">download {props.sizeLabel}</span>
+        {status === "idle" && props.available && (
+          <button onClick={props.onActivate} className={`px-2.5 py-1 rounded-md bg-${accent} text-background font-semibold text-[10px] inline-flex items-center gap-1 hover:opacity-90`}>
+            <Zap className="h-3 w-3" /> {props.activateLabel}
+          </button>
+        )}
+        {status === "loading" && <Loader2 className={`h-3.5 w-3.5 text-${accent} animate-spin`} />}
+        {status === "ready" && <ShieldCheck className="h-3.5 w-3.5 text-green" />}
+        {status === "error" && (
+          <button onClick={props.onActivate} className="px-2.5 py-1 rounded-md border border-red/50 text-red font-mono text-[10px]">opnieuw</button>
+        )}
+      </div>
+    </div>
+  );
+}
