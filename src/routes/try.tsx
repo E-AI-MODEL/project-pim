@@ -417,8 +417,8 @@ function TryPage() {
               <li><span className="font-mono text-primary mr-1.5">3.</span>De verdict-balk onderaan toont <em>ALLOW</em>, <em>WARNING</em> of <em>BLOCK</em>.</li>
             </ol>
             <p className="mt-3 text-[11px] text-muted-foreground leading-relaxed">
-              <strong className="text-foreground/80">Tip:</strong> activeer het browser-AI model (NER, ~180MB)
-              voor diepere naamherkenning. Eenmalige download, daarna gecached.
+              <strong className="text-foreground/80">Tip:</strong> activeer hieronder de twee lokale modellen
+              (NER ~180MB, Qwen rewrite ~400MB). Eenmalige download, daarna gecached en volledig offline.
             </p>
             <div className="mt-3 flex gap-2">
               <button onClick={dismissWelcome} className="text-[11px] font-mono px-3 py-1.5 rounded-md bg-primary text-primary-foreground font-semibold">
@@ -431,67 +431,61 @@ function TryPage() {
           </section>
         )}
 
-        {/* — Browser-AI status banner — altijd zichtbaar — */}
-        <section
-          className={`mt-4 panel p-3 ${
-            !profile.detectors.nerSlm ? "border-border/40" :
-            slmStatus?.ready ? "border-green/40 bg-green/5" :
-            slmStatus?.loading ? "border-cyan/40 bg-cyan/5" :
-            slmStatus?.error ? "border-red/50 bg-red/5" :
-            "border-orange/40 bg-orange/5"
-          }`}
-        >
-          <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 mt-0.5">
-              {slmStatus?.loading ? <Loader2 className="h-5 w-5 text-cyan animate-spin" /> :
-               slmStatus?.ready ? <ShieldCheck className="h-5 w-5 text-green" /> :
-               slmStatus?.error ? <ShieldX className="h-5 w-5 text-red" /> :
-               <Cpu className={`h-5 w-5 ${profile.detectors.nerSlm ? "text-orange" : "text-muted-foreground"}`} />}
+        {/* — Lokale modellen statusbalk — altijd zichtbaar — */}
+        <section className="mt-4 panel p-3">
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <div className="font-mono text-[10px] uppercase tracking-wider text-foreground/70 flex items-center gap-1.5">
+              <Cpu className="h-3 w-3" /> Lokale modellen · draaien in je browser
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-foreground/70">
-                  Browser-AI · lokaal taalmodel
-                </span>
-                <span className={`font-mono text-[10px] px-1.5 py-0.5 rounded-full border ${
-                  slmStatus?.ready ? "border-green/50 text-green" :
-                  slmStatus?.loading ? "border-cyan/50 text-cyan" :
-                  slmStatus?.error ? "border-red/50 text-red" :
-                  "border-orange/50 text-orange"
-                }`}>
-                  {!profile.detectors.nerSlm ? "niet in profiel" :
-                   slmStatus?.ready ? `ACTIEF · ${slmStatus.runtime?.toUpperCase()}` :
-                   slmStatus?.loading ? `LADEN ${slmStatus.progress?.pct ? Math.round(slmStatus.progress.pct) + "%" : "…"}` :
-                   slmStatus?.error ? "FOUT" :
-                   "niet geladen"}
-                </span>
-              </div>
-              <p className="text-[12px] text-foreground/85 mt-1 leading-snug">
-                {slmStatus?.ready
-                  ? "Het browser-model herkent nu ook namen en organisaties die niet in regex-lijsten staan. Alles draait lokaal — geen tekst verlaat je apparaat."
-                  : slmStatus?.loading
-                  ? `Eenmalige download (~180MB). ${slmStatus.progress?.file ?? "bestanden worden opgehaald"}. Bij volgend bezoek direct beschikbaar.`
-                  : slmStatus?.error
-                  ? `Laden mislukt: ${slmStatus.error}. Pipeline werkt door op regex + lexicon.`
-                  : "Voor optimale detectie van persoonsnamen heb je een klein in-browser taalmodel nodig. Eenmalige download (~180MB), draait daarna volledig offline."}
-              </p>
-              {slmStatus?.loading && slmStatus.progress && (
-                <div className="mt-2 h-1.5 rounded-full bg-card overflow-hidden border border-border/40">
-                  <div className="h-full bg-cyan transition-all" style={{ width: `${slmStatus.progress.pct ?? 0}%` }} />
-                </div>
-              )}
-            </div>
-            {profile.detectors.nerSlm && !slmStatus?.ready && !slmStatus?.loading && (
-              <button
-                onClick={activateSlm}
-                className="flex-shrink-0 px-3 py-2 rounded-md bg-cyan text-background font-semibold text-xs inline-flex items-center gap-1.5 hover:bg-cyan/90"
-              >
-                <Zap className="h-3.5 w-3.5" />
-                Activeer
-              </button>
-            )}
+            <span className="font-mono text-[10px] text-muted-foreground">geen egress</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <ModelStatusCard
+              name="NER · naamherkenning"
+              sizeLabel="~180MB"
+              tone="cyan"
+              available={profile.detectors.nerSlm}
+              status={
+                !profile.detectors.nerSlm ? "disabled" :
+                slmStatus?.ready ? "ready" :
+                slmStatus?.loading ? "loading" :
+                slmStatus?.error ? "error" : "idle"
+              }
+              runtime={slmStatus?.runtime ?? null}
+              progressPct={slmStatus?.progress?.pct}
+              progressLabel={slmStatus?.progress?.file}
+              errorMsg={slmStatus?.error ?? null}
+              idleHint="Detecteert namen/organisaties buiten de regex-lijsten."
+              loadingHint="Eenmalige download. Bij volgend bezoek direct actief."
+              readyHint="Actief — geen tekst verlaat je apparaat."
+              onActivate={activateSlm}
+              activateLabel="Activeer NER"
+            />
+            <ModelStatusCard
+              name="Qwen2.5 · rewrite"
+              sizeLabel="~400MB"
+              tone="purple"
+              available={mode === "anonymous"}
+              status={
+                mode !== "anonymous" ? "disabled" :
+                llmStatus?.ready ? "ready" :
+                llmStatus?.loading ? "loading" :
+                llmStatus?.error ? "error" : "idle"
+              }
+              runtime={null}
+              progressPct={llmStatus?.progress?.pct}
+              progressLabel={llmStatus?.progress?.text}
+              errorMsg={llmStatus?.error ?? null}
+              idleHint="Herschrijft anonieme drafts om residuele herkenbaarheid te generaliseren."
+              loadingHint="Grotere download. Pas op via mobiele data."
+              readyHint="Actief — gebruik de 'Rewrite'-knop in Geavanceerd."
+              disabledHint="Alleen in mode anonymous."
+              onActivate={() => { loadRewriteLlmFn(); }}
+              activateLabel="Download Qwen"
+            />
           </div>
         </section>
+
 
         {/* — Alerts (één strip) — */}
         {alerts.length > 0 && (
