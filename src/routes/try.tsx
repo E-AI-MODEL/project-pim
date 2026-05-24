@@ -24,7 +24,7 @@ import {
 } from "@/lib/pim";
 import {
   Shield, ShieldAlert, ShieldCheck, ShieldX, Copy, Eye, Save, RotateCcw, Send, Download, Printer, Share2,
-  Lock, AlertTriangle, Cpu, Loader2, Wrench, Inbox, Check, Activity, ChevronRight, Sparkles,
+  Lock, AlertTriangle, Cpu, Loader2, Wrench, Check, ChevronRight, Sparkles,
 } from "lucide-react";
 
 export const Route = createFileRoute("/try")({
