@@ -22,6 +22,7 @@ import {
   type Mode, type Action, type Verdict, type AuditEvent, type MappingHandle,
   type PiiSpan,
 } from "@/lib/pim";
+import { loadRewriteLlm } from "@/lib/pim/rewriteLlm";
 import {
   Shield, ShieldAlert, ShieldCheck, ShieldX, Copy, Eye, Save, RotateCcw, Send, Download, Printer, Share2,
   Lock, AlertTriangle, Cpu, Loader2, Wrench, Check, ChevronRight, Sparkles, X, Info, Zap,
@@ -480,7 +481,7 @@ function TryPage() {
               loadingHint="Grotere download. Pas op via mobiele data."
               readyHint="Actief — gebruik de 'Rewrite'-knop in Geavanceerd."
               disabledHint="Alleen in mode anonymous."
-              onActivate={() => { loadRewriteLlmFn(); }}
+              onActivate={() => { loadRewriteLlm().catch(() => {}); }}
               activateLabel="Download Qwen"
             />
           </div>
