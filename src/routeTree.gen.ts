@@ -9,7 +9,6 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TryRouteImport } from './routes/try'
 import { Route as TrustRouteImport } from './routes/trust'
 import { Route as ScenariosRouteImport } from './routes/scenarios'
 import { Route as PipelineRouteImport } from './routes/pipeline'
@@ -19,11 +18,6 @@ import { Route as ComplianceRouteImport } from './routes/compliance'
 import { Route as ArchitectureRouteImport } from './routes/architecture'
 import { Route as IndexRouteImport } from './routes/index'
 
-const TryRoute = TryRouteImport.update({
-  id: '/try',
-  path: '/try',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const TrustRoute = TrustRouteImport.update({
   id: '/trust',
   path: '/trust',
@@ -74,7 +68,6 @@ export interface FileRoutesByFullPath {
   '/pipeline': typeof PipelineRoute
   '/scenarios': typeof ScenariosRoute
   '/trust': typeof TrustRoute
-  '/try': typeof TryRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -85,7 +78,6 @@ export interface FileRoutesByTo {
   '/pipeline': typeof PipelineRoute
   '/scenarios': typeof ScenariosRoute
   '/trust': typeof TrustRoute
-  '/try': typeof TryRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -97,7 +89,6 @@ export interface FileRoutesById {
   '/pipeline': typeof PipelineRoute
   '/scenarios': typeof ScenariosRoute
   '/trust': typeof TrustRoute
-  '/try': typeof TryRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -110,7 +101,6 @@ export interface FileRouteTypes {
     | '/pipeline'
     | '/scenarios'
     | '/trust'
-    | '/try'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -121,7 +111,6 @@ export interface FileRouteTypes {
     | '/pipeline'
     | '/scenarios'
     | '/trust'
-    | '/try'
   id:
     | '__root__'
     | '/'
@@ -132,7 +121,6 @@ export interface FileRouteTypes {
     | '/pipeline'
     | '/scenarios'
     | '/trust'
-    | '/try'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -144,18 +132,10 @@ export interface RootRouteChildren {
   PipelineRoute: typeof PipelineRoute
   ScenariosRoute: typeof ScenariosRoute
   TrustRoute: typeof TrustRoute
-  TryRoute: typeof TryRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/try': {
-      id: '/try'
-      path: '/try'
-      fullPath: '/try'
-      preLoaderRoute: typeof TryRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/trust': {
       id: '/trust'
       path: '/trust'
@@ -224,17 +204,7 @@ const rootRouteChildren: RootRouteChildren = {
   PipelineRoute: PipelineRoute,
   ScenariosRoute: ScenariosRoute,
   TrustRoute: TrustRoute,
-  TryRoute: TryRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
