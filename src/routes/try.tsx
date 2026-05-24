@@ -24,7 +24,7 @@ import {
 } from "@/lib/pim";
 import {
   Shield, ShieldAlert, ShieldCheck, ShieldX, Copy, Eye, Save, RotateCcw, Send, Download, Printer, Share2,
-  Lock, AlertTriangle, Cpu, Loader2, Wrench, Check, ChevronRight, Sparkles,
+  Lock, AlertTriangle, Cpu, Loader2, Wrench, Check, ChevronRight, Sparkles, X, Info, Zap,
 } from "lucide-react";
 
 export const Route = createFileRoute("/try")({
@@ -180,6 +180,26 @@ function TryPage() {
   const [llmStreaming, setLlmStreaming] = useState(false);
   const [llmStreamText, setLlmStreamText] = useState("");
   const [verdictOpen, setVerdictOpen] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(true);
+
+  useEffect(() => {
+    try {
+      if (typeof window !== "undefined" && localStorage.getItem("pim:try:welcomeSeen") === "1") {
+        setShowWelcome(false);
+      }
+    } catch { /* noop */ }
+  }, []);
+
+  const dismissWelcome = () => {
+    setShowWelcome(false);
+    try { localStorage.setItem("pim:try:welcomeSeen", "1"); } catch { /* noop */ }
+  };
+
+  const activateSlm = () => {
+    if (!profile.detectors.nerSlm) return;
+    setSlmEnabled(true);
+    loadNerSlm().catch(() => {});
+  };
 
   const profile = PIPELINE_PROFILES[profileId];
   const activeDetectorIds = useMemo(() => activeDetectorsFor(profileId).map((d) => d.id), [profileId]);
@@ -372,6 +392,107 @@ function TryPage() {
       />
 
       <div className="mx-auto max-w-4xl px-4 sm:px-6 pb-32">
+        {/* — Welkomstkaart (eerste bezoek) — */}
+        {showWelcome && (
+          <section className="mt-4 panel p-4 border-primary/40 bg-primary/5 relative">
+            <button
+              onClick={dismissWelcome}
+              aria-label="Sluit uitleg"
+              className="absolute top-2 right-2 p-1 rounded text-muted-foreground hover:text-foreground hover:bg-background/50"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <div className="font-mono text-[10px] uppercase tracking-wider text-primary flex items-center gap-1.5">
+              <Info className="h-3 w-3" /> Eerste keer hier?
+            </div>
+            <h2 className="font-display font-bold text-base mt-1 mb-2">Wat doet deze demo?</h2>
+            <p className="text-[12px] text-foreground/85 leading-relaxed">
+              PiM analyseert onderwijstekst <strong>volledig in je browser</strong> en bepaalt of die veilig
+              naar een externe AI (zoals ChatGPT) gestuurd mag worden. Geen tekst verlaat je apparaat zonder
+              expliciete toestemming.
+            </p>
+            <ol className="mt-3 space-y-1.5 text-[12px] text-foreground/85">
+              <li><span className="font-mono text-primary mr-1.5">1.</span>Kies hieronder een scenario (of plak je eigen tekst).</li>
+              <li><span className="font-mono text-primary mr-1.5">2.</span>De pipeline detecteert namen, BSN, adressen, contextuele PII.</li>
+              <li><span className="font-mono text-primary mr-1.5">3.</span>De verdict-balk onderaan toont <em>ALLOW</em>, <em>WARNING</em> of <em>BLOCK</em>.</li>
+            </ol>
+            <p className="mt-3 text-[11px] text-muted-foreground leading-relaxed">
+              <strong className="text-foreground/80">Tip:</strong> activeer het browser-AI model (NER, ~180MB)
+              voor diepere naamherkenning. Eenmalige download, daarna gecached.
+            </p>
+            <div className="mt-3 flex gap-2">
+              <button onClick={dismissWelcome} className="text-[11px] font-mono px-3 py-1.5 rounded-md bg-primary text-primary-foreground font-semibold">
+                Begrepen, ga verder
+              </button>
+              <Link to="/scenarios" className="text-[11px] font-mono px-3 py-1.5 rounded-md border border-border/60 text-foreground/80 hover:bg-background/50">
+                Bekijk scenario's
+              </Link>
+            </div>
+          </section>
+        )}
+
+        {/* — Browser-AI status banner — altijd zichtbaar — */}
+        <section
+          className={`mt-4 panel p-3 ${
+            !profile.detectors.nerSlm ? "border-border/40" :
+            slmStatus?.ready ? "border-green/40 bg-green/5" :
+            slmStatus?.loading ? "border-cyan/40 bg-cyan/5" :
+            slmStatus?.error ? "border-red/50 bg-red/5" :
+            "border-orange/40 bg-orange/5"
+          }`}
+        >
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 mt-0.5">
+              {slmStatus?.loading ? <Loader2 className="h-5 w-5 text-cyan animate-spin" /> :
+               slmStatus?.ready ? <ShieldCheck className="h-5 w-5 text-green" /> :
+               slmStatus?.error ? <ShieldX className="h-5 w-5 text-red" /> :
+               <Cpu className={`h-5 w-5 ${profile.detectors.nerSlm ? "text-orange" : "text-muted-foreground"}`} />}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-foreground/70">
+                  Browser-AI · lokaal taalmodel
+                </span>
+                <span className={`font-mono text-[10px] px-1.5 py-0.5 rounded-full border ${
+                  slmStatus?.ready ? "border-green/50 text-green" :
+                  slmStatus?.loading ? "border-cyan/50 text-cyan" :
+                  slmStatus?.error ? "border-red/50 text-red" :
+                  "border-orange/50 text-orange"
+                }`}>
+                  {!profile.detectors.nerSlm ? "niet in profiel" :
+                   slmStatus?.ready ? `ACTIEF · ${slmStatus.runtime?.toUpperCase()}` :
+                   slmStatus?.loading ? `LADEN ${slmStatus.progress?.pct ? Math.round(slmStatus.progress.pct) + "%" : "…"}` :
+                   slmStatus?.error ? "FOUT" :
+                   "niet geladen"}
+                </span>
+              </div>
+              <p className="text-[12px] text-foreground/85 mt-1 leading-snug">
+                {slmStatus?.ready
+                  ? "Het browser-model herkent nu ook namen en organisaties die niet in regex-lijsten staan. Alles draait lokaal — geen tekst verlaat je apparaat."
+                  : slmStatus?.loading
+                  ? `Eenmalige download (~180MB). ${slmStatus.progress?.file ?? "bestanden worden opgehaald"}. Bij volgend bezoek direct beschikbaar.`
+                  : slmStatus?.error
+                  ? `Laden mislukt: ${slmStatus.error}. Pipeline werkt door op regex + lexicon.`
+                  : "Voor optimale detectie van persoonsnamen heb je een klein in-browser taalmodel nodig. Eenmalige download (~180MB), draait daarna volledig offline."}
+              </p>
+              {slmStatus?.loading && slmStatus.progress && (
+                <div className="mt-2 h-1.5 rounded-full bg-card overflow-hidden border border-border/40">
+                  <div className="h-full bg-cyan transition-all" style={{ width: `${slmStatus.progress.pct ?? 0}%` }} />
+                </div>
+              )}
+            </div>
+            {profile.detectors.nerSlm && !slmStatus?.ready && !slmStatus?.loading && (
+              <button
+                onClick={activateSlm}
+                className="flex-shrink-0 px-3 py-2 rounded-md bg-cyan text-background font-semibold text-xs inline-flex items-center gap-1.5 hover:bg-cyan/90"
+              >
+                <Zap className="h-3.5 w-3.5" />
+                Activeer
+              </button>
+            )}
+          </div>
+        </section>
+
         {/* — Alerts (één strip) — */}
         {alerts.length > 0 && (
           <div className="mt-4 space-y-2">
