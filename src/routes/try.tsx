@@ -367,6 +367,142 @@ function TryPage() {
   const draftDisplay = llmStreaming && llmStreamText ? llmStreamText : effectiveDraft.text;
   const totalSpans = signals.directPii.length + signals.contextualPii.length;
 
+  // — Semantische pipeline-stappen: wat doet elke laag NU op deze input —
+  const stepViews = useMemo<PipelineStepView[]>(() => {
+    const direct = signals.directPii.length;
+    const ctx = signals.contextualPii.length;
+    const sentenceCount = Math.max(1, text.split(/[.!?]+/).filter((s) => s.trim().length > 0).length);
+    const draftSnippet = (() => {
+      const t = effectiveDraft.text.trim();
+      return t.length > 90 ? t.slice(0, 88) + "…" : t;
+    })();
+    const decisionLine =
+      decision.verdict === "ALLOW" ? `ALLOW: actie '${action}' is toegestaan.` :
+      decision.verdict === "ALLOW_WITH_WARNING" ? `WAARSCHUWING: '${action}' mag, maar review aanbevolen.` :
+      `BLOCK: '${action}' wordt tegengehouden.`;
+
+    return [
+      {
+        id: "input", index: 1,
+        title: "Tekst ingelezen",
+        subtitle: `${text.length} tekens · ${sentenceCount} zin(nen)`,
+        detail: `De tekst staat in het geheugen van deze browser-tab. Geen netwerkverkeer, geen logregel met inhoud. Vanaf hier doorloopt elk teken de detectoren van het profiel '${profile.label}'.`,
+        status: text.trim().length === 0 ? "idle" : "ok",
+        badge: `${text.length}c`,
+        lastTickMs: 0, durationMs: 0,
+      },
+      {
+        id: "regex", index: 2,
+        title: "Patroon-detectie (regex)",
+        subtitle: "BSN, IBAN, e-mail, telefoon, postcode",
+        detail: sourceCounts.regex === 0
+          ? "Geen harde identificerende patronen aangetroffen. Dit zegt nog niets over namen of context — daarvoor zijn de volgende lagen."
+          : `${sourceCounts.regex} harde match(es) gevonden door regex-detectoren. Dit zijn de zwart-wit identifiers die altijd worden gemaskeerd, ongeacht context.`,
+        status: sourceCounts.regex > 0 ? "warn" : "ok",
+        badge: `${sourceCounts.regex}`,
+        lastTickMs: 0, durationMs: 0,
+      },
+      {
+        id: "lex", index: 3,
+        title: "Lexicon NL · onderwijs",
+        subtitle: "voornamen, organisaties, special-category woorden",
+        detail: sourceCounts.lex === 0
+          ? "Geen treffers in het Nederlandse onderwijslexicon. Veelvoorkomende voornamen, scholen en gevoelige categorieën (zorg, religie, etniciteit) staan in de woordenlijst."
+          : `${sourceCounts.lex} treffer(s) in het lexicon. Naast namen kan dit ook special-category zijn (bv. medische termen), wat het risico verhoogt los van directe identifiers.`,
+        status: sourceCounts.lex > 0 ? "found" : "ok",
+        badge: `${sourceCounts.lex}`,
+        lastTickMs: 0, durationMs: 0,
+      },
+      {
+        id: "slm", index: 4,
+        title: "Browser-NER (SLM)",
+        subtitle: slmEnabled ? "lokaal AI-model voor namen" : "uitgeschakeld",
+        detail: !profile.detectors.nerSlm
+          ? "Dit profiel gebruikt geen SLM. Alleen regels + lexicon zijn actief."
+          : !slmEnabled
+            ? "De browser-AI staat uit. Activeer hierboven om óók namen te vangen die niet in het lexicon staan (bv. zeldzame familienamen). Eenmalige download ~180MB."
+            : slmStatus?.loading
+              ? `Model wordt geladen (${slmStatus.progress?.pct ?? 0}%). Zodra klaar verschijnen extra naam-spans hieronder.`
+              : slmStatus?.ready
+                ? `Lokaal NER-model actief op ${slmStatus.runtime?.toUpperCase() ?? "?"}. ${sourceCounts.slm} naam-entiteit(en) herkend bovenop regex/lexicon.`
+                : slmStatus?.error
+                  ? `Laden mislukt: ${slmStatus.error}. Klik 'opnieuw' bij Lokale modellen.`
+                  : "Klaar om te activeren.",
+        status: !profile.detectors.nerSlm ? "skip" :
+                !slmEnabled ? "skip" :
+                slmStatus?.error ? "block" :
+                slmStatus?.ready ? (sourceCounts.slm > 0 ? "found" : "ok") :
+                slmStatus?.loading ? "found" : "idle",
+        badge: slmEnabled && slmStatus?.ready ? `${sourceCounts.slm}` : undefined,
+        lastTickMs: 0, durationMs: 0,
+      },
+      {
+        id: "ctx", index: 5,
+        title: "Contextuele versterking",
+        subtitle: "klas + naam, zorgsignaal + persoon, …",
+        detail: ctx === 0
+          ? "Geen contextuele combinaties gevonden. Contextdetectie kijkt of losse signalen samen herkenbaar worden (bv. 'Sophie' + 'groep 3' + 'juf Wim')."
+          : `${ctx} contextueel signaal(en). Dit verhoogt de risicoscore zelfs als de individuele woorden onschuldig lijken — small-group identifiability is hier de zorg.`,
+        status: ctx > 0 ? "warn" : "ok",
+        badge: `${ctx}`,
+        lastTickMs: 0, durationMs: 0,
+      },
+      {
+        id: "repair", index: 6,
+        title: "Auto-repair (rule-based)",
+        subtitle: mode === "anonymous" ? "generaliseer residuele identifiers" : "n.v.t. in pseudonymous",
+        detail: mode !== "anonymous"
+          ? "Repair draait alleen in mode 'anonymous'. In pseudonymous worden tokens gezet i.p.v. weggeschreven."
+          : repaired
+            ? "Initiële draft was nog niet schoon — automatische generalisatieregels hebben restjes herschreven (bv. 'klas 4H2' → 'een bovenbouwklas')."
+            : "Niet nodig — initiële anonimisering haalde alle harde issues weg.",
+        status: mode !== "anonymous" ? "skip" : repaired ? "warn" : "ok",
+        lastTickMs: 0, durationMs: 0,
+      },
+      {
+        id: "guard", index: 7,
+        title: "Draft Check Guard",
+        subtitle: `status: ${guard.status}`,
+        detail: guard.status === "pass"
+          ? `Draft is gecertificeerd voor mode '${mode}'. Geen ruwe e-mail, BSN, IBAN of tokens uit de andere modus. Veilig om door te geven aan de beslislaag.`
+          : guard.status === "repair"
+            ? `Draft heeft nog ${guard.issues.length} issue(s): ${guard.issues.slice(0, 2).join("; ")}. ${llmDraft ? "Qwen-rewrite is toegepast." : "Auto-repair kon dit niet volledig oplossen — overweeg LLM-rewrite of handmatige edit."}`
+            : `BLOK: ${guard.issues.length} kritiek issue(s) — ${guard.issues.slice(0, 2).join("; ")}. PIM zal géén uitgaande actie toestaan.`,
+        status: guard.status === "pass" ? "ok" : guard.status === "repair" ? "warn" : "block",
+        badge: guard.issues.length > 0 ? `${guard.issues.length}` : undefined,
+        lastTickMs: 0, durationMs: 0,
+      },
+      {
+        id: "decide", index: 8,
+        title: "PIM-beslissing",
+        subtitle: `${decision.verdict} · rule ${decision.ruleId}`,
+        detail: `${decisionLine} Onderliggende reden: ${decision.reason} (code: ${decision.reasonCode}, policy v${decision.policyVersion}). De beslissing is deterministisch — zelfde input + profiel = zelfde uitkomst.`,
+        status: decision.verdict === "ALLOW" ? "ok" : decision.verdict === "ALLOW_WITH_WARNING" ? "warn" : "block",
+        badge: action,
+        lastTickMs: 0, durationMs: 0,
+      },
+      {
+        id: "llm", index: 9,
+        title: "Qwen rewrite (optioneel)",
+        subtitle: mode === "anonymous" ? "lokale LLM verzacht residuen" : "n.v.t. in pseudonymous",
+        detail: mode !== "anonymous"
+          ? "LLM-rewrite is bewust uitgeschakeld in pseudonymous: tokens mogen nooit aan een taalmodel worden gevoerd, zelfs niet lokaal."
+          : llmStreaming
+            ? "Qwen2.5 streamt nu een herschrijving in de browser…"
+            : llmDraft
+              ? `Rewrite toegepast: '${draftSnippet}'. Het resultaat ging opnieuw door Draft Check Guard.`
+              : llmStatus?.ready
+                ? "Qwen is geladen — klik 'Rewrite' bij Geavanceerd om residuele herkenbaarheid te generaliseren."
+                : "Niet gebruikt. Activeer Qwen hierboven als je een natuurlijker geanonimiseerde tekst wilt.",
+        status: mode !== "anonymous" ? "skip" :
+                llmDraft ? "found" :
+                llmStreaming ? "found" :
+                llmStatus?.error ? "warn" : "idle",
+        lastTickMs: 0, durationMs: 0,
+      },
+    ];
+  }, [text, signals, sourceCounts, profile, slmEnabled, slmStatus, mode, repaired, guard, decision, action, llmDraft, llmStreaming, llmStatus, effectiveDraft.text]);
+
   const loadPreset = (p: Preset) => {
     setActivePreset(p);
     setText(p.text);
