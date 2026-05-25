@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PageHero } from "@/components/pim/PageHero";
 import { RiskGauge } from "@/components/pim/RiskGauge";
-import { PipelineTimeline } from "@/components/pim/PipelineTimeline";
+import { PipelineTimeline, type PipelineStepView } from "@/components/pim/PipelineTimeline";
 import { AnonymizedText } from "@/components/pim/AnonymizedText";
 import { RiskBanner } from "@/components/pim/RiskBanner";
 import { usePipelineHeartbeat, type StepId } from "@/hooks/usePipelineHeartbeat";
