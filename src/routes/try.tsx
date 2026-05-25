@@ -780,11 +780,15 @@ function TryPage() {
         </Section>
 
         {/* — Sectie 4: Live pipeline — */}
-        <Section title="Live pipeline" eyebrow="04 · Heartbeat">
+        <Section title="Live pipeline" eyebrow="04 · Wat doet elke laag?" defaultOpen>
           <div className="flex items-center justify-center mb-3">
             <RiskGauge score={decisionSignals.riskScore} level={decisionSignals.riskLevel} />
           </div>
-          <PipelineTimeline steps={steps} />
+          <p className="text-[11px] text-muted-foreground mb-3 leading-relaxed">
+            Negen lagen draaien volgordelijk in je browser. Tik op een stap voor de uitleg in
+            klare taal — gebaseerd op wat de pipeline op <em>jouw</em> tekst aantrof.
+          </p>
+          <PipelineTimeline steps={stepViews} heartbeats={steps} />
         </Section>
 
         {/* — Sectie 5: Geavanceerd — */}
