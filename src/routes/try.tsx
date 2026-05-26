@@ -57,14 +57,19 @@ const STARTERS: Preset[] = [
     id: "starter-clean",
     label: "Schoon · ALLOW",
     tone: "green",
-    hint: "Geen herleidbare gegevens — pipeline geeft direct groen licht.",
+    hint: "Vakinhoudelijke evaluatie zonder herleidbare gegevens — alles blijft staan, AI mag direct aan de slag.",
     text:
-      "Tussenevaluatie nieuwe rekenmethode.\n\n" +
-      "Na acht weken werken met de nieuwe methode zien we drie patronen: leerlingen " +
-      "pakken automatiseren sneller op, de differentiatiebladen worden actief gebruikt, " +
-      "en de wekelijkse toets levert minder spreiding op dan voorheen.\n\n" +
-      "Voorstel voor de bouwvergadering: methode definitief invoeren vanaf het nieuwe " +
-      "schooljaar en de huidige differentiatieaanpak opnemen in het schoolplan.",
+      "Vraag aan de AI: help mij deze tussenevaluatie aanscherpen tot een advies van " +
+      "max. 250 woorden voor de bouwvergadering.\n\n" +
+      "Tussenevaluatie nieuwe rekenmethode — na acht weken.\n" +
+      "1. Automatiseren tot 100 gaat aantoonbaar sneller: gemiddelde tijd op de " +
+      "weektoets daalde van 7'20\" naar 5'45\".\n" +
+      "2. De differentiatiebladen op niveau 1-2-3 worden in 4 van de 5 lessen ingezet; " +
+      "de instructiegroep krimpt na de eerste oefenronde.\n" +
+      "3. Spreiding op de blok­toets is kleiner (sd 1,2 → 0,8), maar de zwakste subgroep " +
+      "blijft achter op meten & meetkunde.\n\n" +
+      "Beoogd besluit: methode definitief invoeren vanaf komend schooljaar, met een extra " +
+      "interventielijn voor meten & meetkunde in de onderbouw.",
     mode: "anonymous",
     action: "display",
   },
@@ -72,14 +77,19 @@ const STARTERS: Preset[] = [
     id: "starter-medium",
     label: "Repair · contextuele PII",
     tone: "orange",
-    hint: "Naam, klascode en kleine groep — auto-repair generaliseert vóór egress.",
+    hint: "Naam + klascode worden geneutraliseerd; de pedagogische inhoud — het échte signaal voor de AI — blijft volledig staan.",
     text:
-      "Kort mentorverslag.\n\n" +
-      "Gesprek gevoerd met Tom de Vries (4H2) over de planning richting het " +
-      "schoolexamen Nederlands. Tom geeft aan dat hij vastloopt op de twee PTA-" +
-      "deadlines in november en vraagt om een herziene studieplanning.\n\n" +
-      "Afspraken: Tom levert vrijdag een eigen planning aan, ouders zijn vandaag " +
-      "telefonisch geïnformeerd en steunen de aanpak. Vervolggesprek over twee weken.",
+      "Vraag aan de AI: stel op basis van dit verslag een studieplanning van 3 weken voor, " +
+      "met tussendoelen per week en een korte ouderbrief.\n\n" +
+      "Kort mentorverslag.\n" +
+      "Gesprek gevoerd met Tom de Vries (4H2) over de aanloop naar het schoolexamen " +
+      "Nederlands. Twee PTA-deadlines vallen in dezelfde week van november: " +
+      "literatuurdossier (5 boeken, eigen analyse) en betoog (800 woorden, bronvermelding).\n\n" +
+      "Observaties: leerling overziet de stof, maar plant op dagniveau in plaats van op " +
+      "weekniveau; herleest bronnen meerdere keren zonder aantekeningen; begint pas met " +
+      "schrijven als alles 'klopt'. Motivatie is hoog, faalangst speelt mee.\n\n" +
+      "Afspraken: leerling levert vrijdag een eigen weekplanning, ouders zijn telefonisch " +
+      "geïnformeerd en steunen de aanpak. Vervolggesprek over twee weken.",
     mode: "anonymous",
     action: "copy",
   },
@@ -87,17 +97,24 @@ const STARTERS: Preset[] = [
     id: "starter-heavy",
     label: "Block · directe PII",
     tone: "red",
-    hint: "BSN, IBAN, adres, e-mail, telefoon — egress wordt hard geblokkeerd.",
+    hint: "Identificerende kop wordt geblokkeerd; de inhoudelijke zorgvraag eronder is precies waarom je PiM nodig hebt vóór je naar AI gaat.",
     text:
-      "Notitie zorgcoördinator — vertrouwelijk.\n\n" +
+      "Vraag aan de AI: help mij een handelingsplan op te stellen volgens de SMW-richtlijn, " +
+      "met concrete interventies voor school én ouders.\n\n" +
+      "Notitie zorgcoördinator — vertrouwelijk.\n" +
       "Betreft: Sarah Jansen, groep 6, basisschool De Wilg te Utrecht.\n" +
       "Geboortedatum 14-03-2015, BSN 123456782, leerlingnummer 4582193.\n" +
-      "Adres: Bredestraat 12, 3511 AB Utrecht.\n\n" +
-      "Contact ouders: vader (Mark Jansen) bereikbaar op 06-12345678, " +
-      "e-mail jansen@voorbeeld.nl. Eigen bijdrage zorgarrangement loopt via " +
-      "IBAN NL91ABNA0417164300.\n\n" +
-      "Aanleiding: signalen van pesten binnen de kerngroep van vier meisjes. " +
-      "Vervolgafspraak met IB'er De Groot staat gepland.",
+      "Adres: Bredestraat 12, 3511 AB Utrecht.\n" +
+      "Contact ouders: vader (Mark Jansen) op 06-12345678, e-mail jansen@voorbeeld.nl. " +
+      "Eigen bijdrage zorgarrangement loopt via IBAN NL91ABNA0417164300.\n\n" +
+      "Aanleiding en observaties (relevant voor de AI):\n" +
+      "- Sinds de herfstvakantie afnemende deelname aan groepswerk, eet tussen de middag " +
+      "alleen, scoort op de SAQI hoger op de schaal 'sociale onveiligheid'.\n" +
+      "- Pestsignalen binnen een kerngroep van vier meisjes (uitsluiten bij gym en " +
+      "buitenspel, roddel via groepschat).\n" +
+      "- Leerprestaties stabiel, maar werktempo bij begrijpend lezen halveerde.\n\n" +
+      "Gewenste output: handelingsplan met (1) korte-termijn interventies in de groep, " +
+      "(2) gespreksleidraad voor ouders, (3) evaluatiemomenten over 4 en 8 weken.",
     mode: "anonymous",
     action: "send_external_ai",
   },
@@ -109,13 +126,21 @@ const SCENARIO_PRESETS: Preset[] = [
     label: "AI-tutor → ext. LLM",
     tone: "cyan",
     scenarioId: "llm-tutor",
-    hint: "Leerling-prompt naar ChatGPT — PiM filtert naam, zorgcontext en school vóór de fetch.",
+    hint: "Naam, school en zorgdiagnose worden gefilterd; de inhoudelijke leervraag over 'Spijt!' blijft volledig staan voor de tutor.",
     text:
       "Hoi, ik ben Yusuf el-Amrani uit 3vmbo-b op het Stedelijk Lyceum in Eindhoven. " +
       "Ik heb ADHD en gebruik daar medicatie voor, dus lange opdrachten lopen vaak vast.\n\n" +
-      "Kun je me helpen om mijn boekverslag van 'Spijt!' van Carry Slee beter op te " +
-      "bouwen? Mijn docent Nederlands, meester Jansen, wil een duidelijke rode draad " +
-      "tussen thema, hoofdpersoon en eigen mening. Inleverdatum is 28 november.",
+      "Vraag aan de tutor:\n" +
+      "Help me een boekverslag van 'Spijt!' van Carry Slee op te bouwen rond één rode " +
+      "draad: hoe het thema (groepsdruk en pesten) zichtbaar wordt in de keuzes van " +
+      "hoofdpersoon David, en wat ik daar zelf van vind.\n\n" +
+      "Wat ik al heb:\n" +
+      "- Samenvatting per hoofdstuk klaar.\n" +
+      "- Drie scènes geselecteerd waarin David wegkijkt bij Jochem.\n" +
+      "- Eigen mening: 'meelopen is ook kiezen', maar ik krijg het niet onderbouwd.\n\n" +
+      "Wat ik nodig heb: een opbouw in 5 alinea's (thema → personage → 3 scènes → " +
+      "eigen mening → conclusie) en per alinea één concrete schrijftip. Inleverdatum " +
+      "is 28 november, dus geen lange theorie graag.",
     mode: "anonymous",
     action: "send_external_ai",
   },
@@ -124,15 +149,21 @@ const SCENARIO_PRESETS: Preset[] = [
     label: "RAG schoolbeleid",
     tone: "purple",
     scenarioId: "rag-school",
-    hint: "Ingest in vector-store — pseudonieme tokens, mapping lokaal AES-GCM versleuteld.",
+    hint: "Namen worden pseudonieme tokens (lokaal te restoren); de beleidslogica en interventies blijven indexeerbaar voor de vector-store.",
     text:
       "Casusbeschrijving voor het ondersteuningsdossier (schooljaar 2024-2025).\n\n" +
       "Leerling Lisa Bakker (klas 2havo, dyslexieverklaring sinds groep 6) kreeg na " +
-      "overleg met IB'er Marieke de Groot extra tijd bij toetsen Nederlands en Engels, " +
-      "plus toegang tot voorleessoftware.\n\n" +
-      "Vergelijkbare aanpak werd vorig schooljaar succesvol gebruikt bij Tariq el-Amrani " +
-      "(klas 2A) en Sophie van Dijk (klas 2B). Op basis van die drie casussen stelt de " +
-      "ondersteuningscoördinator voor om de aanpak vast te leggen in het schoolbeleid.",
+      "overleg met IB'er Marieke de Groot het volgende arrangement:\n" +
+      "- 25% extra tijd bij toetsen Nederlands en Engels;\n" +
+      "- toegang tot voorleessoftware (ClaroRead) op het schoolaccount;\n" +
+      "- vrijstelling van hardop voorlezen in de klas;\n" +
+      "- twee keer per periode evaluatiegesprek met de mentor.\n\n" +
+      "Vergelijkbare aanpak werd vorig schooljaar succesvol ingezet bij Tariq el-Amrani " +
+      "(klas 2A) en Sophie van Dijk (klas 2B). In beide gevallen steeg het cijfer " +
+      "Nederlands met gemiddeld 0,8 punt en daalde het aantal gemiste toetsmomenten naar 0.\n\n" +
+      "Voorstel van de ondersteuningscoördinator: dit arrangement opnemen als " +
+      "standaardroute in het schoolbeleid 'dyslexie onderbouw', met evaluatie na één " +
+      "schooljaar en heldere afbakening t.o.v. maatwerk-trajecten.",
     mode: "pseudonymous",
     action: "save_local",
   },
@@ -141,15 +172,23 @@ const SCENARIO_PRESETS: Preset[] = [
     label: "Feedback op essay",
     tone: "green",
     scenarioId: "feedback",
-    hint: "Essay met naam en familie-context in de openingszin — PiM anonimiseert vóór feedback-LLM.",
+    hint: "Identificerende kop én familie-context gaan eraf; het inhoudelijke essay (onderzoeksvraag, methode, bronnen) blijft één-op-één staan voor de feedback-LLM.",
     text:
-      "Naam: Yusuf el-Amrani — klas 4H2 — vak: maatschappijleer.\n\n" +
-      "Mijn vader werkt als verpleegkundige in het Catharina-ziekenhuis en ziet dagelijks " +
-      "jongeren binnenkomen met klachten die mogelijk samenhangen met schermgebruik. Dat " +
-      "vormt de aanleiding voor dit essay.\n\n" +
-      "Onderzoeksvraag: in hoeverre beïnvloedt het dagelijks gebruik van sociale media de " +
-      "concentratie van scholieren tussen 14 en 18 jaar? Ik combineer literatuur (Twenge, " +
-      "2017; Orben & Przybylski, 2019) met een korte enquête onder mijn eigen klas.",
+      "Naam: Yusuf el-Amrani — klas 4H2 — vak: maatschappijleer — docent: meester Jansen.\n" +
+      "Mijn vader werkt als verpleegkundige in het Catharina-ziekenhuis en ziet daar " +
+      "dagelijks jongeren binnenkomen met klachten die mogelijk samenhangen met " +
+      "schermgebruik. Dat vormt de persoonlijke aanleiding voor dit essay.\n\n" +
+      "— Essay (concept v2) —\n" +
+      "Onderzoeksvraag: in hoeverre beïnvloedt het dagelijks gebruik van sociale media " +
+      "de concentratie van scholieren tussen 14 en 18 jaar?\n\n" +
+      "Methode: combinatie van literatuuronderzoek (Twenge, 2017; Orben & Przybylski, " +
+      "2019; Nesi et al., 2018) en een korte enquête (n=28) onder mijn eigen klas, met " +
+      "vragen over schermtijd, slaap en zelf-gerapporteerde concentratie.\n\n" +
+      "Voorlopige conclusie: schermtijd boven 3 uur per dag correleert in mijn steekproef " +
+      "met lagere zelf-gerapporteerde concentratie, maar de literatuur waarschuwt voor " +
+      "te snelle causale claims. Discussie­paragraaf is nog niet af.\n\n" +
+      "Vraag aan de feedback-LLM: beoordeel structuur, sterkte van de argumentatie en " +
+      "gebruik van bronnen op havo-4 niveau, en geef 3 concrete verbeterpunten.",
     mode: "anonymous",
     action: "display",
   },
@@ -158,15 +197,21 @@ const SCENARIO_PRESETS: Preset[] = [
     label: "LVS → risico-classifier",
     tone: "orange",
     scenarioId: "lvs-trigger",
-    hint: "Nightly export naar risico-classifier — leerling-features worden pseudoniem getokeniseerd.",
+    hint: "Leerlingnummer en dossier-ID worden tokens; de feature-vector (cijferverloop, absentie, trend) blijft compleet voor de classifier.",
     text:
       "Nightly LVS-export — record 1 van 412.\n\n" +
-      "Leerlingnummer 4582193, klas 3V, mentor: dhr. P. Hendriks.\n" +
-      "Cijferverloop wiskunde: 7,2 → 6,1 → 4,8 over drie achtereenvolgende periodes.\n" +
-      "Absentie: 14 dagen ongeoorloofd in het lopende kwartaal.\n" +
-      "Zorgvlag actief sinds 02-09-2025, gekoppeld aan dossier ZRG-2025-0418.\n\n" +
-      "Aanbeveling classifier: opnemen in wekelijkse signaleringslijst voor de " +
-      "zorgcoördinator. Geen rechtstreekse interventie zonder menselijke beoordeling.",
+      "Identificatie (wordt getokeniseerd):\n" +
+      "leerlingnummer 4582193, klas 3V, mentor dhr. P. Hendriks, dossier ZRG-2025-0418.\n\n" +
+      "Features voor de classifier (blijven inhoudelijk staan):\n" +
+      "- cijferverloop wiskunde: 7,2 → 6,1 → 4,8 over drie periodes (trend −2,4);\n" +
+      "- cijferverloop Nederlands: 6,8 → 6,9 → 6,7 (stabiel);\n" +
+      "- absentie: 14 dagen ongeoorloofd in lopend kwartaal (vorig kwartaal 2);\n" +
+      "- te-laat-meldingen: 9 in 6 weken, geconcentreerd op maandag en vrijdag;\n" +
+      "- huiswerk-completion (LMS): 92% → 64% → 41%;\n" +
+      "- zorgvlag actief sinds 02-09-2025.\n\n" +
+      "Gewenste output classifier: risico-score 0-1, top-3 drijvende features, en " +
+      "aanbeveling 'opnemen in wekelijkse signaleringslijst' ja/nee. Geen rechtstreekse " +
+      "interventie zonder menselijke beoordeling door de zorgcoördinator.",
     mode: "pseudonymous",
     action: "send_external_ai",
   },
@@ -175,16 +220,22 @@ const SCENARIO_PRESETS: Preset[] = [
     label: "Ouder-chatbot",
     tone: "cyan",
     scenarioId: "chatbot-ouders",
-    hint: "Inkomende ouder-vraag — namen, groep en pest-signaal worden geanonimiseerd vóór het LLM-antwoord.",
+    hint: "Familienamen en kleine-groep-context gaan eraf; de feitelijke observaties en de hulpvraag van de ouders blijven voor de chatbot leesbaar.",
     text:
       "Goedemiddag,\n\n" +
       "Ik wil graag weten hoe het met mijn dochter Sophie van Dijk gaat in groep 3 bij " +
-      "juf Wilma. De laatste drie weken is ze 's avonds erg stil en wil ze 's ochtends " +
-      "niet meer naar school.\n\n" +
+      "juf Wilma. De laatste drie weken zien wij thuis het volgende:\n" +
+      "- 's avonds opvallend stil, eet minder, wil eerder naar bed;\n" +
+      "- 's ochtends buikpijn en huilbuien rond het aankleden;\n" +
+      "- vraagt of ze met mama mee mag naar het werk in plaats van naar school.\n\n" +
       "Haar broer Lucas (groep 5) vertelt thuis dat Sophie tijdens de pauze regelmatig " +
-      "alleen op het schoolplein staat en dat twee meisjes uit haar groep haar uitsluiten. " +
-      "Kan iemand vóór vrijdag contact opnemen om af te stemmen wat we als ouders kunnen " +
-      "doen?\n\n" +
+      "alleen op het schoolplein staat en dat twee meisjes uit haar groep haar uitsluiten " +
+      "bij het spelen.\n\n" +
+      "Onze vraag aan de school:\n" +
+      "1. Herkent de leerkracht deze signalen op school?\n" +
+      "2. Wat is jullie pestprotocol en welke stap zit jullie nu in?\n" +
+      "3. Kunnen we vóór vrijdag een gesprek inplannen om af te stemmen wat wij als " +
+      "ouders thuis kunnen doen?\n\n" +
       "Met vriendelijke groet,\nFamilie Van Dijk",
     mode: "anonymous",
     action: "send_external_ai",
@@ -194,17 +245,27 @@ const SCENARIO_PRESETS: Preset[] = [
     label: "Gespreksverslag",
     tone: "purple",
     scenarioId: "rapport-rewrite",
-    hint: "Dictaat → lokale rewrite (Qwen) die zorg-context generaliseert zonder kern te verliezen.",
+    hint: "Namen, klas en medicatie­dosis worden lokaal door Qwen generaliserend herschreven; de inhoudelijke afspraken en interventies blijven exact bewaard.",
     text:
       "Verslag multidisciplinair overleg — 14 maart 2025.\n\n" +
-      "Aanwezig: mentor (dhr. Hendriks), IB'er (mevr. De Groot), schoolpsycholoog, " +
-      "ouders Tariq el-Amrani.\n\n" +
-      "Tariq el-Amrani (klas 2A) blijft worstelen met faalangst rond toetsen. De " +
-      "medicatie (methylfenidaat 10 mg) loopt door en de huisarts evalueert in juni. " +
-      "De gezinssituatie is sinds de scheiding van ouders in 2024 complex, met wisselend " +
-      "verblijf bij beide ouders.\n\n" +
-      "Op school ondersteunt klasgenoot Sophie van Dijk actief tijdens groepswerk. " +
-      "Afspraak: handelingsplan herzien vóór de meivakantie en vervolg-MDO op 12 mei.",
+      "Aanwezig: mentor (dhr. Hendriks), IB'er (mevr. De Groot), schoolpsycholoog " +
+      "(mevr. Visser), ouders Tariq el-Amrani.\n\n" +
+      "Stand van zaken:\n" +
+      "Tariq el-Amrani (klas 2A) laat al twee periodes toenemende faalangst zien rond " +
+      "toetsmomenten: vermijdingsgedrag op de dag van de toets, blanco inleveren bij " +
+      "tijdsdruk, en herstel binnen 24 uur. De medicatie (methylfenidaat 10 mg) loopt " +
+      "door; huisarts evalueert in juni. De gezinssituatie is sinds de scheiding van " +
+      "ouders in 2024 complex, met wisselend verblijf bij beide ouders.\n\n" +
+      "Wat werkt op school (blijft staan in verslag):\n" +
+      "- toetsen in kleinere ruimte met 25% extra tijd;\n" +
+      "- vooraf inzage in opdrachttype (open/gesloten);\n" +
+      "- vaste 'time-out kaart' bij overprikkeling;\n" +
+      "- ondersteuning van een vaste klasgenoot tijdens groepswerk.\n\n" +
+      "Afspraken:\n" +
+      "1. Handelingsplan herzien vóór de meivakantie, met meetbare doelen op " +
+      "toetsdeelname en zelfgerapporteerde spanning (schaal 1-10).\n" +
+      "2. Schoolpsycholoog start cognitieve gedragsoefeningen, 6 sessies.\n" +
+      "3. Vervolg-MDO op 12 mei, met evaluatie van de medicatie samen met de huisarts.",
     mode: "anonymous",
     action: "save_local",
   },
