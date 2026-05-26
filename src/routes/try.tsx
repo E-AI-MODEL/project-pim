@@ -57,14 +57,19 @@ const STARTERS: Preset[] = [
     id: "starter-clean",
     label: "Schoon · ALLOW",
     tone: "green",
-    hint: "Geen herleidbare gegevens — pipeline geeft direct groen licht.",
+    hint: "Vakinhoudelijke evaluatie zonder herleidbare gegevens — alles blijft staan, AI mag direct aan de slag.",
     text:
-      "Tussenevaluatie nieuwe rekenmethode.\n\n" +
-      "Na acht weken werken met de nieuwe methode zien we drie patronen: leerlingen " +
-      "pakken automatiseren sneller op, de differentiatiebladen worden actief gebruikt, " +
-      "en de wekelijkse toets levert minder spreiding op dan voorheen.\n\n" +
-      "Voorstel voor de bouwvergadering: methode definitief invoeren vanaf het nieuwe " +
-      "schooljaar en de huidige differentiatieaanpak opnemen in het schoolplan.",
+      "Vraag aan de AI: help mij deze tussenevaluatie aanscherpen tot een advies van " +
+      "max. 250 woorden voor de bouwvergadering.\n\n" +
+      "Tussenevaluatie nieuwe rekenmethode — na acht weken.\n" +
+      "1. Automatiseren tot 100 gaat aantoonbaar sneller: gemiddelde tijd op de " +
+      "weektoets daalde van 7'20\" naar 5'45\".\n" +
+      "2. De differentiatiebladen op niveau 1-2-3 worden in 4 van de 5 lessen ingezet; " +
+      "de instructiegroep krimpt na de eerste oefenronde.\n" +
+      "3. Spreiding op de blok­toets is kleiner (sd 1,2 → 0,8), maar de zwakste subgroep " +
+      "blijft achter op meten & meetkunde.\n\n" +
+      "Beoogd besluit: methode definitief invoeren vanaf komend schooljaar, met een extra " +
+      "interventielijn voor meten & meetkunde in de onderbouw.",
     mode: "anonymous",
     action: "display",
   },
@@ -72,14 +77,19 @@ const STARTERS: Preset[] = [
     id: "starter-medium",
     label: "Repair · contextuele PII",
     tone: "orange",
-    hint: "Naam, klascode en kleine groep — auto-repair generaliseert vóór egress.",
+    hint: "Naam + klascode worden geneutraliseerd; de pedagogische inhoud — het échte signaal voor de AI — blijft volledig staan.",
     text:
-      "Kort mentorverslag.\n\n" +
-      "Gesprek gevoerd met Tom de Vries (4H2) over de planning richting het " +
-      "schoolexamen Nederlands. Tom geeft aan dat hij vastloopt op de twee PTA-" +
-      "deadlines in november en vraagt om een herziene studieplanning.\n\n" +
-      "Afspraken: Tom levert vrijdag een eigen planning aan, ouders zijn vandaag " +
-      "telefonisch geïnformeerd en steunen de aanpak. Vervolggesprek over twee weken.",
+      "Vraag aan de AI: stel op basis van dit verslag een studieplanning van 3 weken voor, " +
+      "met tussendoelen per week en een korte ouderbrief.\n\n" +
+      "Kort mentorverslag.\n" +
+      "Gesprek gevoerd met Tom de Vries (4H2) over de aanloop naar het schoolexamen " +
+      "Nederlands. Twee PTA-deadlines vallen in dezelfde week van november: " +
+      "literatuurdossier (5 boeken, eigen analyse) en betoog (800 woorden, bronvermelding).\n\n" +
+      "Observaties: leerling overziet de stof, maar plant op dagniveau in plaats van op " +
+      "weekniveau; herleest bronnen meerdere keren zonder aantekeningen; begint pas met " +
+      "schrijven als alles 'klopt'. Motivatie is hoog, faalangst speelt mee.\n\n" +
+      "Afspraken: leerling levert vrijdag een eigen weekplanning, ouders zijn telefonisch " +
+      "geïnformeerd en steunen de aanpak. Vervolggesprek over twee weken.",
     mode: "anonymous",
     action: "copy",
   },
@@ -87,17 +97,24 @@ const STARTERS: Preset[] = [
     id: "starter-heavy",
     label: "Block · directe PII",
     tone: "red",
-    hint: "BSN, IBAN, adres, e-mail, telefoon — egress wordt hard geblokkeerd.",
+    hint: "Identificerende kop wordt geblokkeerd; de inhoudelijke zorgvraag eronder is precies waarom je PiM nodig hebt vóór je naar AI gaat.",
     text:
-      "Notitie zorgcoördinator — vertrouwelijk.\n\n" +
+      "Vraag aan de AI: help mij een handelingsplan op te stellen volgens de SMW-richtlijn, " +
+      "met concrete interventies voor school én ouders.\n\n" +
+      "Notitie zorgcoördinator — vertrouwelijk.\n" +
       "Betreft: Sarah Jansen, groep 6, basisschool De Wilg te Utrecht.\n" +
       "Geboortedatum 14-03-2015, BSN 123456782, leerlingnummer 4582193.\n" +
-      "Adres: Bredestraat 12, 3511 AB Utrecht.\n\n" +
-      "Contact ouders: vader (Mark Jansen) bereikbaar op 06-12345678, " +
-      "e-mail jansen@voorbeeld.nl. Eigen bijdrage zorgarrangement loopt via " +
-      "IBAN NL91ABNA0417164300.\n\n" +
-      "Aanleiding: signalen van pesten binnen de kerngroep van vier meisjes. " +
-      "Vervolgafspraak met IB'er De Groot staat gepland.",
+      "Adres: Bredestraat 12, 3511 AB Utrecht.\n" +
+      "Contact ouders: vader (Mark Jansen) op 06-12345678, e-mail jansen@voorbeeld.nl. " +
+      "Eigen bijdrage zorgarrangement loopt via IBAN NL91ABNA0417164300.\n\n" +
+      "Aanleiding en observaties (relevant voor de AI):\n" +
+      "- Sinds de herfstvakantie afnemende deelname aan groepswerk, eet tussen de middag " +
+      "alleen, scoort op de SAQI hoger op de schaal 'sociale onveiligheid'.\n" +
+      "- Pestsignalen binnen een kerngroep van vier meisjes (uitsluiten bij gym en " +
+      "buitenspel, roddel via groepschat).\n" +
+      "- Leerprestaties stabiel, maar werktempo bij begrijpend lezen halveerde.\n\n" +
+      "Gewenste output: handelingsplan met (1) korte-termijn interventies in de groep, " +
+      "(2) gespreksleidraad voor ouders, (3) evaluatiemomenten over 4 en 8 weken.",
     mode: "anonymous",
     action: "send_external_ai",
   },
