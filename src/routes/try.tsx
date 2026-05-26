@@ -57,8 +57,14 @@ const STARTERS: Preset[] = [
     id: "starter-clean",
     label: "Schoon · ALLOW",
     tone: "green",
-    hint: "Geen PII — pipeline geeft direct groen licht.",
-    text: "Korte aantekening voor de teamvergadering: leerlingen vinden de nieuwe rekenmethode prettiger werken dan de oude. Goede stof voor de bouwbijeenkomst van volgende week.",
+    hint: "Geen herleidbare gegevens — pipeline geeft direct groen licht.",
+    text:
+      "Tussenevaluatie nieuwe rekenmethode.\n\n" +
+      "Na acht weken werken met de nieuwe methode zien we drie patronen: leerlingen " +
+      "pakken automatiseren sneller op, de differentiatiebladen worden actief gebruikt, " +
+      "en de wekelijkse toets levert minder spreiding op dan voorheen.\n\n" +
+      "Voorstel voor de bouwvergadering: methode definitief invoeren vanaf het nieuwe " +
+      "schooljaar en de huidige differentiatieaanpak opnemen in het schoolplan.",
     mode: "anonymous",
     action: "display",
   },
@@ -66,8 +72,14 @@ const STARTERS: Preset[] = [
     id: "starter-medium",
     label: "Repair · contextuele PII",
     tone: "orange",
-    hint: "Namen + klas — auto-repair generaliseert vóór egress.",
-    text: "Mentorgesprek met Tom de Vries (4H2): hij wil meer uitleg over de PTA-deadlines. Ouders zijn op de hoogte en steunen het plan.",
+    hint: "Naam, klascode en kleine groep — auto-repair generaliseert vóór egress.",
+    text:
+      "Kort mentorverslag.\n\n" +
+      "Gesprek gevoerd met Tom de Vries (4H2) over de planning richting het " +
+      "schoolexamen Nederlands. Tom geeft aan dat hij vastloopt op de twee PTA-" +
+      "deadlines in november en vraagt om een herziene studieplanning.\n\n" +
+      "Afspraken: Tom levert vrijdag een eigen planning aan, ouders zijn vandaag " +
+      "telefonisch geïnformeerd en steunen de aanpak. Vervolggesprek over twee weken.",
     mode: "anonymous",
     action: "copy",
   },
@@ -75,8 +87,17 @@ const STARTERS: Preset[] = [
     id: "starter-heavy",
     label: "Block · directe PII",
     tone: "red",
-    hint: "BSN, e-mail, adres — egress wordt geblokkeerd.",
-    text: "Notitie zorgcoördinator over Sarah Jansen (groep 6), basisschool De Wilg. Vader bereikbaar op 06-12345678, mail jansen@example.com. Postcode 3511AB, Bredestraat 12. BSN 123456782.",
+    hint: "BSN, IBAN, adres, e-mail, telefoon — egress wordt hard geblokkeerd.",
+    text:
+      "Notitie zorgcoördinator — vertrouwelijk.\n\n" +
+      "Betreft: Sarah Jansen, groep 6, basisschool De Wilg te Utrecht.\n" +
+      "Geboortedatum 14-03-2015, BSN 123456782, leerlingnummer 4582193.\n" +
+      "Adres: Bredestraat 12, 3511 AB Utrecht.\n\n" +
+      "Contact ouders: vader (Mark Jansen) bereikbaar op 06-12345678, " +
+      "e-mail jansen@voorbeeld.nl. Eigen bijdrage zorgarrangement loopt via " +
+      "IBAN NL91ABNA0417164300.\n\n" +
+      "Aanleiding: signalen van pesten binnen de kerngroep van vier meisjes. " +
+      "Vervolgafspraak met IB'er De Groot staat gepland.",
     mode: "anonymous",
     action: "send_external_ai",
   },
@@ -88,8 +109,13 @@ const SCENARIO_PRESETS: Preset[] = [
     label: "AI-tutor → ext. LLM",
     tone: "cyan",
     scenarioId: "llm-tutor",
-    hint: "Leerling-prompt richting ChatGPT. PiM filtert vóór de fetch.",
-    text: "Ik heb ADHD en zit in 3vmbo bij meester Jansen op het Stedelijk Lyceum. Kun je me uitleggen hoe ik mijn boekverslag van 'Spijt!' beter kan opbouwen? Mijn naam is Yusuf el-Amrani.",
+    hint: "Leerling-prompt naar ChatGPT — PiM filtert naam, zorgcontext en school vóór de fetch.",
+    text:
+      "Hoi, ik ben Yusuf el-Amrani uit 3vmbo-b op het Stedelijk Lyceum in Eindhoven. " +
+      "Ik heb ADHD en gebruik daar medicatie voor, dus lange opdrachten lopen vaak vast.\n\n" +
+      "Kun je me helpen om mijn boekverslag van 'Spijt!' van Carry Slee beter op te " +
+      "bouwen? Mijn docent Nederlands, meester Jansen, wil een duidelijke rode draad " +
+      "tussen thema, hoofdpersoon en eigen mening. Inleverdatum is 28 november.",
     mode: "anonymous",
     action: "send_external_ai",
   },
@@ -98,8 +124,15 @@ const SCENARIO_PRESETS: Preset[] = [
     label: "RAG schoolbeleid",
     tone: "purple",
     scenarioId: "rag-school",
-    hint: "Ingest in vector-store — pseudonieme tokens, mapping AES-GCM.",
-    text: "Casus 2024: leerling Lisa Bakker (klas 2havo, dyslexie) kreeg extra tijd na overleg met IB'er M. de Groot. Vergelijkbare aanpak werd vorig jaar gebruikt bij Tariq, klas 2A.",
+    hint: "Ingest in vector-store — pseudonieme tokens, mapping lokaal AES-GCM versleuteld.",
+    text:
+      "Casusbeschrijving voor het ondersteuningsdossier (schooljaar 2024-2025).\n\n" +
+      "Leerling Lisa Bakker (klas 2havo, dyslexieverklaring sinds groep 6) kreeg na " +
+      "overleg met IB'er Marieke de Groot extra tijd bij toetsen Nederlands en Engels, " +
+      "plus toegang tot voorleessoftware.\n\n" +
+      "Vergelijkbare aanpak werd vorig schooljaar succesvol gebruikt bij Tariq el-Amrani " +
+      "(klas 2A) en Sophie van Dijk (klas 2B). Op basis van die drie casussen stelt de " +
+      "ondersteuningscoördinator voor om de aanpak vast te leggen in het schoolbeleid.",
     mode: "pseudonymous",
     action: "save_local",
   },
@@ -108,8 +141,15 @@ const SCENARIO_PRESETS: Preset[] = [
     label: "Feedback op essay",
     tone: "green",
     scenarioId: "feedback",
-    hint: "Essay-upload met naam in de openingszin.",
-    text: "Mijn naam is Yusuf el-Amrani, klas 4H2, en mijn vader werkt in de zorg. In dit essay onderzoek ik of sociale media de concentratie van jongeren beïnvloedt.",
+    hint: "Essay met naam en familie-context in de openingszin — PiM anonimiseert vóór feedback-LLM.",
+    text:
+      "Naam: Yusuf el-Amrani — klas 4H2 — vak: maatschappijleer.\n\n" +
+      "Mijn vader werkt als verpleegkundige in het Catharina-ziekenhuis en ziet dagelijks " +
+      "jongeren binnenkomen met klachten die mogelijk samenhangen met schermgebruik. Dat " +
+      "vormt de aanleiding voor dit essay.\n\n" +
+      "Onderzoeksvraag: in hoeverre beïnvloedt het dagelijks gebruik van sociale media de " +
+      "concentratie van scholieren tussen 14 en 18 jaar? Ik combineer literatuur (Twenge, " +
+      "2017; Orben & Przybylski, 2019) met een korte enquête onder mijn eigen klas.",
     mode: "anonymous",
     action: "display",
   },
@@ -118,8 +158,15 @@ const SCENARIO_PRESETS: Preset[] = [
     label: "LVS → risico-classifier",
     tone: "orange",
     scenarioId: "lvs-trigger",
-    hint: "Nightly export — pseudonymiseer leerling-features.",
-    text: "Leerling 4582193 (klas 3V): cijferdip wiskunde van 7.2 naar 4.8 in twee periodes, verzuim 14 dagen, zorgvlag actief sinds 02-09-2025.",
+    hint: "Nightly export naar risico-classifier — leerling-features worden pseudoniem getokeniseerd.",
+    text:
+      "Nightly LVS-export — record 1 van 412.\n\n" +
+      "Leerlingnummer 4582193, klas 3V, mentor: dhr. P. Hendriks.\n" +
+      "Cijferverloop wiskunde: 7,2 → 6,1 → 4,8 over drie achtereenvolgende periodes.\n" +
+      "Absentie: 14 dagen ongeoorloofd in het lopende kwartaal.\n" +
+      "Zorgvlag actief sinds 02-09-2025, gekoppeld aan dossier ZRG-2025-0418.\n\n" +
+      "Aanbeveling classifier: opnemen in wekelijkse signaleringslijst voor de " +
+      "zorgcoördinator. Geen rechtstreekse interventie zonder menselijke beoordeling.",
     mode: "pseudonymous",
     action: "send_external_ai",
   },
@@ -128,8 +175,17 @@ const SCENARIO_PRESETS: Preset[] = [
     label: "Ouder-chatbot",
     tone: "cyan",
     scenarioId: "chatbot-ouders",
-    hint: "Inkomende ouder-vraag — anonymiseer voordat LLM antwoordt.",
-    text: "Hoe gaat het met Sophie in groep 3 bij juf Wim? Ik maak me zorgen omdat ze de laatste weken erg stil is en haar broertje Lucas (groep 5) zegt dat ze gepest wordt.",
+    hint: "Inkomende ouder-vraag — namen, groep en pest-signaal worden geanonimiseerd vóór het LLM-antwoord.",
+    text:
+      "Goedemiddag,\n\n" +
+      "Ik wil graag weten hoe het met mijn dochter Sophie van Dijk gaat in groep 3 bij " +
+      "juf Wilma. De laatste drie weken is ze 's avonds erg stil en wil ze 's ochtends " +
+      "niet meer naar school.\n\n" +
+      "Haar broer Lucas (groep 5) vertelt thuis dat Sophie tijdens de pauze regelmatig " +
+      "alleen op het schoolplein staat en dat twee meisjes uit haar groep haar uitsluiten. " +
+      "Kan iemand vóór vrijdag contact opnemen om af te stemmen wat we als ouders kunnen " +
+      "doen?\n\n" +
+      "Met vriendelijke groet,\nFamilie Van Dijk",
     mode: "anonymous",
     action: "send_external_ai",
   },
@@ -138,8 +194,17 @@ const SCENARIO_PRESETS: Preset[] = [
     label: "Gespreksverslag",
     tone: "purple",
     scenarioId: "rapport-rewrite",
-    hint: "Dictaat → rewrite. Lokale STT + lokale Qwen.",
-    text: "Verslag MDO 14-03: Tariq el-Amrani (2A) blijft worstelen met faalangst, medicatie ritalin loopt door, gezinssituatie sinds scheiding ouders complex. Klasgenoot Sophie ondersteunt actief.",
+    hint: "Dictaat → lokale rewrite (Qwen) die zorg-context generaliseert zonder kern te verliezen.",
+    text:
+      "Verslag multidisciplinair overleg — 14 maart 2025.\n\n" +
+      "Aanwezig: mentor (dhr. Hendriks), IB'er (mevr. De Groot), schoolpsycholoog, " +
+      "ouders Tariq el-Amrani.\n\n" +
+      "Tariq el-Amrani (klas 2A) blijft worstelen met faalangst rond toetsen. De " +
+      "medicatie (methylfenidaat 10 mg) loopt door en de huisarts evalueert in juni. " +
+      "De gezinssituatie is sinds de scheiding van ouders in 2024 complex, met wisselend " +
+      "verblijf bij beide ouders.\n\n" +
+      "Op school ondersteunt klasgenoot Sophie van Dijk actief tijdens groepswerk. " +
+      "Afspraak: handelingsplan herzien vóór de meivakantie en vervolg-MDO op 12 mei.",
     mode: "anonymous",
     action: "save_local",
   },
