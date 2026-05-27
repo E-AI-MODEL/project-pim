@@ -810,7 +810,7 @@ function TryPage() {
         </section>
 
         {/* — Sectie 1: Input — */}
-        <Section title="Onderwijsfragment" eyebrow="01 · Input" defaultOpen>
+        <Section title="Onderwijsfragment" eyebrow="01 · Input" defaultOpen interactive="do" hint="Plak of typ tekst — of kies hierboven een scenario.">
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -825,7 +825,7 @@ function TryPage() {
         </Section>
 
         {/* — Sectie 2: Detectie & Draft — */}
-        <Section title="Detectie & draft" eyebrow="02 · Verwerking" defaultOpen>
+        <Section title="Detectie & draft" eyebrow="02 · Verwerking" defaultOpen interactive="watch" hint="PiM toont live wat het vindt en hoe de draft eruit ziet.">
           <RiskBanner level={signals.riskLevel} reasons={signals.reasons} />
 
           {totalSpans > 0 && (
@@ -880,7 +880,7 @@ function TryPage() {
         </Section>
 
         {/* — Sectie 3: Mode & Action — */}
-        <Section title="Mode & actie" eyebrow="03 · Bestemming">
+        <Section title="Mode & actie" eyebrow="03 · Bestemming" defaultOpen interactive="do" hint="Kies mode (anoniem of pseudoniem) en wat je ermee wil doen. Daarna 'Voer uit' onderaan.">
           <div className="grid grid-cols-2 gap-1.5 mb-3">
             {(["anonymous", "pseudonymous"] as Mode[]).map((m) => (
               <button key={m} onClick={() => setMode(m)} className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all border ${
@@ -906,7 +906,7 @@ function TryPage() {
         </Section>
 
         {/* — Sectie 4: Live pipeline — */}
-        <Section title="Live pipeline" eyebrow="04 · Wat doet elke laag?" defaultOpen>
+        <Section title="Live pipeline" eyebrow="04 · Wat doet elke laag?" defaultOpen interactive="watch" hint="Negen lagen, volgordelijk. Tik op een stap voor uitleg op jouw tekst.">
           <div className="flex items-center justify-center mb-3">
             <RiskGauge score={decisionSignals.riskScore} level={decisionSignals.riskLevel} />
           </div>
@@ -918,7 +918,7 @@ function TryPage() {
         </Section>
 
         {/* — Sectie 5: Geavanceerd — */}
-        <Section title="Geavanceerd" eyebrow="05 · Profiel · SLM · LLM · audit">
+        <Section title="Geavanceerd" eyebrow="05 · Profiel · SLM · LLM · audit" interactive="do" hint="Wissel pipeline-profiel, activeer NER/Qwen, bekijk audit-log.">
           {/* Profile */}
           <div className="mb-4">
             <div className="font-mono text-[10px] uppercase tracking-wider text-primary mb-1.5">Pipeline profile</div>
@@ -1044,7 +1044,7 @@ function TryPage() {
         </Section>
 
         {/* — Sectie 6: Review queue — */}
-        <Section title={`Review queue${reviewItems.length ? ` · ${reviewItems.length}` : ""}`} eyebrow="06 · Menselijke check">
+        <Section title={`Review queue${reviewItems.length ? ` · ${reviewItems.length}` : ""}`} eyebrow="06 · Menselijke check" interactive="watch" hint="Items met lage zekerheid komen hier voor menselijke triage.">
           <p className="text-[11px] text-muted-foreground mb-2">Alleen 'repair' of 'fail'. Inhoud blijft lokaal.</p>
           {reviewItems.length === 0 ? (
             <p className="text-[11px] text-muted-foreground">Queue is leeg.</p>
@@ -1109,13 +1109,25 @@ function TryPage() {
   );
 }
 
-function Section({ title, eyebrow, defaultOpen, children }: { title: string; eyebrow: string; defaultOpen?: boolean; children: React.ReactNode }) {
+function Section({ title, eyebrow, defaultOpen, hint, interactive, children }: { title: string; eyebrow: string; defaultOpen?: boolean; hint?: string; interactive?: "do" | "watch"; children: React.ReactNode }) {
   return (
     <details open={defaultOpen} className="panel p-0 mt-3 group overflow-hidden">
       <summary className="cursor-pointer list-none flex items-center justify-between gap-2 p-4 hover:bg-accent/20">
-        <div className="min-w-0">
-          <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">{eyebrow}</div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">{eyebrow}</div>
+            {interactive && (
+              <span className={`font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${
+                interactive === "do"
+                  ? "bg-primary/15 text-primary border border-primary/40"
+                  : "bg-card/40 text-muted-foreground border border-border/50"
+              }`}>
+                {interactive === "do" ? "jij doet" : "kijk mee"}
+              </span>
+            )}
+          </div>
           <div className="font-display font-bold text-sm">{title}</div>
+          {hint && <div className="text-[11px] text-muted-foreground leading-snug mt-0.5">{hint}</div>}
         </div>
         <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-90 flex-shrink-0" />
       </summary>
