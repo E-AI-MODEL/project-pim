@@ -1109,13 +1109,25 @@ function TryPage() {
   );
 }
 
-function Section({ title, eyebrow, defaultOpen, children }: { title: string; eyebrow: string; defaultOpen?: boolean; children: React.ReactNode }) {
+function Section({ title, eyebrow, defaultOpen, hint, interactive, children }: { title: string; eyebrow: string; defaultOpen?: boolean; hint?: string; interactive?: "do" | "watch"; children: React.ReactNode }) {
   return (
     <details open={defaultOpen} className="panel p-0 mt-3 group overflow-hidden">
       <summary className="cursor-pointer list-none flex items-center justify-between gap-2 p-4 hover:bg-accent/20">
-        <div className="min-w-0">
-          <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">{eyebrow}</div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">{eyebrow}</div>
+            {interactive && (
+              <span className={`font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${
+                interactive === "do"
+                  ? "bg-primary/15 text-primary border border-primary/40"
+                  : "bg-card/40 text-muted-foreground border border-border/50"
+              }`}>
+                {interactive === "do" ? "jij doet" : "kijk mee"}
+              </span>
+            )}
+          </div>
           <div className="font-display font-bold text-sm">{title}</div>
+          {hint && <div className="text-[11px] text-muted-foreground leading-snug mt-0.5">{hint}</div>}
         </div>
         <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-90 flex-shrink-0" />
       </summary>
