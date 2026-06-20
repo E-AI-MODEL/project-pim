@@ -56,12 +56,12 @@ export function InputPanel({ text, onTextChange, onStart, onExample, busy, compa
 
       <div className="relative">
         <textarea
-        value={text}
-        onChange={(e) => onTextChange(e.target.value)}
-        placeholder={COPY.placeholder}
-        rows={8}
-        spellCheck={false}
-          className="w-full rounded-md border px-4 py-3 text-sm leading-relaxed focus:outline-none resize-y transition-colors bg-card/60 border-border/60 focus:ring-2 focus:ring-primary/40 focus:border-primary/40 font-mono min-h-[200px] shadow-inner"
+          value={text}
+          onChange={(e) => onTextChange(e.target.value)}
+          placeholder={COPY.placeholder}
+          rows={10}
+          spellCheck={false}
+          className="w-full rounded-md border px-4 py-3 text-sm leading-relaxed focus:outline-none resize-y transition-colors bg-card/60 border-border/60 focus:ring-2 focus:ring-primary/40 focus:border-primary/40 font-mono min-h-[260px] shadow-inner"
         />
         {text.trim().length > 0 && (
           <div className="absolute top-3 right-3 inline-flex items-center gap-1.5 rounded-full backdrop-blur px-2 py-0.5 text-[10px] font-medium animate-fade-in bg-background/80 text-primary border border-primary/30">
@@ -183,9 +183,9 @@ function CompactComposer({
             }
           }}
           placeholder={COPY.placeholder}
-          rows={5}
+          rows={6}
           spellCheck={false}
-          className="w-full bg-transparent px-4 pt-4 pb-2 text-sm leading-relaxed text-[#e8edf3] placeholder:text-[#e8edf3]/35 font-plex-mono resize-none focus:outline-none min-h-[140px]"
+          className="w-full bg-transparent px-4 pt-4 pb-2 text-sm leading-relaxed text-[#e8edf3] placeholder:text-[#e8edf3]/35 font-plex-mono resize-y focus:outline-none min-h-[180px]"
         />
 
         {/* Toolbar */}
