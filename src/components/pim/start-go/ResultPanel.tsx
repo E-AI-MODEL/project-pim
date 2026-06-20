@@ -52,7 +52,10 @@ export function ResultPanel({
     const pid = profileId ?? DEFAULT_PROFILE;
     const disabled = disabledCategories ?? new Set<PiiCategory>();
     const sig = computeSignals(editedSafe, [], pid, disabled);
-    const guard = draftCheck({ text: editedSafe, residual: sig.directPii }, decision.mode);
+    const guard = draftCheck(
+      { text: editedSafe, mode: decision.mode, rawHadPii: signals.directPii.length > 0 },
+      decision.mode,
+    );
     const d = decide({
       mode: decision.mode,
       action: (decision as { action?: Action }).action ?? "send_external_ai",
