@@ -2,7 +2,10 @@ import type { PiiSpan, PrivacySignals, RiskLevel } from "./types";
 import { runRegistrySync } from "./detectorRegistry";
 import { DEFAULT_PROFILE, type PipelineProfileId } from "./pipelineProfile";
 
-const HIGH_SEVERITY: ReadonlySet<string> = new Set(["bsn", "iban", "email", "phone", "address", "student_id"]);
+const HIGH_SEVERITY: ReadonlySet<string> = new Set([
+  "bsn", "iban", "email", "phone", "address", "student_id",
+  "credit_card", "license_plate", "birthdate_text",
+]);
 
 export function computeSignals(
   text: string,
