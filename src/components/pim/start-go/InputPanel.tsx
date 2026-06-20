@@ -183,9 +183,9 @@ function CompactComposer({
             }
           }}
           placeholder={COPY.placeholder}
-          rows={5}
+          rows={6}
           spellCheck={false}
-          className="w-full bg-transparent px-4 pt-4 pb-2 text-sm leading-relaxed text-[#e8edf3] placeholder:text-[#e8edf3]/35 font-plex-mono resize-none focus:outline-none min-h-[140px]"
+          className="w-full bg-transparent px-4 pt-4 pb-2 text-sm leading-relaxed text-[#e8edf3] placeholder:text-[#e8edf3]/35 font-plex-mono resize-y focus:outline-none min-h-[180px]"
         />
 
         {/* Toolbar */}
