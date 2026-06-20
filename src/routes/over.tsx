@@ -6,7 +6,7 @@ import { PrincipleBadge } from "@/components/pim/PrincipleBadge";
 export const Route = createFileRoute("/over")({
   head: () => ({
     meta: [
-      { title: "Project PiM — Privacy Integrity Monitor voor onderwijsdata" },
+      { title: "Over Project PiM — Privacy Integrity Monitor" },
       { name: "description", content: "Browser-first privacy pipeline. Lokale detectie, deterministische beslissingen, fail-closed handhaving. Voor onderwijsorganisaties die echt willen anonimiseren." },
       { property: "og:title", content: "Project PiM — Privacy Integrity Monitor" },
       { property: "og:description", content: "Browser-first privacy pipeline voor onderwijsdata." },
