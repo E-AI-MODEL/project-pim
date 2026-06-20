@@ -58,7 +58,7 @@ export function ResultPanel({
     );
     const d = decide({
       mode: decision.mode,
-      action: (decision as { action?: Action }).action ?? "send_external_ai",
+      action: decision.action,
       signals: sig,
       draftCheck: guard,
       modelVerified: true,
