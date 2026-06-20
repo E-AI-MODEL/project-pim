@@ -9,7 +9,7 @@ import StarterKit from "@tiptap/starter-kit";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import {
   Bold, Italic, Heading1, Heading2, List, ListOrdered, Quote, Undo2, Redo2,
-  Upload, Download, Settings2, Shield, Trash2, X, Check,
+  Upload, Download, Settings2, Shield, Trash2, X, Check, Crosshair,
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -20,6 +20,7 @@ import {
   createPimPlugin, pimPluginKey, extractPlain, spanToRange, buildDecorations,
 } from "./pimPlugin";
 import { importDocxToEditor, exportEditorToDocx } from "./docxIO";
+import { isValidBsn, isValidIban, isValidLicensePlate } from "./validators";
 
 interface ClickedSpan {
   from: number;
@@ -36,6 +37,7 @@ export function WriterShell() {
   const [autoRedact, setAutoRedact] = useState<Set<PiiCategory>>(
     () => new Set(DEFAULT_AUTO_REDACT),
   );
+  const [strict, setStrict] = useState(false);
   const [ignored, setIgnored] = useState<Set<string>>(new Set());
   const [stats, setStats] = useState({ scrubbed: 0, marked: 0 });
   const [clicked, setClicked] = useState<ClickedSpan | null>(null);
