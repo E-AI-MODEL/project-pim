@@ -1,5 +1,5 @@
 // §8.1 — alleen state + PIM-koppeling. GEEN uitleg.
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import {
   computeSignals, anonymize, pseudonymize, draftCheck, decide, executeAction,
   modelGateFor, onModelIntegrity, type ModelIntegrityRecord,
@@ -28,10 +28,20 @@ export function StartGoShell() {
 
   useEffect(() => onModelIntegrity(setIntegrity), []);
 
-  // Live preview-signals (zonder PiM uit te voeren) — we tonen pas een
-  // resultaat na klik op Start PiM. Dit is bewust om §6 ("plak → start")
-  // te respecteren en demo-onzekerheid niet als feit te tonen.
+  // Live preview-signals (zonder PiM uit te voeren).
   const previewSignals = useMemo(() => computeSignals(text, [], DEFAULT_PROFILE), [text]);
+
+  // Live oordeel: debounced auto-run zodra de tekst stabiel is.
+  // Gebruiker krijgt instant feedback; expliciete knop blijft de
+  // formele bevestiging (zelfde codepad) en voert de actie pas uit.
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (!text.trim()) { setResult(null); setEgressMsg(null); return; }
+    debounceRef.current = setTimeout(() => { run(); }, 450);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [text, mode, action, integrity]);
 
   const run = () => {
     if (!text.trim()) return;
@@ -91,7 +101,7 @@ export function StartGoShell() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl px-4 sm:px-6 py-6 sm:py-10 space-y-6">
+    <div className="mx-auto max-w-3xl px-4 sm:px-6 py-8 sm:py-14 space-y-7">
       <InputPanel
         text={text}
         onTextChange={(v) => { setText(v); setResult(null); setEgressMsg(null); }}
@@ -102,9 +112,8 @@ export function StartGoShell() {
       <ModeTargetBar mode={mode} onModeChange={setMode} action={action} onActionChange={setAction} />
 
       {!result && text.trim().length > 0 && (
-        <div className="text-xs text-muted-foreground border-l-2 border-primary/40 pl-3">
-          Live-detectie ziet alvast {previewSignals.directPii.length + previewSignals.contextualPii.length} signalen.
-          Klik op <span className="font-semibold text-foreground">Start PiM</span> voor het oordeel.
+        <div className="text-xs text-muted-foreground border-l-2 border-primary/40 pl-3 animate-pulse">
+          PiM bekijkt je tekst… ({previewSignals.directPii.length + previewSignals.contextualPii.length} signalen tot nu toe)
         </div>
       )}
 
