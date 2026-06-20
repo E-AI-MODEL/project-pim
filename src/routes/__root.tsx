@@ -3,6 +3,7 @@ import { Shield } from "lucide-react";
 import { useEffect } from "react";
 import { installRuntimeHardening } from "@/lib/pim/runtimeHardening";
 import { runSelfTest } from "@/lib/pim/selfTest";
+import { StartHeader } from "@/components/pim/start-go/StartHeader";
 
 import appCss from "../styles.css?url";
 
@@ -98,7 +99,7 @@ function RootComponent() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <SiteHeader />
+      <StartHeader />
       <main className="flex-1">
         <Outlet />
       </main>
@@ -107,103 +108,19 @@ function RootComponent() {
   );
 }
 
-const navLinks = [
-  { to: "/", label: "Overview" },
-  { to: "/pipeline", label: "Pipeline" },
-  { to: "/architecture", label: "Architectuur" },
-  { to: "/modes", label: "Modi" },
-  { to: "/scenarios", label: "Scenarios" },
-  { to: "/flags", label: "Flags" },
-  { to: "/compliance", label: "Compliance" },
-  { to: "/try", label: "Try-it" },
-] as const;
-
-function SiteHeader() {
-  return (
-    <header className="sticky top-0 z-40 backdrop-blur-md border-b border-border/60 bg-background/70">
-      <div className="mx-auto max-w-7xl px-6 h-16 flex items-center justify-between gap-6">
-        <Link to="/" className="flex items-center gap-2.5 group">
-          <div className="relative">
-            <div className="absolute inset-0 bg-primary/40 blur-md rounded-full" />
-            <Shield className="relative h-6 w-6 text-primary" strokeWidth={2.2} />
-          </div>
-          <div className="font-display font-bold text-base tracking-tight">
-            Project <span className="text-primary">PiM</span>
-          </div>
-        </Link>
-        <nav className="hidden md:flex items-center gap-1">
-          {navLinks.map((l) => (
-            <Link
-              key={l.to}
-              to={l.to}
-              activeOptions={{ exact: l.to === "/" }}
-              activeProps={{ className: "text-foreground bg-accent/60" }}
-              inactiveProps={{ className: "text-muted-foreground hover:text-foreground hover:bg-accent/30" }}
-              className="px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
-            >
-              {l.label}
-            </Link>
-          ))}
-        </nav>
-        <Link
-          to="/try"
-          className="hidden sm:inline-flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-        >
-          Try-it
-        </Link>
-      </div>
-      <div className="md:hidden border-t border-border/40 px-3 py-2 flex gap-1 overflow-x-auto">
-        {navLinks.map((l) => (
-          <Link
-            key={l.to}
-            to={l.to}
-            activeOptions={{ exact: l.to === "/" }}
-            activeProps={{ className: "text-foreground bg-accent/60" }}
-            inactiveProps={{ className: "text-muted-foreground" }}
-            className="px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap"
-          >
-            {l.label}
-          </Link>
-        ))}
-      </div>
-    </header>
-  );
-}
-
 function SiteFooter() {
   return (
-    <footer className="border-t border-border/40 mt-16">
-      <div className="mx-auto max-w-7xl px-6 py-10 grid gap-6 md:grid-cols-3 text-sm">
-        <div>
-          <div className="flex items-center gap-2 font-display font-bold">
-            <Shield className="h-4 w-4 text-primary" />
-            Project PiM
-          </div>
-          <p className="mt-2 text-muted-foreground text-xs leading-relaxed max-w-sm">
-            Browser-first privacy pipeline voor onderwijsdata. Models zijn sensors. PIM is de beslislaag.
-          </p>
+    <footer className="border-t border-border/40 mt-16 py-6">
+      <div className="mx-auto max-w-5xl px-6 flex flex-wrap items-center justify-between gap-3 text-[11px] text-muted-foreground">
+        <div className="flex items-center gap-2">
+          <Shield className="h-3.5 w-3.5 text-primary" />
+          <span>Project PiM · lokaal · geen tracking</span>
         </div>
-        <div>
-          <div className="font-semibold text-xs uppercase tracking-wider text-muted-foreground mb-2">Principes</div>
-          <ul className="space-y-1 text-muted-foreground text-xs">
-            <li>Local-first</li>
-            <li>Fail-closed</li>
-            <li>Mode isolation</li>
-            <li>Data minimization</li>
-          </ul>
+        <div className="flex items-center gap-4">
+          <Link to="/over" className="hover:text-foreground">Over</Link>
+          <Link to="/trust" className="hover:text-foreground">Trust</Link>
+          <Link to="/try" className="hover:text-foreground">Expert lab</Link>
         </div>
-        <div>
-          <div className="font-semibold text-xs uppercase tracking-wider text-muted-foreground mb-2">Routes</div>
-          <ul className="space-y-1 text-muted-foreground text-xs">
-            {navLinks.map((l) => (
-              <li key={l.to}><Link to={l.to} className="hover:text-foreground">{l.label}</Link></li>
-            ))}
-            <li><Link to="/trust" className="hover:text-foreground">Trust dashboard</Link></li>
-          </ul>
-        </div>
-      </div>
-      <div className="border-t border-border/40 py-4 text-center text-[11px] text-muted-foreground">
-        Specificatie v3-2 · education-nl · Geen tracking · Geen netwerkverzoeken voor verwerking
       </div>
     </footer>
   );
