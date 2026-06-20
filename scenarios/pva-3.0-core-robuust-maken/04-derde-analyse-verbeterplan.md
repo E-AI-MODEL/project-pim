@@ -3,6 +3,60 @@
 Datum: 20 juni 2026  
 Bronnen: eerder verbeterplan, aangeleverde zip `project-pim-main (2).zip`, uitgepakte code, PVA 3.0-map en GitHub-repo `E-AI-MODEL/project-pim`.
 
+---
+
+## 0. UITVOERINGSSTATUS (levend werkbestand)
+
+Bij elke afgeronde taak: `[ ]` → `[x]`, datum, eventuele afwijking.
+
+### Guardrails (§16)
+- [x] G1 Geen extra panelen aan `/try` (gevolgd in alle fasen).
+- [x] G2 Geen UI bouwen vóór build/tests groen zijn — Fase 0 eerst.
+- [x] G3 Geen claim "productie-anonimisatie".
+- [x] G4 Rules-only mag niet exporteren.
+- [x] G5 Pseudonieme output niet kopiëren/delen.
+- [x] G6 Modelstatus niet verstoppen.
+- [x] G7 Geen uitleg op `/`.
+- [x] G8 Geen OCR vóór egress + tests hard.
+
+### Fase 0 — Repo-hygiëne
+- [x] 0.1 `bun install` schoon (2026-06-20).
+- [x] 0.2 Script `typecheck` = `tsc --noEmit`.
+- [x] 0.3 Script `test` = `vitest run`.
+- [x] 0.4 Script `test:watch` = `vitest`.
+- [x] 0.5 Script `check` = typecheck + lint + test + build.
+- [x] 0.6 Vitest + jsdom + @testing-library/react geïnstalleerd.
+- [x] 0.7 Smoketest groen (`src/lib/pim/__tests__/smoke.test.ts`).
+- [x] 0.8 `<html lang="nl">`.
+
+**Afwijking §4.2:** project gebruikt Bun (`bunfig.toml`); `npm ci`/`package-lock.json` overgeslagen, vervangen door `bun install`/`bun.lock`.
+
+### Fase 1 — PIM-core hard maken
+- [ ] 1.1 `PayloadType` toegevoegd · 1.2 `CertifiedPayload` · 1.3 uitgebreide `DraftCheckResult` · 1.4 `profileId` in `DecideInput` · 1.5 `payloadType` in `DecideInput` · 1.6 `profileId` in `PimDecision` · 1.7 rules-only + send_external_ai = BLOCK · 1.8 rules-only + export_file = BLOCK · 1.9 rules-only copy/share/print gated · 1.10 payload-gate alleen `draft_anonymous_certified` · 1.11 `draftCheckWithRegistry()` · 1.12 oude `draftCheck` herleid · 1.13 aanroepers omgezet · 1.14 `modelGateFor()` · 1.15 hardcoded `modelVerified:true` weg · 1.16 demo-hash geen productiegroen · 1.17–1.22 egress accepteert alleen `CertifiedPayload` · 1.23–1.29 testbestanden · 1.30–1.49 20 privacy-invarianten.
+
+### Fase 2 — Naamgeving + claims
+- [ ] 2.1–2.8.
+
+### Fase 3 — App-shell + burger menu
+- [ ] 3.1–3.17.
+
+### Fase 4 — `/` wordt Start & Go
+- [ ] 4.1–4.30.
+
+### Fase 5 — `/try` wordt expertlab
+- [ ] 5.1–5.4.
+
+### Fase 6 — CI gate (optioneel)
+- [ ] 6.1 (skipped — Lovable deployt zelf).
+
+### Fase 7 — Runtime hardening positionering
+- [ ] 7.1–7.3.
+
+### Acceptatie + backlog
+- [ ] T1–T5 user-tasks · M1–M12 must-have · S1–S6 should-have.
+
+---
+
 ## 1. Kort oordeel
 
 Project PiM heeft een goede basis. Het is geen losse schets. Er staat een werkende browserdemo met detectie, anonimiseren, pseudonimiseren, policy, egress-afhandeling, lokale mapping, runtime hardening, modelstatus, review queue en trust-dashboard.
