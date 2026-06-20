@@ -326,6 +326,20 @@ function CompactComposer({
 
           {/* Status midden/rechts */}
           <div className="flex-1 flex justify-end items-center gap-2 pr-1">
+            <button
+              type="button"
+              onClick={() => setLiveScrub((v) => !v)}
+              aria-pressed={liveScrub}
+              title={liveScrub ? "Live wissen staat aan — namen verdwijnen direct" : "Live wissen aanzetten — gevoelige woorden worden meteen weggehaald"}
+              className={`inline-flex items-center gap-1.5 h-8 px-2 rounded-md text-[11px] font-plex-mono border transition-colors ${
+                liveScrub
+                  ? "bg-rose-500/15 border-rose-400/50 text-rose-200"
+                  : "bg-transparent border-[#3b6fa0]/30 text-[#e8edf3]/55 hover:text-[#e8edf3] hover:border-[#3b6fa0]/60"
+              }`}
+            >
+              <Eraser className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Live wissen</span>
+            </button>
             {text.trim().length > 0 ? (
               <span className="inline-flex items-center gap-1.5 text-[10px] font-plex-mono text-[#3b6fa0]">
                 <Radio className="h-2.5 w-2.5 animate-pulse" />
