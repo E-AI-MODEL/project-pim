@@ -12,6 +12,7 @@ type Item =
 const ITEMS: Item[] = [
   { kind: "event", event: "pim:reset", label: COPY.menuNewTest },
   { kind: "event", event: "pim:open-examples", label: COPY.menuExamples },
+  { kind: "link", to: "/schrijven", label: COPY.menuWriter },
   { kind: "link", to: "/try", label: COPY.menuExpertLab },
   { kind: "link", to: "/trust", label: COPY.menuTrust },
   { kind: "link", to: "/pipeline", label: COPY.menuPipeline },

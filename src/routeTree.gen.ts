@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TryRouteImport } from './routes/try'
 import { Route as TrustRouteImport } from './routes/trust'
+import { Route as SchrijvenRouteImport } from './routes/schrijven'
 import { Route as ScenariosRouteImport } from './routes/scenarios'
 import { Route as PipelineRouteImport } from './routes/pipeline'
 import { Route as OverRouteImport } from './routes/over'
@@ -28,6 +29,11 @@ const TryRoute = TryRouteImport.update({
 const TrustRoute = TrustRouteImport.update({
   id: '/trust',
   path: '/trust',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SchrijvenRoute = SchrijvenRouteImport.update({
+  id: '/schrijven',
+  path: '/schrijven',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ScenariosRoute = ScenariosRouteImport.update({
@@ -80,6 +86,7 @@ export interface FileRoutesByFullPath {
   '/over': typeof OverRoute
   '/pipeline': typeof PipelineRoute
   '/scenarios': typeof ScenariosRoute
+  '/schrijven': typeof SchrijvenRoute
   '/trust': typeof TrustRoute
   '/try': typeof TryRoute
 }
@@ -92,6 +99,7 @@ export interface FileRoutesByTo {
   '/over': typeof OverRoute
   '/pipeline': typeof PipelineRoute
   '/scenarios': typeof ScenariosRoute
+  '/schrijven': typeof SchrijvenRoute
   '/trust': typeof TrustRoute
   '/try': typeof TryRoute
 }
@@ -105,6 +113,7 @@ export interface FileRoutesById {
   '/over': typeof OverRoute
   '/pipeline': typeof PipelineRoute
   '/scenarios': typeof ScenariosRoute
+  '/schrijven': typeof SchrijvenRoute
   '/trust': typeof TrustRoute
   '/try': typeof TryRoute
 }
@@ -119,6 +128,7 @@ export interface FileRouteTypes {
     | '/over'
     | '/pipeline'
     | '/scenarios'
+    | '/schrijven'
     | '/trust'
     | '/try'
   fileRoutesByTo: FileRoutesByTo
@@ -131,6 +141,7 @@ export interface FileRouteTypes {
     | '/over'
     | '/pipeline'
     | '/scenarios'
+    | '/schrijven'
     | '/trust'
     | '/try'
   id:
@@ -143,6 +154,7 @@ export interface FileRouteTypes {
     | '/over'
     | '/pipeline'
     | '/scenarios'
+    | '/schrijven'
     | '/trust'
     | '/try'
   fileRoutesById: FileRoutesById
@@ -156,6 +168,7 @@ export interface RootRouteChildren {
   OverRoute: typeof OverRoute
   PipelineRoute: typeof PipelineRoute
   ScenariosRoute: typeof ScenariosRoute
+  SchrijvenRoute: typeof SchrijvenRoute
   TrustRoute: typeof TrustRoute
   TryRoute: typeof TryRoute
 }
@@ -174,6 +187,13 @@ declare module '@tanstack/react-router' {
       path: '/trust'
       fullPath: '/trust'
       preLoaderRoute: typeof TrustRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/schrijven': {
+      id: '/schrijven'
+      path: '/schrijven'
+      fullPath: '/schrijven'
+      preLoaderRoute: typeof SchrijvenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/scenarios': {
@@ -244,6 +264,7 @@ const rootRouteChildren: RootRouteChildren = {
   OverRoute: OverRoute,
   PipelineRoute: PipelineRoute,
   ScenariosRoute: ScenariosRoute,
+  SchrijvenRoute: SchrijvenRoute,
   TrustRoute: TrustRoute,
   TryRoute: TryRoute,
 }
