@@ -109,8 +109,14 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
         onExample={onExample}
         busy={busy}
         compact={compact}
+        mode={mode}
+        onModeChange={setMode}
+        action={action}
+        onActionChange={setAction}
       />
-      <ModeTargetBar mode={mode} onModeChange={setMode} action={action} onActionChange={setAction} />
+      {!compact && (
+        <ModeTargetBar mode={mode} onModeChange={setMode} action={action} onActionChange={setAction} />
+      )}
 
       {!result && text.trim().length > 0 && (
         <div className={`text-xs border-l-2 pl-3 animate-pulse ${compact ? "text-[#e8edf3]/60 border-[#3b6fa0]/50" : "text-muted-foreground border-primary/40"}`}>
