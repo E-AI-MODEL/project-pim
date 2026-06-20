@@ -25,6 +25,13 @@ const GENERALIZATIONS: Record<string, string> = {
   context_care: "[zorgcontext]",
   context_incident: "[incident]",
   context_role: "[rol]",
+  context_health: "[gezondheid]",
+  context_family: "[gezinscontext]",
+  context_legal: "[justitiecontext]",
+  context_financial: "[financiële context]",
+  context_protected_class: "[bijzondere categorie]",
+  context_performance: "[schoolprestatie]",
+  context_location_specific: "[locatie]",
 };
 
 function applySpans(text: string, spans: PiiSpan[], replace: (s: PiiSpan, i: number) => string): string {
