@@ -11,7 +11,7 @@ export interface Example {
 export const EXAMPLES: Example[] = [
   {
     id: "clean",
-    label: "Schone evaluatie",
+    label: "Vakinhoud",
     hint: "Vakinhoud zonder herleidbare gegevens — verwacht: groen.",
     text:
       "Tussenevaluatie nieuwe rekenmethode na acht weken. Automatiseren tot 100 " +

@@ -4,17 +4,40 @@
 export const COPY = {
   // Hero — werkt voor docent, bestuurder én tech-reviewer
   eyebrow: "Privacy Integrity Monitor",
-  title: "Eerst veilig. Dan pas delen.",
+  title: "Controleer je tekst op privacy,",
+  titleLine2: "voordat je hem deelt.",
   subtitle:
-    "Plak je tekst, kies wat je ermee wilt doen, en zie binnen één seconde of het mag — met uitleg. Alles draait lokaal in je browser, niets verlaat dit apparaat tot een toegestane actie is goedgekeurd.",
+    "PiM leest mee in je browser, herkent gevoelige gegevens en zegt of je veilig kunt delen — alles gebeurt lokaal, zonder ingewikkelde technische stappen.",
   placeholder:
-    "Plak hier je tekst — bijvoorbeeld een leerlingnotitie, een mentorgesprek, een evaluatie of een e-mailconcept.",
+    "Plak hier je tekst, of kies een voorbeeld hierboven.",
   startButton: "Controleer deze tekst",
   startButtonShort: "Controleer",
   privacyHint:
-    "Verwerking blijft in je browser; geen upload, geen tracking, en de audit-log bevat nooit je tekst.",
+    "Verwerking blijft in je browser. Geen upload, geen tracking.",
   detailsLink: "Toon technische details (modelstatus, regels, audit)",
-  liveBadge: "Leest met je mee",
+  liveBadge: "Leest mee",
+
+  // USP-grid op de landing — 2×2
+  uspLocalTitle: "Niets verlaat je apparaat",
+  uspLocalBody:
+    "De controle gebeurt in je browser. Geen upload, geen server, geen log van je tekst.",
+  uspDualTitle: "Anoniem of pseudoniem",
+  uspDualBody:
+    "Anoniem maakt namen definitief onleesbaar. Pseudoniem vervangt ze door codes — de sleutel blijft op dit apparaat.",
+  uspExplainTitle: "Uitleg per rol",
+  uspExplainBody:
+    "Eén verdict, drie lezingen: wat het voor jou betekent, voor je organisatie en voor je tech-collega.",
+  uspEgressTitle: "Egress Guard",
+  uspEgressBody:
+    "De uitgang zit op slot. PiM verstuurt niets — pas nadat jij de actie goedkeurt, gaat de veilige versie eruit.",
+
+  // Mini-strip onderaan
+  anonVsPseudo:
+    "Anoniem is onomkeerbaar. Pseudoniem is omkeerbaar, maar alleen op dit apparaat. Jij kiest per tekst wat past.",
+
+  // Monitor frame
+  monitorLabel: "Live monitor",
+  monitorStatus: "Local Guard actief",
 
   // Verdict-zin — voor de docent, in mens-taal
   statusGreen:

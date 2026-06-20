@@ -1,60 +1,108 @@
 ## Doel
 
-De hero ("Eerst veilig. Dan pas delen." + jouw subtitel) lijkt ook taalkundig zwak, De rest van de teksten op de site is taalkundig super zwak: stijlbreuken, jargon door elkaar met spreektaal, inconsistent gebruik van "PiM" vs "we" vs passief, rare koppelingen ("mee­kijkend" met soft hyphen), en knoppen die niet doen wat ze beloven. Deze ronde is een **pure taalpass** — geen logica, geen layout, geen nieuwe features.
+Landingspagina (`/`) compleet herbouwen volgens richting C ("Console"). Rust, vertrouwen, simpele taal, strakke gridverdeling. Werkende demo blijft live aangesloten op de bestaande PiM-engine — alleen presentatie en taal veranderen.
 
-## Scope (alleen tekst)
+## Designtokens (LOCKED)
 
-### 1. `src/lib/pim/copy.ts` — herschrijven van alle strings behalve `title` + `subtitle`
+In `src/styles.css` vastleggen, daarna overal via tokens gebruiken (geen hardcoded hex in componenten):
 
-- **Placeholder, knoppen, hints** consistent maken: actief, kort, één stem.
-  - `placeholder`: nu een opsomming → één uitnodigende zin.
-  - `startButton` "Controleer met PiM" → strakker, bv. "Controleer deze tekst".
-  - `privacyHint`: nu vier losse fragmenten met `·` → één leesbare zin.
-  - `liveBadge`: weghalen soft hyphen, normale spelling.
-- **Verdict-zinnen** (`statusGreen/Orange/Red`) — taal gladtrekken, "deur uit" eruit, één register.
-- **Drie-lagen uitleg** (`layerTeacher*`, `layerLeader*`) — docent-laag echt in docent-taal (kort, concreet, geen "AVG-minimalisatie"); bestuurder-laag bondig juridisch zonder klontering ("Fail-closed:" prefix eruit, in volzin).
-- **Knoppen** (`buttonAllow/Warning/Block`) — werkwoord vooraan, beloofde actie = werkelijke actie.
-- **Mode/doel-labels en hints** — "Anoniem / Pseudoniem (lokaal)" consistent uitleggen; "Waar gaat het naartoe?" → neutralere kop.
-- **Status-pill** — "Lokaal actief / Beperkte detectie / Niet klaar" + tagline taalkundig op één lijn.
-- **Menu-items** — uniforme stijl (zelfstandige naamwoorden, geen mix met werkwoorden); "Nieuwe test" → "Nieuwe controle", etc.
+- `--background: #0f1b3d` (deep navy)
+- `--surface: #1e3a5f` (demo card)
+- `--accent: #3b6fa0` (blauw)
+- `--foreground: #e8edf3` (off-white)
+- `--font-display: "Libre Baskerville", serif` (koppen)
+- `--font-sans: "IBM Plex Sans", sans-serif` (body)
+- `--font-mono: "IBM Plex Mono", monospace` (1 detail, status-pill)
 
-### 2. Header-microcopy `StartHeader.tsx`
+Fonts laden via `<link>` in `src/routes/__root.tsx` (Tailwind v4 regel — geen CSS @import).
 
-Alleen het regeltje onder het logo (`Privacy Integrity Monitor`) check — ofwel laten staan ofwel vervangen door een NL-tagline. Geen JSX-structuur wijzigen.
+## Layout (desktop ≥1024px)
 
-### 3. Overige routes — taalpass op koppen, intro's en CTA's
+```text
+┌────────────────────────────┬─────────────────────────────┐
+│ EYEBROW (small caps)       │  ┌─ LIVE MONITOR ───────┐  │
+│                            │  │ [Schoon][Mentor][Zorg]│ │
+│ H1 serif, kort, 2 regels   │  │                       │  │
+│                            │  │  textarea             │  │
+│ Sub, 1 zin, simpel         │  │                       │  │
+│                            │  │  ─ verdict-card ─     │  │
+│ ─ 2×2 grid USPs ─          │  │                       │  │
+│ Lokaal      │ Dubbele      │  │  [primaire actie]     │  │
+│ ────────────┼──────────    │  └───────────────────────┘  │
+│ Verdict     │ Egress Guard │   Local Guard Active        │
+└────────────────────────────┴─────────────────────────────┘
+        ──── anoniem vs pseudoniem mini-strip ────
+```
 
-Alleen tekstuele inhoud, geen componenten verbouwen:
+Mobiel: stack, demo eerst, USPs daarna, mini-strip onderaan. Hero past binnen 1 scherm op desktop.
 
-- `src/routes/over.tsx`
-- `src/routes/try.tsx` (Expert lab — intro + "terug"-link)
-- `src/routes/trust.tsx`
-- `src/routes/pipeline.tsx`
-- `src/routes/modes.tsx`
-- `src/routes/compliance.tsx`
-- `src/routes/flags.tsx`
-- `src/routes/architecture.tsx`
-- `src/routes/scenarios.tsx`
-- `__root.tsx` — `<title>`, meta description, OG-tags consistent in NL.
+## Tekst (eindversies — taalpas)
 
-Per route: kop, ondertitel, sectiekoppen, eerste alinea, CTA-knoppen. Lange uitleg-blokken alleen aanraken als er duidelijke taalfouten of registerbreuken staan.
+**Eyebrow**: `PRIVACY INTEGRITY MONITOR`
 
-### 4. Stijlregels die ik consequent toepas
+**H1** (serif, 2 regels):
 
-- **Eén stem**: PiM = "het" (product), niet "we"/"ik". Gebruiker = "je".
-- **Actief boven passief**, werkwoord vroeg in de zin.
-- **Geen Engels door NL** ("audit-spoor", "rules-only", "fail-closed") tenzij vakterm — dan tussen aanhalingstekens of vertaald.
-- **Geen typografische trucs** (soft hyphens, `·` als zinscheider in body-tekst).
-- **Knoplabel = belofte van de actie**. Geen "Controleer met PiM" als de knop "Controleer" doet.
-- **Hero (title + subtitle) ongewijzigd.**
+> Controleer je tekst op privacy,
+> voordat je hem deelt.
 
-## Wat ik niet doe
+**Sub** (1 zin, simpel):
 
-- Geen componenten verplaatsen, hernoemen of nieuwe maken.
-- Geen styling, geen iconen, geen layout.
-- Geen wijzigingen aan policy/processing/egress/tests.
+> PiM leest mee in je browser, herkent gevoelige gegevens en zegt of je veilig kunt delen, alles gebeurt lokaal zonder moeilijke technische stappen. 
+
+**USPs** (4 stuks, korte titel + 1 zin):
+
+1. **Niets verlaat je apparaat** :De controle gebeurt in je browser. Geen upload, geen server, geen log van je tekst.
+2. **Anoniem of pseudoniem** : Anoniem maakt namen definitief onleesbaar. Pseudoniem vervangt ze door codes, met een sleutel die alleen jij hebt.
+3. **Uitleg per rol** : Eén drie lezingen: wat het voor jou betekent, voor je organisatie, en voor je tech-collega.
+4. **Egress Guard**: PiM stuurt nooit gegevens door maar zet alles klaar voor de gebruiker die na goedkeuring tekst stuurt naar een LLM. kan 
+
+**Demo-kaart**:
+
+- Header pill: `LIVE MONITOR` (mono, small-caps)
+- Voorbeeldknoppen: `( zoek ander sooorr wordt voor schoon)` , `Mentor-notitie`, `Zorgnotitie`
+- Textarea placeholder: `Plak hier je tekst, of kies een voorbeeld hierboven.`
+- Primaire knop: `Controleer deze tekst`
+- Status-footer: `Local Guard actief` met groene dot
+- Verdict-card states (groen/oranje/rood) gebruiken bestaande engine-output, met uitlegregels uit `copy.ts`
+
+**Mini-strip onderaan** (1 regel, kalm):
+
+> Anoniem = onomkeerbaar. Pseudoniem = omkeerbaar, maar alleen op dit apparaat. Jij kiest per tekst waar je gebruik van wil maken. 
+
+## Bestanden
+
+**Nieuw / herschreven:**
+
+- `src/routes/index.tsx` — volledige herstructurering naar split-screen Console-layout
+- `src/components/pim/start-go/UspGrid.tsx` — nieuwe 2×2 USP-grid (presentatie, geen logic)
+- `src/components/pim/start-go/MonitorShell.tsx` — frame om bestaande demo (window header, footer-status). Bevat de bestaande `InputPanel` / `ResultPanel` componenten ongewijzigd.
+- `src/components/pim/start-go/AnonPseudoStrip.tsx` — mini-uitleg-strip onderaan
+
+**Aangepast (alleen tekst + tokens):**
+
+- `src/lib/pim/copy.ts` — alle hero/USP/demo-strings vervangen door bovenstaande versies
+- `src/components/pim/start-go/StartHeader.tsx` — eyebrow + nieuwe serif H1
+- `src/components/pim/start-go/InputPanel.tsx` — placeholder + knop-label, geen logic-wijziging
+- `src/components/pim/start-go/SafetyVerdictCard.tsx` — alleen styling naar tokens, 1-regel uitleg per rol
+- `src/styles.css` — design tokens hierboven, `@theme inline` mapping, hairline-divider utility
+
+**Niet aanraken:**
+
+- Detectie/policy/engine onder `src/lib/pim/` (logic blijft 1:1)
+- Andere routes (`/over`, `/try`, `/compliance`, etc.) — apart traject
 
 ## Validatie
 
-- `bun run typecheck` (strings only — moet schoon blijven).
-- Visuele controle van `/` op mobile-viewport (393×588) via Playwright-screenshot, plus snelle blik op de overige routes om te checken dat niets visueel breekt door langere/kortere strings.
+1. Build via auto-typecheck van het systeem
+2. Playwright screenshot op 1440×900 (desktop) en 393×800 (mobiel) → visueel checken: hero binnen 1 scherm, geen overflow, demo-card uitgelijnd, hairlines zichtbaar, fonts geladen
+3. Klikken op `Mentor-notitie` voorbeeld → verdict-card verschijnt oranje met de juiste uitlegregels
+4. Console-log check: geen font-load errors, geen unknown utility class
+
+## Wat dit oplost
+
+- "Niemand snapt wat je hier moet doen" → demo staat direct rechts met 3 klikbare voorbeelden en zichtbare verdict
+- "Schoon zorg notitie is vaag" → labels worden `Schoon`, `Mentor-notitie`, `Zorgnotitie` (drie aparte knoppen, niet aan elkaar geplakt)
+- "Eerst veilig dan delen is raar" → H1 wordt expliciete instructie in plaats van slogan
+- "Onderscheidende elementen ontbreken" → 2×2 grid noemt expliciet wat anderen claimen maar niet leveren (lokaal, dubbele bescherming, uitleg per rol, egress guard)
+- "Anoniem vs pseudoniem uitleggen" → eigen USP + mini-strip onderaan
+- "Rust en vertrouwen, compacter, ander palet" → Navy Trust + Libre Baskerville + hairlines + alles boven de vouw
