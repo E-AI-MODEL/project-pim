@@ -85,7 +85,7 @@ export function ResultPanel({ decision, safeText, originalText, signals, mapping
         <MappingViewer mapping={mapping} />
       )}
 
-      <ResultActions verdict={decision.verdict} onPrimary={onPrimary} busy={busy} />
+      <ResultActions verdict={decision.verdict} onPrimary={onPrimary} safeText={safeText} busy={busy} />
 
       {egressMsg && (
         <div className="text-xs text-muted-foreground border-l-2 border-border/60 pl-3">{egressMsg}</div>

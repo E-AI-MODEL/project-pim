@@ -34,6 +34,18 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
 
   useEffect(() => onModelIntegrity(setIntegrity), []);
 
+  // Globaal reset-event (uit burgermenu "Nieuwe controle").
+  useEffect(() => {
+    const onReset = () => {
+      setText("");
+      setResult(null);
+      setEgressMsg(null);
+      if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+    window.addEventListener("pim:reset", onReset);
+    return () => window.removeEventListener("pim:reset", onReset);
+  }, []);
+
   // Live preview-signals (zonder PiM uit te voeren).
   const previewSignals = useMemo(
     () => computeSignals(text, [], profileId, disabledCategories),

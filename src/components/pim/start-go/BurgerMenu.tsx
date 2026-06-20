@@ -4,17 +4,21 @@ import { Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { COPY } from "@/lib/pim/copy";
 
-const ITEMS: { to: string; label: string; hash?: string }[] = [
-  { to: "/", label: COPY.menuNewTest },
-  { to: "/", label: COPY.menuExamples, hash: "voorbeelden" },
-  { to: "/try", label: COPY.menuExpertLab },
-  { to: "/trust", label: COPY.menuTrust },
-  { to: "/pipeline", label: COPY.menuPipeline },
-  { to: "/modes", label: COPY.menuModes },
-  { to: "/compliance", label: COPY.menuCompliance },
-  { to: "/flags", label: COPY.menuFlags },
-  { to: "/over", label: COPY.menuSettings, hash: "instellingen" },
-  { to: "/over", label: COPY.menuAbout },
+type Item =
+  | { kind: "link"; to: string; label: string; hash?: string }
+  | { kind: "event"; event: string; label: string };
+
+const ITEMS: Item[] = [
+  { kind: "event", event: "pim:reset", label: COPY.menuNewTest },
+  { kind: "event", event: "pim:open-examples", label: COPY.menuExamples },
+  { kind: "link", to: "/try", label: COPY.menuExpertLab },
+  { kind: "link", to: "/trust", label: COPY.menuTrust },
+  { kind: "link", to: "/pipeline", label: COPY.menuPipeline },
+  { kind: "link", to: "/modes", label: COPY.menuModes },
+  { kind: "link", to: "/compliance", label: COPY.menuCompliance },
+  { kind: "link", to: "/flags", label: COPY.menuFlags },
+  { kind: "event", event: "pim:open-advanced", label: COPY.menuSettings },
+  { kind: "link", to: "/over", label: COPY.menuAbout },
 ];
 
 export function BurgerMenu() {
@@ -54,15 +58,28 @@ export function BurgerMenu() {
             </div>
             <ul className="flex-1 overflow-y-auto py-2">
               {ITEMS.map((item, i) => (
-                <li key={`${item.to}-${item.label}-${i}`}>
-                  <Link
-                    to={item.to}
-                    hash={item.hash}
-                    onClick={() => setOpen(false)}
-                    className="block px-5 py-2.5 text-sm hover:bg-accent/30"
-                  >
-                    {item.label}
-                  </Link>
+                <li key={`${item.label}-${i}`}>
+                  {item.kind === "link" ? (
+                    <Link
+                      to={item.to}
+                      onClick={() => setOpen(false)}
+                      className="block px-5 py-2.5 text-sm hover:bg-accent/30"
+                    >
+                      {item.label}
+                    </Link>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOpen(false);
+                        // wacht tot menu dicht is — voorkomt focus-trap-conflict met popovers
+                        setTimeout(() => window.dispatchEvent(new CustomEvent(item.event)), 60);
+                      }}
+                      className="w-full text-left block px-5 py-2.5 text-sm hover:bg-accent/30"
+                    >
+                      {item.label}
+                    </button>
+                  )}
                 </li>
               ))}
             </ul>
