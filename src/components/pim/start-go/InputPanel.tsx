@@ -57,6 +57,12 @@ export function InputPanel({ text, onTextChange, onStart, onExample, busy, compa
 
       <ExamplePicker onPick={onExample} />
 
+      {compact && text.trim().length === 0 && (
+        <p className="text-xs text-[#e8edf3]/55 border-l-2 border-[#3b6fa0]/40 pl-3 leading-relaxed">
+          {COPY.monitorEmptyHint}
+        </p>
+      )}
+
       <div className="flex flex-wrap items-center gap-3 pt-1">
         <button
           type="button"
