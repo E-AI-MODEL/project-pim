@@ -122,8 +122,10 @@ function CompactComposer({
     if (!text.trim()) return;
     scrubRef.current = setTimeout(() => {
       const sig = computeSignals(text, [], DEFAULT_PROFILE, new Set());
+      console.log("[scrub] fired", { text, direct: sig.directPii.length, spans: sig.directPii });
       if (sig.directPii.length === 0) return;
       const cleaned = anonymize(text, sig).text;
+      console.log("[scrub] cleaned", { cleaned });
       if (cleaned === text) return;
       onTextChange(cleaned);
       setFlash(true);
