@@ -1,11 +1,12 @@
 // §8.2 — textarea + voorbeeldknop + Start PiM + korte privacyregel.
 import { COPY } from "@/lib/pim/copy";
 import { EXAMPLES, ExamplePicker, type Example } from "./ExamplePicker";
-import { Play, Cpu, Radio, Plus, SlidersHorizontal, ArrowUp, Check, FileUp, FileText, X, AlertCircle } from "lucide-react";
+import { Play, Cpu, Radio, Plus, SlidersHorizontal, ArrowUp, Check, FileUp, FileText, X, AlertCircle, Eraser } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { Mode, Action } from "@/lib/pim/types";
 import { extractDocument, formatBytes, rejectionReason, MAX_DOC_BYTES, type ExtractedDoc } from "@/lib/pim/documentReader";
 import { useEffect, useRef, useState } from "react";
+import { computeSignals, anonymize, DEFAULT_PROFILE } from "@/lib/pim";
 
 interface Props {
   text: string;
@@ -108,6 +109,33 @@ function CompactComposer({
   const [docBusy, setDocBusy] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const composerRef = useRef<HTMLElement>(null);
+  const [liveScrub, setLiveScrub] = useState(false);
+  const [flash, setFlash] = useState(false);
+  const scrubRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Live wissen — debounced. Als directe PII gevonden wordt, vervangen we
+  // de inhoud door de geanonimiseerde variant en flashen het kader rood.
+  useEffect(() => {
+    if (!liveScrub) return;
+    if (scrubRef.current) clearTimeout(scrubRef.current);
+    if (!text.trim()) return;
+    scrubRef.current = setTimeout(() => {
+      const sig = computeSignals(text, [], DEFAULT_PROFILE, new Set());
+      if (sig.directPii.length === 0) return;
+      const cleaned = anonymize(text, sig).text;
+      if (cleaned === text) return;
+      onTextChange(cleaned);
+      setFlash(true);
+      setTimeout(() => setFlash(false), 650);
+      // cursor naar einde — origineel was zojuist herschreven
+      requestAnimationFrame(() => {
+        const ta = textareaRef.current;
+        if (ta) ta.setSelectionRange(cleaned.length, cleaned.length);
+      });
+    }, 350);
+    return () => { if (scrubRef.current) clearTimeout(scrubRef.current); };
+  }, [text, liveScrub, onTextChange]);
 
   useEffect(() => {
     const onOpenExamples = () => {
@@ -150,7 +178,11 @@ function CompactComposer({
   return (
     <section ref={composerRef} className="space-y-3 scroll-mt-20">
       {/* Composer-kaart */}
-      <div className="rounded-2xl border border-[#3b6fa0]/30 bg-[#0f1b3d]/70 focus-within:border-[#3b6fa0]/70 focus-within:shadow-[0_0_0_3px_rgba(59,111,160,0.15)] transition-all overflow-hidden">
+      <div className={`rounded-2xl border bg-[#0f1b3d]/70 transition-all overflow-hidden ${
+        flash
+          ? "border-rose-500/80 shadow-[0_0_0_3px_rgba(244,63,94,0.35)]"
+          : "border-[#3b6fa0]/30 focus-within:border-[#3b6fa0]/70 focus-within:shadow-[0_0_0_3px_rgba(59,111,160,0.15)]"
+      }`}>
         {/* Verborgen file-input voor upload */}
         <input
           ref={fileInputRef}
@@ -185,6 +217,7 @@ function CompactComposer({
 
         {/* Textarea */}
         <textarea
+          ref={textareaRef}
           value={text}
           onChange={(e) => onTextChange(e.target.value)}
           onKeyDown={(e) => {
