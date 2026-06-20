@@ -1,7 +1,7 @@
 // Advanced panel — geeft gebruikers sturing over profiel, drempels en toont
 // modelintegriteit. Alleen UI; alle beslislogica blijft in src/lib/pim.
 import { useState } from "react";
-import { ChevronDown, ChevronRight, RotateCcw, ShieldCheck, ShieldAlert } from "lucide-react";
+import { ChevronDown, RotateCcw, ShieldCheck, ShieldAlert, SlidersHorizontal } from "lucide-react";
 import {
   PIPELINE_PROFILES,
   RELEASE_1_PROFILES,
@@ -61,14 +61,26 @@ export function AdvancedPanel({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-[#3b6fa0]/10 transition-colors"
+        aria-expanded={open}
+        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[#3b6fa0]/10 transition-colors"
       >
-        <div className="flex items-center gap-2">
-          {open ? <ChevronDown className="h-4 w-4 text-[#e8edf3]/60" /> : <ChevronRight className="h-4 w-4 text-[#e8edf3]/60" />}
-          <span className="text-[10px] uppercase tracking-wider font-plex-mono text-[#e8edf3]/55">Advanced</span>
-          <span className="text-sm text-[#e8edf3]/85">Profiel, drempels & integriteit</span>
+        <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#3b6fa0]/15 border border-[#3b6fa0]/30">
+          <SlidersHorizontal className="h-4 w-4 text-[#e8edf3]/80" />
+        </span>
+        <div className="flex-1 min-w-0">
+          <div className="text-sm font-medium text-[#e8edf3] leading-tight">
+            Geavanceerde instellingen
+          </div>
+          <div className="text-[11px] text-[#e8edf3]/55 leading-snug truncate">
+            Profiel · drempels · detectoren
+          </div>
         </div>
-        <span className="text-[11px] font-plex-mono text-[#e8edf3]/45 truncate max-w-[40%]">{profile.label}</span>
+        <span className="hidden sm:inline-flex text-[10px] font-plex-mono px-2 py-1 rounded-md bg-[#3b6fa0]/15 border border-[#3b6fa0]/25 text-[#e8edf3]/70 truncate max-w-[40%]">
+          {profile.label}
+        </span>
+        <ChevronDown
+          className={`h-4 w-4 text-[#e8edf3]/55 shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
+        />
       </button>
 
       {open && (
