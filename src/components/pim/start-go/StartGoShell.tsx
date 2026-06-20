@@ -4,11 +4,12 @@ import {
   computeSignals, anonymize, pseudonymize, draftCheck, decide, executeAction,
   modelGateFor, onModelIntegrity, type ModelIntegrityRecord,
   DEFAULT_PROFILE, type CertifiedPayload, type PayloadType,
-  type Mode, type Action,
+  type Mode, type Action, type PipelineProfileId,
 } from "@/lib/pim";
 import { InputPanel } from "./InputPanel";
 import { ModeTargetBar } from "./ModeTargetBar";
 import { ResultPanel } from "./ResultPanel";
+import { AdvancedPanel } from "./AdvancedPanel";
 import type { Example } from "./ExamplePicker";
 
 interface ResultState {
@@ -21,6 +22,8 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
   const [text, setText] = useState("");
   const [mode, setMode] = useState<Mode>("anonymous");
   const [action, setAction] = useState<Action>("send_external_ai");
+  const [profileId, setProfileId] = useState<PipelineProfileId>(DEFAULT_PROFILE);
+  const [thresholdOverrides, setThresholdOverrides] = useState<Partial<Record<Action, number>>>({});
   const [integrity, setIntegrity] = useState<ModelIntegrityRecord[]>([]);
   const [result, setResult] = useState<ResultState | null>(null);
   const [egressMsg, setEgressMsg] = useState<string | null>(null);
@@ -29,7 +32,7 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
   useEffect(() => onModelIntegrity(setIntegrity), []);
 
   // Live preview-signals (zonder PiM uit te voeren).
-  const previewSignals = useMemo(() => computeSignals(text, [], DEFAULT_PROFILE), [text]);
+  const previewSignals = useMemo(() => computeSignals(text, [], profileId), [text, profileId]);
 
   // Live oordeel: debounced auto-run zodra de tekst stabiel is.
   // Gebruiker krijgt instant feedback; expliciete knop blijft de
@@ -41,26 +44,26 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
     debounceRef.current = setTimeout(() => { run(); }, 450);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [text, mode, action, integrity]);
+  }, [text, mode, action, integrity, profileId, thresholdOverrides]);
 
   const run = () => {
     if (!text.trim()) return;
     setBusy(true);
     try {
-      const signals = computeSignals(text, [], DEFAULT_PROFILE);
+      const signals = computeSignals(text, [], profileId);
       const draft = mode === "anonymous"
         ? anonymize(text, signals)
         : pseudonymize(text, signals).draft;
       const guard = draftCheck(draft, mode);
-      const gate = modelGateFor(DEFAULT_PROFILE, action, integrity);
+      const gate = modelGateFor(profileId, action, integrity);
       const payloadType: PayloadType =
         mode === "anonymous" && guard.status === "pass" ? "draft_anonymous_certified" :
         mode === "pseudonymous" ? "draft_pseudonymous_local" :
         "unknown";
-      const decisionSignals = computeSignals(draft.text, [], DEFAULT_PROFILE);
+      const decisionSignals = computeSignals(draft.text, [], profileId);
       const decision = decide({
         mode, action, signals: decisionSignals, draftCheck: guard,
-        modelVerified: gate.verified, profileId: DEFAULT_PROFILE, payloadType,
+        modelVerified: gate.verified, profileId, payloadType, thresholdOverrides,
       });
       setResult({ decision, safeText: draft.text, signals: decisionSignals });
       setEgressMsg(null);
@@ -84,7 +87,7 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
         text: result.safeText,
         mode: result.decision.mode,
         payloadType: result.decision.payloadType ?? "unknown",
-        profileId: result.decision.profileId ?? DEFAULT_PROFILE,
+        profileId: result.decision.profileId ?? profileId,
         guardStatus,
       };
       const r = await executeAction(result.decision, certified);
@@ -117,6 +120,15 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
       {!compact && (
         <ModeTargetBar mode={mode} onModeChange={setMode} action={action} onActionChange={setAction} />
       )}
+
+      <AdvancedPanel
+        profileId={profileId}
+        onProfileChange={setProfileId}
+        thresholds={thresholdOverrides}
+        onThresholdChange={(a, v) => setThresholdOverrides((prev) => ({ ...prev, [a]: v }))}
+        onResetThresholds={() => setThresholdOverrides({})}
+        integrity={integrity}
+      />
 
       {!result && text.trim().length > 0 && (
         <div className={`text-xs border-l-2 pl-3 animate-pulse ${compact ? "text-[#e8edf3]/60 border-[#3b6fa0]/50" : "text-muted-foreground border-primary/40"}`}>
