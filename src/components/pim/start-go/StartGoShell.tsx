@@ -15,7 +15,9 @@ import type { Example } from "./ExamplePicker";
 interface ResultState {
   decision: ReturnType<typeof decide>;
   safeText: string;
+  originalText: string;
   signals: ReturnType<typeof computeSignals>;
+  mapping: Map<string, string>;
 }
 
 export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
@@ -55,9 +57,15 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
     setBusy(true);
     try {
       const signals = computeSignals(text, [], profileId, disabledCategories);
-      const draft = mode === "anonymous"
-        ? anonymize(text, signals)
-        : pseudonymize(text, signals).draft;
+      let draft;
+      let mapping = new Map<string, string>();
+      if (mode === "anonymous") {
+        draft = anonymize(text, signals);
+      } else {
+        const pseudo = pseudonymize(text, signals);
+        draft = pseudo.draft;
+        mapping = pseudo.mapping;
+      }
       const guard = draftCheck(draft, mode);
       const gate = modelGateFor(profileId, action, integrity);
       const payloadType: PayloadType =
@@ -69,7 +77,7 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
         mode, action, signals: decisionSignals, draftCheck: guard,
         modelVerified: gate.verified, profileId, payloadType, thresholdOverrides,
       });
-      setResult({ decision, safeText: draft.text, signals: decisionSignals });
+      setResult({ decision, safeText: draft.text, originalText: text, signals, mapping });
       setEgressMsg(null);
     } finally {
       setBusy(false);
@@ -151,7 +159,9 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
         <ResultPanel
           decision={result.decision}
           safeText={result.safeText}
+          originalText={result.originalText}
           signals={result.signals}
+          mapping={result.mapping}
           integrity={integrity}
           onPrimary={onPrimary}
           egressMsg={egressMsg}

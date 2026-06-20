@@ -1,24 +1,24 @@
 import type { Verdict } from "@/lib/pim/types";
 import { COPY } from "@/lib/pim/copy";
-import { ShieldCheck, ShieldAlert, ShieldX, GraduationCap, Building2 } from "lucide-react";
+import { ShieldCheck, ShieldAlert, ShieldX, GraduationCap, Building2, Code2 } from "lucide-react";
 
 export function SafetyVerdictCard({ verdict, reason }: { verdict: Verdict; reason: string }) {
   const map = {
     ALLOW: {
       head: COPY.resultHeadGreen,  body: COPY.statusGreen,
-      teacher: COPY.layerTeacherAllow, leader: COPY.layerLeaderAllow,
+      teacher: COPY.layerTeacherAllow, leader: COPY.layerLeaderAllow, tech: COPY.layerTechAllow,
       cls: "border-green-500/40 bg-green-500/[0.07]",
       Icon: ShieldCheck, color: "text-green-400", glow: "shadow-[0_0_32px_oklch(0.82_0.22_145/0.25)]",
     },
     ALLOW_WITH_WARNING: {
       head: COPY.resultHeadOrange, body: COPY.statusOrange,
-      teacher: COPY.layerTeacherWarn, leader: COPY.layerLeaderWarn,
+      teacher: COPY.layerTeacherWarn, leader: COPY.layerLeaderWarn, tech: COPY.layerTechWarn,
       cls: "border-orange-500/40 bg-orange-500/[0.07]",
       Icon: ShieldAlert, color: "text-orange-400", glow: "shadow-[0_0_32px_oklch(0.78_0.18_60/0.25)]",
     },
     BLOCK: {
       head: COPY.resultHeadRed, body: COPY.statusRed,
-      teacher: COPY.layerTeacherBlock, leader: COPY.layerLeaderBlock,
+      teacher: COPY.layerTeacherBlock, leader: COPY.layerLeaderBlock, tech: COPY.layerTechBlock,
       cls: "border-red-500/40 bg-red-500/[0.07]",
       Icon: ShieldX, color: "text-red-400", glow: "shadow-[0_0_32px_oklch(0.68_0.24_18/0.3)]",
     },
@@ -37,6 +37,7 @@ export function SafetyVerdictCard({ verdict, reason }: { verdict: Verdict; reaso
           <div className="space-y-2 pt-1 border-t border-border/30">
             <Layer Icon={GraduationCap} label="Voor jou als gebruiker" text={map.teacher} />
             <Layer Icon={Building2} label="Voor je organisatie" text={map.leader} />
+            <Layer Icon={Code2} label="Voor je tech-collega" text={map.tech} />
           </div>
 
           <p className="text-[11px] text-muted-foreground font-mono pt-1">{reason}</p>

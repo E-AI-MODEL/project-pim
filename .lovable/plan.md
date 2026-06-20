@@ -1,73 +1,63 @@
+# Volgende stappen: PiM UX & functionaliteit
+
 ## Probleem
+Na document-upload (fase 1, net gebouwd) is de grootste UX-gap duidelijk: de gebruiker ziet **welke** categorieën PiM vond, maar **niet waar** in de tekst. Bij lange documenten is handmatig zoeken onwerkbaar.
 
-Op mobiel komt de Live Monitor pas in beeld na de hero + alle vier USP-blokken (~1000px scrollen). Bezoekers zien alleen uitleg en concluderen "er werkt niks". De Anoniem/Pseudoniem-knoppen werken wel — ze togglen state — maar zonder zichtbare demo en zonder tekst is dat onzichtbaar.
+Daarnaast: de spec belooft 3 uitleglagen (docent / bestuurder / tech) maar de UI toont er 2. En de pseudonieme mapping + self-test modules bestaan maar zijn onzichtbaar.
 
-## Fix (klein, alleen layout & volgorde)
+## Fase 1 — Gekleurde tekst-highlighting in ResultPanel (hoogste impact)
 
-### 1. Mobiele volgorde omdraaien — demo eerst
+**Nieuw component:** `TextHighlighter.tsx`
 
-In `src/routes/index.tsx`: gebruik flex-order zodat op mobiel de monitor bovenaan staat (direct na de eyebrow + korte kop), en de USP-grid eronder. Op `lg:` herstellen we de huidige naast-elkaar-layout.
+Toon de originele invoertekst met inline gekleurde highlights op elke PII-detectie:
+- **Directe PII** (email, BSN, naam, adres…): oranje/rood achtergrond + tooltip met categorie + confidence
+- **Contextuele PII** (zorgcontext, incident, kleine groep…): amber/geel achtergrond + tooltip
+- Overlappende spans: hoogste confidence wint (zelfde logica als detectors)
+- Lange teksten (>5000 chars): scrollbaar met sticky categorie-legenda
 
-Schema mobiel:
-```text
-EYEBROW
-H1 + sub        ← korter zichtbaar boven de vouw
-LIVE MONITOR    ← meteen probeerbaar
-USP-grid (4)
-anon vs pseudo strip
-```
+**UI-integratie in ResultPanel:**
+- Nieuwe sectie boven "De veilige versie van je tekst" — genaamd "Wat PiM herkende in je tekst"
+- Tab-switcher: [Origineel met highlights] | [Veilige versie]
+- FindingChips blijft bestaan als samenvatting bovenaan
 
-Concreet:
-- Buitenste grid blijft `lg:grid-cols-2`.
-- Linker-kolom (hero+USPs) en rechter-kolom (Monitor) krijgen `order` classes: op mobiel `order-2` voor USPs, hero blijft order-1, Monitor `order-2` tussen hero en USPs. Op `lg:` alles terug naar originele plek.
-- Praktisch splitsen: hero (header met eyebrow+H1+sub) als eigen blok `order-1`, MonitorShell `order-2 lg:order-3`, UspGrid `order-3 lg:order-2`. Op desktop met `lg:grid` blijft links/rechts hetzelfde door grid-area logica.
+**Technisch:**
+- Render spans als overlappende `<mark>`-achtige elementen via absolute positioning of span-injectie
+- Tooltip via native `title` of kleine popover op hover
+- Responsief: op mobile wordt de tekst horizontaal scrollbaar met zoom-indicator
 
-Simpelste vorm: op mobiel gewoon DOM-volgorde aanpassen via wrapping — buiten `lg`-breakpoint stack ik: `<Header /> <MonitorShell /> <UspGrid />`. Op `lg+` toon ik de tweekolomslayout met linker `<Header />+<UspGrid />` en rechter `<MonitorShell />`.
+## Fase 2 — Tech-laag toevoegen aan SafetyVerdictCard
 
-Implementatie: render hero apart, en gebruik twee containers:
-- mobiele stack (`lg:hidden`): Header → Monitor → UspGrid → Strip
-- desktop split (`hidden lg:grid lg:grid-cols-2`): links Header+UspGrid, rechts Monitor; strip eronder
+COPY.ts bevat alleen `layerTeacher*` en `layerLeader*`. De spec noemt expliciet een **tech-collega**-laag.
 
-Dubbele markup voor Header/UspGrid/Monitor is OK — het zijn presentatiecomponenten, geen state. Wacht — Monitor bevat StartGoShell met React-state. Twee instanties = twee aparte states. Daarom NIET dupliceren: gebruik één DOM-boom en stuur volgorde via Tailwind `order-*` op grid-items binnen één grid die op mobiel `grid-cols-1` is.
+**Actie:**
+- Nieuwe COPY-keys: `layerTechAllow`, `layerTechWarn`, `layerTechBlock`
+- Tech-laag toont: ruleId, policyVersion, aantal detectoren, riskScore breakdown, payloadType
+- SafetyVerdictCard krijgt 3e `Layer` (met `Code` icon) naast GraduationCap en Building2
 
-Definitieve aanpak (één instantie, order via Tailwind):
-```tsx
-<div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
-  <header className="order-1 lg:order-1 lg:col-start-1">…hero…</header>
-  <div   className="order-2 lg:order-2 lg:col-start-2 lg:row-span-2">
-    <MonitorShell />
-  </div>
-  <div   className="order-3 lg:order-3 lg:col-start-1">
-    <UspGrid />
-  </div>
-</div>
-```
-Op mobiel: 1 kolom, volgorde Header → Monitor → USPs. Op desktop: links Header boven USPs (col 1, twee rijen), rechts Monitor (col 2, span 2 rijen). Dit is exact het huidige desktop-uiterlijk, maar mobiel staat Monitor nu direct onder de hero.
+## Fase 3 — Pseudoniem mapping viewer
 
-### 2. Hero compacter op mobiel zodat Monitor sneller in beeld komt
+Wanneer modus = pseudoniem, toon een uitklapbare "Token mapping" tabel onder de veilige tekst:
+- Kolommen: Token | Origineel | Categorie
+- Zoek/filter op token of categorie
+- Knop "Kopieer mapping als JSON" (lokaal — geen egress)
+- Alleen zichtbaar bij modus = pseudonymous
 
-- H1 op mobiel: `text-2xl` i.p.v. `text-[2rem]` (~24px → kop past op één regel).
-- Sub op mobiel inkorten met `line-clamp-3` of gewoon korter laten zien — geen wijziging copy nodig.
-- Vertical padding terug: `py-6 sm:py-10 lg:py-20`.
+## Fase 4 — Trust indicator (self-test)
 
-### 3. Lege-staat hint in Monitor
+De `selfTest.ts` module is compleet maar onzichtbaar.
 
-Als de textarea leeg is, toon één rustige regel onder de voorbeeldknoppen: "Kies een voorbeeld of typ je eigen tekst om PiM te zien werken." Zo voelt het meteen interactief; de Anoniem/Pseudoniem-knoppen krijgen ook context.
+**Actie:**
+- Mini trust-badge in MonitorShell footer (naast "Local Guard actief")
+- Groen vinkje = self-test PASS, oranje uitroepteken = FAIL
+- Klik opent een klein popover met: golden-cases resultaten, hardening status, ruleset hash (eerste 12 chars)
+- Self-test runt automatisch bij eerste render (non-blocking)
 
-Wijziging in `src/components/pim/start-go/InputPanel.tsx` (compact-variant): toon `emptyHint` onder ExamplePicker wanneer `text.trim().length === 0`. Nieuwe string in `copy.ts`: `monitorEmptyHint`.
+## Technische details
 
-## Bestanden
+- Geen nieuwe dependencies nodig
+- Alles blijft 100% client-side
+- TypeScript strict compatibel
 
-- `src/routes/index.tsx` — grid met order/row-span, compactere hero op mobiel
-- `src/components/pim/start-go/InputPanel.tsx` — lege-staat-hintregel (alleen in compact)
-- `src/lib/pim/copy.ts` — `monitorEmptyHint` string toevoegen
+## Scope
 
-## Niet aanraken
-
-Logica van Anoniem/Pseudoniem (werkt al). Desktop-uiterlijk (blijft identiek). Andere routes.
-
-## Validatie
-
-Playwright op 393×588 (smal & kort) en 1440×900:
-- Mobiel: Monitor zichtbaar binnen één scroll na de hero. Klik op "Mentor-notitie" → verdict-card verschijnt. Toggle Pseudoniem → verdict update.
-- Desktop: layout ongewijzigd t.o.v. huidige screenshot.
+Alleen frontend/UI wijzigingen — geen aanpassingen aan detectoren, policy, of pipeline-logica.

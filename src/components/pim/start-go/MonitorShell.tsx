@@ -1,5 +1,6 @@
 import { COPY } from "@/lib/pim/copy";
 import { StartGoShell } from "./StartGoShell";
+import { TrustBadge } from "./TrustBadge";
 
 export function MonitorShell() {
   return (
@@ -29,7 +30,10 @@ export function MonitorShell() {
             {COPY.monitorStatus}
           </span>
         </div>
-        <span className="font-plex-mono text-[10px] text-[#e8edf3]/40">v1.0</span>
+        <div className="flex items-center gap-2">
+          <TrustBadge />
+          <span className="font-plex-mono text-[10px] text-[#e8edf3]/40">v1.0</span>
+        </div>
       </div>
     </div>
   );
