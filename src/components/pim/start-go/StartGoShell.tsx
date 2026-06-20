@@ -4,7 +4,7 @@ import {
   computeSignals, anonymize, pseudonymize, draftCheck, decide, executeAction,
   modelGateFor, onModelIntegrity, type ModelIntegrityRecord,
   DEFAULT_PROFILE, type CertifiedPayload, type PayloadType,
-  type Mode, type Action, type PipelineProfileId,
+  type Mode, type Action, type PipelineProfileId, type PiiCategory,
 } from "@/lib/pim";
 import { InputPanel } from "./InputPanel";
 import { ModeTargetBar } from "./ModeTargetBar";
@@ -24,6 +24,7 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
   const [action, setAction] = useState<Action>("send_external_ai");
   const [profileId, setProfileId] = useState<PipelineProfileId>(DEFAULT_PROFILE);
   const [thresholdOverrides, setThresholdOverrides] = useState<Partial<Record<Action, number>>>({});
+  const [disabledCategories, setDisabledCategories] = useState<ReadonlySet<PiiCategory>>(new Set());
   const [integrity, setIntegrity] = useState<ModelIntegrityRecord[]>([]);
   const [result, setResult] = useState<ResultState | null>(null);
   const [egressMsg, setEgressMsg] = useState<string | null>(null);
@@ -32,7 +33,10 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
   useEffect(() => onModelIntegrity(setIntegrity), []);
 
   // Live preview-signals (zonder PiM uit te voeren).
-  const previewSignals = useMemo(() => computeSignals(text, [], profileId), [text, profileId]);
+  const previewSignals = useMemo(
+    () => computeSignals(text, [], profileId, disabledCategories),
+    [text, profileId, disabledCategories],
+  );
 
   // Live oordeel: debounced auto-run zodra de tekst stabiel is.
   // Gebruiker krijgt instant feedback; expliciete knop blijft de
@@ -44,13 +48,13 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
     debounceRef.current = setTimeout(() => { run(); }, 450);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [text, mode, action, integrity, profileId, thresholdOverrides]);
+  }, [text, mode, action, integrity, profileId, thresholdOverrides, disabledCategories]);
 
   const run = () => {
     if (!text.trim()) return;
     setBusy(true);
     try {
-      const signals = computeSignals(text, [], profileId);
+      const signals = computeSignals(text, [], profileId, disabledCategories);
       const draft = mode === "anonymous"
         ? anonymize(text, signals)
         : pseudonymize(text, signals).draft;
@@ -60,7 +64,7 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
         mode === "anonymous" && guard.status === "pass" ? "draft_anonymous_certified" :
         mode === "pseudonymous" ? "draft_pseudonymous_local" :
         "unknown";
-      const decisionSignals = computeSignals(draft.text, [], profileId);
+      const decisionSignals = computeSignals(draft.text, [], profileId, disabledCategories);
       const decision = decide({
         mode, action, signals: decisionSignals, draftCheck: guard,
         modelVerified: gate.verified, profileId, payloadType, thresholdOverrides,
@@ -128,6 +132,13 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
         onThresholdChange={(a, v) => setThresholdOverrides((prev) => ({ ...prev, [a]: v }))}
         onResetThresholds={() => setThresholdOverrides({})}
         integrity={integrity}
+        disabledCategories={disabledCategories}
+        onToggleCategory={(cat) => setDisabledCategories((prev) => {
+          const next = new Set(prev);
+          if (next.has(cat)) next.delete(cat); else next.add(cat);
+          return next;
+        })}
+        onResetCategories={() => setDisabledCategories(new Set())}
       />
 
       {!result && text.trim().length > 0 && (

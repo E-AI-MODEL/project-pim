@@ -9,6 +9,7 @@ import {
   type PipelineProfileId,
   type Action,
   type ModelIntegrityRecord,
+  type PiiCategory,
 } from "@/lib/pim";
 
 const ACTION_LABELS: Record<Action, string> = {
@@ -26,6 +27,16 @@ const TUNEABLE: Action[] = [
   "send_external_ai", "export_file", "print", "copy", "share", "save_local", "display",
 ];
 
+// Categorieën die je kunt aan/uitzetten — gegroepeerd op relevantie.
+const CATEGORY_GROUPS: PiiCategory[] = [
+  "email", "phone", "bsn", "iban", "credit_card", "postcode", "address",
+  "name", "school", "date", "birthdate_text", "student_id", "class_code",
+  "license_plate", "url", "ip_address", "social_handle",
+  "context_small_group", "context_care", "context_incident", "context_role",
+  "context_health", "context_family", "context_legal", "context_financial",
+  "context_protected_class", "context_performance", "context_location_specific",
+];
+
 interface Props {
   profileId: PipelineProfileId;
   onProfileChange: (id: PipelineProfileId) => void;
@@ -33,10 +44,14 @@ interface Props {
   onThresholdChange: (action: Action, value: number) => void;
   onResetThresholds: () => void;
   integrity: ModelIntegrityRecord[];
+  disabledCategories: ReadonlySet<PiiCategory>;
+  onToggleCategory: (cat: PiiCategory) => void;
+  onResetCategories: () => void;
 }
 
 export function AdvancedPanel({
   profileId, onProfileChange, thresholds, onThresholdChange, onResetThresholds, integrity,
+  disabledCategories, onToggleCategory, onResetCategories,
 }: Props) {
   const [open, setOpen] = useState(false);
   const profile = PIPELINE_PROFILES[profileId];
@@ -135,6 +150,44 @@ export function AdvancedPanel({
                       {(val * 100).toFixed(0)}%
                     </span>
                   </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Detector categorieën */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="text-[10px] uppercase tracking-wider font-plex-mono text-[#e8edf3]/50">
+                Detectoren (categorieën)
+              </div>
+              <button
+                type="button"
+                onClick={onResetCategories}
+                className="inline-flex items-center gap-1 text-[10px] font-plex-mono text-[#e8edf3]/60 hover:text-[#e8edf3] px-2 py-1 rounded hover:bg-[#3b6fa0]/15"
+              >
+                <RotateCcw className="h-3 w-3" /> Alles aan
+              </button>
+            </div>
+            <p className="text-[11px] text-[#e8edf3]/50 leading-snug">
+              Uitschakelen verlaagt detectie — alleen voor demo of false-positive-debug.
+            </p>
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {CATEGORY_GROUPS.map((cat) => {
+                const off = disabledCategories.has(cat);
+                return (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => onToggleCategory(cat)}
+                    className={`text-[10px] font-plex-mono px-2 py-1 rounded border transition-colors ${
+                      off
+                        ? "border-[#3b6fa0]/15 bg-transparent text-[#e8edf3]/35 line-through"
+                        : "border-[#3b6fa0]/40 bg-[#3b6fa0]/15 text-[#e8edf3]/85 hover:bg-[#3b6fa0]/25"
+                    }`}
+                  >
+                    {cat}
+                  </button>
                 );
               })}
             </div>
