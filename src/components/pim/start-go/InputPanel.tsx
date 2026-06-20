@@ -117,6 +117,7 @@ function CompactComposer({
   // Live wissen — debounced. Als directe PII gevonden wordt, vervangen we
   // de inhoud door de geanonimiseerde variant en flashen het kader rood.
   useEffect(() => {
+    console.log("[scrub:effect]", { liveScrub, text });
     if (!liveScrub) return;
     if (scrubRef.current) clearTimeout(scrubRef.current);
     if (!text.trim()) return;
