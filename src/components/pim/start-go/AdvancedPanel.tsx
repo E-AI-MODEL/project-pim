@@ -27,6 +27,16 @@ const TUNEABLE: Action[] = [
   "send_external_ai", "export_file", "print", "copy", "share", "save_local", "display",
 ];
 
+// Categorieën die je kunt aan/uitzetten — gegroepeerd op relevantie.
+const CATEGORY_GROUPS: PiiCategory[] = [
+  "email", "phone", "bsn", "iban", "credit_card", "postcode", "address",
+  "name", "school", "date", "birthdate_text", "student_id", "class_code",
+  "license_plate", "url", "ip_address", "social_handle",
+  "context_small_group", "context_care", "context_incident", "context_role",
+  "context_health", "context_family", "context_legal", "context_financial",
+  "context_protected_class", "context_performance", "context_location_specific",
+];
+
 interface Props {
   profileId: PipelineProfileId;
   onProfileChange: (id: PipelineProfileId) => void;
