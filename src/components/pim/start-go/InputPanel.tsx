@@ -297,3 +297,12 @@ function shortTarget(a: Action): string {
     default: return "";
   }
 }
+
+function dotForExample(id: string): string {
+  switch (id) {
+    case "clean": return "bg-emerald-400";
+    case "context": return "bg-amber-400";
+    case "hard": return "bg-rose-400";
+    default: return "bg-[#3b6fa0]";
+  }
+}
