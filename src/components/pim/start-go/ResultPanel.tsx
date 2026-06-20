@@ -19,23 +19,26 @@ interface Props {
 export function ResultPanel({ decision, safeText, signals, integrity, onPrimary, egressMsg, busy }: Props) {
   const directSpans = signals.directPii;
   return (
-    <section className="space-y-4">
+    <section className="space-y-4 animate-fade-in">
       <SafetyVerdictCard verdict={decision.verdict} reason={decision.reason} />
 
       {decision.verdict === "BLOCK" && directSpans.length > 0 && (
-        <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-4 space-y-2">
-          <div className="text-xs font-semibold uppercase tracking-wider text-red-300">Gevonden</div>
+        <div className="rounded-xl border border-red-500/30 bg-red-500/5 p-4 space-y-2">
+          <div className="text-[11px] font-semibold uppercase tracking-wider text-red-300">PiM vond dit terug in je tekst</div>
           <FindingChips spans={directSpans} />
-          <div className="text-xs text-muted-foreground pt-1">
-            Wat nu? Verwijder deze gegevens uit je tekst of kies een sterkere mode (Anoniem) en klik opnieuw op Start PiM.
+          <div className="text-xs text-muted-foreground pt-1 leading-relaxed">
+            <span className="text-foreground font-medium">Volgende stap:</span> haal deze gegevens weg, of kies de mode <span className="text-foreground font-medium">Anoniem</span> — PiM rekent dan zelf opnieuw.
           </div>
         </div>
       )}
 
       {decision.verdict !== "BLOCK" && (
         <div className="space-y-2">
-          <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Veilige tekst</div>
-          <pre className="rounded-lg border border-border/40 bg-card/40 p-3 text-sm font-mono whitespace-pre-wrap leading-relaxed max-h-[40vh] overflow-auto">{safeText}</pre>
+          <div className="flex items-center justify-between">
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">De veilige versie van je tekst</div>
+            <div className="text-[10px] text-muted-foreground">klaar voor de gekozen actie</div>
+          </div>
+          <pre className="rounded-xl border border-primary/20 bg-card/60 p-4 text-sm font-mono whitespace-pre-wrap leading-relaxed max-h-[40vh] overflow-auto">{safeText}</pre>
         </div>
       )}
 
