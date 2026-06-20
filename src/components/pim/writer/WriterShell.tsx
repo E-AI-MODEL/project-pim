@@ -80,15 +80,35 @@ export function WriterShell() {
     if (!editor) return;
     const { plain, map } = extractPlain(editor.state.doc);
     const signals = computeSignals(plain, [], DEFAULT_PROFILE, new Set());
-    const all = [...signals.directPii, ...signals.contextualPii];
+    let all = [...signals.directPii, ...signals.contextualPii];
+
+    // Aanscherping: identifier-validators verwerpen willekeurige cijferreeksen.
+    if (strict) {
+      all = all.filter((s) => {
+        if (s.category === "bsn") return isValidBsn(s.text);
+        if (s.category === "iban") return isValidIban(s.text);
+        if (s.category === "license_plate") return isValidLicensePlate(s.text);
+        return true;
+      });
+    }
+
+    // Bugfix: nooit redacten terwijl gebruiker er nog in typt.
+    const sel = editor.state.selection;
+    const cursorFrom = Math.min(sel.from, sel.to);
 
     // 1) Auto-redact: harde PII direct vervangen, achteraan beginnen.
     const toReplace: { from: number; to: number; label: string }[] = [];
     const toMark: PiiSpan[] = [];
     for (const s of all) {
+      const r = spanToRange(s, map);
+      if (!r) continue;
       if (autoRedact.has(s.category)) {
-        const r = spanToRange(s, map);
-        if (r) toReplace.push({ ...r, label: GENERALIZATIONS[s.category] ?? "[geredacteerd]" });
+        // 1 char veiligheidsmarge na de span: wacht tot cursor er voorbij is.
+        if (r.to + 1 <= cursorFrom) {
+          toReplace.push({ ...r, label: GENERALIZATIONS[s.category] ?? "[geredacteerd]" });
+        } else {
+          toMark.push(s); // tijdelijk markeren tot de cursor voorbij is
+        }
       } else {
         const ignKey = `${s.category}:${s.text.toLowerCase()}`;
         if (!ignored.has(ignKey)) toMark.push(s);
@@ -111,7 +131,7 @@ export function WriterShell() {
     const tr = editor.state.tr.setMeta(pimPluginKey, { decorations });
     editor.view.dispatch(tr);
     setStats((p) => ({ scrubbed: p.scrubbed, marked: toMark.length }));
-  }, [editor, autoRedact, ignored]);
+  }, [editor, autoRedact, ignored, strict]);
 
   useEffect(() => {
     if (!editor) return;
@@ -126,7 +146,7 @@ export function WriterShell() {
       cancelAnimationFrame(raf);
       editor.off("update", debounced);
     };
-  }, [editor, scan, autoRedactKey, ignoredKey]);
+  }, [editor, scan, autoRedactKey, ignoredKey, strict]);
 
   // Klik op highlight → popover.
   useEffect(() => {
