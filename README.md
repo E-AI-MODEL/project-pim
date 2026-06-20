@@ -1,13 +1,36 @@
 # Project PiM
 
-**Project PiM** is een browser-native demonstratie van de **PIM-engine** (Privacy
-Intelligence Module): een lokale, fail-closed pipeline die onderwijsteksten
-anonimiseert of pseudonimiseert vóór er ook maar iets richting clipboard, share,
-download of externe AI gaat. Alle verwerking is client-side; er is geen server.
+**Project PiM** is een browser-native demonstratie van de **Privacy Integrity
+Monitor** — een lokale, fail-closed pipeline die onderwijsteksten anonimiseert
+of pseudonimiseert vóór er ook maar iets richting clipboard, share, download
+of externe AI gaat. Alle verwerking is client-side; er is geen server.
 
-- Productnaam (UI / branding): **Project PiM**
-- Engine / code-laag: **PIM** (Privacy Intelligence Module)
-- Live: https://project-pim.lovable.app
+## Termen (consistent door UI, code en PVA)
+
+| Term | Betekenis |
+|---|---|
+| **Project PiM** | Productnaam (UI / branding). |
+| **Privacy Integrity Monitor** | Volledige naam van het product. |
+| **PIM** | De deterministische beslislaag (`policy.ts` + `egressGuard.ts`). |
+| **Privacy Intelligence Module** | *(oud, niet meer gebruiken — vervangen door bovenstaande.)* |
+
+Live: https://project-pim.lovable.app
+
+## Modelintegriteit — eerlijke claim
+
+`modelCatalog.ts` pint NER op een SHA-256 over een canonieke descriptor
+(`<modelId>@<revision>`). Dit is **trust-on-first-pin**: deterministisch en
+verifieerbaar, maar **geen** hash over de werkelijke modelweights of een
+gepinde `config.json`. Daarom:
+
+- UI toont `demo verified` voor descriptor-hashes, `productie verified` is
+  gereserveerd voor toekomstige weight-/config-hashes.
+- Productie-egress (`copy`, `export`, `print`, `share`, `send_external_ai`)
+  vereist `productie verified`. Een demo-hash blokkeert uitgaande acties
+  voor het `education-nl-full` profiel.
+- Modeldownload (Transformers.js → huggingface.co) en Qwen-LLM
+  (`@mlc-ai/web-llm`) zijn aparte trust-bronnen. Beide draaien lokaal in
+  WebGPU/WASM; alleen de **download** raakt het netwerk.
 
 ## Mapping spec v3-2 → code
 
