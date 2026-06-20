@@ -8,9 +8,9 @@ export const Route = createFileRoute("/compliance")({
   head: () => ({
     meta: [
       { title: "Compliance — Project PiM" },
-      { name: "description", content: "Juridische afbakening, AI Act-grenzen en threat model van Project PIM." },
+      { name: "description", content: "Juridische afbakening, AI Act-grenzen en dreigingsmodel van Project PiM." },
       { property: "og:title", content: "Compliance — Project PiM" },
-      { property: "og:description", content: "Juridische afbakening en threat model." },
+      { property: "og:description", content: "Juridische afbakening en dreigingsmodel van Project PiM." },
     ],
   }),
   component: CompliancePage,
