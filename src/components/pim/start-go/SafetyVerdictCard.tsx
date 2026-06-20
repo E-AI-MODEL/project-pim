@@ -35,8 +35,8 @@ export function SafetyVerdictCard({ verdict, reason }: { verdict: Verdict; reaso
           </div>
 
           <div className="space-y-2 pt-1 border-t border-border/30">
-            <Layer Icon={GraduationCap} label="Voor jou" text={map.teacher} />
-            <Layer Icon={Building2} label="Voor de organisatie" text={map.leader} />
+            <Layer Icon={GraduationCap} label="Voor jou als gebruiker" text={map.teacher} />
+            <Layer Icon={Building2} label="Voor je organisatie" text={map.leader} />
           </div>
 
           <p className="text-[11px] text-muted-foreground font-mono pt-1">{reason}</p>
