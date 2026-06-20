@@ -5,10 +5,10 @@ import { Cpu, Brain, Wand2, ShieldCheck, Scale, Network, FileCheck, ArrowRight }
 export const Route = createFileRoute("/architecture")({
   head: () => ({
     meta: [
-      { title: "Architectuur — Project PIM" },
-      { name: "description", content: "Hoe de PIM-architectuur de rollen scheidt: code-detectoren, SLM/LLM, guards, PIM policy engine, egress en audit." },
-      { property: "og:title", content: "Architectuur — Project PIM" },
-      { property: "og:description", content: "Strikte rolverdeling tussen detectie, beslissing en handhaving." },
+      { title: "Architectuur — Project PiM" },
+      { name: "description", content: "Hoe Project PiM de rollen scheidt: code-detectoren, taalmodellen, guards, beslislaag, egress en audit." },
+      { property: "og:title", content: "Architectuur — Project PiM" },
+      { property: "og:description", content: "De strikte rolverdeling tussen detectie, beslissing en handhaving." },
     ],
   }),
   component: ArchitecturePage,
