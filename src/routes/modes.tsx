@@ -5,10 +5,10 @@ import { Check, X, ArrowRight } from "lucide-react";
 export const Route = createFileRoute("/modes")({
   head: () => ({
     meta: [
-      { title: "Modi — Anonymous vs Pseudonymous — Project PIM" },
-      { name: "description", content: "Vergelijking van de twee verwerkingsmodi van Project PIM. Wat mag, wat niet en waarom." },
-      { property: "og:title", content: "Anonymous vs Pseudonymous — Project PIM" },
-      { property: "og:description", content: "De twee modi van Project PIM, naast elkaar." },
+      { title: "Anoniem of pseudoniem — Project PiM" },
+      { name: "description", content: "Vergelijking van de twee verwerkingsmodi van Project PiM: wat mag, wat niet, en waarom." },
+      { property: "og:title", content: "Anoniem of pseudoniem — Project PiM" },
+      { property: "og:description", content: "De twee verwerkingsmodi van Project PiM, naast elkaar gezet." },
     ],
   }),
   component: ModesPage,
@@ -38,8 +38,8 @@ function ModesPage() {
     <>
       <PageHero
         eyebrow="Twee modi · Strikt gescheiden"
-        title={<>Anonymous <span className="text-muted-foreground">of</span> <span className="text-cyan">pseudonymous</span></>}
-        description="De twee modi mogen technisch nooit door elkaar lopen. Mode-mix in output is een hard fail in de Draft Check Guard."
+        title={<>Anoniem <span className="text-muted-foreground">of</span> <span className="text-cyan">pseudoniem</span></>}
+        description="De twee modi mogen technisch nooit door elkaar lopen. Vermenging in de uitvoer wordt door de Draft Check Guard direct geweigerd."
       />
 
       <section className="mx-auto max-w-7xl px-6 py-12 grid md:grid-cols-2 gap-5">
