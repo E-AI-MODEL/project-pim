@@ -13,8 +13,13 @@ export function StartHeader() {
             <div className="absolute inset-0 bg-primary/40 blur-md rounded-full" />
             <Shield className="relative h-5 w-5 text-primary" strokeWidth={2.2} />
           </div>
-          <div className="font-display font-bold text-sm tracking-tight">
-            Project <span className="text-primary">PiM</span>
+          <div className="leading-tight">
+            <div className="font-display font-bold text-sm tracking-tight">
+              Project <span className="text-primary">PiM</span>
+            </div>
+            <div className="text-[10px] text-muted-foreground hidden sm:block">
+              Privacy Integrity Monitor
+            </div>
           </div>
         </Link>
         <div className="flex items-center gap-3">
