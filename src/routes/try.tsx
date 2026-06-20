@@ -20,7 +20,8 @@ import {
   recordSubmission, type AbuseSignal,
   rewriteAnonymousDraftStream, onRewriteStatus, type RewriteStatus,
   type Mode, type Action, type Verdict, type AuditEvent, type MappingHandle,
-  type PiiSpan,
+  type PiiSpan, type CertifiedPayload, type PayloadType,
+  modelGateFor,
 } from "@/lib/pim";
 import { loadRewriteLlm } from "@/lib/pim/rewriteLlm";
 import {
@@ -462,10 +463,24 @@ function TryPage() {
   );
   const decision = useMemo(() => {
     const t0 = performance.now();
-    const d = decide({ mode, action, signals: decisionSignals, draftCheck: guard, modelVerified: true });
+    // Spec derde analyse §4.4 — echte modelgate (geen hardcoded true meer).
+    const gate = modelGateFor(profileId, action, integrity);
+    // Spec §4.7 — bepaal payloadType: anonymous + draft pass = certified.
+    const payloadType: PayloadType =
+      mode === "anonymous" && guard.status === "pass" ? "draft_anonymous_certified" :
+      mode === "pseudonymous" ? "draft_pseudonymous_local" :
+      "unknown";
+    const d = decide({
+      mode, action,
+      signals: decisionSignals,
+      draftCheck: guard,
+      modelVerified: gate.verified,
+      profileId,
+      payloadType,
+    });
     queueMicrotask(() => tick("decide", performance.now() - t0));
     return d;
-  }, [mode, action, decisionSignals, guard, tick]);
+  }, [mode, action, decisionSignals, guard, tick, profileId, integrity]);
 
   const onAct = async () => {
     setEgress(null); setRestored(null);
@@ -481,7 +496,19 @@ function TryPage() {
       payloadText = await restoreFromContainer(handle, effectiveDraft.text);
       setRestored(payloadText);
     }
-    const result = await executeAction(decision, { text: payloadText, mode });
+    // Spec §4.7 — gecertificeerde payload met expliciet type.
+    const certified: CertifiedPayload = {
+      text: payloadText,
+      mode,
+      payloadType:
+        decision.action === "restore" ? "restored" :
+        mode === "anonymous" && guard.status === "pass" ? "draft_anonymous_certified" :
+        mode === "pseudonymous" ? "draft_pseudonymous_local" :
+        "unknown",
+      profileId,
+      guardStatus: guard.status,
+    };
+    const result = await executeAction(decision, certified);
     setEgress({ ok: result.executed, msg: result.reason });
     setAudit((a) => [{
       ts: decision.timestamp, action: decision.action, mode: decision.mode,
