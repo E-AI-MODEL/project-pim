@@ -103,4 +103,12 @@ export const COPY = {
   menuFlags: "Beslissingscodes",
   menuSettings: "Instellingen",
   menuAbout: "Over Project PiM",
+
+  // Tech-laag — voor de tech-collega / reviewer
+  layerTechAllow:
+    "Verdict ALLOW · draftCheck=pass · payloadType=draft_anonymous_certified. Egress-reconsult draait opnieuw async NER op de exacte payload.",
+  layerTechWarn:
+    "Verdict ALLOW_WITH_WARNING · risk net onder drempel of repair-status op draft. Reconsult vóór egress blijft van kracht; mapping/raw nooit egress.",
+  layerTechBlock:
+    "Verdict BLOCK · zie ruleId / reasonCode. Fail-closed: residuele directe PII, mode-mix, payloadType ≠ draft_anonymous_certified, of profiel-policy blokkeert deze actie.",
 } as const;
