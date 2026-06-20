@@ -23,6 +23,18 @@ const RULES: RuleDef[] = [
   { id: "rule.name", category: "name", regex: /\b(?:[A-Z][a-zà-ÿ]{2,})(?:\s+(?:van|de|der|den|ten|ter)\s+[A-Z][a-zà-ÿ]+|\s+[A-Z][a-zà-ÿ]{2,})\b/g, confidence: 0.6 },
   { id: "rule.school", category: "school", regex: /\b(?:basisschool|middelbare school|gymnasium|havo|vwo|vmbo|mbo|hbo)\s+[A-Z][\wà-ÿ]+(?:\s+[A-Z][\wà-ÿ]+)?/gi, confidence: 0.8 },
   { id: "rule.address", category: "address", regex: /\b[A-Z][a-zà-ÿ]+(?:straat|laan|weg|plein|gracht|kade|hof|park)\s+\d{1,4}[a-z]?\b/g, confidence: 0.85 },
+  // Creditcard (Visa/MC/Amex/Discover/JCB style). Confidence niet 1.0 omdat we Luhn niet checken.
+  { id: "rule.credit_card", category: "credit_card", regex: /\b(?:\d[ -]?){13,19}\b/g, confidence: 0.7 },
+  // NL kenteken — diverse sidecodes (AA-12-AA, 12-AAA-1, etc.). Conservatief.
+  { id: "rule.license_plate", category: "license_plate", regex: /\b[A-Z]{1,3}-?\d{1,3}-?[A-Z0-9]{1,3}\b/g, confidence: 0.55 },
+  // URL (http/https/www).
+  { id: "rule.url", category: "url", regex: /\b(?:https?:\/\/|www\.)[^\s<>"']{2,}/gi, confidence: 0.9 },
+  // IPv4.
+  { id: "rule.ip_address", category: "ip_address", regex: /\b(?:(?:25[0-5]|2[0-4]\d|[01]?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d?\d)\b/g, confidence: 0.85 },
+  // Social handle (@user).
+  { id: "rule.social_handle", category: "social_handle", regex: /(?<![A-Za-z0-9])@[A-Za-z0-9_]{3,}/g, confidence: 0.75 },
+  // Geboortedatum/datum in tekst: "12 januari 1985" — NL maanden.
+  { id: "rule.birthdate_text", category: "birthdate_text", regex: /\b\d{1,2}\s+(?:januari|februari|maart|april|mei|juni|juli|augustus|september|oktober|november|december)\s+\d{2,4}\b/gi, confidence: 0.8 },
   // Contextual signals (lower confidence, contextual=true)
   { id: "ctx.small_group", category: "context_small_group", regex: /\b(?:groep\s*[1-8]|klas\s*[1-6][a-z]?|brugklas)\b/gi, contextual: true, confidence: 0.5 },
   { id: "ctx.care", category: "context_care", regex: /\b(?:zorgleerling|dyslexie|dyscalculie|adhd|autisme|asperger|pleegzorg|pleeggezin|jeugdzorg|gedragsproblemen|ondersteuningsbehoefte)\b/gi, contextual: true, confidence: 0.7 },
