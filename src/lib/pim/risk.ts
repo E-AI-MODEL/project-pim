@@ -1,4 +1,4 @@
-import type { PiiSpan, PrivacySignals, RiskLevel } from "./types";
+import type { PiiSpan, PiiCategory, PrivacySignals, RiskLevel } from "./types";
 import { runRegistrySync } from "./detectorRegistry";
 import { DEFAULT_PROFILE, type PipelineProfileId } from "./pipelineProfile";
 
@@ -11,11 +11,15 @@ export function computeSignals(
   text: string,
   extraSpans: PiiSpan[] = [],
   profileId: PipelineProfileId = DEFAULT_PROFILE,
+  disabledCategories?: ReadonlySet<PiiCategory>,
 ): PrivacySignals {
   // Sync registry: regex + special lexicon + heuristic contextSlm (per profiel).
   const baseSpans = runRegistrySync(text, profileId);
   // Merge alle spans (base + async/SLM extras). Bij overlap wint hoogste confidence.
-  const all: PiiSpan[] = [...baseSpans, ...extraSpans];
+  const merged0: PiiSpan[] = [...baseSpans, ...extraSpans];
+  const all: PiiSpan[] = disabledCategories
+    ? merged0.filter((s) => !disabledCategories.has(s.category))
+    : merged0;
   all.sort((a, b) => a.start - b.start || b.confidence - a.confidence);
   const merged: PiiSpan[] = [];
   for (const s of all) {
@@ -50,6 +54,32 @@ export function computeSignals(
   if (cats.has("context_incident")) { score += 0.10; reasons.push("incident-context verhoogt herkenbaarheid"); }
   if (cats.has("context_small_group") && (cats.has("name") || cats.has("context_role"))) {
     score += 0.18; reasons.push("kleine groep met identifier — hoog herleidbaarheidsrisico");
+  }
+  // Bijzondere persoonsgegevens (GDPR Art 9) — verhoogt drastisch.
+  if (cats.has("context_protected_class")) {
+    score += 0.25; reasons.push("bijzondere persoonsgegevens (etniciteit/religie/oriëntatie) — GDPR Art 9");
+  }
+  if (cats.has("context_health")) {
+    score += 0.20; reasons.push("gezondheidsinformatie — GDPR Art 9");
+  }
+  if (cats.has("context_legal")) {
+    score += 0.22; reasons.push("justitie-/politiecontext — gevoelig");
+  }
+  if (cats.has("context_family")) {
+    score += 0.15; reasons.push("familie-/thuiscontext verhoogt herleidbaarheid");
+  }
+  if (cats.has("context_financial")) {
+    score += 0.10; reasons.push("financiële context");
+  }
+  if (cats.has("context_performance") && cats.has("name")) {
+    score += 0.15; reasons.push("schoolprestatie + naam — direct herleidbaar");
+  }
+  if (cats.has("context_location_specific") && cats.has("context_small_group")) {
+    score += 0.10; reasons.push("specifieke locatie + kleine groep");
+  }
+  // Algemene combo: ≥3 contextuele signalen → herleidbaarheid loopt hard op.
+  if (ctx.length >= 3) {
+    score += 0.10; reasons.push(`${ctx.length} contextsignalen stapelen — herleidbaarheid stijgt`);
   }
 
   if (direct.length > 0) reasons.push(`${direct.length} directe PII-detectie(s)`);
