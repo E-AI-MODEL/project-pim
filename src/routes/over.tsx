@@ -3,7 +3,7 @@ import { Shield, Lock, ShieldCheck, Cloud, MinusSquare, EyeOff, ArrowRight, Cpu,
 import { PageHero } from "@/components/pim/PageHero";
 import { PrincipleBadge } from "@/components/pim/PrincipleBadge";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/over")({
   head: () => ({
     meta: [
       { title: "Project PiM — Privacy Integrity Monitor voor onderwijsdata" },
