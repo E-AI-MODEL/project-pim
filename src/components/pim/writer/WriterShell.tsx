@@ -251,6 +251,8 @@ export function WriterShell() {
         editor={editor}
         autoRedact={autoRedact}
         setAutoRedact={setAutoRedact}
+        strict={strict}
+        setStrict={setStrict}
         onImport={onImportClick}
         onExport={onExport}
         onClear={onClear}
@@ -303,11 +305,13 @@ export function WriterShell() {
 }
 
 function WriterToolbar({
-  editor, autoRedact, setAutoRedact, onImport, onExport, onClear, stats,
+  editor, autoRedact, setAutoRedact, strict, setStrict, onImport, onExport, onClear, stats,
 }: {
   editor: Editor;
   autoRedact: Set<PiiCategory>;
   setAutoRedact: (s: Set<PiiCategory>) => void;
+  strict: boolean;
+  setStrict: (v: boolean) => void;
   onImport: () => void;
   onExport: () => void;
   onClear: () => void;
@@ -332,6 +336,23 @@ function WriterToolbar({
       <button className={btn} onClick={onImport} title="Importeer .docx"><Upload className="h-4 w-4" /></button>
       <button className={btn} onClick={onExport} title="Exporteer .docx"><Download className="h-4 w-4" /></button>
       <button className={btn} onClick={onClear} title="Leegmaken"><Trash2 className="h-4 w-4" /></button>
+      <span className="h-5 w-px bg-border/60 mx-1" />
+      <button
+        type="button"
+        onClick={() => setStrict(!strict)}
+        title={strict
+          ? "Aanscherping aan — BSN-elfproef, IBAN mod-97 en kenteken-format filteren willekeurige cijferreeksen weg."
+          : "Aanscherping uit — klik om strenger te controleren (BSN-elfproef, IBAN mod-97, kenteken-format)."}
+        aria-pressed={strict}
+        className={`inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md text-xs font-medium border transition-colors ${
+          strict
+            ? "border-amber-400/50 bg-amber-400/15 text-amber-200 hover:bg-amber-400/25"
+            : "border-border/60 text-muted-foreground hover:text-foreground hover:bg-accent/40"
+        }`}
+      >
+        <Crosshair className="h-3.5 w-3.5" />
+        Aanscherping
+      </button>
       <span className="h-5 w-px bg-border/60 mx-1" />
       <Popover>
         <PopoverTrigger asChild>
