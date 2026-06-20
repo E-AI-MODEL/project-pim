@@ -217,7 +217,7 @@ function CompactComposer({
               <div className="px-2 py-1 text-[10px] uppercase tracking-wider text-[#e8edf3]/50 font-plex-mono">Document controleren</div>
               <button
                 type="button"
-                onClick={() => fileInputRef.current?.click()}
+                onClick={() => { setAddOpen(false); fileInputRef.current?.click(); }}
                 className="w-full text-left px-2 py-2 rounded-md hover:bg-[#3b6fa0]/20 transition-colors flex items-start gap-2.5"
               >
                 <FileUp className="h-4 w-4 mt-0.5 text-[#3b6fa0] shrink-0" />
@@ -235,7 +235,7 @@ function CompactComposer({
                   <button
                     key={e.id}
                     type="button"
-                    onClick={() => { setLoadedDoc(null); onExample(e); }}
+                    onClick={() => { setLoadedDoc(null); onExample(e); setAddOpen(false); }}
                     className="text-left px-2 py-2 rounded-md hover:bg-[#3b6fa0]/20 transition-colors"
                   >
                     <div className="text-sm text-[#e8edf3]">{e.label}</div>
