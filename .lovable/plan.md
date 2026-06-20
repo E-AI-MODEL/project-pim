@@ -1,108 +1,73 @@
-## Doel
+## Probleem
 
-Landingspagina (`/`) compleet herbouwen volgens richting C ("Console"). Rust, vertrouwen, simpele taal, strakke gridverdeling. Werkende demo blijft live aangesloten op de bestaande PiM-engine — alleen presentatie en taal veranderen.
+Op mobiel komt de Live Monitor pas in beeld na de hero + alle vier USP-blokken (~1000px scrollen). Bezoekers zien alleen uitleg en concluderen "er werkt niks". De Anoniem/Pseudoniem-knoppen werken wel — ze togglen state — maar zonder zichtbare demo en zonder tekst is dat onzichtbaar.
 
-## Designtokens (LOCKED)
+## Fix (klein, alleen layout & volgorde)
 
-In `src/styles.css` vastleggen, daarna overal via tokens gebruiken (geen hardcoded hex in componenten):
+### 1. Mobiele volgorde omdraaien — demo eerst
 
-- `--background: #0f1b3d` (deep navy)
-- `--surface: #1e3a5f` (demo card)
-- `--accent: #3b6fa0` (blauw)
-- `--foreground: #e8edf3` (off-white)
-- `--font-display: "Libre Baskerville", serif` (koppen)
-- `--font-sans: "IBM Plex Sans", sans-serif` (body)
-- `--font-mono: "IBM Plex Mono", monospace` (1 detail, status-pill)
+In `src/routes/index.tsx`: gebruik flex-order zodat op mobiel de monitor bovenaan staat (direct na de eyebrow + korte kop), en de USP-grid eronder. Op `lg:` herstellen we de huidige naast-elkaar-layout.
 
-Fonts laden via `<link>` in `src/routes/__root.tsx` (Tailwind v4 regel — geen CSS @import).
-
-## Layout (desktop ≥1024px)
-
+Schema mobiel:
 ```text
-┌────────────────────────────┬─────────────────────────────┐
-│ EYEBROW (small caps)       │  ┌─ LIVE MONITOR ───────┐  │
-│                            │  │ [Schoon][Mentor][Zorg]│ │
-│ H1 serif, kort, 2 regels   │  │                       │  │
-│                            │  │  textarea             │  │
-│ Sub, 1 zin, simpel         │  │                       │  │
-│                            │  │  ─ verdict-card ─     │  │
-│ ─ 2×2 grid USPs ─          │  │                       │  │
-│ Lokaal      │ Dubbele      │  │  [primaire actie]     │  │
-│ ────────────┼──────────    │  └───────────────────────┘  │
-│ Verdict     │ Egress Guard │   Local Guard Active        │
-└────────────────────────────┴─────────────────────────────┘
-        ──── anoniem vs pseudoniem mini-strip ────
+EYEBROW
+H1 + sub        ← korter zichtbaar boven de vouw
+LIVE MONITOR    ← meteen probeerbaar
+USP-grid (4)
+anon vs pseudo strip
 ```
 
-Mobiel: stack, demo eerst, USPs daarna, mini-strip onderaan. Hero past binnen 1 scherm op desktop.
+Concreet:
+- Buitenste grid blijft `lg:grid-cols-2`.
+- Linker-kolom (hero+USPs) en rechter-kolom (Monitor) krijgen `order` classes: op mobiel `order-2` voor USPs, hero blijft order-1, Monitor `order-2` tussen hero en USPs. Op `lg:` alles terug naar originele plek.
+- Praktisch splitsen: hero (header met eyebrow+H1+sub) als eigen blok `order-1`, MonitorShell `order-2 lg:order-3`, UspGrid `order-3 lg:order-2`. Op desktop met `lg:grid` blijft links/rechts hetzelfde door grid-area logica.
 
-## Tekst (eindversies — taalpas)
+Simpelste vorm: op mobiel gewoon DOM-volgorde aanpassen via wrapping — buiten `lg`-breakpoint stack ik: `<Header /> <MonitorShell /> <UspGrid />`. Op `lg+` toon ik de tweekolomslayout met linker `<Header />+<UspGrid />` en rechter `<MonitorShell />`.
 
-**Eyebrow**: `PRIVACY INTEGRITY MONITOR`
+Implementatie: render hero apart, en gebruik twee containers:
+- mobiele stack (`lg:hidden`): Header → Monitor → UspGrid → Strip
+- desktop split (`hidden lg:grid lg:grid-cols-2`): links Header+UspGrid, rechts Monitor; strip eronder
 
-**H1** (serif, 2 regels):
+Dubbele markup voor Header/UspGrid/Monitor is OK — het zijn presentatiecomponenten, geen state. Wacht — Monitor bevat StartGoShell met React-state. Twee instanties = twee aparte states. Daarom NIET dupliceren: gebruik één DOM-boom en stuur volgorde via Tailwind `order-*` op grid-items binnen één grid die op mobiel `grid-cols-1` is.
 
-> Controleer je tekst op privacy,
-> voordat je hem deelt.
+Definitieve aanpak (één instantie, order via Tailwind):
+```tsx
+<div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+  <header className="order-1 lg:order-1 lg:col-start-1">…hero…</header>
+  <div   className="order-2 lg:order-2 lg:col-start-2 lg:row-span-2">
+    <MonitorShell />
+  </div>
+  <div   className="order-3 lg:order-3 lg:col-start-1">
+    <UspGrid />
+  </div>
+</div>
+```
+Op mobiel: 1 kolom, volgorde Header → Monitor → USPs. Op desktop: links Header boven USPs (col 1, twee rijen), rechts Monitor (col 2, span 2 rijen). Dit is exact het huidige desktop-uiterlijk, maar mobiel staat Monitor nu direct onder de hero.
 
-**Sub** (1 zin, simpel):
+### 2. Hero compacter op mobiel zodat Monitor sneller in beeld komt
 
-> PiM leest mee in je browser, herkent gevoelige gegevens en zegt of je veilig kunt delen, alles gebeurt lokaal zonder moeilijke technische stappen. 
+- H1 op mobiel: `text-2xl` i.p.v. `text-[2rem]` (~24px → kop past op één regel).
+- Sub op mobiel inkorten met `line-clamp-3` of gewoon korter laten zien — geen wijziging copy nodig.
+- Vertical padding terug: `py-6 sm:py-10 lg:py-20`.
 
-**USPs** (4 stuks, korte titel + 1 zin):
+### 3. Lege-staat hint in Monitor
 
-1. **Niets verlaat je apparaat** :De controle gebeurt in je browser. Geen upload, geen server, geen log van je tekst.
-2. **Anoniem of pseudoniem** : Anoniem maakt namen definitief onleesbaar. Pseudoniem vervangt ze door codes, met een sleutel die alleen jij hebt.
-3. **Uitleg per rol** : Eén drie lezingen: wat het voor jou betekent, voor je organisatie, en voor je tech-collega.
-4. **Egress Guard**: PiM stuurt nooit gegevens door maar zet alles klaar voor de gebruiker die na goedkeuring tekst stuurt naar een LLM. kan 
+Als de textarea leeg is, toon één rustige regel onder de voorbeeldknoppen: "Kies een voorbeeld of typ je eigen tekst om PiM te zien werken." Zo voelt het meteen interactief; de Anoniem/Pseudoniem-knoppen krijgen ook context.
 
-**Demo-kaart**:
-
-- Header pill: `LIVE MONITOR` (mono, small-caps)
-- Voorbeeldknoppen: `( zoek ander sooorr wordt voor schoon)` , `Mentor-notitie`, `Zorgnotitie`
-- Textarea placeholder: `Plak hier je tekst, of kies een voorbeeld hierboven.`
-- Primaire knop: `Controleer deze tekst`
-- Status-footer: `Local Guard actief` met groene dot
-- Verdict-card states (groen/oranje/rood) gebruiken bestaande engine-output, met uitlegregels uit `copy.ts`
-
-**Mini-strip onderaan** (1 regel, kalm):
-
-> Anoniem = onomkeerbaar. Pseudoniem = omkeerbaar, maar alleen op dit apparaat. Jij kiest per tekst waar je gebruik van wil maken. 
+Wijziging in `src/components/pim/start-go/InputPanel.tsx` (compact-variant): toon `emptyHint` onder ExamplePicker wanneer `text.trim().length === 0`. Nieuwe string in `copy.ts`: `monitorEmptyHint`.
 
 ## Bestanden
 
-**Nieuw / herschreven:**
+- `src/routes/index.tsx` — grid met order/row-span, compactere hero op mobiel
+- `src/components/pim/start-go/InputPanel.tsx` — lege-staat-hintregel (alleen in compact)
+- `src/lib/pim/copy.ts` — `monitorEmptyHint` string toevoegen
 
-- `src/routes/index.tsx` — volledige herstructurering naar split-screen Console-layout
-- `src/components/pim/start-go/UspGrid.tsx` — nieuwe 2×2 USP-grid (presentatie, geen logic)
-- `src/components/pim/start-go/MonitorShell.tsx` — frame om bestaande demo (window header, footer-status). Bevat de bestaande `InputPanel` / `ResultPanel` componenten ongewijzigd.
-- `src/components/pim/start-go/AnonPseudoStrip.tsx` — mini-uitleg-strip onderaan
+## Niet aanraken
 
-**Aangepast (alleen tekst + tokens):**
-
-- `src/lib/pim/copy.ts` — alle hero/USP/demo-strings vervangen door bovenstaande versies
-- `src/components/pim/start-go/StartHeader.tsx` — eyebrow + nieuwe serif H1
-- `src/components/pim/start-go/InputPanel.tsx` — placeholder + knop-label, geen logic-wijziging
-- `src/components/pim/start-go/SafetyVerdictCard.tsx` — alleen styling naar tokens, 1-regel uitleg per rol
-- `src/styles.css` — design tokens hierboven, `@theme inline` mapping, hairline-divider utility
-
-**Niet aanraken:**
-
-- Detectie/policy/engine onder `src/lib/pim/` (logic blijft 1:1)
-- Andere routes (`/over`, `/try`, `/compliance`, etc.) — apart traject
+Logica van Anoniem/Pseudoniem (werkt al). Desktop-uiterlijk (blijft identiek). Andere routes.
 
 ## Validatie
 
-1. Build via auto-typecheck van het systeem
-2. Playwright screenshot op 1440×900 (desktop) en 393×800 (mobiel) → visueel checken: hero binnen 1 scherm, geen overflow, demo-card uitgelijnd, hairlines zichtbaar, fonts geladen
-3. Klikken op `Mentor-notitie` voorbeeld → verdict-card verschijnt oranje met de juiste uitlegregels
-4. Console-log check: geen font-load errors, geen unknown utility class
-
-## Wat dit oplost
-
-- "Niemand snapt wat je hier moet doen" → demo staat direct rechts met 3 klikbare voorbeelden en zichtbare verdict
-- "Schoon zorg notitie is vaag" → labels worden `Schoon`, `Mentor-notitie`, `Zorgnotitie` (drie aparte knoppen, niet aan elkaar geplakt)
-- "Eerst veilig dan delen is raar" → H1 wordt expliciete instructie in plaats van slogan
-- "Onderscheidende elementen ontbreken" → 2×2 grid noemt expliciet wat anderen claimen maar niet leveren (lokaal, dubbele bescherming, uitleg per rol, egress guard)
-- "Anoniem vs pseudoniem uitleggen" → eigen USP + mini-strip onderaan
-- "Rust en vertrouwen, compacter, ander palet" → Navy Trust + Libre Baskerville + hairlines + alles boven de vouw
+Playwright op 393×588 (smal & kort) en 1440×900:
+- Mobiel: Monitor zichtbaar binnen één scroll na de hero. Klik op "Mentor-notitie" → verdict-card verschijnt. Toggle Pseudoniem → verdict update.
+- Desktop: layout ongewijzigd t.o.v. huidige screenshot.
