@@ -9,7 +9,7 @@ export const COPY = {
   subtitle:
     "PiM leest mee in je browser, herkent gevoelige gegevens en zegt of je veilig kunt delen — alles gebeurt lokaal, zonder ingewikkelde technische stappen.",
   placeholder:
-    "Plak hier je tekst, of kies een voorbeeld hierboven.",
+    "Plak of typ je tekst — of kies hieronder een voorbeeld.",
   startButton: "Controleer deze tekst",
   startButtonShort: "Controleer",
   privacyHint:
