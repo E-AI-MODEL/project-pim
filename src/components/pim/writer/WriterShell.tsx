@@ -31,6 +31,8 @@ interface ClickedSpan {
 }
 
 export function WriterShell() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
   const [autoRedact, setAutoRedact] = useState<Set<PiiCategory>>(
     () => new Set(DEFAULT_AUTO_REDACT),
   );
@@ -44,6 +46,7 @@ export function WriterShell() {
   const pimPlugin = useMemo(() => createPimPlugin(), []);
 
   const editor = useEditor({
+    immediatelyRender: false,
     extensions: [
       StarterKit.configure({
         heading: { levels: [1, 2, 3] },
@@ -193,7 +196,7 @@ export function WriterShell() {
     setStats({ scrubbed: 0, marked: 0 });
   };
 
-  if (!editor) {
+  if (!mounted || !editor) {
     return <div className="p-10 text-sm text-muted-foreground">Editor laden…</div>;
   }
 
