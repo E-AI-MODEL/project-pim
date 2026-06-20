@@ -1,5 +1,7 @@
 import type { DraftCandidate, Mode, PrivacySignals, PiiSpan, DraftCheckResult } from "./types";
 import { detectPii } from "./detectors";
+import { runRegistry, runRegistrySync } from "./detectorRegistry";
+import type { PipelineProfileId } from "./pipelineProfile";
 
 const GENERALIZATIONS: Record<string, string> = {
   email: "[email]",
@@ -95,5 +97,61 @@ export function draftCheck(draft: DraftCandidate, mode: Mode): DraftCheckResult 
   if (issues.length === 0) return { status: "pass", issues: [] };
   // Residual direct PII = fail hard. Mode-mix = fail. Hallucination = repair.
   const hardFail = issues.some((i) => i.includes("Residuele") || i.includes("mode-mix"));
-  return { status: hardFail ? "fail" : "repair", issues };
+  const residualCategories = residual.map((r) => r.category as string);
+  const halluCount = mode === "pseudonymous" && draft.expectedTokens
+    ? tokens.filter((t) => !new Set(draft.expectedTokens!).has(t)).length
+    : 0;
+  return {
+    status: hardFail ? "fail" : "repair",
+    issues,
+    residualCategories: residualCategories.length ? residualCategories : undefined,
+    hallucinatedTokenCount: halluCount || undefined,
+    modeMix: mode === "anonymous" && tokens.length > 0,
+  };
+}
+
+/**
+ * Spec derde analyse §4.6 — draftCheck via detectorRegistry zodat de output-
+ * controle dezelfde coverage heeft als de input-fase (incl. async NER en
+ * special lexicon). De oude `draftCheck()` blijft bestaan voor backwards-
+ * compat (sync regex-only), maar alle egress-paden gebruiken deze variant.
+ */
+export async function draftCheckWithRegistry(
+  draft: DraftCandidate,
+  mode: Mode,
+  profileId: PipelineProfileId,
+  options: { async?: boolean } = {},
+): Promise<DraftCheckResult> {
+  const enableAsync = options.async ?? true;
+  const spans = enableAsync
+    ? await runRegistry(draft.text, { profileId, enableAsync: true })
+    : runRegistrySync(draft.text, profileId);
+  const residual = spans.filter((s) => !s.contextual);
+  const issues: string[] = [];
+  if (residual.length > 0) {
+    issues.push(`Residuele directe PII gedetecteerd in output: ${residual.map((r) => r.category).join(", ")}`);
+  }
+  const tokenLikePattern = /\[[A-Z_]+_\d{3}\]/g;
+  const tokens = draft.text.match(tokenLikePattern) ?? [];
+  if (mode === "anonymous" && tokens.length > 0) {
+    issues.push("Pseudonieme tokens gevonden in anonymous output (mode-mix)");
+  }
+  let halluCount = 0;
+  if (mode === "pseudonymous" && draft.expectedTokens) {
+    const expected = new Set(draft.expectedTokens);
+    const hallu = tokens.filter((t) => !expected.has(t));
+    halluCount = hallu.length;
+    if (hallu.length > 0) {
+      issues.push(`Hallucinerende tokens (niet uit mapping): ${hallu.slice(0, 3).join(", ")}`);
+    }
+  }
+  if (issues.length === 0) return { status: "pass", issues: [] };
+  const hardFail = issues.some((i) => i.includes("Residuele") || i.includes("mode-mix"));
+  return {
+    status: hardFail ? "fail" : "repair",
+    issues,
+    residualCategories: residual.map((r) => r.category as string),
+    hallucinatedTokenCount: halluCount || undefined,
+    modeMix: mode === "anonymous" && tokens.length > 0,
+  };
 }
