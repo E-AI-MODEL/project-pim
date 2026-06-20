@@ -32,10 +32,10 @@ import {
 export const Route = createFileRoute("/try")({
   head: () => ({
     meta: [
-      { title: "Try-it — Project PiM" },
-      { name: "description", content: "Test de PIM privacy pipeline live op echte tekst. Detectie, mapping, egress guard — alles lokaal in je browser." },
-      { property: "og:title", content: "Try Project PiM live" },
-      { property: "og:description", content: "Live PIM privacy pipeline — alles lokaal." },
+      { title: "Expert lab — Project PiM" },
+      { name: "description", content: "Volledige PIM-pipeline met detector-profielen, NER, Qwen-rewrite, modelintegriteit en audit. Voor testers en ontwikkelaars. Snelle test? Ga naar de startpagina." },
+      { property: "og:title", content: "Project PiM — Expert lab" },
+      { property: "og:description", content: "Volledige pipeline + modelstatus + audit. Snelle test staat op de startpagina." },
     ],
   }),
   component: TryPage,
@@ -676,10 +676,14 @@ function TryPage() {
   return (
     <>
       <PageHero
-        eyebrow="Try-it · live · lokaal"
-        title={<>Test PiM op <span className="text-primary">echte tekst</span></>}
-        description="Kies een scenario of plak je eigen fragment. De verdict-balk onderaan blijft altijd in beeld."
-      />
+        eyebrow="Expert lab · alle gates zichtbaar · lokaal"
+        title={<>PiM <span className="text-primary">Expert lab</span></>}
+        description="Volledige pipeline met detector-profielen, NER, Qwen-rewrite, modelintegriteit en audit. Snelle test? Ga terug naar de startpagina."
+      >
+        <Link to="/" className="inline-flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 font-medium">
+          ← terug naar snelle test
+        </Link>
+      </PageHero>
 
       <div className="mx-auto max-w-4xl px-4 sm:px-6 pb-32">
         {/* — Welkomstkaart (eerste bezoek) — */}
