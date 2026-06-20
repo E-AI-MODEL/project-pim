@@ -119,14 +119,55 @@ export function ResultPanel({
             </button>
           </div>
           <div className="text-[10px] text-muted-foreground">
-            {tab === "safe" ? "Gereed voor de gekozen actie" : "Hover een markering voor categorie + confidence"}
+            {tab === "safe"
+              ? (isEdited
+                  ? `Handmatig bewerkt — live opnieuw beoordeeld: ${liveSafeVerdict ?? "—"}`
+                  : "Bewerkbaar — wijzigingen worden direct opnieuw gecontroleerd")
+              : "Bewerkbaar — markeringen verversen mee tijdens typen"}
           </div>
         </div>
 
         {tab === "original" ? (
-          <TextHighlighter text={originalText} spans={allSpans} />
+          <div className="space-y-2">
+            {onOriginalChange && (
+              <textarea
+                value={originalText}
+                onChange={(e) => onOriginalChange(e.target.value)}
+                rows={6}
+                spellCheck={false}
+                className="w-full rounded-xl border border-border/50 bg-card/50 px-4 py-3 text-sm font-mono leading-relaxed resize-y focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 min-h-[140px]"
+              />
+            )}
+            <TextHighlighter text={originalText} spans={liveOriginalSpans} />
+          </div>
         ) : (
-          <pre className="rounded-xl border border-primary/20 bg-card/60 p-4 text-sm font-mono whitespace-pre-wrap leading-relaxed max-h-[40vh] overflow-auto">{safeText}</pre>
+          <div className="space-y-2">
+            <textarea
+              value={editedSafe}
+              onChange={(e) => setEditedSafe(e.target.value)}
+              rows={8}
+              spellCheck={false}
+              className={`w-full rounded-xl border bg-card/60 px-4 py-3 text-sm font-mono leading-relaxed resize-y focus:outline-none focus:ring-2 min-h-[180px] max-h-[50vh] overflow-auto ${
+                isEdited
+                  ? "border-amber-400/50 focus:ring-amber-400/40 focus:border-amber-400/50"
+                  : "border-primary/20 focus:ring-primary/40 focus:border-primary/40"
+              }`}
+            />
+            {isEdited && (
+              <div className="flex items-center justify-between gap-2 text-[11px]">
+                <span className="text-amber-300/80">
+                  Bewerkte versie — kopie/download/uitvoeren gebruikt jouw aangepaste tekst.
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setEditedSafe(safeText)}
+                  className="text-muted-foreground hover:text-foreground underline underline-offset-2"
+                >
+                  Terug naar PiM-versie
+                </button>
+              </div>
+            )}
+          </div>
         )}
       </div>
 
@@ -135,7 +176,12 @@ export function ResultPanel({
         <MappingViewer mapping={mapping} />
       )}
 
-      <ResultActions verdict={decision.verdict} onPrimary={onPrimary} safeText={safeText} busy={busy} />
+      <ResultActions
+        verdict={isEdited && liveSafeVerdict ? liveSafeVerdict : decision.verdict}
+        onPrimary={onPrimary}
+        safeText={editedSafe}
+        busy={busy}
+      />
 
       {egressMsg && (
         <div className="text-xs text-muted-foreground border-l-2 border-border/60 pl-3">{egressMsg}</div>
