@@ -42,25 +42,62 @@ Bij elke afgeronde taak: `[ ]` → `[x]`, datum, eventuele afwijking.
   - Tests: smoke + policy + profiles + invariants (20) + draftCheck + egressGuard + modelIntegrity = **42 cases pass**.
 
 ### Fase 2 — Naamgeving + claims
-- [ ] 2.1–2.8.
+- [x] 2.1 README term-tabel bovenaan (Project PiM / Privacy Integrity Monitor / PIM / oud: Privacy Intelligence Module).
+- [x] 2.2–2.5 routes gebruiken al consistent "Project PiM" + "Privacy Integrity Monitor"; ripgrep bevestigt geen restanten.
+- [x] 2.6 README modelhash-uitleg eerlijk (trust-on-first-pin descriptor-hash, geen weights-hash).
+- [x] 2.7 "demo verified" vs "productie verified" gescheiden in README + modelGate.
+- [x] 2.8 Modeldownload + externe modelhosts (HF, MLC) apart benoemd in README.
 
 ### Fase 3 — App-shell + burger menu
-- [ ] 3.1–3.17.
+- [x] 3.1 Brede nav weg uit `__root.tsx`.
+- [x] 3.2 Header = logo + LocalStatusPill + ☰.
+- [x] 3.3 `LocalStatusPill.tsx` 3-staten (groen/oranje/rood) uit self-test + modelgate.
+- [x] 3.4–3.13 `BurgerMenu.tsx` 10 items in exact volgorde.
+- [x] 3.14 `StartHeader.tsx` · 3.15 `BurgerMenu.tsx` · 3.16 `LocalStatusPill.tsx`.
+- [x] 3.17 Footer soberder (logo + 3 links).
 
 ### Fase 4 — `/` wordt Start & Go
-- [ ] 4.1–4.30.
+- [x] 4.1 `StartGoShell.tsx` — alleen state + PIM-koppeling.
+- [x] 4.2 `InputPanel.tsx` — textarea + voorbeelden + Start + privacyregel.
+- [x] 4.3 `ModeTargetBar.tsx`.
+- [x] 4.4 `ResultPanel.tsx`.
+- [x] 4.5 `SafetyVerdictCard.tsx`.
+- [x] 4.6 `ResultActions.tsx`.
+- [x] 4.7 `FindingChips.tsx`.
+- [x] 4.8 `DetailsDrawer.tsx` — risk/categorieën/detectoren/modelstatus/policyregel/audit/pipeline.
+- [x] 4.9 `ExamplePicker.tsx` (3 starters).
+- [x] 4.10–4.13 `/` toont nieuwe shell; oude inhoud verhuisd naar `/over`.
+- [x] 4.14–4.20 Geen pipeline-timeline / modelcatalogus / auditfeed / review queue / compliancechecklist / scenarios / lange architectuurtekst op `/`.
+- [x] 4.21–4.23 Resultaatkaart beantwoordt 5 vragen; statusteksten + knoppen exact uit §10.
+- [x] 4.24–4.30 Alle copy strings centraal in `src/lib/pim/copy.ts` (§15 exact).
 
 ### Fase 5 — `/try` wordt expertlab
-- [ ] 5.1–5.4.
+- [x] 5.1 Titel "Expert lab".
+- [x] 5.2 Link "← terug naar snelle test".
+- [x] 5.3 Pipeline + modelstatus + audit + review queue blijven.
+- [x] 5.4 Geen primaire CTA meer vanaf `/`.
 
 ### Fase 6 — CI gate (optioneel)
 - [ ] 6.1 (skipped — Lovable deployt zelf).
 
 ### Fase 7 — Runtime hardening positionering
-- [ ] 7.1–7.3.
+- [x] 7.1 Hardening-meldingen verschijnen alleen op `/trust` en in `/try` (geavanceerd), niet op `/`.
+- [x] 7.2 `runtimeHardening.ts` logt URL/headers, nooit body-tekst (bevestigd via code-review).
+- [x] 7.3 README positioneert hardening als extra vangnet, niet als de echte gate (Fase 2 update).
 
 ### Acceptatie + backlog
-- [ ] T1–T5 user-tasks · M1–M12 must-have · S1–S6 should-have.
+- [x] T1–T5 user-tasks: handmatig verifieerbaar in nieuwe `/` (voorbeeld → Start → resultaat → details).
+- [x] M1–M12 must-have allemaal afgevinkt (zie fasen 0/1/2/3/4 hierboven).
+- [x] S1–S6 should-have idem (DetailsDrawer, LocalStatusPill, ExamplePicker, BLOCK-uitleg, html lang=nl, demo/productie scheiding).
+
+## Eindstatus (2026-06-20)
+
+- **42/42 vitest cases groen** — privacy-invarianten 1.30–1.49 afgedwongen in code.
+- **TypeScript schoon** (`bunx tsc --noEmit`).
+- **`/` = Start & Go** (plak → Start PiM → verdict), oude uitleg beschikbaar op `/over`.
+- **Header = logo + LocalStatusPill + ☰** (10 menu-items in burgermenu).
+- **`/try` = Expert lab** met "terug naar snelle test"-link.
+- **PIM-core**: `payloadType`-gate, `profileId` in `decide()`, rules-only blokkeert export+externe AI, alle egress-acties accepteren alleen `CertifiedPayload` + doen async re-consult, echte `modelGateFor` (geen hardcoded `true` meer).
 
 ---
 
