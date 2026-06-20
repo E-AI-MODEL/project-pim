@@ -147,21 +147,24 @@ export function AdvancedPanel({
               <p className="text-[11px] text-[#e8edf3]/50">Nog geen modellen gecheckt.</p>
             ) : (
               <ul className="space-y-1">
-                {integrity.map((r, i) => (
-                  <li key={i} className="flex items-start gap-2 text-[11px]">
-                    {r.verified ? (
-                      <ShieldCheck className="h-3.5 w-3.5 text-emerald-400 mt-0.5 flex-shrink-0" />
-                    ) : (
-                      <ShieldAlert className="h-3.5 w-3.5 text-rose-400 mt-0.5 flex-shrink-0" />
-                    )}
-                    <div className="font-plex-mono">
-                      <div className="text-[#e8edf3]/85">{r.modelId}</div>
-                      <div className="text-[#e8edf3]/45 text-[10px]">
-                        {r.verified ? "verified" : "MISMATCH"} · {r.reason ?? "—"}
+                {integrity.map((r, i) => {
+                  const ok = r.status === "verified";
+                  return (
+                    <li key={i} className="flex items-start gap-2 text-[11px]">
+                      {ok ? (
+                        <ShieldCheck className="h-3.5 w-3.5 text-emerald-400 mt-0.5 flex-shrink-0" />
+                      ) : (
+                        <ShieldAlert className="h-3.5 w-3.5 text-rose-400 mt-0.5 flex-shrink-0" />
+                      )}
+                      <div className="font-plex-mono">
+                        <div className="text-[#e8edf3]/85">{r.modelId}</div>
+                        <div className="text-[#e8edf3]/45 text-[10px]">
+                          {r.status} · {r.message}
+                        </div>
                       </div>
-                    </div>
-                  </li>
-                ))}
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </div>
