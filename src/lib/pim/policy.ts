@@ -5,7 +5,7 @@ import { PIPELINE_PROFILES } from "./pipelineProfile";
 
 export const POLICY_VERSION = "pim.policy/v2.1";
 
-const ANON_THRESHOLDS: Record<Action, number> = {
+export const DEFAULT_ANON_THRESHOLDS: Record<Action, number> = {
   send_external_ai: 0.18,
   export_file: 0.25,
   print: 0.30,
@@ -26,6 +26,8 @@ export interface DecideInput {
   profileId: PipelineProfileId;
   /** Type payload waarvoor besluit gevraagd wordt (spec §4.7). */
   payloadType: PayloadType;
+  /** Optionele runtime-overrides van de risico-drempels per actie (Advanced panel). */
+  thresholdOverrides?: Partial<Record<Action, number>>;
 }
 
 function fromFlag(code: PimFlagCode, base: Pick<PimDecision, "mode" | "action" | "riskLevel" | "policyVersion" | "timestamp" | "profileId" | "payloadType">, reason?: string): PimDecision {
@@ -44,7 +46,7 @@ const EGRESS_ACTIONS: ReadonlySet<Action> = new Set([
   "copy", "export_file", "print", "share", "send_external_ai",
 ]);
 
-export function decide({ mode, action, signals, draftCheck, modelVerified, profileId, payloadType }: DecideInput): PimDecision {
+export function decide({ mode, action, signals, draftCheck, modelVerified, profileId, payloadType, thresholdOverrides }: DecideInput): PimDecision {
   const base = {
     policyVersion: POLICY_VERSION,
     riskLevel: signals.riskLevel,
@@ -104,7 +106,7 @@ export function decide({ mode, action, signals, draftCheck, modelVerified, profi
     const isEgress = (["copy", "export_file", "print", "share", "send_external_ai"] as Action[]).includes(action);
     if (specialCombo && isEgress) return fromFlag("PIM_SPECIAL_CONTEXT_EGRESS_BLOCK", base);
 
-    const threshold = ANON_THRESHOLDS[action];
+    const threshold = thresholdOverrides?.[action] ?? DEFAULT_ANON_THRESHOLDS[action];
     if (signals.riskScore > threshold) {
       const code: PimFlagCode =
         action === "send_external_ai" ? "PIM_EXTERNAL_AI_RISK_BLOCK" :
