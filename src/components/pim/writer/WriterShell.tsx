@@ -9,7 +9,7 @@ import StarterKit from "@tiptap/starter-kit";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import {
   Bold, Italic, Heading1, Heading2, List, ListOrdered, Quote, Undo2, Redo2,
-  Upload, Download, Settings2, Shield, Trash2, X, Check,
+  Upload, Download, Settings2, Shield, Trash2, X, Check, Crosshair,
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -20,6 +20,7 @@ import {
   createPimPlugin, pimPluginKey, extractPlain, spanToRange, buildDecorations,
 } from "./pimPlugin";
 import { importDocxToEditor, exportEditorToDocx } from "./docxIO";
+import { isValidBsn, isValidIban, isValidLicensePlate } from "./validators";
 
 interface ClickedSpan {
   from: number;
@@ -36,6 +37,7 @@ export function WriterShell() {
   const [autoRedact, setAutoRedact] = useState<Set<PiiCategory>>(
     () => new Set(DEFAULT_AUTO_REDACT),
   );
+  const [strict, setStrict] = useState(false);
   const [ignored, setIgnored] = useState<Set<string>>(new Set());
   const [stats, setStats] = useState({ scrubbed: 0, marked: 0 });
   const [clicked, setClicked] = useState<ClickedSpan | null>(null);
@@ -80,15 +82,35 @@ export function WriterShell() {
     if (!editor) return;
     const { plain, map } = extractPlain(editor.state.doc);
     const signals = computeSignals(plain, [], DEFAULT_PROFILE, new Set());
-    const all = [...signals.directPii, ...signals.contextualPii];
+    let all = [...signals.directPii, ...signals.contextualPii];
+
+    // Aanscherping: identifier-validators verwerpen willekeurige cijferreeksen.
+    if (strict) {
+      all = all.filter((s) => {
+        if (s.category === "bsn") return isValidBsn(s.text);
+        if (s.category === "iban") return isValidIban(s.text);
+        if (s.category === "license_plate") return isValidLicensePlate(s.text);
+        return true;
+      });
+    }
+
+    // Bugfix: nooit redacten terwijl gebruiker er nog in typt.
+    const sel = editor.state.selection;
+    const cursorFrom = Math.min(sel.from, sel.to);
 
     // 1) Auto-redact: harde PII direct vervangen, achteraan beginnen.
     const toReplace: { from: number; to: number; label: string }[] = [];
     const toMark: PiiSpan[] = [];
     for (const s of all) {
+      const r = spanToRange(s, map);
+      if (!r) continue;
       if (autoRedact.has(s.category)) {
-        const r = spanToRange(s, map);
-        if (r) toReplace.push({ ...r, label: GENERALIZATIONS[s.category] ?? "[geredacteerd]" });
+        // 1 char veiligheidsmarge na de span: wacht tot cursor er voorbij is.
+        if (r.to + 1 <= cursorFrom) {
+          toReplace.push({ ...r, label: GENERALIZATIONS[s.category] ?? "[geredacteerd]" });
+        } else {
+          toMark.push(s); // tijdelijk markeren tot de cursor voorbij is
+        }
       } else {
         const ignKey = `${s.category}:${s.text.toLowerCase()}`;
         if (!ignored.has(ignKey)) toMark.push(s);
@@ -111,7 +133,7 @@ export function WriterShell() {
     const tr = editor.state.tr.setMeta(pimPluginKey, { decorations });
     editor.view.dispatch(tr);
     setStats((p) => ({ scrubbed: p.scrubbed, marked: toMark.length }));
-  }, [editor, autoRedact, ignored]);
+  }, [editor, autoRedact, ignored, strict]);
 
   useEffect(() => {
     if (!editor) return;
@@ -126,7 +148,7 @@ export function WriterShell() {
       cancelAnimationFrame(raf);
       editor.off("update", debounced);
     };
-  }, [editor, scan, autoRedactKey, ignoredKey]);
+  }, [editor, scan, autoRedactKey, ignoredKey, strict]);
 
   // Klik op highlight → popover.
   useEffect(() => {
@@ -229,6 +251,8 @@ export function WriterShell() {
         editor={editor}
         autoRedact={autoRedact}
         setAutoRedact={setAutoRedact}
+        strict={strict}
+        setStrict={setStrict}
         onImport={onImportClick}
         onExport={onExport}
         onClear={onClear}
@@ -281,11 +305,13 @@ export function WriterShell() {
 }
 
 function WriterToolbar({
-  editor, autoRedact, setAutoRedact, onImport, onExport, onClear, stats,
+  editor, autoRedact, setAutoRedact, strict, setStrict, onImport, onExport, onClear, stats,
 }: {
   editor: Editor;
   autoRedact: Set<PiiCategory>;
   setAutoRedact: (s: Set<PiiCategory>) => void;
+  strict: boolean;
+  setStrict: (v: boolean) => void;
   onImport: () => void;
   onExport: () => void;
   onClear: () => void;
@@ -310,6 +336,23 @@ function WriterToolbar({
       <button className={btn} onClick={onImport} title="Importeer .docx"><Upload className="h-4 w-4" /></button>
       <button className={btn} onClick={onExport} title="Exporteer .docx"><Download className="h-4 w-4" /></button>
       <button className={btn} onClick={onClear} title="Leegmaken"><Trash2 className="h-4 w-4" /></button>
+      <span className="h-5 w-px bg-border/60 mx-1" />
+      <button
+        type="button"
+        onClick={() => setStrict(!strict)}
+        title={strict
+          ? "Aanscherping aan — BSN-elfproef, IBAN mod-97 en kenteken-format filteren willekeurige cijferreeksen weg."
+          : "Aanscherping uit — klik om strenger te controleren (BSN-elfproef, IBAN mod-97, kenteken-format)."}
+        aria-pressed={strict}
+        className={`inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md text-xs font-medium border transition-colors ${
+          strict
+            ? "border-amber-400/50 bg-amber-400/15 text-amber-200 hover:bg-amber-400/25"
+            : "border-border/60 text-muted-foreground hover:text-foreground hover:bg-accent/40"
+        }`}
+      >
+        <Crosshair className="h-3.5 w-3.5" />
+        Aanscherping
+      </button>
       <span className="h-5 w-px bg-border/60 mx-1" />
       <Popover>
         <PopoverTrigger asChild>
