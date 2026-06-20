@@ -17,7 +17,7 @@ interface ResultState {
   signals: ReturnType<typeof computeSignals>;
 }
 
-export function StartGoShell() {
+export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
   const [text, setText] = useState("");
   const [mode, setMode] = useState<Mode>("anonymous");
   const [action, setAction] = useState<Action>("send_external_ai");
@@ -101,18 +101,19 @@ export function StartGoShell() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl px-4 sm:px-6 py-8 sm:py-14 space-y-7">
+    <div className={compact ? "space-y-5" : "mx-auto max-w-3xl px-4 sm:px-6 py-8 sm:py-14 space-y-7"}>
       <InputPanel
         text={text}
         onTextChange={(v) => { setText(v); setResult(null); setEgressMsg(null); }}
         onStart={run}
         onExample={onExample}
         busy={busy}
+        compact={compact}
       />
       <ModeTargetBar mode={mode} onModeChange={setMode} action={action} onActionChange={setAction} />
 
       {!result && text.trim().length > 0 && (
-        <div className="text-xs text-muted-foreground border-l-2 border-primary/40 pl-3 animate-pulse">
+        <div className={`text-xs border-l-2 pl-3 animate-pulse ${compact ? "text-[#e8edf3]/60 border-[#3b6fa0]/50" : "text-muted-foreground border-primary/40"}`}>
           PiM leest mee… tot nu toe {previewSignals.directPii.length + previewSignals.contextualPii.length} {previewSignals.directPii.length + previewSignals.contextualPii.length === 1 ? "signaal" : "signalen"} gevonden.
         </div>
       )}
