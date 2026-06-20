@@ -58,9 +58,41 @@ export interface DraftCandidate {
 export interface DraftCheckResult {
   status: "pass" | "repair" | "fail";
   issues: string[];
+  /** Categorieën van residuele directe PII gevonden in output (zonder ruwe tekst). */
+  residualCategories?: string[];
+  /** Aantal halucinerende tokens (alleen pseudonymous). */
+  hallucinatedTokenCount?: number;
+  /** True als output mode-mix bevat (anon-output met pseudo-tokens etc.). */
+  modeMix?: boolean;
 }
 
 export type Verdict = "ALLOW" | "ALLOW_WITH_WARNING" | "BLOCK";
+
+/**
+ * PayloadType — spec hfst 28 + derde analyse §4.7.
+ * Egress mag ALLEEN `draft_anonymous_certified` doorlaten. Elk ander type
+ * (raw input, mapping, restored, pseudonieme draft, of `unknown`) wordt
+ * door de egress guard fail-closed afgewezen, ongeacht het PIM-besluit.
+ */
+export type PayloadType =
+  | "draft_anonymous_certified"   // anoniem + draftCheck status=pass
+  | "draft_pseudonymous_local"    // pseudoniem — alleen lokaal toegestaan
+  | "raw_input"                   // ruwe gebruikersinvoer
+  | "mapping"                     // token→original mapping (NEVER egress)
+  | "restored"                    // na restore — bevat originele PII
+  | "unknown";                    // type kon niet worden vastgesteld
+
+/**
+ * CertifiedPayload — het ENIGE objecttype dat de egress guard accepteert.
+ * Bevat tekst + metadata waarop fail-closed beslist kan worden.
+ */
+export interface CertifiedPayload {
+  text: string;
+  mode: Mode;
+  payloadType: PayloadType;
+  profileId: import("./pipelineProfile").PipelineProfileId;
+  guardStatus: DraftCheckResult["status"];
+}
 
 export interface PimDecision {
   verdict: Verdict;
@@ -73,6 +105,10 @@ export interface PimDecision {
   action: Action;
   timestamp: string;
   flag?: string; // PIM_* flag code
+  /** Pipeline-profiel waaronder dit besluit is genomen (spec derde analyse §4.5). */
+  profileId?: import("./pipelineProfile").PipelineProfileId;
+  /** Type payload waarvoor besluit gold (spec derde analyse §4.7). */
+  payloadType?: PayloadType;
 }
 
 export interface AuditEvent {
