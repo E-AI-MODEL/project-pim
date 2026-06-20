@@ -95,6 +95,7 @@ export const COPY = {
   // Burgermenu (§7.2)
   menuNewTest: "Nieuwe controle",
   menuExamples: "Voorbeelden",
+  menuWriter: "Schrijfmodus",
   menuExpertLab: "Expert lab",
   menuTrust: "Vertrouwensdashboard",
   menuPipeline: "Hoe de pipeline werkt",
