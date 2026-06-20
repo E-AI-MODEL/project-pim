@@ -20,7 +20,7 @@ export function ModeTargetBar({ mode, onModeChange, action, onActionChange }: Pr
   return (
     <div className="space-y-3 rounded-xl border border-border/40 bg-card/40 p-4">
       <div className="space-y-1.5">
-        <span className="text-[11px] uppercase tracking-wider text-muted-foreground">Hoe verwerken?</span>
+        <span className="text-[11px] uppercase tracking-wider text-muted-foreground">Hoe verwerken</span>
         <div className="flex flex-wrap gap-2">
           <Toggle on={mode === "anonymous"} onClick={() => onModeChange("anonymous")}
             hint={COPY.modeAnonymousHint}>{COPY.modeAnonymous}</Toggle>

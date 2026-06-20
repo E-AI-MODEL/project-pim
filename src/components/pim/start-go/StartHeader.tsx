@@ -18,7 +18,7 @@ export function StartHeader() {
               Project <span className="text-primary">PiM</span>
             </div>
             <div className="text-[10px] text-muted-foreground hidden sm:block">
-              Privacy Integrity Monitor
+              Veilig delen, lokaal gecontroleerd
             </div>
           </div>
         </Link>

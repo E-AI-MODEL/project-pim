@@ -8,75 +8,74 @@ export const COPY = {
   subtitle:
     "Plak je tekst, kies wat je ermee wilt doen, en zie binnen één seconde of het mag — met uitleg. Alles draait lokaal in je browser, niets verlaat dit apparaat tot een toegestane actie is goedgekeurd.",
   placeholder:
-    "Plak hier — een leerlingnotitie, mentorgesprek, evaluatie, beleidstekst of e-mailconcept.",
-  startButton: "Controleer met PiM",
+    "Plak hier je tekst — bijvoorbeeld een leerlingnotitie, een mentorgesprek, een evaluatie of een e-mailconcept.",
+  startButton: "Controleer deze tekst",
   startButtonShort: "Controleer",
   privacyHint:
-    "Lokaal verwerkt · geen upload · geen tracking · audit-spoor zonder ruwe tekst",
-  detailsLink: "Toon details (modelstatus, regels, audit)",
-  liveBadge: "Live mee­kijkend",
+    "Verwerking blijft in je browser; geen upload, geen tracking, en de audit-log bevat nooit je tekst.",
+  detailsLink: "Toon technische details (modelstatus, regels, audit)",
+  liveBadge: "Leest met je mee",
 
   // Verdict-zin — voor de docent, in mens-taal
   statusGreen:
-    "Deze versie kan veilig de deur uit voor de actie die je koos.",
+    "Deze versie is veilig genoeg voor de actie die je koos.",
   statusOrange:
-    "Bruikbaar, maar de context blijft herkenbaar. Lees de gemarkeerde plekken nog één keer na.",
+    "Bruikbaar, maar de context blijft herkenbaar. Lees de gemarkeerde stukken nog één keer rustig na.",
   statusRed:
-    "Niet delen. PiM vond directe persoonsgegevens of een route die voor dit profiel is uitgesloten.",
+    "Niet delen. PiM vond herleidbare persoonsgegevens, of deze actie is voor dit profiel niet toegestaan.",
 
   // Headlines op de verdict-kaart
   resultHeadGreen: "Klaar om te delen",
-  resultHeadOrange: "Bijna goed — even nakijken",
+  resultHeadOrange: "Bijna klaar — nog even nalezen",
   resultHeadRed: "Geblokkeerd",
 
   // Verdict → primaire actie
-  buttonAllow: "Kopieer de veilige versie",
-  buttonAllowWarning: "Ik heb gecontroleerd — kopieer",
-  buttonBlock: "Pas tekst aan en probeer opnieuw",
+  buttonAllow: "Voer de gekozen actie uit",
+  buttonAllowWarning: "Ik heb het nagelezen — ga door",
+  buttonBlock: "Tekst aanpassen en opnieuw proberen",
 
   // Drie-lagen uitleg per verdict (docent · bestuurder · tech)
-  // De UI toont docent + bestuurder direct en tech achter "Toon details".
   layerTeacherAllow:
-    "Namen, adressen en andere directe persoonsgegevens zijn weggehaald of vervangen.",
+    "Namen, adressen en andere direct herleidbare gegevens zijn weggehaald of vervangen.",
   layerLeaderAllow:
-    "Conform AVG-minimalisatie: alleen pseudoniem of geaggregeerde context verlaat het apparaat.",
+    "Voldoet aan dataminimalisatie uit de AVG: alleen geanonimiseerde of pseudonieme inhoud verlaat dit apparaat.",
   layerTeacherWarn:
-    "PiM heeft de hard herleidbare gegevens verwijderd, maar de combinatie van kenmerken kan voor insiders nog herkenbaar zijn.",
+    "De duidelijke persoonsgegevens zijn weg, maar de combinatie van kenmerken kan voor wie de situatie kent nog herkenbaar zijn.",
   layerLeaderWarn:
-    "Restrisico op her-identificatie. Geschikt voor interne reflectie, niet voor externe verwerking zonder verwerkersovereenkomst.",
+    "Er blijft een restrisico op her-identificatie. Geschikt voor intern gebruik; voor externe verwerking is een verwerkersovereenkomst nodig.",
   layerTeacherBlock:
-    "Er staan nog BSN, IBAN, telefoonnummers of namen in — of de gekozen actie past niet bij dit profiel.",
+    "Er staan nog persoonsgegevens in (zoals een naam, BSN, IBAN of telefoonnummer), of deze actie past niet bij het gekozen profiel.",
   layerLeaderBlock:
-    "Fail-closed: PiM weigert export naar externe verwerkers wanneer harde PII aanwezig is of het profiel rules-only voorschrijft.",
+    "PiM blokkeert standaard bij twijfel: zodra er herleidbare persoonsgegevens aanwezig zijn, of het profiel alleen vaste regels toelaat, gaat er niets naar buiten.",
 
   // Mode/doel
   modeAnonymous: "Anoniem",
-  modeAnonymousHint: "Namen → rollen. Onomkeerbaar.",
+  modeAnonymousHint: "Namen worden vervangen door rollen. Niet terug te draaien.",
   modePseudonymous: "Pseudoniem (lokaal)",
-  modePseudonymousHint: "Namen → codes. Mapping blijft op dit apparaat.",
-  targetLabel: "Waar gaat het naartoe?",
+  modePseudonymousHint: "Namen worden vervangen door codes. De koppeling blijft op dit apparaat.",
+  targetLabel: "Bestemming",
   targetExternalAi: "Externe AI (ChatGPT, Claude…)",
-  targetCopy: "Klembord",
-  targetExport: "Bestand opslaan",
+  targetCopy: "Naar het klembord",
+  targetExport: "Opslaan als bestand",
   targetPrint: "Printer",
-  targetShare: "Delen / link",
+  targetShare: "Delen via link",
   targetDisplay: "Alleen op dit scherm",
 
   // Status-pill (§7.1)
   pillLocalActive: "Lokaal actief",
   pillLimited: "Beperkte detectie",
-  pillNotReady: "Niet klaar",
-  pillTagline: "Privacy-engine draait in je browser",
+  pillNotReady: "Nog niet gereed",
+  pillTagline: "De privacy-engine draait in je browser",
 
   // Burgermenu (§7.2)
-  menuNewTest: "Nieuwe test",
+  menuNewTest: "Nieuwe controle",
   menuExamples: "Voorbeelden",
   menuExpertLab: "Expert lab",
-  menuTrust: "Trust dashboard",
-  menuPipeline: "Pipeline uitleg",
-  menuModes: "Modi uitleg",
+  menuTrust: "Vertrouwensdashboard",
+  menuPipeline: "Hoe de pipeline werkt",
+  menuModes: "Verwerkingsmodi",
   menuCompliance: "Compliance",
-  menuFlags: "Flags",
+  menuFlags: "Beslissingscodes",
   menuSettings: "Instellingen",
   menuAbout: "Over Project PiM",
 } as const;

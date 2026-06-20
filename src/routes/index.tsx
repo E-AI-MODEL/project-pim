@@ -5,9 +5,9 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Project PiM — Eerst veilig. Dan pas delen." },
-      { name: "description", content: "Browser-eerste privacy-controle voor onderwijsdata: plak tekst, kies bestemming, krijg binnen één seconde een uitlegbaar oordeel. Lokaal verwerkt, geen upload." },
+      { name: "description", content: "Een lokale privacy-controle voor onderwijs. Plak je tekst, kies een bestemming en krijg binnen één seconde een uitlegbaar oordeel. Niets verlaat je apparaat." },
       { property: "og:title", content: "Project PiM — Eerst veilig. Dan pas delen." },
-      { property: "og:description", content: "Plak tekst, kies bestemming, krijg binnen één seconde een uitlegbaar privacy-oordeel. 100% lokaal in je browser." },
+      { property: "og:description", content: "Plak je tekst, kies een bestemming, en zie binnen één seconde of het mag — met uitleg. Volledig lokaal in je browser." },
     ],
   }),
   component: HomePage,

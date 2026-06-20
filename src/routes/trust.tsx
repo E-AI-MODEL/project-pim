@@ -20,16 +20,16 @@ import {
 export const Route = createFileRoute("/trust")({
   head: () => ({
     meta: [
-      { title: "Trust Dashboard — Project PiM" },
+      { title: "Vertrouwensdashboard — Project PiM" },
       {
         name: "description",
         content:
-          "Live status van privacy-invarianten: pipeline, runtime hardening, modelintegriteit, egress-pogingen, review queue.",
+          "Live status van de privacy-waarborgen: pipeline, runtime-hardening, modelintegriteit, egress-pogingen en reviewrij.",
       },
-      { property: "og:title", content: "Trust Dashboard — Project PiM" },
+      { property: "og:title", content: "Vertrouwensdashboard — Project PiM" },
       {
         property: "og:description",
-        content: "Live transparantie over de PIM privacy-pipeline in jouw browser.",
+        content: "Live inzicht in wat Project PiM in je browser doet en niet doet.",
       },
     ],
   }),
@@ -66,8 +66,8 @@ function TrustPage() {
     <div className="mx-auto max-w-6xl px-6 py-10">
       <PageHero
         eyebrow="Transparantie"
-        title="Trust Dashboard"
-        description="Live status van de privacy-invarianten. Geen inhoud — alleen meta-informatie."
+        title="Vertrouwensdashboard"
+        description="Live status van de privacy-waarborgen. Je ziet alleen metingen en metadata, nooit je tekst zelf."
       />
 
       <div className="grid md:grid-cols-2 gap-4 mt-8">

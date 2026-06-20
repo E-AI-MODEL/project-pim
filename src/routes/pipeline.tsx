@@ -5,10 +5,10 @@ import { PageHero } from "@/components/pim/PageHero";
 export const Route = createFileRoute("/pipeline")({
   head: () => ({
     meta: [
-      { title: "Pipeline — Project PIM" },
-      { name: "description", content: "Interactieve walkthrough van de Project PIM privacy pipeline: van raw input tot egress." },
-      { property: "og:title", content: "Project PIM Pipeline" },
-      { property: "og:description", content: "Interactieve walkthrough van de privacy pipeline." },
+      { title: "Hoe de pipeline werkt — Project PiM" },
+      { name: "description", content: "Stap voor stap door de privacy-pipeline van Project PiM: van ruwe invoer tot uitgaande actie." },
+      { property: "og:title", content: "Hoe de pipeline werkt — Project PiM" },
+      { property: "og:description", content: "Een interactieve doorloop van de privacy-pipeline, stap voor stap." },
     ],
   }),
   component: PipelinePage,

@@ -33,9 +33,9 @@ export const Route = createFileRoute("/try")({
   head: () => ({
     meta: [
       { title: "Expert lab — Project PiM" },
-      { name: "description", content: "Volledige PIM-pipeline met detector-profielen, NER, Qwen-rewrite, modelintegriteit en audit. Voor testers en ontwikkelaars. Snelle test? Ga naar de startpagina." },
-      { property: "og:title", content: "Project PiM — Expert lab" },
-      { property: "og:description", content: "Volledige pipeline + modelstatus + audit. Snelle test staat op de startpagina." },
+      { name: "description", content: "De volledige pipeline van Project PiM, voor testers en ontwikkelaars: detector-profielen, NER, herschrijving, modelintegriteit en audit. Wil je een snelle test? Ga naar de startpagina." },
+      { property: "og:title", content: "Expert lab — Project PiM" },
+      { property: "og:description", content: "De volledige pipeline, modelstatus en audit. Voor een snelle test ga je naar de startpagina." },
     ],
   }),
   component: TryPage,

@@ -6,10 +6,10 @@ import { ShieldX, ShieldAlert, ShieldCheck } from "lucide-react";
 export const Route = createFileRoute("/flags")({
   head: () => ({
     meta: [
-      { title: "PIM Flags — Project PIM" },
-      { name: "description", content: "Volledige tabel van gestandaardiseerde PIM_* flags. Elke flag heeft ruleId, reasonCode, severity en default verdict — geen flag bevat ooit inhoud." },
-      { property: "og:title", content: "PIM Flags — gestandaardiseerde besluitcodes" },
-      { property: "og:description", content: "Alle PIM_* flags met ruleId, reasonCode, severity en verdict." },
+      { title: "Beslissingscodes — Project PiM" },
+      { name: "description", content: "Volledige tabel van de PIM_* beslissingscodes. Elke code bevat een ruleId, reasonCode, ernst en standaard verdict — nooit inhoud." },
+      { property: "og:title", content: "Beslissingscodes — Project PiM" },
+      { property: "og:description", content: "Alle PIM_* beslissingscodes met ruleId, reasonCode, ernst en verdict." },
     ],
   }),
   component: FlagsPage,
@@ -30,9 +30,9 @@ function FlagsPage() {
   return (
     <>
       <PageHero
-        eyebrow="Spec hfst 37 · Flag table"
-        title={<>PIM <span className="text-primary">flags</span></>}
-        description="Elke beslissing van PIM verwijst naar een vaste flag met ruleId, reasonCode, severity en default verdict. Geen flag bevat ooit inhoud — alleen metadata."
+        eyebrow="Specificatie · hoofdstuk 37"
+        title={<>De <span className="text-primary">beslissingscodes</span></>}
+        description="Elke beslissing van PiM verwijst naar een vaste code met ruleId, reasonCode, ernst en standaard verdict. Een code bevat nooit tekst — alleen metadata."
       />
 
       <section className="mx-auto max-w-7xl px-6 py-10 grid grid-cols-2 md:grid-cols-4 gap-3">

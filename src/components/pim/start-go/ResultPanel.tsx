@@ -24,10 +24,10 @@ export function ResultPanel({ decision, safeText, signals, integrity, onPrimary,
 
       {decision.verdict === "BLOCK" && directSpans.length > 0 && (
         <div className="rounded-xl border border-red-500/30 bg-red-500/5 p-4 space-y-2">
-          <div className="text-[11px] font-semibold uppercase tracking-wider text-red-300">PiM vond dit terug in je tekst</div>
+          <div className="text-[11px] font-semibold uppercase tracking-wider text-red-300">PiM herkende deze gegevens in je tekst</div>
           <FindingChips spans={directSpans} />
           <div className="text-xs text-muted-foreground pt-1 leading-relaxed">
-            <span className="text-foreground font-medium">Volgende stap:</span> haal deze gegevens weg, of kies de mode <span className="text-foreground font-medium">Anoniem</span> — PiM rekent dan zelf opnieuw.
+            <span className="text-foreground font-medium">Volgende stap:</span> verwijder deze gegevens, of zet de modus op <span className="text-foreground font-medium">Anoniem</span> — PiM voert de controle dan automatisch opnieuw uit.
           </div>
         </div>
       )}
@@ -36,7 +36,7 @@ export function ResultPanel({ decision, safeText, signals, integrity, onPrimary,
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">De veilige versie van je tekst</div>
-            <div className="text-[10px] text-muted-foreground">klaar voor de gekozen actie</div>
+            <div className="text-[10px] text-muted-foreground">Gereed voor de gekozen actie</div>
           </div>
           <pre className="rounded-xl border border-primary/20 bg-card/60 p-4 text-sm font-mono whitespace-pre-wrap leading-relaxed max-h-[40vh] overflow-auto">{safeText}</pre>
         </div>
