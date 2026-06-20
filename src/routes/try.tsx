@@ -20,7 +20,8 @@ import {
   recordSubmission, type AbuseSignal,
   rewriteAnonymousDraftStream, onRewriteStatus, type RewriteStatus,
   type Mode, type Action, type Verdict, type AuditEvent, type MappingHandle,
-  type PiiSpan,
+  type PiiSpan, type CertifiedPayload, type PayloadType,
+  modelGateFor,
 } from "@/lib/pim";
 import { loadRewriteLlm } from "@/lib/pim/rewriteLlm";
 import {
@@ -31,10 +32,10 @@ import {
 export const Route = createFileRoute("/try")({
   head: () => ({
     meta: [
-      { title: "Try-it — Project PiM" },
-      { name: "description", content: "Test de PIM privacy pipeline live op echte tekst. Detectie, mapping, egress guard — alles lokaal in je browser." },
-      { property: "og:title", content: "Try Project PiM live" },
-      { property: "og:description", content: "Live PIM privacy pipeline — alles lokaal." },
+      { title: "Expert lab — Project PiM" },
+      { name: "description", content: "Volledige PIM-pipeline met detector-profielen, NER, Qwen-rewrite, modelintegriteit en audit. Voor testers en ontwikkelaars. Snelle test? Ga naar de startpagina." },
+      { property: "og:title", content: "Project PiM — Expert lab" },
+      { property: "og:description", content: "Volledige pipeline + modelstatus + audit. Snelle test staat op de startpagina." },
     ],
   }),
   component: TryPage,
@@ -462,10 +463,24 @@ function TryPage() {
   );
   const decision = useMemo(() => {
     const t0 = performance.now();
-    const d = decide({ mode, action, signals: decisionSignals, draftCheck: guard, modelVerified: true });
+    // Spec derde analyse §4.4 — echte modelgate (geen hardcoded true meer).
+    const gate = modelGateFor(profileId, action, integrity);
+    // Spec §4.7 — bepaal payloadType: anonymous + draft pass = certified.
+    const payloadType: PayloadType =
+      mode === "anonymous" && guard.status === "pass" ? "draft_anonymous_certified" :
+      mode === "pseudonymous" ? "draft_pseudonymous_local" :
+      "unknown";
+    const d = decide({
+      mode, action,
+      signals: decisionSignals,
+      draftCheck: guard,
+      modelVerified: gate.verified,
+      profileId,
+      payloadType,
+    });
     queueMicrotask(() => tick("decide", performance.now() - t0));
     return d;
-  }, [mode, action, decisionSignals, guard, tick]);
+  }, [mode, action, decisionSignals, guard, tick, profileId, integrity]);
 
   const onAct = async () => {
     setEgress(null); setRestored(null);
@@ -481,7 +496,19 @@ function TryPage() {
       payloadText = await restoreFromContainer(handle, effectiveDraft.text);
       setRestored(payloadText);
     }
-    const result = await executeAction(decision, { text: payloadText, mode });
+    // Spec §4.7 — gecertificeerde payload met expliciet type.
+    const certified: CertifiedPayload = {
+      text: payloadText,
+      mode,
+      payloadType:
+        decision.action === "restore" ? "restored" :
+        mode === "anonymous" && guard.status === "pass" ? "draft_anonymous_certified" :
+        mode === "pseudonymous" ? "draft_pseudonymous_local" :
+        "unknown",
+      profileId,
+      guardStatus: guard.status,
+    };
+    const result = await executeAction(decision, certified);
     setEgress({ ok: result.executed, msg: result.reason });
     setAudit((a) => [{
       ts: decision.timestamp, action: decision.action, mode: decision.mode,
@@ -649,10 +676,14 @@ function TryPage() {
   return (
     <>
       <PageHero
-        eyebrow="Try-it · live · lokaal"
-        title={<>Test PiM op <span className="text-primary">echte tekst</span></>}
-        description="Kies een scenario of plak je eigen fragment. De verdict-balk onderaan blijft altijd in beeld."
-      />
+        eyebrow="Expert lab · alle gates zichtbaar · lokaal"
+        title={<>PiM <span className="text-primary">Expert lab</span></>}
+        description="Volledige pipeline met detector-profielen, NER, Qwen-rewrite, modelintegriteit en audit. Snelle test? Ga terug naar de startpagina."
+      >
+        <Link to="/" className="inline-flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 font-medium">
+          ← terug naar snelle test
+        </Link>
+      </PageHero>
 
       <div className="mx-auto max-w-4xl px-4 sm:px-6 pb-32">
         {/* — Welkomstkaart (eerste bezoek) — */}

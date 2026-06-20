@@ -1,7 +1,9 @@
-import type { Action, Mode, PimDecision, PrivacySignals, DraftCheckResult } from "./types";
+import type { Action, Mode, PimDecision, PrivacySignals, DraftCheckResult, PayloadType } from "./types";
 import { PIM_FLAGS, type PimFlagCode } from "./flags";
+import type { PipelineProfileId } from "./pipelineProfile";
+import { PIPELINE_PROFILES } from "./pipelineProfile";
 
-export const POLICY_VERSION = "pim.policy/v2.0";
+export const POLICY_VERSION = "pim.policy/v2.1";
 
 const ANON_THRESHOLDS: Record<Action, number> = {
   send_external_ai: 0.18,
@@ -14,15 +16,19 @@ const ANON_THRESHOLDS: Record<Action, number> = {
   restore: 0,
 };
 
-interface DecideInput {
+export interface DecideInput {
   mode: Mode;
   action: Action;
   signals: PrivacySignals;
   draftCheck: DraftCheckResult;
   modelVerified: boolean;
+  /** Pipeline-profiel (spec derde analyse §4.5 — rules-only enforcement). */
+  profileId: PipelineProfileId;
+  /** Type payload waarvoor besluit gevraagd wordt (spec §4.7). */
+  payloadType: PayloadType;
 }
 
-function fromFlag(code: PimFlagCode, base: Pick<PimDecision, "mode" | "action" | "riskLevel" | "policyVersion" | "timestamp">, reason?: string): PimDecision {
+function fromFlag(code: PimFlagCode, base: Pick<PimDecision, "mode" | "action" | "riskLevel" | "policyVersion" | "timestamp" | "profileId" | "payloadType">, reason?: string): PimDecision {
   const f = PIM_FLAGS[code];
   return {
     ...base,
@@ -34,14 +40,40 @@ function fromFlag(code: PimFlagCode, base: Pick<PimDecision, "mode" | "action" |
   };
 }
 
-export function decide({ mode, action, signals, draftCheck, modelVerified }: DecideInput): PimDecision {
+const EGRESS_ACTIONS: ReadonlySet<Action> = new Set([
+  "copy", "export_file", "print", "share", "send_external_ai",
+]);
+
+export function decide({ mode, action, signals, draftCheck, modelVerified, profileId, payloadType }: DecideInput): PimDecision {
   const base = {
     policyVersion: POLICY_VERSION,
     riskLevel: signals.riskLevel,
     mode,
     action,
     timestamp: new Date().toISOString(),
+    profileId,
+    payloadType,
   };
+
+  const profile = PIPELINE_PROFILES[profileId];
+  const isEgressAction = EGRESS_ACTIONS.has(action);
+
+  // 0. Profielbeleid (spec derde analyse §4.5)
+  // Rules-only mag geen export of externe AI.
+  if (profile.egressPolicy === "degrade_no_export") {
+    if (action === "send_external_ai") return fromFlag("PIM_RULES_ONLY_EXTERNAL_AI_BLOCK", base);
+    if (action === "export_file") return fromFlag("PIM_RULES_ONLY_EXPORT_BLOCK", base);
+  }
+  if (profile.egressPolicy === "design_only" && isEgressAction) {
+    return fromFlag("PIM_PROFILE_DESIGN_ONLY_BLOCK", base);
+  }
+
+  // 0b. Payload-gate (spec derde analyse §4.7)
+  // Alleen `draft_anonymous_certified` mag de browser uit.
+  if (isEgressAction && payloadType !== "draft_anonymous_certified") {
+    return fromFlag("PIM_PAYLOAD_TYPE_EGRESS_BLOCK", base,
+      `Payload-type '${payloadType}' mag de browser niet verlaten — alleen 'draft_anonymous_certified'.`);
+  }
 
   // Fail-closed gates first
   if (!modelVerified) return fromFlag("PIM_MODEL_INTEGRITY_BLOCK", base);

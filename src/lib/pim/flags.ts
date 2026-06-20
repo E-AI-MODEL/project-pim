@@ -36,6 +36,10 @@ export const PIM_FLAGS = {
   PIM_PSEUDO_LOCAL_ONLY_WARN:         { ruleId: "pim.pseudo.local.only",          reasonCode: "PSEUDO_LOCAL_ONLY",       severity: "warn",  verdict: "ALLOW_WITH_WARNING", description: "Pseudonieme verwerking — alleen lokaal toegestaan." },
   PIM_DRAFT_REPAIR_WARN:              { ruleId: "pim.draft.repair",               reasonCode: "DRAFT_REPAIR",            severity: "warn",  verdict: "ALLOW_WITH_WARNING", description: "Draft kan verbeterd worden — repair loop voorgesteld." },
   PIM_OK:                             { ruleId: "pim.ok",                         reasonCode: "OK",                      severity: "info",  verdict: "ALLOW",              description: "Toegestaan binnen huidige modus, drempel en guards." },
+  PIM_RULES_ONLY_EXTERNAL_AI_BLOCK:   { ruleId: "pim.rules.only.external.ai",     reasonCode: "RULES_ONLY_NO_EXTERNAL",  severity: "block", verdict: "BLOCK",              description: "Rules-only profiel mag geen externe AI gebruiken — modelcoverage te beperkt." },
+  PIM_RULES_ONLY_EXPORT_BLOCK:        { ruleId: "pim.rules.only.export",          reasonCode: "RULES_ONLY_NO_EXPORT",    severity: "block", verdict: "BLOCK",              description: "Rules-only profiel mag geen bestanden exporteren — beperkte detectie." },
+  PIM_PROFILE_DESIGN_ONLY_BLOCK:      { ruleId: "pim.profile.design.only",        reasonCode: "PROFILE_DESIGN_ONLY",     severity: "block", verdict: "BLOCK",              description: "Profiel is ontwerpvoorbereiding — geen egress toegestaan." },
+  PIM_PAYLOAD_TYPE_EGRESS_BLOCK:      { ruleId: "pim.payload.type.egress",        reasonCode: "PAYLOAD_TYPE_FORBIDDEN",  severity: "block", verdict: "BLOCK",              description: "Alleen `draft_anonymous_certified` mag de browser verlaten." },
 } as const satisfies Record<string, Omit<PimFlag, "flag">>;
 
 export type PimFlagCode = keyof typeof PIM_FLAGS;
