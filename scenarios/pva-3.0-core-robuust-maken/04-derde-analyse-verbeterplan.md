@@ -32,7 +32,14 @@ Bij elke afgeronde taak: `[ ]` → `[x]`, datum, eventuele afwijking.
 **Afwijking §4.2:** project gebruikt Bun (`bunfig.toml`); `npm ci`/`package-lock.json` overgeslagen, vervangen door `bun install`/`bun.lock`.
 
 ### Fase 1 — PIM-core hard maken
-- [ ] 1.1 `PayloadType` toegevoegd · 1.2 `CertifiedPayload` · 1.3 uitgebreide `DraftCheckResult` · 1.4 `profileId` in `DecideInput` · 1.5 `payloadType` in `DecideInput` · 1.6 `profileId` in `PimDecision` · 1.7 rules-only + send_external_ai = BLOCK · 1.8 rules-only + export_file = BLOCK · 1.9 rules-only copy/share/print gated · 1.10 payload-gate alleen `draft_anonymous_certified` · 1.11 `draftCheckWithRegistry()` · 1.12 oude `draftCheck` herleid · 1.13 aanroepers omgezet · 1.14 `modelGateFor()` · 1.15 hardcoded `modelVerified:true` weg · 1.16 demo-hash geen productiegroen · 1.17–1.22 egress accepteert alleen `CertifiedPayload` · 1.23–1.29 testbestanden · 1.30–1.49 20 privacy-invarianten.
+- [x] 1.1–1.49 ALLE klaar (2026-06-20) — 42 tests groen, typecheck schoon.
+  - PayloadType + CertifiedPayload + uitgebreide DraftCheckResult in `types.ts`.
+  - `policy.ts`: `decide()` heeft `profileId` + `payloadType`; rules-only blokkeert export + externe AI; payload-gate dwingt `draft_anonymous_certified` af.
+  - `processing.ts`: `draftCheckWithRegistry()` via detectorRegistry; oude `draftCheck()` blijft als sync-fallback met uitgebreide metadata.
+  - `egressGuard.ts`: alle uitgaande acties (copy/print/share/export) doen nu DEZELFDE async re-consult als send_external_ai en accepteren alleen `CertifiedPayload`.
+  - `modelGate.ts` nieuw: `modelGateFor(profile, action, integrity)` — placeholder = niet productiegroen voor egress, rules-only = altijd verified, lokale acties = demo-acceptabel.
+  - `try.tsx`: hardcoded `modelVerified: true` weg, vervangen door echte modelgate + payloadType-bepaling op draft + mode.
+  - Tests: smoke + policy + profiles + invariants (20) + draftCheck + egressGuard + modelIntegrity = **42 cases pass**.
 
 ### Fase 2 — Naamgeving + claims
 - [ ] 2.1–2.8.
