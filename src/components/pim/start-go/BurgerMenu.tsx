@@ -12,17 +12,39 @@ type Item =
   | { kind: "link"; to: string; label: string; icon: React.ReactNode; hash?: string }
   | { kind: "event"; event: string; label: string; icon: React.ReactNode };
 
-const ITEMS: Item[] = [
-  { kind: "event", event: "pim:reset", label: COPY.menuNewTest, icon: <Sparkles className="h-4 w-4" /> },
-  { kind: "link",   to: "/schrijven", label: COPY.menuWriter, icon: <PenLine className="h-4 w-4" /> },
-  { kind: "link",   to: "/try", label: COPY.menuExpertLab, icon: <FlaskConical className="h-4 w-4" /> },
-  { kind: "link",   to: "/trust", label: COPY.menuTrust, icon: <ShieldCheck className="h-4 w-4" /> },
-  { kind: "link",   to: "/pipeline", label: COPY.menuPipeline, icon: <Workflow className="h-4 w-4" /> },
-  { kind: "link",   to: "/modes", label: COPY.menuModes, icon: <Layers className="h-4 w-4" /> },
-  { kind: "link",   to: "/compliance", label: COPY.menuCompliance, icon: <CheckCircle className="h-4 w-4" /> },
-  { kind: "link",   to: "/flags", label: COPY.menuFlags, icon: <Flag className="h-4 w-4" /> },
-  { kind: "event", event: "pim:open-advanced", label: COPY.menuSettings, icon: <Settings className="h-4 w-4" /> },
-  { kind: "link",   to: "/over", label: COPY.menuAbout, icon: <Info className="h-4 w-4" /> },
+type Group = { label: string; items: Item[] };
+
+const GROUPS: Group[] = [
+  {
+    label: "Aan de slag",
+    items: [
+      { kind: "event", event: "pim:reset", label: COPY.menuNewTest, icon: <Sparkles className="h-4 w-4" /> },
+      { kind: "link",  to: "/schrijven", label: COPY.menuWriter, icon: <PenLine className="h-4 w-4" /> },
+      { kind: "link",  to: "/try",       label: COPY.menuExpertLab, icon: <FlaskConical className="h-4 w-4" /> },
+    ],
+  },
+  {
+    label: "Onder de motorkap",
+    items: [
+      { kind: "link", to: "/pipeline", label: COPY.menuPipeline, icon: <Workflow className="h-4 w-4" /> },
+      { kind: "link", to: "/modes",    label: COPY.menuModes,    icon: <Layers className="h-4 w-4" /> },
+      { kind: "link", to: "/flags",    label: COPY.menuFlags,    icon: <Flag className="h-4 w-4" /> },
+    ],
+  },
+  {
+    label: "Vertrouwen & beleid",
+    items: [
+      { kind: "link", to: "/trust",      label: COPY.menuTrust,      icon: <ShieldCheck className="h-4 w-4" /> },
+      { kind: "link", to: "/compliance", label: COPY.menuCompliance, icon: <CheckCircle className="h-4 w-4" /> },
+    ],
+  },
+  {
+    label: "Systeem",
+    items: [
+      { kind: "event", event: "pim:open-advanced", label: COPY.menuSettings, icon: <Settings className="h-4 w-4" /> },
+      { kind: "link",  to: "/over",                label: COPY.menuAbout,    icon: <Info className="h-4 w-4" /> },
+    ],
+  },
 ];
 
 export function BurgerMenu() {
@@ -68,41 +90,53 @@ export function BurgerMenu() {
                 <X className="h-3.5 w-3.5" />
               </button>
             </div>
-            <ul className="flex-1 overflow-y-auto py-1">
-              {ITEMS.map((item, i) => (
-                <li key={`${item.label}-${i}`}>
-                  {item.kind === "link" ? (
-                    <Link
-                      to={item.to}
-                      onClick={() => setOpen(false)}
-                      className={[
-                        "flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium rounded-md mx-2 my-0.5 transition-colors",
-                        isActive(item.to)
-                          ? "bg-primary/10 text-primary"
-                          : "text-foreground/80 hover:bg-accent/40 hover:text-foreground",
-                      ].join(" ")}
-                    >
-                      <span className={isActive(item.to) ? "text-primary" : "text-muted-foreground"}>
-                        {item.icon}
-                      </span>
-                      {item.label}
-                    </Link>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setOpen(false);
-                        setTimeout(() => window.dispatchEvent(new CustomEvent(item.event)), 60);
-                      }}
-                      className="w-full text-left flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium rounded-md mx-2 my-0.5 text-foreground/80 hover:bg-accent/40 hover:text-foreground transition-colors"
-                    >
-                      <span className="text-muted-foreground">{item.icon}</span>
-                      {item.label}
-                    </button>
-                  )}
-                </li>
+            <div className="flex-1 overflow-y-auto py-2">
+              {GROUPS.map((group, gi) => (
+                <section
+                  key={group.label}
+                  className={gi > 0 ? "mt-2 pt-2 border-t border-border/30" : ""}
+                >
+                  <h3 className="px-4 pt-1 pb-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+                    {group.label}
+                  </h3>
+                  <ul>
+                    {group.items.map((item, i) => (
+                      <li key={`${item.label}-${i}`}>
+                        {item.kind === "link" ? (
+                          <Link
+                            to={item.to}
+                            onClick={() => setOpen(false)}
+                            className={[
+                              "flex items-center gap-3 px-4 py-2 text-[13px] font-medium rounded-md mx-2 my-0.5 transition-colors",
+                              isActive(item.to)
+                                ? "bg-primary/10 text-primary"
+                                : "text-foreground/80 hover:bg-accent/40 hover:text-foreground",
+                            ].join(" ")}
+                          >
+                            <span className={isActive(item.to) ? "text-primary" : "text-muted-foreground"}>
+                              {item.icon}
+                            </span>
+                            {item.label}
+                          </Link>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setOpen(false);
+                              setTimeout(() => window.dispatchEvent(new CustomEvent(item.event)), 60);
+                            }}
+                            className="w-full text-left flex items-center gap-3 px-4 py-2 text-[13px] font-medium rounded-md mx-2 my-0.5 text-foreground/80 hover:bg-accent/40 hover:text-foreground transition-colors"
+                          >
+                            <span className="text-muted-foreground">{item.icon}</span>
+                            {item.label}
+                          </button>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </section>
               ))}
-            </ul>
+            </div>
             <div className="px-4 py-3 border-t border-border/30">
               <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
                 <FileText className="h-3 w-3" />
