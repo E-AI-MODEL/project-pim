@@ -113,7 +113,7 @@ export function StartGoShell() {
 
       {!result && text.trim().length > 0 && (
         <div className="text-xs text-muted-foreground border-l-2 border-primary/40 pl-3 animate-pulse">
-          PiM bekijkt je tekst… ({previewSignals.directPii.length + previewSignals.contextualPii.length} signalen tot nu toe)
+          PiM leest mee… tot nu toe {previewSignals.directPii.length + previewSignals.contextualPii.length} {previewSignals.directPii.length + previewSignals.contextualPii.length === 1 ? "signaal" : "signalen"} gevonden.
         </div>
       )}
 
