@@ -1,5 +1,5 @@
 // §8.4 — status → reden → highlights/veilige tekst → primaire actie → details dicht.
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { PimDecision, PrivacySignals } from "@/lib/pim/types";
 import type { ModelIntegrityRecord } from "@/lib/pim/modelCatalog";
 import { SafetyVerdictCard } from "./SafetyVerdictCard";
@@ -8,6 +8,7 @@ import { FindingChips } from "./FindingChips";
 import { DetailsDrawer } from "./DetailsDrawer";
 import { TextHighlighter } from "./TextHighlighter";
 import { MappingViewer } from "./MappingViewer";
+import { computeSignals, draftCheck, decide, DEFAULT_PROFILE, type PipelineProfileId, type PiiCategory, type Action } from "@/lib/pim";
 
 interface Props {
   decision: PimDecision;
@@ -19,14 +20,60 @@ interface Props {
   onPrimary: () => void;
   egressMsg: string | null;
   busy?: boolean;
+  /** Live-bewerken van de origineel-tekst (gaat terug naar StartGoShell.text) */
+  onOriginalChange?: (t: string) => void;
+  /** Context voor live her-evaluatie van handmatig bewerkte veilige tekst */
+  profileId?: PipelineProfileId;
+  disabledCategories?: ReadonlySet<PiiCategory>;
+  thresholdOverrides?: Partial<Record<Action, number>>;
 }
 
-export function ResultPanel({ decision, safeText, originalText, signals, mapping, integrity, onPrimary, egressMsg, busy }: Props) {
+export function ResultPanel({
+  decision, safeText, originalText, signals, mapping, integrity, onPrimary, egressMsg, busy,
+  onOriginalChange, profileId, disabledCategories, thresholdOverrides,
+}: Props) {
   const directSpans = signals.directPii;
   const allSpans = [...signals.directPii, ...signals.contextualPii];
   const [tab, setTab] = useState<"original" | "safe">(
     decision.verdict === "BLOCK" ? "original" : "safe",
   );
+
+  // Lokale bewerk-state voor de veilige versie. Reset zodra een nieuwe
+  // automatische versie van boven binnenkomt.
+  const [editedSafe, setEditedSafe] = useState(safeText);
+  useEffect(() => { setEditedSafe(safeText); }, [safeText]);
+  const isEdited = editedSafe !== safeText;
+
+  // Live her-evaluatie van de bewerkte veilige tekst — zelfde codepad als
+  // de automatische pipeline, maar zonder anonymize/pseudonymize (de
+  // gebruiker is verantwoordelijk voor de inhoud).
+  const liveSafeVerdict = useMemo(() => {
+    if (!isEdited) return null;
+    const pid = profileId ?? DEFAULT_PROFILE;
+    const disabled = disabledCategories ?? new Set<PiiCategory>();
+    const sig = computeSignals(editedSafe, [], pid, disabled);
+    const guard = draftCheck({ text: editedSafe, residual: sig.directPii }, decision.mode);
+    const d = decide({
+      mode: decision.mode,
+      action: (decision as { action?: Action }).action ?? "send_external_ai",
+      signals: sig,
+      draftCheck: guard,
+      modelVerified: true,
+      profileId: pid,
+      payloadType: decision.payloadType ?? "unknown",
+      thresholdOverrides: thresholdOverrides ?? {},
+    });
+    return d.verdict;
+  }, [editedSafe, isEdited, profileId, disabledCategories, thresholdOverrides, decision]);
+
+  // Live highlights voor de origineel-tab — herberekend op elke toetsaanslag.
+  const liveOriginalSpans = useMemo(() => {
+    if (!onOriginalChange) return allSpans;
+    const pid = profileId ?? DEFAULT_PROFILE;
+    const disabled = disabledCategories ?? new Set<PiiCategory>();
+    const sig = computeSignals(originalText, [], pid, disabled);
+    return [...sig.directPii, ...sig.contextualPii];
+  }, [originalText, onOriginalChange, profileId, disabledCategories, allSpans]);
   return (
     <section className="space-y-4 animate-fade-in">
       <SafetyVerdictCard verdict={decision.verdict} reason={decision.reason} />
