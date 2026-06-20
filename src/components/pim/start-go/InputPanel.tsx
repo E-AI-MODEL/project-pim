@@ -1,9 +1,11 @@
 // §8.2 — textarea + voorbeeldknop + Start PiM + korte privacyregel.
 import { COPY } from "@/lib/pim/copy";
 import { EXAMPLES, ExamplePicker, type Example } from "./ExamplePicker";
-import { Play, Cpu, Radio, Plus, SlidersHorizontal, ArrowUp, Check } from "lucide-react";
+import { Play, Cpu, Radio, Plus, SlidersHorizontal, ArrowUp, Check, FileUp, FileText, X, AlertCircle } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { Mode, Action } from "@/lib/pim/types";
+import { extractDocument, formatBytes, rejectionReason, MAX_DOC_BYTES, type ExtractedDoc } from "@/lib/pim/documentReader";
+import { useRef, useState } from "react";
 
 interface Props {
   text: string;
@@ -100,11 +102,76 @@ function CompactComposer({
 }: Omit<Props, "compact">) {
   const canSend = text.trim().length > 0 && !busy;
   const activeTarget = TARGETS.find((t) => t.id === action)?.label ?? "";
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [loadedDoc, setLoadedDoc] = useState<ExtractedDoc | null>(null);
+  const [docError, setDocError] = useState<string | null>(null);
+  const [docBusy, setDocBusy] = useState(false);
+
+  async function handleFiles(files: FileList | null) {
+    setDocError(null);
+    if (!files || files.length === 0) return;
+    const file = files[0];
+    const reason = rejectionReason(file);
+    if (reason) { setDocError(reason); return; }
+    setDocBusy(true);
+    try {
+      const doc = await extractDocument(file);
+      if (!doc.text.trim()) {
+        setDocError("Geen tekst gevonden in het bestand.");
+        return;
+      }
+      setLoadedDoc(doc);
+      onTextChange(doc.text);
+    } catch (err) {
+      setDocError(err instanceof Error ? err.message : "Kon bestand niet lezen.");
+    } finally {
+      setDocBusy(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
+  function clearDoc() {
+    setLoadedDoc(null);
+    setDocError(null);
+    onTextChange("");
+  }
 
   return (
     <section className="space-y-3">
       {/* Composer-kaart */}
       <div className="rounded-2xl border border-[#3b6fa0]/30 bg-[#0f1b3d]/70 focus-within:border-[#3b6fa0]/70 focus-within:shadow-[0_0_0_3px_rgba(59,111,160,0.15)] transition-all overflow-hidden">
+        {/* Verborgen file-input voor upload */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".txt,.md,.markdown,.csv,.tsv,.json,.log,.html,.htm,.xml,.rtf,.docx"
+          className="sr-only"
+          onChange={(e) => handleFiles(e.target.files)}
+        />
+
+        {/* Geladen-document chip */}
+        {loadedDoc && (
+          <div className="flex items-center gap-2 px-3 py-2 border-b border-[#3b6fa0]/15 bg-[#3b6fa0]/10">
+            <FileText className="h-3.5 w-3.5 text-[#3b6fa0]" />
+            <div className="flex-1 min-w-0">
+              <div className="text-[12px] text-[#e8edf3] truncate font-plex-mono">{loadedDoc.filename}</div>
+              <div className="text-[10px] text-[#e8edf3]/55 font-plex-mono">
+                {formatBytes(loadedDoc.bytes)} · {loadedDoc.text.length.toLocaleString("nl-NL")} tekens
+                {loadedDoc.truncated && " · ingekort"} · lokaal verwerkt
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={clearDoc}
+              aria-label="Bestand verwijderen"
+              title="Bestand verwijderen"
+              className="h-6 w-6 inline-flex items-center justify-center rounded-md text-[#e8edf3]/60 hover:text-[#e8edf3] hover:bg-[#3b6fa0]/20 transition-colors"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
+
         {/* Textarea */}
         <textarea
           value={text}
@@ -123,19 +190,41 @@ function CompactComposer({
 
         {/* Toolbar */}
         <div className="flex items-center gap-1.5 px-2 py-2 border-t border-[#3b6fa0]/15">
-          {/* + Voorbeelden */}
+          {/* + Toevoegen: bestand uploaden of voorbeeld kiezen */}
           <Popover>
             <PopoverTrigger asChild>
-              <IconBtn label="Voorbeeld invoegen"><Plus className="h-4 w-4" /></IconBtn>
+              <IconBtn label="Bestand of voorbeeld toevoegen">
+                {docBusy ? (
+                  <span className="h-4 w-4 inline-block animate-spin rounded-full border-2 border-[#e8edf3]/30 border-t-[#e8edf3]" />
+                ) : (
+                  <Plus className="h-4 w-4" />
+                )}
+              </IconBtn>
             </PopoverTrigger>
-            <PopoverContent align="start" className="w-72 bg-[#0f1b3d] border-[#3b6fa0]/40 text-[#e8edf3] p-2">
+            <PopoverContent align="start" className="w-80 bg-[#0f1b3d] border-[#3b6fa0]/40 text-[#e8edf3] p-2">
+              {/* Upload-actie */}
+              <div className="px-2 py-1 text-[10px] uppercase tracking-wider text-[#e8edf3]/50 font-plex-mono">Document controleren</div>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full text-left px-2 py-2 rounded-md hover:bg-[#3b6fa0]/20 transition-colors flex items-start gap-2.5"
+              >
+                <FileUp className="h-4 w-4 mt-0.5 text-[#3b6fa0] shrink-0" />
+                <div className="min-w-0">
+                  <div className="text-sm text-[#e8edf3]">Bestand uploaden</div>
+                  <div className="text-[11px] text-[#e8edf3]/55 leading-snug mt-0.5">
+                    .txt · .md · .csv · .json · .html · .docx — tot {formatBytes(MAX_DOC_BYTES)}. Lokaal verwerkt.
+                  </div>
+                </div>
+              </button>
+              <div className="my-1 border-t border-[#3b6fa0]/20" />
               <div className="px-2 py-1 text-[10px] uppercase tracking-wider text-[#e8edf3]/50 font-plex-mono">Voorbeelden</div>
               <div className="flex flex-col">
                 {EXAMPLES.map((e) => (
                   <button
                     key={e.id}
                     type="button"
-                    onClick={() => onExample(e)}
+                    onClick={() => { setLoadedDoc(null); onExample(e); }}
                     className="text-left px-2 py-2 rounded-md hover:bg-[#3b6fa0]/20 transition-colors"
                   >
                     <div className="text-sm text-[#e8edf3]">{e.label}</div>
@@ -218,6 +307,22 @@ function CompactComposer({
           </button>
         </div>
       </div>
+
+      {/* Document-foutmelding */}
+      {docError && (
+        <div className="flex items-start gap-2 px-3 py-2 rounded-lg border border-rose-500/40 bg-rose-500/10 text-rose-200">
+          <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+          <div className="text-[11px] leading-relaxed flex-1">{docError}</div>
+          <button
+            type="button"
+            onClick={() => setDocError(null)}
+            aria-label="Sluiten"
+            className="h-5 w-5 inline-flex items-center justify-center rounded text-rose-200/70 hover:text-rose-200"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </div>
+      )}
 
       {/* Hint onder de composer */}
       {text.trim().length === 0 ? (
