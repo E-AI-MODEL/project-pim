@@ -1,8 +1,8 @@
 // Production Egress Guard — handhaaft PIM-besluit op echte browser-egress.
 // Spec hfst 28. Geen actie mag voorbij PIM zonder ALLOW.
 
-import type { PimDecision } from "./types";
-import { draftCheck } from "./processing";
+import type { PimDecision, CertifiedPayload } from "./types";
+import { draftCheckWithRegistry } from "./processing";
 import { runRegistry } from "./detectorRegistry";
 import { DEFAULT_PROFILE } from "./pipelineProfile";
 import type { RiskLevel } from "./types";
@@ -31,11 +31,12 @@ export function getEgressReconsultLog(): string[] {
  * voor de output die naar buiten gaat. Daarom hier nogmaals detectie +
  * draftCheck op de exacte string die over de lijn zou gaan.
  */
-async function reconsultPayload(text: string): Promise<{ ok: true } | { ok: false; reason: string }> {
+async function reconsultPayload(payload: CertifiedPayload): Promise<{ ok: true } | { ok: false; reason: string }> {
+  const text = payload.text;
   // Spec hfst 28 + verificatie-laag: forceer async NER zodat second-pass
   // dezelfde detector-coverage heeft als de input-fase. Een sync-only
   // re-consult zou namen die alleen door de SLM gevonden worden missen.
-  const spans = await runRegistry(text, { profileId: DEFAULT_PROFILE, enableAsync: true });
+  const spans = await runRegistry(text, { profileId: payload.profileId ?? DEFAULT_PROFILE, enableAsync: true });
   const directPii = spans.filter((s) => !s.contextual);
   const HIGH: ReadonlySet<string> = new Set(["bsn", "iban", "email", "phone", "address", "student_id"]);
   let score = 0;
@@ -57,7 +58,12 @@ async function reconsultPayload(text: string): Promise<{ ok: true } | { ok: fals
   if (riskLevel === "high" || riskLevel === "critical") {
     return { ok: false, reason: `Egress re-consult BLOCK: risk=${riskLevel}` };
   }
-  const check = draftCheck({ mode: "anonymous", text, rawHadPii: false }, "anonymous");
+  const check = await draftCheckWithRegistry(
+    { mode: "anonymous", text, rawHadPii: false },
+    "anonymous",
+    payload.profileId ?? DEFAULT_PROFILE,
+    { async: true },
+  );
   if (check.status === "fail") {
     return { ok: false, reason: `Egress re-consult BLOCK: draftCheck fail (${check.issues.join("; ")})` };
   }
@@ -69,12 +75,27 @@ export interface EgressResult {
   reason: string;
 }
 
+/**
+ * Spec derde analyse §4.7 — alle egress-acties accepteren UITSLUITEND
+ * een `CertifiedPayload`. Ongetypeerde tekst wordt fail-closed afgewezen.
+ * Copy/export/print/share doen nu DEZELFDE async payload-re-consult als
+ * send_external_ai (eerder alleen daar).
+ */
 export async function executeAction(
   decision: PimDecision,
-  payload: { text: string; mode: string },
+  payload: CertifiedPayload,
 ): Promise<EgressResult> {
   if (decision.verdict === "BLOCK") {
     return { executed: false, reason: `Geblokkeerd door PIM: ${decision.reasonCode}` };
+  }
+
+  // Belt + braces: ongeacht het besluit blokkeren we hier nogmaals elke
+  // niet-gecertificeerde payload op alle uitgaande paden. Lokale acties
+  // (display/save_local/restore) mogen wel met andere payloadtypes werken.
+  const egressActions: PimDecision["action"][] = ["copy", "export_file", "print", "share", "send_external_ai"];
+  if (egressActions.includes(decision.action) && payload.payloadType !== "draft_anonymous_certified") {
+    emitReconsult(`Egress guard BLOCK: payloadType='${payload.payloadType}' niet toegestaan voor '${decision.action}'.`);
+    return { executed: false, reason: `Egress guard BLOCK: payload-type '${payload.payloadType}' mag niet naar buiten.` };
   }
 
   switch (decision.action) {
@@ -87,6 +108,9 @@ export async function executeAction(
     case "copy": {
       try {
         if (!navigator.clipboard) return { executed: false, reason: "Clipboard API niet beschikbaar." };
+        const reconsult = await reconsultPayload(payload);
+        if (!reconsult.ok) { emitReconsult(reconsult.reason); return { executed: false, reason: reconsult.reason }; }
+        emitReconsult(`Egress copy re-consult PASS (${payload.text.length} chars).`);
         await navigator.clipboard.writeText(payload.text);
         return { executed: true, reason: "Anonymous tekst gekopieerd naar klembord." };
       } catch (e) {
@@ -95,6 +119,9 @@ export async function executeAction(
     }
 
     case "print": {
+      const reconsult = await reconsultPayload(payload);
+      if (!reconsult.ok) { emitReconsult(reconsult.reason); return { executed: false, reason: reconsult.reason }; }
+      emitReconsult(`Egress print re-consult PASS (${payload.text.length} chars).`);
       // Open een sandboxed print-frame met alleen de geaccepteerde tekst.
       const w = window.open("", "_blank", "width=600,height=600");
       if (!w) return { executed: false, reason: "Popup geblokkeerd door browser." };
@@ -106,6 +133,9 @@ export async function executeAction(
     }
 
     case "share": {
+      const reconsult = await reconsultPayload(payload);
+      if (!reconsult.ok) { emitReconsult(reconsult.reason); return { executed: false, reason: reconsult.reason }; }
+      emitReconsult(`Egress share re-consult PASS (${payload.text.length} chars).`);
       const navAny = navigator as Navigator & { share?: (d: { text?: string }) => Promise<void> };
       if (!navAny.share) {
         // Fallback: clipboard
@@ -125,6 +155,9 @@ export async function executeAction(
     }
 
     case "export_file": {
+      const reconsult = await reconsultPayload(payload);
+      if (!reconsult.ok) { emitReconsult(reconsult.reason); return { executed: false, reason: reconsult.reason }; }
+      emitReconsult(`Egress export re-consult PASS (${payload.text.length} chars).`);
       const blob = new Blob([payload.text], { type: "text/plain;charset=utf-8" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -141,7 +174,7 @@ export async function executeAction(
       // Spec hfst 28: per egress-call OPNIEUW PIM consulteren op de
       // werkelijke payload. Een eerder ALLOW op de input is niet genoeg —
       // de string die over de lijn gaat moet zelfstandig schoon zijn.
-      const reconsult = await reconsultPayload(payload.text);
+      const reconsult = await reconsultPayload(payload);
       if (!reconsult.ok) {
         emitReconsult(reconsult.reason);
         return { executed: false, reason: reconsult.reason };
