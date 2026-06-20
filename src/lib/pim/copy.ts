@@ -38,6 +38,8 @@ export const COPY = {
   // Monitor frame
   monitorLabel: "Live monitor",
   monitorStatus: "Local Guard actief",
+  monitorEmptyHint:
+    "Kies een voorbeeld of typ je eigen tekst — PiM geeft direct een verdict.",
 
   // Verdict-zin — voor de docent, in mens-taal
   statusGreen:
