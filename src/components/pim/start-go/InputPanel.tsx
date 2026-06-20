@@ -5,7 +5,7 @@ import { Play, Cpu, Radio, Plus, SlidersHorizontal, ArrowUp, Check, FileUp, File
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { Mode, Action } from "@/lib/pim/types";
 import { extractDocument, formatBytes, rejectionReason, MAX_DOC_BYTES, type ExtractedDoc } from "@/lib/pim/documentReader";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface Props {
   text: string;
@@ -106,6 +106,17 @@ function CompactComposer({
   const [loadedDoc, setLoadedDoc] = useState<ExtractedDoc | null>(null);
   const [docError, setDocError] = useState<string | null>(null);
   const [docBusy, setDocBusy] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
+  const composerRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const onOpenExamples = () => {
+      composerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      setTimeout(() => setAddOpen(true), 120);
+    };
+    window.addEventListener("pim:open-examples", onOpenExamples);
+    return () => window.removeEventListener("pim:open-examples", onOpenExamples);
+  }, []);
 
   async function handleFiles(files: FileList | null) {
     setDocError(null);
@@ -137,7 +148,7 @@ function CompactComposer({
   }
 
   return (
-    <section className="space-y-3">
+    <section ref={composerRef} className="space-y-3 scroll-mt-20">
       {/* Composer-kaart */}
       <div className="rounded-2xl border border-[#3b6fa0]/30 bg-[#0f1b3d]/70 focus-within:border-[#3b6fa0]/70 focus-within:shadow-[0_0_0_3px_rgba(59,111,160,0.15)] transition-all overflow-hidden">
         {/* Verborgen file-input voor upload */}
@@ -191,7 +202,7 @@ function CompactComposer({
         {/* Toolbar */}
         <div className="flex items-center gap-1.5 px-2 py-2 border-t border-[#3b6fa0]/15">
           {/* + Toevoegen: bestand uploaden of voorbeeld kiezen */}
-          <Popover>
+          <Popover open={addOpen} onOpenChange={setAddOpen}>
             <PopoverTrigger asChild>
               <IconBtn label="Bestand of voorbeeld toevoegen">
                 {docBusy ? (
