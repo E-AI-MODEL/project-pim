@@ -1,6 +1,6 @@
 // Advanced panel — geeft gebruikers sturing over profiel, drempels en toont
 // modelintegriteit. Alleen UI; alle beslislogica blijft in src/lib/pim.
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronDown, RotateCcw, ShieldCheck, ShieldAlert, SlidersHorizontal } from "lucide-react";
 import {
   PIPELINE_PROFILES,
@@ -55,9 +55,19 @@ export function AdvancedPanel({
 }: Props) {
   const [open, setOpen] = useState(false);
   const profile = PIPELINE_PROFILES[profileId];
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const onOpen = () => {
+      setOpen(true);
+      setTimeout(() => sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+    };
+    window.addEventListener("pim:open-advanced", onOpen);
+    return () => window.removeEventListener("pim:open-advanced", onOpen);
+  }, []);
 
   return (
-    <section className="rounded-2xl border border-[#3b6fa0]/30 bg-[#0f1b3d]/50 overflow-hidden">
+    <section ref={sectionRef} className="rounded-2xl border border-[#3b6fa0]/30 bg-[#0f1b3d]/50 overflow-hidden scroll-mt-20">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
