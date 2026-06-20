@@ -37,6 +37,9 @@ const RULES: RuleDef[] = [
   { id: "rule.ipv6", category: "ip_address", regex: /\b(?:[A-F0-9]{1,4}:){2,7}[A-F0-9]{1,4}\b/gi, confidence: 0.75 },
   // Single-name met titel/prefix: "meneer De Vries", "juf Karin", "dhr. Jansen".
   { id: "rule.name_titled", category: "name", regex: /\b(?:meneer|mevrouw|mw\.?|dhr\.?|mevr\.?|meester|juf|meester|dr\.?|prof\.?)\s+(?:[A-Z][a-zà-ÿ]+)(?:\s+(?:van|de|der|den|ten|ter)\s+[A-Z][a-zà-ÿ]+|\s+[A-Z][a-zà-ÿ]+)?/gi, confidence: 0.85 },
+  // Naam na introductie-patroon: "ik heet Klaas", "mijn naam is Sanne", "noem mij Jan".
+  // Variable-length lookbehind wordt door moderne V8/Safari ondersteund.
+  { id: "rule.name_intro", category: "name", regex: /(?<=\b(?:ik heet|mijn naam is|noem (?:mij|me)|ik ben)\s+)[A-Z][a-zà-ÿ]+(?:\s+(?:van|de|der|den|ten|ter)\s+[A-Z][a-zà-ÿ]+|\s+[A-Z][a-zà-ÿ]+)?/g, confidence: 0.8 },
   // Social handle (@user).
   { id: "rule.social_handle", category: "social_handle", regex: /(?<![A-Za-z0-9])@[A-Za-z0-9_]{3,}/g, confidence: 0.75 },
   // Geboortedatum/datum in tekst: "12 januari 1985" — NL maanden.

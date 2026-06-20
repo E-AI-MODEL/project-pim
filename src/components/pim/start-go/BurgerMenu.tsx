@@ -2,6 +2,7 @@
 import { Link } from "@tanstack/react-router";
 import { Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { COPY } from "@/lib/pim/copy";
 
 type Item =
@@ -41,7 +42,7 @@ export function BurgerMenu() {
       >
         <Menu className="h-4 w-4" />
       </button>
-      {open && (
+      {open && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 z-50 flex">
           <button
             type="button"
@@ -84,7 +85,8 @@ export function BurgerMenu() {
               ))}
             </ul>
           </nav>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );
