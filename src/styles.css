@@ -243,3 +243,24 @@
     background-size: 40px 40px;
   }
 }
+
+/* === Landing "Console" theme — Navy Trust ===================== */
+.pim-landing {
+  --navy-bg: #0f1b3d;
+  --navy-surface: #1e3a5f;
+  --navy-accent: #3b6fa0;
+  --navy-fg: #e8edf3;
+  background: var(--navy-bg);
+  color: var(--navy-fg);
+  font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+}
+.pim-landing .font-serif-display {
+  font-family: "Libre Baskerville", Georgia, serif;
+  letter-spacing: -0.005em;
+}
+.pim-landing .font-plex-mono {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+}
+.pim-landing .hairline {
+  border-color: rgb(232 237 243 / 0.10);
+}
