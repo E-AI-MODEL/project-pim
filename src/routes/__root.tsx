@@ -14,14 +14,14 @@ function NotFoundComponent() {
         <h1 className="font-display text-7xl font-bold text-primary">404</h1>
         <h2 className="mt-4 text-xl font-semibold">Pagina niet gevonden</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Bij twijfel wordt geblokkeerd. Deze route bestaat niet.
+          Deze pagina bestaat niet. PiM houdt zich aan zijn eigen regel: bij twijfel niets doorlaten.
         </p>
         <div className="mt-6">
           <Link
             to="/"
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Naar home
+            Terug naar de startpagina
           </Link>
         </div>
       </div>
@@ -49,15 +49,15 @@ export const Route = createRootRoute({
           "form-action 'self'; " +
           "frame-ancestors 'none'",
       },
-      { title: "Project PiM — Privacy Integrity Monitor (by EAI)" },
-      { name: "description", content: "Browser-first privacy pipeline voor onderwijsdata. Lokale detectie, deterministische besluitvorming, fail-closed handhaving." },
+      { title: "Project PiM — Eerst veilig, dan pas delen" },
+      { name: "description", content: "Project PiM controleert tekst lokaal in je browser op persoonsgegevens. Eerst veilig, dan pas delen — met uitleg." },
       { name: "author", content: "Project PiM" },
-      { property: "og:title", content: "Project PiM — Privacy Integrity Monitor (by EAI)" },
-      { property: "og:description", content: "Browser-first privacy pipeline voor onderwijsdata. Lokale detectie, deterministische besluitvorming, fail-closed handhaving." },
+      { property: "og:title", content: "Project PiM — Eerst veilig, dan pas delen" },
+      { property: "og:description", content: "Een lokale privacy-controle voor onderwijs. Plak je tekst, kies een bestemming, en zie binnen één seconde of het mag." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Project PiM — Privacy Integrity Monitor (by EAI)" },
-      { name: "twitter:description", content: "Browser-first privacy pipeline voor onderwijsdata. Lokale detectie, deterministische besluitvorming, fail-closed handhaving." },
+      { name: "twitter:title", content: "Project PiM — Eerst veilig, dan pas delen" },
+      { name: "twitter:description", content: "Een lokale privacy-controle voor onderwijs. Plak je tekst, kies een bestemming, en zie binnen één seconde of het mag." },
       { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/39dcf18b-d97a-40d8-b7d4-ea9221b8d6bf" },
       { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/39dcf18b-d97a-40d8-b7d4-ea9221b8d6bf" },
     ],
@@ -114,7 +114,7 @@ function SiteFooter() {
       <div className="mx-auto max-w-5xl px-6 flex flex-wrap items-center justify-between gap-3 text-[11px] text-muted-foreground">
         <div className="flex items-center gap-2">
           <Shield className="h-3.5 w-3.5 text-primary" />
-          <span>Project PiM · lokaal · geen tracking</span>
+          <span>Project PiM — volledig lokaal, zonder tracking</span>
         </div>
         <div className="flex items-center gap-4">
           <Link to="/over" className="hover:text-foreground">Over</Link>
