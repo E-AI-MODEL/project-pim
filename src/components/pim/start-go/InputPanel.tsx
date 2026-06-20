@@ -221,9 +221,28 @@ function CompactComposer({
 
       {/* Hint onder de composer */}
       {text.trim().length === 0 ? (
-        <p className="text-xs text-[#e8edf3]/55 leading-relaxed px-1">
-          {COPY.monitorEmptyHint}
-        </p>
+        <div className="space-y-2 px-1">
+          <p className="text-[10px] uppercase tracking-wider text-[#e8edf3]/45 font-plex-mono">
+            Probeer een voorbeeld
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {EXAMPLES.map((e) => (
+              <button
+                key={e.id}
+                type="button"
+                onClick={() => onExample(e)}
+                title={e.hint}
+                className="group inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-[#3b6fa0]/30 bg-[#0f1b3d]/50 hover:bg-[#3b6fa0]/15 hover:border-[#3b6fa0]/60 transition-colors text-left"
+              >
+                <span className={`h-1.5 w-1.5 rounded-full ${dotForExample(e.id)}`} />
+                <span className="text-[11px] text-[#e8edf3]/85 font-plex-mono">{e.label}</span>
+              </button>
+            ))}
+          </div>
+          <p className="text-[11px] text-[#e8edf3]/50 leading-relaxed pt-1">
+            {COPY.monitorEmptyHint}
+          </p>
+        </div>
       ) : (
         <p className="text-[11px] text-[#e8edf3]/45 leading-relaxed px-1 font-plex-mono truncate">
           Bestemming: {activeTarget}
