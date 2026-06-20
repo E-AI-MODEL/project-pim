@@ -33,7 +33,14 @@ export type PiiCategory =
   | "context_small_group"
   | "context_care"
   | "context_incident"
-  | "context_role";
+  | "context_role"
+  | "context_health"
+  | "context_family"
+  | "context_legal"
+  | "context_financial"
+  | "context_protected_class"
+  | "context_performance"
+  | "context_location_specific";
 
 export interface PiiSpan {
   start: number;
