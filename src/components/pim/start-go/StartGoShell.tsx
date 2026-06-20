@@ -178,6 +178,10 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
           onPrimary={onPrimary}
           egressMsg={egressMsg}
           busy={busy}
+          onOriginalChange={(v) => { setText(v); setEgressMsg(null); }}
+          profileId={profileId}
+          disabledCategories={disabledCategories}
+          thresholdOverrides={thresholdOverrides}
         />
       )}
     </div>
