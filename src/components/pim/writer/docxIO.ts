@@ -3,13 +3,28 @@
 import type { Editor } from "@tiptap/react";
 import type { Node as PmNode } from "@tiptap/pm/model";
 
-export async function importDocxToEditor(file: File, editor: Editor): Promise<void> {
+export interface DocxImportResult {
+  warnings: string[];
+}
+
+export async function importDocxToEditor(file: File, editor: Editor): Promise<DocxImportResult> {
   const mammoth = await import("mammoth/mammoth.browser");
   const arrayBuffer = await file.arrayBuffer();
   const result = await mammoth.convertToHtml({ arrayBuffer });
   const html = (result.value ?? "").trim();
   if (!html) throw new Error("Geen tekst gevonden in het document.");
   editor.commands.setContent(html);
+  const warnings: string[] = [];
+  const messages = (result.messages ?? []) as Array<{ type?: string; message?: string }>;
+  const imgCount = messages.filter((m) => /image/i.test(m?.message ?? "")).length;
+  if (imgCount > 0) {
+    warnings.push(`Afbeeldingen niet meegenomen (${imgCount}). PiM importeert alleen tekst.`);
+  }
+  const others = messages.filter((m) => !/image/i.test(m?.message ?? "") && m?.message);
+  for (const m of others.slice(0, 3)) {
+    warnings.push(m.message as string);
+  }
+  return { warnings };
 }
 
 export async function exportEditorToDocx(editor: Editor, filename: string): Promise<void> {
@@ -34,6 +49,8 @@ export async function exportEditorToDocx(editor: Editor, filename: string): Prom
             text: child.text ?? "",
             bold: marks.includes("bold"),
             italics: marks.includes("italic"),
+            underline: marks.includes("underline") ? {} : undefined,
+            strike: marks.includes("strike") || marks.includes("strikethrough"),
           }),
         );
       }
@@ -53,6 +70,7 @@ export async function exportEditorToDocx(editor: Editor, filename: string): Prom
         }),
       );
     } else if (name === "bulletList" || name === "orderedList") {
+      // FIXME: nested lists worden platgeslagen naar level 0.
       const ref = name === "bulletList" ? "writer-bullets" : "writer-numbers";
       node.forEach((li) => {
         paragraphs.push(
@@ -104,7 +122,16 @@ export async function exportEditorToDocx(editor: Editor, filename: string): Prom
         },
       ],
     },
-    sections: [{ children: paragraphs }],
+    sections: [{
+      properties: {
+        page: {
+          // A4 in DXA: 11906 × 16838, marges 1417 ≈ 2,5 cm.
+          size: { width: 11906, height: 16838 },
+          margin: { top: 1417, right: 1417, bottom: 1417, left: 1417 },
+        },
+      },
+      children: paragraphs,
+    }],
   });
 
   const blob = await Packer.toBlob(doc);
