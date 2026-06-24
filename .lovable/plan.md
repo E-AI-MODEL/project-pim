@@ -1,107 +1,51 @@
+## Probleem
+
+1. `PipelineStepsBar` boven het monitorvenster klapt **in de pagina open** en duwt hero-tekst weg → storend.
+2. Alles wat in het popup-paneel (`LiveTechMonitor`) staat, hoort niet óók op de startpagina te staan.
+3. Het popup-paneel toont vooral statussen — gebruiker ziet *het gevolg* van PiM, niet *wat PiM op dat moment doet*.
+
 ## Doel
 
-Drie verbeteringen, mét correcte woordkeuze: **PiM blokkeert geen tekst** — het vervangt gevoelige woorden door een placeholder/label, of laat jou kiezen (die keuze is pas mogelijk nadat het in-browser model is gedownload).
+- Op de startpagina staat **geen** modellen-/techniek-strip meer. Geen inline-uitklap, geen 1/3-actief regel, geen StepPills.
+- Eén toegang tot techniek: de bestaande "Live techniek"-knop in de footer van het monitorvenster opent het zij-paneel.
+- In dat paneel zie je PiM écht aan het werk, niet alleen het eindresultaat.
 
-1. **Geavanceerd-menu** simpeler + Expert duidelijk + cijfers vervangen door uitleg.
-2. **"Gum"-functie** controleren en verduidelijken.
-3. **Word-functie** controleren op missende features.
+## Wijzigingen
 
----
+### 1. `MonitorShell.tsx` — strip uit de hero
+- `<PipelineStepsBar />` verwijderen.
+- De wrapper `<div className="space-y-3">` mag weg; alleen het monitor-window blijft.
+- Footer-knop "Live techniek" blijft staan (enige ingang).
 
-## 1. Geavanceerd-menu — uitleg vóór cijfers, juiste woorden
+### 2. `PipelineStepsBar.tsx` — wordt niet meer gebruikt op `/`
+- Bestand laten staan (kan elders in docs-routes gebruikt worden); geen edit nodig. Geen import meer vanuit `MonitorShell`.
 
-### Woordgebruik (overal toepassen, geen "blokkeren")
+### 3. `LiveTechMonitor.tsx` — Modellen-tab krijgt de 3 stap-kaarten
+- De drie kaarten (Regex/regels, NER-SLM, Generalisatie-LLM, met progress + "Inschakelen"-knoppen + mobiel-badge) verhuizen integraal naar de **Modellen**-tab. Dat is precies de inhoud die nu uit de hero verdwijnt.
+- Bestaande integrity-blok blijft eronder.
 
-| Niet meer | Wel |
-|---|---|
-| "blokkeert de actie" | "vervangt het woord door een label, bv. `[naam]` of `[bsn]`" |
-| "drempel waarop PiM blokkeert" | "gevoeligheid: hoe snel PiM een woord vervangt of markeert" |
-| "streng = vaker blokkeren" | "streng = sneller vervangen / markeren" |
+### 4. Nieuwe **Live**-tab (default) — toont wat PiM nu doet
+Vervangt de huidige magere "Pipeline"-tab. Tabvolgorde: **Live · Modellen · Omgeving · Log**.
 
-Korte uitleg-blok bovenaan paneel:
-> PiM stopt nooit je tekst. Het **vervangt** harde PII (BSN, e-mail, telefoon, IBAN) direct door een label zoals `[bsn]`. Voor twijfelgevallen (namen, context) krijg je een **keuze**: vervangen of laten staan. Die keuze-modus werkt pas nadat het NER-model in je browser is gedownload (zie Modellen).
+Inhoud (alles uit `debugBus` + bestaande hooks, geen nieuwe data over de privacy-grens):
+- **Nu actief**: laatste step uit `usePipelineHeartbeat` met pulsing dot + "x ms geleden". Idle → "Wacht op invoer".
+- **Stap-heartbeat**: alle steps (regex → ner → llm → policy → draftcheck → egress) met per stap *laatste duur in ms* en *aantal keer uitgevoerd*.
+- **Detector-tellingen (laatste run)**: per categorie (BSN, email, telefoon, NER-persoon, etc.) het aantal hits — alléén tellingen, geen waarden. Uit het laatste `pipeline.run`-event.
+- **Beslissing**: laatste verdict (`ALLOW`/`WARN`/`BLOCK`) + reden-codes.
+- **Egress-poort**: laatste `pipeline.execute` — toegestaan/geblokt + reden.
+- **Modellen-mini**: NER runtime (`webgpu`/`wasm`) en LLM-status als one-liner met dot.
 
-### A. Basis vs Expert-toggle
+De huidige "Laatste run"-JSON-dump blijft als inklapbare "Ruwe data" onderaan voor wie het wil.
 
-Bovenaan paneel: **Basis · Expert**.
+### 5. Geen wijzigingen aan
+- `BurgerMenu`, copy, kleuren, fonts, pipeline-logica, detectors, server-functies.
+- Privacy-belofte: events bevatten nog steeds alleen tellingen/IDs/statussen, geen ruwe tekst.
 
-- **Basis** (default): profielkeuze + 3 grote knoppen per actie (Streng / Standaard / Soepel) + per-categorie aan/uit met uitleg. Geen percentages.
-- **Expert**: zelfde + sliders + getalswaardes + Modellen-tab. Gele info-strook:
-  > **Expert-modus.** Je stelt de gevoeligheid handmatig in (0–100). Hoger = PiM laat meer staan, lager = vervangt sneller. Niet zeker? Kies een profiel of klik Standaard.
+## Bestanden
+- `src/components/pim/start-go/MonitorShell.tsx` — import + render van `PipelineStepsBar` weg.
+- `src/components/pim/start-go/LiveTechMonitor.tsx` — Live-tab toevoegen; Modellen-tab uitbreiden met de 3 kaarten (StepPill-component intern overnemen).
 
-### B. Gevoeligheid per bestemming — 3 knoppen i.p.v. naakte slider
-
-Per actie (Externe AI, Bestand, Printer, Klembord, Link delen, Lokaal opslaan, Alleen scherm):
-
-```
-Externe AI                              [ Streng ] [ Standaard ] [ Soepel ]
-ChatGPT, Copilot, Gemini buiten je organisatie.
-→ Streng: vervangt al bij 1 signaal (bv. één naam).
-```
-
-Uitleg-regel verandert mee per niveau (geen percentage in Basis):
-
-| Niveau | Wat PiM doet |
-|---|---|
-| Streng | Vervangt direct bij elk signaal — ook twijfelgevallen |
-| Standaard | Vervangt harde PII direct, twijfel krijg je als keuze |
-| Soepel | Vervangt alleen overduidelijke treffers, rest laat staan |
-
-In **Expert** verschijnt eronder de slider met label:
-*"Gevoeligheid: 0,65 — PiM vervangt vanaf score 65/100. Lager = strenger."*
-
-### C. Profiel-kaarten
-
-2e regel "Wanneer kiezen?":
-- *Strikt* — klassenlijsten, oudergesprekken, leerlingdossiers
-- *Gebalanceerd* — dagelijks werk, AI-tools
-- *Soepel* — interne notities, brainstorm
-
-### D. Detectoren
-
-Rode info-strook: *"Uit = PiM ziet die categorie niet meer en vervangt niets in die groep. Alleen doen voor demo of false-positive debug."*. Per categorie korte `title`-tooltip met voorbeeld.
-
-### E. Modellen-tab (Expert)
-
-Bovenaan: *"NER-model nodig voor de keuze-modus op namen en context. 'Verified' = exact gematcht op onze hash-lijst. 'Failed' = niet gebruiken, herlaad de pagina."*
-
-Geen wijziging in `lib/pim`-logica, alleen UI + copy.
-
-## 2. "Gum" controleren
-
-**Composer — `InputPanel.tsx` "Live wissen"**
-- Werkt: 350 ms debounce, `anonymize()` vervangt directe PII door label, rode flash.
-- Bug: cursor springt altijd naar `cleaned.length`. Fix: alleen verplaatsen als de vervanging vóór de cursor zat.
-- Eerste-keer mini-toast: *"Live wissen actief — BSN, e-mail, telefoon en IBAN worden direct vervangen door een label."*
-
-**Writer — `WriterShell.tsx` Auto-wis/Markeer-popover**
-- Werkt: harde PII achteraan vervangen, 1-char cursor-marge ✅
-- Overbodige `*Key`-strings in deps opruimen.
-- Popover-copy: *"Auto-wis = meteen vervangen door label · Markeer = onderstrepen, jij klikt om te vervangen of laten staan."* (geen "blokkeer"-woord).
-
-## 3. Word-functie (`docxIO.ts`)
-
-| Aspect | Status | Actie |
-|---|---|---|
-| Import tekst/headings/lijsten (mammoth) | ✅ | — |
-| Afbeeldingen in docx | stilzwijgend genegeerd | Waarschuwing "Afbeeldingen niet meegenomen" |
-| `result.messages` mammoth-warnings | nu genegeerd | Teruggeven, tonen als gele strook |
-| Export `bold`/`italic` | ✅ | — |
-| Export `underline`/`strike` | **ontbreekt** | Toevoegen in `runsFor()` |
-| Export heading 3 | ✅ | — |
-| Paginaformaat | niet gezet, inconsistent | Expliciet A4 (11906×16838 DXA) + 2,5 cm marges |
-| Bestandsnaam timestamp | ✅ | — |
-| Plakken uit Word | Tiptap native ✅ | QA |
-| Auto-redact na import | `update`-event triggert scan ✅ | — |
-| Genested lijsten | platgeslagen | FIXME-comment |
-
-## Files
-
-- `src/components/pim/start-go/AdvancedPanel.tsx` — Basis/Expert-toggle, 3 knop-niveaus, herschreven uitleg ("vervangen" i.p.v. "blokkeren"), info-strook bovenaan.
-- `src/components/pim/start-go/InputPanel.tsx` — cursor-fix Live wissen, eerste-keer toast.
-- `src/components/pim/writer/WriterShell.tsx` — popover-copy, deps opruimen, import-warnings tonen.
-- `src/components/pim/writer/docxIO.ts` — underline/strike, A4 page-properties, warnings teruggeven.
-
-## Niet in scope
-
-Geen wijziging aan detector-defaults, profielen, NER of pipeline-logica. Geen multi-level lijsten in export.
+## Validatie
+- Typecheck.
+- Visueel: hero-tekst blijft staan, niets duwt 'm meer weg.
+- Klik op "Live techniek" → paneel rechts opent met Live-tab actief; tijdens een testrun lichten step-heartbeat en tellingen op.
