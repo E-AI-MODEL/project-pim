@@ -3,13 +3,14 @@ import { useMemo, useState, useEffect, useRef } from "react";
 import { AlertTriangle, Check, Cpu, Loader2, Sparkles } from "lucide-react";
 import {
   computeSignals, anonymize, pseudonymize, draftCheck, decide, executeAction,
-  modelGateFor, onModelIntegrity, PIPELINE_PROFILES,
-  onNerStatus, loadNerSlm, retryNerSlm, detectPersonsSlm,
+  modelGateFor, PIPELINE_PROFILES,
   onRewriteStatus, loadRewriteLlm, rewriteAnonymousDraft,
-  type ModelIntegrityRecord, type NerStatus, type RewriteStatus,
-  DEFAULT_PROFILE, type CertifiedPayload, type PayloadType,
-  type Mode, type Action, type PipelineProfileId, type PiiCategory, type PiiSpan,
+  type NerStatus, type RewriteStatus,
+  type CertifiedPayload, type PayloadType,
+  type Mode, type Action, type PiiSpan,
 } from "@/lib/pim";
+import { useNerSpans } from "@/hooks/useNerSpans";
+import { usePimSettings } from "@/hooks/usePimSettings";
 import { emitDebug } from "@/lib/pim/debugBus";
 import { InputPanel } from "./InputPanel";
 import { ModeTargetBar } from "./ModeTargetBar";
@@ -29,13 +30,9 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
   const [text, setText] = useState("");
   const [mode, setMode] = useState<Mode>("anonymous");
   const [action, setAction] = useState<Action>("send_external_ai");
-  const [profileId, setProfileId] = useState<PipelineProfileId>(DEFAULT_PROFILE);
-  const [thresholdOverrides, setThresholdOverrides] = useState<Partial<Record<Action, number>>>({});
-  const [disabledCategories, setDisabledCategories] = useState<ReadonlySet<PiiCategory>>(new Set());
-  const [integrity, setIntegrity] = useState<ModelIntegrityRecord[]>([]);
-  const [nerStatus, setNerStatus] = useState<NerStatus | null>(null);
+  // Gedeelde instellingen (spoor C): profiel/drempels/categorieën/integriteit.
+  const { profileId, thresholdOverrides, disabledCategories, integrity, advancedPanelProps } = usePimSettings();
   const [nerEnabled, setNerEnabled] = useState(false);
-  const [nerSpans, setNerSpans] = useState<PiiSpan[]>([]);
   const [llmStatus, setLlmStatus] = useState<RewriteStatus | null>(null);
   const [llmMsg, setLlmMsg] = useState<string | null>(null);
   const [result, setResult] = useState<ResultState | null>(null);
@@ -45,12 +42,12 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
   const usesNerSlm = profile.detectors.nerSlm;
   const llmDevice = useLlmDeviceGuard();
 
-  useEffect(() => {
-    const offIntegrity = onModelIntegrity(setIntegrity);
-    const offNer = onNerStatus(setNerStatus);
-    const offLlm = onRewriteStatus(setLlmStatus);
-    return () => { offIntegrity(); offNer(); offLlm(); };
-  }, []);
+  // Gedeelde NER-hook (spoor A): identiek SLM-pad als /schrijven.
+  const { nerSpans, nerStatus, startNer: startNerLoad } = useNerSpans(text, {
+    enabled: usesNerSlm && nerEnabled,
+  });
+
+  useEffect(() => onRewriteStatus(setLlmStatus), []);
 
   // Globaal reset-event (uit burgermenu "Nieuwe controle").
   useEffect(() => {
@@ -66,34 +63,15 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
   }, []);
 
   useEffect(() => {
-    if (!usesNerSlm) {
-      setNerEnabled(false);
-      setNerSpans([]);
-    }
+    if (!usesNerSlm) setNerEnabled(false);
   }, [usesNerSlm]);
 
   useEffect(() => {
     if (usesNerSlm && nerStatus?.ready) setNerEnabled(true);
   }, [usesNerSlm, nerStatus?.ready]);
 
-  useEffect(() => {
-    if (!usesNerSlm || !nerEnabled || !nerStatus?.ready || !text.trim()) {
-      setNerSpans([]);
-      return;
-    }
-    let cancelled = false;
-    const id = window.setTimeout(() => {
-      detectPersonsSlm(text)
-        .then((spans) => { if (!cancelled) setNerSpans(spans); })
-        .catch(() => { if (!cancelled) setNerSpans([]); });
-    }, 260);
-    return () => { cancelled = true; window.clearTimeout(id); };
-  }, [text, usesNerSlm, nerEnabled, nerStatus?.ready]);
-
-  const modelSpans = useMemo(
-    () => (usesNerSlm && nerEnabled && nerStatus?.ready ? nerSpans : []),
-    [usesNerSlm, nerEnabled, nerStatus?.ready, nerSpans],
-  );
+  // De hook gate't al op enabled+ready; modelSpans is hier puur de SLM-output.
+  const modelSpans = nerSpans;
 
   // Live preview-signals (zonder PiM uit te voeren).
   const previewSignals = useMemo(
@@ -116,8 +94,7 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
   const startNer = () => {
     if (!usesNerSlm) return;
     setNerEnabled(true);
-    if (nerStatus?.error) retryNerSlm();
-    void loadNerSlm().catch(() => {});
+    startNerLoad();
   };
 
   const startLlm = () => {
@@ -310,21 +287,7 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
         busy={busy}
       />
 
-      <AdvancedPanel
-        profileId={profileId}
-        onProfileChange={setProfileId}
-        thresholds={thresholdOverrides}
-        onThresholdChange={(a, v) => setThresholdOverrides((prev) => ({ ...prev, [a]: v }))}
-        onResetThresholds={() => setThresholdOverrides({})}
-        integrity={integrity}
-        disabledCategories={disabledCategories}
-        onToggleCategory={(cat) => setDisabledCategories((prev) => {
-          const next = new Set(prev);
-          if (next.has(cat)) next.delete(cat); else next.add(cat);
-          return next;
-        })}
-        onResetCategories={() => setDisabledCategories(new Set())}
-      />
+      <AdvancedPanel {...advancedPanelProps} />
 
       {!result && text.trim().length > 0 && (
         <div className={`text-xs border-l-2 pl-3 animate-pulse ${compact ? "text-[#e8edf3]/60 border-[#3b6fa0]/50" : "text-muted-foreground border-primary/40"}`}>

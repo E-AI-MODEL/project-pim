@@ -135,7 +135,7 @@ const PROFILE_SHORT_DESC: Partial<Record<PipelineProfileId, string>> = {
   "generic-en": "Nog niet vrijgegeven.",
 };
 
-interface Props {
+export interface AdvancedPanelProps {
   profileId: PipelineProfileId;
   onProfileChange: (id: PipelineProfileId) => void;
   thresholds: Partial<Record<Action, number>>;
@@ -150,7 +150,7 @@ interface Props {
 export function AdvancedPanel({
   profileId, onProfileChange, thresholds, onThresholdChange, onResetThresholds, integrity,
   disabledCategories, onToggleCategory, onResetCategories,
-}: Props) {
+}: AdvancedPanelProps) {
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState("profile");
   const [expert, setExpert] = useState(false);

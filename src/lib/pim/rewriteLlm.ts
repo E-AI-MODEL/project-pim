@@ -54,7 +54,47 @@ REGELS (hard):
 - Verwijder of generaliseer namen, plaatsen, data, kleine groepen (bijv. "groep 6A" → "een groep").
 - Behoud feitelijke kern en toon. Geen fictieve details toevoegen.
 - Laat ALLE blokken in vierkante haken zoals [persoon], [school], [datum] EXACT staan.
+- Schrijf elke zin EXACT ÉÉN keer. Herhaal geen zinnen, zinsdelen of de input.
 - Antwoord met UITSLUITEND de herschreven tekst, geen uitleg.`;
+
+// Qwen2.5-0.5B is klein en neigt tot lussen/herhaling. Deze sampling-parameters
+// (frequency/presence-penalty) ontmoedigen dat al tijdens generatie; dedupeSentences
+// ruimt resterende dubbele zinnen achteraf op.
+const SAMPLING = {
+  temperature: 0.2,
+  top_p: 0.9,
+  frequency_penalty: 0.6,
+  presence_penalty: 0.4,
+  max_tokens: 512,
+} as const;
+
+/**
+ * Verwijdert herhaalde zinnen uit LLM-output. Kleine modellen produceren soms
+ * dezelfde zin twee of drie keer; we houden de eerste en laten de structuur
+ * (regels/alinea's) intact.
+ */
+export function dedupeSentences(text: string): string {
+  const seen = new Set<string>();
+  const normalize = (s: string) =>
+    s.trim().toLowerCase().replace(/\s+/g, " ").replace(/[.!?]+$/, "");
+  const outLines: string[] = [];
+  for (const line of text.split(/\n/)) {
+    if (line.trim() === "") { outLines.push(""); continue; }
+    const kept: string[] = [];
+    for (const sentence of line.split(/(?<=[.!?])\s+/)) {
+      const norm = normalize(sentence);
+      // Korte fragmenten (<8 tekens) ongemoeid laten — te risicovol voor dedup.
+      if (norm.length >= 8) {
+        if (seen.has(norm)) continue;
+        seen.add(norm);
+      }
+      kept.push(sentence);
+    }
+    const joined = kept.join(" ").trim();
+    if (joined) outLines.push(joined);
+  }
+  return outLines.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+}
 
 export async function loadRewriteLlm(): Promise<EngineLike | null> {
   if (engine) return engine;
@@ -98,11 +138,11 @@ export async function rewriteAnonymousDraft(draft: string): Promise<{ text: stri
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: draft },
       ],
-      temperature: 0.2,
-      max_tokens: 512,
+      ...SAMPLING,
     })) as { choices: { message: { content: string } }[] };
-    const out = res.choices?.[0]?.message?.content?.trim();
-    if (!out || out.length < 10) return { text: draft, usedLlm: false, reason: "Lege LLM-output" };
+    const raw = res.choices?.[0]?.message?.content?.trim();
+    if (!raw || raw.length < 10) return { text: draft, usedLlm: false, reason: "Lege LLM-output" };
+    const out = dedupeSentences(raw);
     return { text: out, usedLlm: true, reason: "LLM-rewrite toegepast" };
   } catch (e) {
     return { text: draft, usedLlm: false, reason: `LLM-fout: ${(e as Error).message}` };
@@ -125,8 +165,7 @@ export async function rewriteAnonymousDraftStream(
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: draft },
       ],
-      temperature: 0.2,
-      max_tokens: 512,
+      ...SAMPLING,
       stream: true,
     })) as AsyncIterable<{ choices: { delta?: { content?: string } }[] }>;
     let acc = "";
@@ -136,8 +175,11 @@ export async function rewriteAnonymousDraftStream(
       acc += piece;
       onToken(piece, acc);
     }
-    const out = acc.trim();
-    if (!out || out.length < 10) return { text: draft, usedLlm: false, reason: "Lege LLM-output" };
+    const raw = acc.trim();
+    if (!raw || raw.length < 10) return { text: draft, usedLlm: false, reason: "Lege LLM-output" };
+    // Eindresultaat ontdubbeld; de UI toont de stream live en zet daarna deze
+    // schone tekst als definitief resultaat.
+    const out = dedupeSentences(raw);
     return { text: out, usedLlm: true, reason: "LLM-rewrite (streaming) toegepast" };
   } catch (e) {
     return { text: draft, usedLlm: false, reason: `LLM-fout: ${(e as Error).message}` };

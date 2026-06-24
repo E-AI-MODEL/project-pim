@@ -1,5 +1,6 @@
 import type { PiiSpan, PiiCategory, PrivacySignals, RiskLevel } from "./types";
 import { runRegistrySync } from "./detectorRegistry";
+import { mergeSpans } from "./mergeSpans";
 import { DEFAULT_PROFILE, type PipelineProfileId } from "./pipelineProfile";
 
 const HIGH_SEVERITY: ReadonlySet<string> = new Set([
@@ -15,22 +16,9 @@ export function computeSignals(
 ): PrivacySignals {
   // Sync registry: regex + special lexicon + heuristic contextSlm (per profiel).
   const baseSpans = runRegistrySync(text, profileId);
-  // Merge alle spans (base + async/SLM extras). Bij overlap wint hoogste confidence.
-  const merged0: PiiSpan[] = [...baseSpans, ...extraSpans];
-  const all: PiiSpan[] = disabledCategories
-    ? merged0.filter((s) => !disabledCategories.has(s.category))
-    : merged0;
-  all.sort((a, b) => a.start - b.start || b.confidence - a.confidence);
-  const merged: PiiSpan[] = [];
-  for (const s of all) {
-    const last = merged[merged.length - 1];
-    if (last && s.start < last.end) {
-      if (s.confidence > last.confidence) merged[merged.length - 1] = s;
-      continue;
-    }
-    merged.push(s);
-  }
-  const spans = merged;
+  // Bron-bewuste merge (spoor A): regex-identifiers autoritair, naam-dekking
+  // van regex + SLM versterkt elkaar i.p.v. te concurreren op confidence.
+  const spans = mergeSpans([...baseSpans, ...extraSpans], disabledCategories);
   const direct = spans.filter((s) => !s.contextual);
   const ctx = spans.filter((s) => s.contextual);
 

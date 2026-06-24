@@ -7,6 +7,7 @@
 import type { PiiSpan } from "./types";
 import { detectPii as runRegexDetectors } from "./detectors";
 import { detectPersonsSlm } from "./nerSlm";
+import { mergeSpans } from "./mergeSpans";
 import { PIPELINE_PROFILES, type PipelineProfileId } from "./pipelineProfile";
 
 export type DetectorKind = "rules" | "specialLexicon" | "nerSlm" | "contextSlm";
@@ -148,18 +149,9 @@ export async function runRegistry(text: string, ctx: DetectorContext): Promise<P
     const r = await d.run(text, ctx);
     all.push(...r);
   }
-  // Dedup overlap, prefer hogere confidence — zelfde regel als detectors.ts.
-  all.sort((a, b) => a.start - b.start || b.confidence - a.confidence);
-  const merged: PiiSpan[] = [];
-  for (const s of all) {
-    const last = merged[merged.length - 1];
-    if (last && s.start < last.end) {
-      if (s.confidence > last.confidence) merged[merged.length - 1] = s;
-      continue;
-    }
-    merged.push(s);
-  }
-  return merged;
+  // Bron-bewuste merge (spoor A): zelfde precedentie als computeSignals, zodat
+  // input-fase, draftCheck en egress-re-consult exact dezelfde spans zien.
+  return mergeSpans(all);
 }
 
 /** Synchroon pad — voert alleen sync detectors uit (regex + lexicon + heuristic context). */
@@ -170,17 +162,7 @@ export function runRegistrySync(text: string, profileId: PipelineProfileId): Pii
     const r = d.run(text, { profileId, enableAsync: false }) as PiiSpan[];
     all.push(...r);
   }
-  all.sort((a, b) => a.start - b.start || b.confidence - a.confidence);
-  const merged: PiiSpan[] = [];
-  for (const s of all) {
-    const last = merged[merged.length - 1];
-    if (last && s.start < last.end) {
-      if (s.confidence > last.confidence) merged[merged.length - 1] = s;
-      continue;
-    }
-    merged.push(s);
-  }
-  return merged;
+  return mergeSpans(all);
 }
 
 /** UI-helper: korte herkomst-tag op basis van ruleId. */
