@@ -141,6 +141,11 @@ export function AdvancedPanel({
   const profile = PIPELINE_PROFILES[profileId];
   const sectionRef = useRef<HTMLElement>(null);
 
+  // Modellen-tab is alleen in Expert beschikbaar — fallback bij toggle.
+  useEffect(() => {
+    if (!expert && tab === "models") setTab("profile");
+  }, [expert, tab]);
+
   useEffect(() => {
     const onOpen = () => {
       setOpen(true);
