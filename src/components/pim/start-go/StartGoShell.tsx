@@ -158,8 +158,9 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
     // bepalen op basis van payload + decision.action.
     const quickDecision = { ...result.decision, action: quickAction };
     const r = await executeAction(quickDecision, certified);
-    emitDebug("pipeline.execute.quick", r.executed ? "quick egress toegestaan" : "quick egress geblokt", {
+    emitDebug("pipeline.execute", r.executed ? "quick egress toegestaan" : "quick egress geblokt", {
       executed: r.executed, reason: r.reason, action: quickAction,
+      quick: true,
     });
     return r;
   };
