@@ -119,6 +119,22 @@ const CATEGORY_EXAMPLE: Partial<Record<PiiCategory, string>> = {
 
 const PROFILE_WHEN: Partial<Record<PipelineProfileId, string>> = {};
 
+// Korte, leesbare labels en beschrijvingen voor de Basis-modus.
+const PROFILE_SHORT_LABEL: Partial<Record<PipelineProfileId, string>> = {
+  "education-nl-full": "Onderwijs — Volledig",
+  "education-nl-rules-only": "Onderwijs — Alleen regels",
+  "healthcare-nl": "Zorg (ontwerp)",
+  "generic-nl": "Algemeen NL (ontwerp)",
+  "generic-en": "Algemeen EN (ontwerp)",
+};
+const PROFILE_SHORT_DESC: Partial<Record<PipelineProfileId, string>> = {
+  "education-nl-full": "Regels + namen-model + onderwijscontext. Volledige bescherming.",
+  "education-nl-rules-only": "Alleen patronen. Geen download, geen extern delen.",
+  "healthcare-nl": "Nog niet vrijgegeven.",
+  "generic-nl": "Nog niet vrijgegeven.",
+  "generic-en": "Nog niet vrijgegeven.",
+};
+
 interface Props {
   profileId: PipelineProfileId;
   onProfileChange: (id: PipelineProfileId) => void;
