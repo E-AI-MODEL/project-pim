@@ -18,6 +18,7 @@ import {
   type ModelIntegrityRecord,
 } from "@/lib/pim";
 import { AdvancedPanel } from "@/components/pim/start-go/AdvancedPanel";
+import { LiveTechMonitor } from "@/components/pim/start-go/LiveTechMonitor";
 import { GENERALIZATIONS, DEFAULT_AUTO_REDACT, CATEGORY_LABELS } from "./pimGeneralizations";
 import {
   createPimPlugin, pimPluginKey, extractPlain, spanToRange, buildDecorations,
@@ -270,6 +271,14 @@ export function WriterShell() {
             signalen krijgen een onderstreping — klik om te vervangen of te negeren.
           </p>
         </div>
+        <LiveTechMonitor
+          trigger={
+            <button className="font-plex-mono text-[10px] uppercase tracking-wider px-2 py-1 rounded bg-[#3b6fa0]/20 hover:bg-[#3b6fa0]/40 text-foreground/80 transition-colors inline-flex items-center gap-1.5 shrink-0">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+              Live techniek
+            </button>
+          }
+        />
       </header>
 
       <input
