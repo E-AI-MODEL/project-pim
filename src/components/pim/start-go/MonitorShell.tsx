@@ -1,14 +1,11 @@
 import { COPY } from "@/lib/pim/copy";
 import { StartGoShell } from "./StartGoShell";
 import { TrustBadge } from "./TrustBadge";
-import { PipelineStepsBar } from "./PipelineStepsBar";
 import { LiveTechMonitor } from "./LiveTechMonitor";
 
 export function MonitorShell() {
   return (
-    <div className="space-y-3">
-      <PipelineStepsBar />
-      <div className="bg-[#1e3a5f] rounded-lg border border-[#3b6fa0]/30 shadow-2xl overflow-hidden flex flex-col">
+    <div className="bg-[#1e3a5f] rounded-lg border border-[#3b6fa0]/30 shadow-2xl overflow-hidden flex flex-col">
       {/* window header */}
       <div className="bg-[#0f1b3d]/50 px-4 py-3 border-b border-[#3b6fa0]/20 flex items-center justify-between">
         <span className="font-plex-mono text-[10px] tracking-[0.2em] uppercase font-bold text-[#3b6fa0]">
@@ -45,7 +42,6 @@ export function MonitorShell() {
           <TrustBadge />
           <span className="font-plex-mono text-[10px] text-[#e8edf3]/40">v1.0</span>
         </div>
-      </div>
       </div>
     </div>
   );
