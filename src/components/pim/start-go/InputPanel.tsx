@@ -111,6 +111,7 @@ function CompactComposer({
   const composerRef = useRef<HTMLElement>(null);
   const [liveScrub, setLiveScrub] = useState(false);
   const [flash, setFlash] = useState(false);
+  const [liveScrubToast, setLiveScrubToast] = useState(false);
   const scrubRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -125,13 +126,21 @@ function CompactComposer({
       if (sig.directPii.length === 0) return;
       const cleaned = anonymize(text, sig).text;
       if (cleaned === text) return;
+      // Cursor-positie behouden: alleen verplaatsen als de wijziging vóór de cursor zat.
+      const ta = textareaRef.current;
+      const prevCursor = ta?.selectionStart ?? text.length;
+      // Vind eerste verschilpositie tussen oud en nieuw.
+      let diff = 0;
+      const maxDiff = Math.min(text.length, cleaned.length);
+      while (diff < maxDiff && text[diff] === cleaned[diff]) diff++;
+      const delta = cleaned.length - text.length;
+      const newCursor = prevCursor <= diff ? prevCursor : Math.max(diff, prevCursor + delta);
       onTextChange(cleaned);
       setFlash(true);
       setTimeout(() => setFlash(false), 650);
-      // cursor naar einde — origineel was zojuist herschreven
       requestAnimationFrame(() => {
-        const ta = textareaRef.current;
-        if (ta) ta.setSelectionRange(cleaned.length, cleaned.length);
+        const t = textareaRef.current;
+        if (t) t.setSelectionRange(newCursor, newCursor);
       });
     }, 350);
     return () => { if (scrubRef.current) clearTimeout(scrubRef.current); };
@@ -328,15 +337,27 @@ function CompactComposer({
           <div className="flex-1 flex justify-end items-center gap-2 pr-1">
             <button
               type="button"
-              onClick={() => setLiveScrub((v) => !v)}
+              onClick={() => {
+                setLiveScrub((v) => {
+                  const next = !v;
+                  if (next) {
+                    setLiveScrubToast(true);
+                    setTimeout(() => setLiveScrubToast(false), 3500);
+                  }
+                  return next;
+                });
+              }}
               aria-pressed={liveScrub}
-              title={liveScrub ? "Live wissen staat aan — namen verdwijnen direct" : "Live wissen aanzetten — gevoelige woorden worden meteen weggehaald"}
+              title={liveScrub
+                ? "Live wissen staat aan — BSN, e-mail, telefoon en IBAN worden direct vervangen door een label"
+                : "Live wissen aanzetten — harde PII (BSN, e-mail, telefoon, IBAN) wordt meteen vervangen door een label"}
               className={`inline-flex items-center gap-1.5 h-8 px-2 rounded-md text-[11px] font-plex-mono border transition-colors ${
                 liveScrub
                   ? "bg-rose-500/15 border-rose-400/50 text-rose-200"
                   : "bg-transparent border-[#3b6fa0]/30 text-[#e8edf3]/55 hover:text-[#e8edf3] hover:border-[#3b6fa0]/60"
               }`}
             >
+              {liveScrub && <span className="h-1.5 w-1.5 rounded-full bg-rose-400 animate-pulse" aria-hidden />}
               <Eraser className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Live wissen</span>
             </button>
@@ -379,6 +400,16 @@ function CompactComposer({
           >
             <X className="h-3 w-3" />
           </button>
+        </div>
+      )}
+
+      {/* Live wissen — eerste-keer toelichting */}
+      {liveScrubToast && (
+        <div className="flex items-start gap-2 px-3 py-2 rounded-lg border border-rose-400/40 bg-rose-500/10 text-rose-200 text-[11px] leading-relaxed">
+          <Eraser className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+          <div className="flex-1">
+            <span className="font-medium">Live wissen actief.</span> BSN, e-mail, telefoon en IBAN worden direct vervangen door een label (bv. <code>[bsn]</code>). Namen en context blijven staan totdat je verstuurt.
+          </div>
         </div>
       )}
 

@@ -1,77 +1,107 @@
-# Plan — Zichtbare meertraps-pipeline + bewuste downloads + live-monitor popup
+## Doel
 
-## 1. Stappen zichtbaar in de UI (op landing)
+Drie verbeteringen, mét correcte woordkeuze: **PiM blokkeert geen tekst** — het vervangt gevoelige woorden door een placeholder/label, of laat jou kiezen (die keuze is pas mogelijk nadat het in-browser model is gedownload).
 
-Boven `MonitorShell` (en als compact mini-strip op mobiel) een nieuwe `PipelineStepsBar` met 3 stappen:
+1. **Geavanceerd-menu** simpeler + Expert duidelijk + cijfers vervangen door uitleg.
+2. **"Gum"-functie** controleren en verduidelijken.
+3. **Word-functie** controleren op missende features.
 
-```text
-[ 1. Regex/Rules ]  →  [ 2. Download 1 · NER-SLM ]  →  [ 3. Download 2 · Generalisatie-LLM ]
-   actief direct       knop: "Inschakelen"            knop: "Inschakelen"
-   ✓ altijd lokaal     ~100 MB · q8 · WebGPU/WASM    ~400 MB · alleen desktop
+---
+
+## 1. Geavanceerd-menu — uitleg vóór cijfers, juiste woorden
+
+### Woordgebruik (overal toepassen, geen "blokkeren")
+
+| Niet meer | Wel |
+|---|---|
+| "blokkeert de actie" | "vervangt het woord door een label, bv. `[naam]` of `[bsn]`" |
+| "drempel waarop PiM blokkeert" | "gevoeligheid: hoe snel PiM een woord vervangt of markeert" |
+| "streng = vaker blokkeren" | "streng = sneller vervangen / markeren" |
+
+Korte uitleg-blok bovenaan paneel:
+> PiM stopt nooit je tekst. Het **vervangt** harde PII (BSN, e-mail, telefoon, IBAN) direct door een label zoals `[bsn]`. Voor twijfelgevallen (namen, context) krijg je een **keuze**: vervangen of laten staan. Die keuze-modus werkt pas nadat het NER-model in je browser is gedownload (zie Modellen).
+
+### A. Basis vs Expert-toggle
+
+Bovenaan paneel: **Basis · Expert**.
+
+- **Basis** (default): profielkeuze + 3 grote knoppen per actie (Streng / Standaard / Soepel) + per-categorie aan/uit met uitleg. Geen percentages.
+- **Expert**: zelfde + sliders + getalswaardes + Modellen-tab. Gele info-strook:
+  > **Expert-modus.** Je stelt de gevoeligheid handmatig in (0–100). Hoger = PiM laat meer staan, lager = vervangt sneller. Niet zeker? Kies een profiel of klik Standaard.
+
+### B. Gevoeligheid per bestemming — 3 knoppen i.p.v. naakte slider
+
+Per actie (Externe AI, Bestand, Printer, Klembord, Link delen, Lokaal opslaan, Alleen scherm):
+
+```
+Externe AI                              [ Streng ] [ Standaard ] [ Soepel ]
+ChatGPT, Copilot, Gemini buiten je organisatie.
+→ Streng: vervangt al bij 1 signaal (bv. één naam).
 ```
 
-Elke stap toont status (idle / loading % / ready / error) en is een **bewuste knop**, niet auto-load. De huidige `auto-load` op `/try` halen we eruit en vervangen door dezelfde knoppen.
+Uitleg-regel verandert mee per niveau (geen percentage in Basis):
 
-Op mobiel:
-- Stap 2 (NER-SLM) toont badge "kan op mobiel — eerste laad duurt langer".
-- Stap 3 (Rewrite-LLM) toont badge "alleen desktop met voldoende RAM" en de knop is **disabled** met tooltip (detectie via `navigator.deviceMemory < 4` of `coarse pointer` + smal viewport).
+| Niveau | Wat PiM doet |
+|---|---|
+| Streng | Vervangt direct bij elk signaal — ook twijfelgevallen |
+| Standaard | Vervangt harde PII direct, twijfel krijg je als keuze |
+| Soepel | Vervangt alleen overduidelijke treffers, rest laat staan |
 
-## 2. Live-monitor popup ("Live techniek")
+In **Expert** verschijnt eronder de slider met label:
+*"Gevoeligheid: 0,65 — PiM vervangt vanaf score 65/100. Lager = strenger."*
 
-Floating knop rechtsonder + extra knop in `MonitorShell`-footer "Live techniek". Opent een `Sheet` (rechts op desktop, bottom-drawer op mobiel) met tabs:
+### C. Profiel-kaarten
 
-- **Pipeline** — laatste run, per stap een rij met status, duur, telcijfers (geen ruwe tekst):
-  - Stap 1 Regex: aantal directe + contextuele hits per categorie.
-  - Stap 2 NER-SLM: aangeroepen ja/nee, runtime (WebGPU/WASM), spans gevonden.
-  - Stap 3 Rewrite-LLM: aangeroepen ja/nee, draft-check verdict, behouden/origineel.
-  - Draft-Check Guard + Model-Gate + Decision (verdict, payloadType, drempel).
-  - Egress-Guard resultaat.
-- **Modellen** — voor SLM en LLM: `modelId`, status, progress-bar tijdens download, verified-hash, knop "Nu laden / Pauzeren".
-- **Omgeving** — WebGPU adapter ja/nee, `deviceMemory`, `hardwareConcurrency`, `crossOriginIsolated`, online/offline, viewport, dpr. Met expliciete melding bovenaan:
+2e regel "Wanneer kiezen?":
+- *Strikt* — klassenlijsten, oudergesprekken, leerlingdossiers
+- *Gebalanceerd* — dagelijks werk, AI-tools
+- *Soepel* — interne notities, brainstorm
 
-  > **Let op — op mobiel is niet alles mogelijk.** De rewrite-LLM (~400 MB) blijft uit. NER-SLM werkt wel, maar de eerste laad kan 20–40 s duren en is daarna gecached.
+### D. Detectoren
 
-- **Logboek** — ring-buffer (laatste 50 events) uit `window.dispatchEvent('pim:debug', …)`, monospace, kopieerbaar. Alleen lengtes/IDs/statussen — nooit ruwe input of mapping-waardes.
+Rode info-strook: *"Uit = PiM ziet die categorie niet meer en vervangt niets in die groep. Alleen doen voor demo of false-positive debug."*. Per categorie korte `title`-tooltip met voorbeeld.
 
-## 3. Bewuste downloads — geen auto-prefetch
+### E. Modellen-tab (Expert)
 
-- Geen `idle prefetch` in `MonitorShell`.
-- `loadNerSlm()` en `loadRewriteLlm()` worden alléén aangeroepen door de twee knoppen in `PipelineStepsBar` of vanuit het Modellen-tab in de popup.
-- Stap 2 en 3 in `decide()` blijven correct: zonder geladen model gaat de pipeline gewoon door op stap 1 (regex) en het Model-Gate-resultaat reflecteert dat eerlijk in de popup.
+Bovenaan: *"NER-model nodig voor de keuze-modus op namen en context. 'Verified' = exact gematcht op onze hash-lijst. 'Failed' = niet gebruiken, herlaad de pagina."*
 
-## 4. Beter / kleiner NER-SLM op HuggingFace?
+Geen wijziging in `lib/pim`-logica, alleen UI + copy.
 
-Huidig model: `Xenova/bert-base-multilingual-cased-ner-hrl` (Davlan, mBERT-base). q8 ONNX ≈ **178 MB**.
+## 2. "Gum" controleren
 
-Beste pragmatische upgrade in december 2026:
-**`Xenova/distilbert-base-multilingual-cased-ner-hrl`** — zelfde Davlan-training en zelfde 10 talen (incl. NL), op DistilBERT i.p.v. mBERT. Quantized ONNX is ~**90–100 MB**, ongeveer **2× kleiner en sneller**, met minimale accuratesseverlies op PER/ORG/LOC. Volledig Transformers.js v3-compatibel, zelfde `token-classification` pipeline, geen code-aanpassing buiten `modelCatalog`.
+**Composer — `InputPanel.tsx` "Live wissen"**
+- Werkt: 350 ms debounce, `anonymize()` vervangt directe PII door label, rode flash.
+- Bug: cursor springt altijd naar `cleaned.length`. Fix: alleen verplaatsen als de vervanging vóór de cursor zat.
+- Eerste-keer mini-toast: *"Live wissen actief — BSN, e-mail, telefoon en IBAN worden direct vervangen door een label."*
 
-Andere overwogen kandidaten:
-- `onnx-community/bert-base-multilingual-cased-ner-hrl-ONNX` — zelfde gewichten als huidig, geen winst.
-- `tjruesch/xlm-roberta-base-ner-hrl-onnx` — XLM-R basis, vaak iets beter maar gróter (~400 MB), géén winst voor jou.
-- GLiNER multi — flexibel, maar minder beproefd in browser en eerder zwaarder.
+**Writer — `WriterShell.tsx` Auto-wis/Markeer-popover**
+- Werkt: harde PII achteraan vervangen, 1-char cursor-marge ✅
+- Overbodige `*Key`-strings in deps opruimen.
+- Popover-copy: *"Auto-wis = meteen vervangen door label · Markeer = onderstrepen, jij klikt om te vervangen of laten staan."* (geen "blokkeer"-woord).
 
-**Advies:** vervangen door `Xenova/distilbert-base-multilingual-cased-ner-hrl` als **Download 1**. We pinnen het in `modelCatalog.ts` met nieuwe revision + hash en laten de huidige bert-mBERT als optionele "zwaardere variant" in advanced staan.
+## 3. Word-functie (`docxIO.ts`)
 
-## 5. Bestanden
+| Aspect | Status | Actie |
+|---|---|---|
+| Import tekst/headings/lijsten (mammoth) | ✅ | — |
+| Afbeeldingen in docx | stilzwijgend genegeerd | Waarschuwing "Afbeeldingen niet meegenomen" |
+| `result.messages` mammoth-warnings | nu genegeerd | Teruggeven, tonen als gele strook |
+| Export `bold`/`italic` | ✅ | — |
+| Export `underline`/`strike` | **ontbreekt** | Toevoegen in `runsFor()` |
+| Export heading 3 | ✅ | — |
+| Paginaformaat | niet gezet, inconsistent | Expliciet A4 (11906×16838 DXA) + 2,5 cm marges |
+| Bestandsnaam timestamp | ✅ | — |
+| Plakken uit Word | Tiptap native ✅ | QA |
+| Auto-redact na import | `update`-event triggert scan ✅ | — |
+| Genested lijsten | platgeslagen | FIXME-comment |
 
-Nieuw:
-- `src/components/pim/start-go/PipelineStepsBar.tsx` — 3 stappen, knoppen, badges.
-- `src/components/pim/start-go/LiveTechMonitor.tsx` — Sheet/Drawer met tabs.
-- `src/lib/pim/debugBus.ts` — kleine emitter (`emit`, `subscribe`, ring-buffer).
+## Files
 
-Wijzigen:
-- `src/lib/pim/modelCatalog.ts` — switch primair SLM naar `Xenova/distilbert-base-multilingual-cased-ner-hrl`, met juiste revision + placeholder-hash tot first-pin.
-- `src/lib/pim/nerSlm.ts` — geen gedragswijziging; alleen log via `debugBus`.
-- `src/lib/pim/rewriteLlm.ts` — idem `debugBus`-events.
-- `src/components/pim/start-go/MonitorShell.tsx` — `PipelineStepsBar` boven shell + "Live techniek" knop + render `<LiveTechMonitor/>`. **Geen** auto-load.
-- `src/components/pim/start-go/StartGoShell.tsx` — `debugBus.emit(...)` na `run()` en `onPrimary()` (lengtes, telcijfers, statussen — geen tekst).
-- `src/routes/try.tsx` — auto-load `loadNerSlm()` op mount verwijderen; gebruikt zelfde knoppen.
+- `src/components/pim/start-go/AdvancedPanel.tsx` — Basis/Expert-toggle, 3 knop-niveaus, herschreven uitleg ("vervangen" i.p.v. "blokkeren"), info-strook bovenaan.
+- `src/components/pim/start-go/InputPanel.tsx` — cursor-fix Live wissen, eerste-keer toast.
+- `src/components/pim/writer/WriterShell.tsx` — popover-copy, deps opruimen, import-warnings tonen.
+- `src/components/pim/writer/docxIO.ts` — underline/strike, A4 page-properties, warnings teruggeven.
 
-## 6. Privacy
+## Niet in scope
 
-Debug-bus logt alleen: `len`, `signalsCount`, `verdict`, `runtime`, `modelId`, `pct`, tijden. **Geen** invoertekst, **geen** mapping-waardes. De popup zelf is een UI-laag — geen netwerk.
-
-## Open keuze
-1. SLM-vervanging direct doorvoeren (distilbert) of als opt-in toggle naast het huidige model?
-2. Floating "Live techniek"-knop standaard zichtbaar of alleen wanneer `?debug=1` of na klik op de status-pill in de footer?
+Geen wijziging aan detector-defaults, profielen, NER of pipeline-logica. Geen multi-level lijsten in export.
