@@ -13,11 +13,11 @@ import {
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
-  computeSignals, DEFAULT_PROFILE, onModelIntegrity, PIPELINE_PROFILES,
-  type PiiCategory, type PiiSpan, type PipelineProfileId, type Action,
-  type ModelIntegrityRecord,
+  computeSignals, PIPELINE_PROFILES,
+  type PiiCategory, type PiiSpan,
 } from "@/lib/pim";
 import { useNerSpans } from "@/hooks/useNerSpans";
+import { usePimSettings } from "@/hooks/usePimSettings";
 import { AdvancedPanel } from "@/components/pim/start-go/AdvancedPanel";
 import { LiveTechMonitor } from "@/components/pim/start-go/LiveTechMonitor";
 import { GENERALIZATIONS, DEFAULT_AUTO_REDACT, CATEGORY_LABELS } from "./pimGeneralizations";
@@ -48,12 +48,8 @@ export function WriterShell() {
   const [clicked, setClicked] = useState<ClickedSpan | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const [importWarnings, setImportWarnings] = useState<string[]>([]);
-  // Profiel + detector-instellingen, gelijk aan de homepage.
-  const [profileId, setProfileId] = useState<PipelineProfileId>(DEFAULT_PROFILE);
-  const [thresholdOverrides, setThresholdOverrides] = useState<Partial<Record<Action, number>>>({});
-  const [disabledCategories, setDisabledCategories] = useState<ReadonlySet<PiiCategory>>(new Set());
-  const [integrity, setIntegrity] = useState<ModelIntegrityRecord[]>([]);
-  useEffect(() => onModelIntegrity(setIntegrity), []);
+  // Profiel + detector-instellingen, gedeeld met de homepage (spoor C).
+  const { profileId, disabledCategories, advancedPanelProps } = usePimSettings();
   // Platte tekst van de editor — gedeeld met de NER-hook zodat /schrijven
   // dezelfde SLM-naamherkenning krijgt als de homepage (spoor A). De SLM
   // wordt alleen gebruikt als het model al geladen is; geen stille download.
@@ -325,21 +321,7 @@ export function WriterShell() {
         </div>
       )}
 
-      <AdvancedPanel
-        profileId={profileId}
-        onProfileChange={setProfileId}
-        thresholds={thresholdOverrides}
-        onThresholdChange={(a, v) => setThresholdOverrides((prev) => ({ ...prev, [a]: v }))}
-        onResetThresholds={() => setThresholdOverrides({})}
-        integrity={integrity}
-        disabledCategories={disabledCategories}
-        onToggleCategory={(cat) => setDisabledCategories((prev) => {
-          const next = new Set(prev);
-          if (next.has(cat)) next.delete(cat); else next.add(cat);
-          return next;
-        })}
-        onResetCategories={() => setDisabledCategories(new Set())}
-      />
+      <AdvancedPanel {...advancedPanelProps} />
 
       <div
         ref={editorRootRef}

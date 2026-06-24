@@ -3,13 +3,14 @@ import { useMemo, useState, useEffect, useRef } from "react";
 import { AlertTriangle, Check, Cpu, Loader2, Sparkles } from "lucide-react";
 import {
   computeSignals, anonymize, pseudonymize, draftCheck, decide, executeAction,
-  modelGateFor, onModelIntegrity, PIPELINE_PROFILES,
+  modelGateFor, PIPELINE_PROFILES,
   onRewriteStatus, loadRewriteLlm, rewriteAnonymousDraft,
-  type ModelIntegrityRecord, type NerStatus, type RewriteStatus,
-  DEFAULT_PROFILE, type CertifiedPayload, type PayloadType,
-  type Mode, type Action, type PipelineProfileId, type PiiCategory, type PiiSpan,
+  type NerStatus, type RewriteStatus,
+  type CertifiedPayload, type PayloadType,
+  type Mode, type Action, type PiiSpan,
 } from "@/lib/pim";
 import { useNerSpans } from "@/hooks/useNerSpans";
+import { usePimSettings } from "@/hooks/usePimSettings";
 import { emitDebug } from "@/lib/pim/debugBus";
 import { InputPanel } from "./InputPanel";
 import { ModeTargetBar } from "./ModeTargetBar";
@@ -29,10 +30,8 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
   const [text, setText] = useState("");
   const [mode, setMode] = useState<Mode>("anonymous");
   const [action, setAction] = useState<Action>("send_external_ai");
-  const [profileId, setProfileId] = useState<PipelineProfileId>(DEFAULT_PROFILE);
-  const [thresholdOverrides, setThresholdOverrides] = useState<Partial<Record<Action, number>>>({});
-  const [disabledCategories, setDisabledCategories] = useState<ReadonlySet<PiiCategory>>(new Set());
-  const [integrity, setIntegrity] = useState<ModelIntegrityRecord[]>([]);
+  // Gedeelde instellingen (spoor C): profiel/drempels/categorieën/integriteit.
+  const { profileId, thresholdOverrides, disabledCategories, integrity, advancedPanelProps } = usePimSettings();
   const [nerEnabled, setNerEnabled] = useState(false);
   const [llmStatus, setLlmStatus] = useState<RewriteStatus | null>(null);
   const [llmMsg, setLlmMsg] = useState<string | null>(null);
@@ -48,11 +47,7 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
     enabled: usesNerSlm && nerEnabled,
   });
 
-  useEffect(() => {
-    const offIntegrity = onModelIntegrity(setIntegrity);
-    const offLlm = onRewriteStatus(setLlmStatus);
-    return () => { offIntegrity(); offLlm(); };
-  }, []);
+  useEffect(() => onRewriteStatus(setLlmStatus), []);
 
   // Globaal reset-event (uit burgermenu "Nieuwe controle").
   useEffect(() => {
@@ -292,21 +287,7 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
         busy={busy}
       />
 
-      <AdvancedPanel
-        profileId={profileId}
-        onProfileChange={setProfileId}
-        thresholds={thresholdOverrides}
-        onThresholdChange={(a, v) => setThresholdOverrides((prev) => ({ ...prev, [a]: v }))}
-        onResetThresholds={() => setThresholdOverrides({})}
-        integrity={integrity}
-        disabledCategories={disabledCategories}
-        onToggleCategory={(cat) => setDisabledCategories((prev) => {
-          const next = new Set(prev);
-          if (next.has(cat)) next.delete(cat); else next.add(cat);
-          return next;
-        })}
-        onResetCategories={() => setDisabledCategories(new Set())}
-      />
+      <AdvancedPanel {...advancedPanelProps} />
 
       {!result && text.trim().length > 0 && (
         <div className={`text-xs border-l-2 pl-3 animate-pulse ${compact ? "text-[#e8edf3]/60 border-[#3b6fa0]/50" : "text-muted-foreground border-primary/40"}`}>
