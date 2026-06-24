@@ -9,7 +9,7 @@ import StarterKit from "@tiptap/starter-kit";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import {
   Bold, Italic, Heading1, Heading2, List, ListOrdered, Quote, Undo2, Redo2,
-  Upload, Download, Settings2, Shield, Trash2, X, Check, Crosshair,
+  Upload, Download, Settings2, Shield, Trash2, X, Check,
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
