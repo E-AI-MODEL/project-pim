@@ -372,8 +372,8 @@ function WriterToolbar({
         <PopoverContent align="end" className="w-80 p-3 space-y-2 max-h-[60vh] overflow-y-auto">
           <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Per categorie</div>
           <p className="text-[11px] text-muted-foreground leading-snug">
-            <span className="font-medium text-foreground">Auto-wis</span> = direct vervangen door label.
-            Anders = onderstrepen; jij beslist.
+            <span className="font-medium text-foreground">Auto-wis</span> = meteen vervangen door een label (bv. <code className="text-foreground">[bsn]</code>).<br />
+            <span className="font-medium text-foreground">Markeer</span> = onderstrepen, jij klikt om te vervangen of te laten staan.
           </p>
           <ul className="space-y-1">
             {(Object.keys(CATEGORY_LABELS) as PiiCategory[]).map((cat) => {
