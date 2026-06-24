@@ -435,9 +435,9 @@ export function AdvancedPanel({
             {/* MODELLEN — alleen in Expert */}
             {expert && (
             <TabsContent value="models" className="p-4 m-0">
-              <p className="text-[11px] text-muted-foreground leading-snug mb-2">
-                Het NER-model is nodig voor de keuze-modus op namen en context. <span className="text-foreground font-medium">'Verified'</span> = exact gematcht op onze hash-lijst (geen tampering). <span className="text-foreground font-medium">'Failed'</span> = niet gebruiken, herlaad de pagina.
-              </p>
+              <div className="rounded-md border border-amber-400/30 bg-amber-400/5 px-2.5 py-1.5 mb-2 text-[11px] text-amber-200 leading-snug">
+                <span className="font-medium">Naam-pin, geen weight-hash.</span> 'Verified' betekent dat het modelnaam + revisie matcht met onze catalog (configuratie-pin). Een verandering van de gewichten op HuggingFace zelf wordt hierdoor <span className="italic">niet</span> gedetecteerd. 'Failed' = niet gebruiken, herlaad de pagina.
+              </div>
               {integrity.length === 0 ? (
                 <p className="text-xs text-muted-foreground">Nog geen modellen gecheckt.</p>
               ) : (

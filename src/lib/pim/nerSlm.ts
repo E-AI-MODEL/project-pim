@@ -61,17 +61,23 @@ export function getNerStatus(): NerStatus { return currentStatus; }
 export function isNerVerified(): boolean { return modelVerified; }
 
 async function runIntegrityCheck(pipe: unknown): Promise<void> {
-  // Trust-on-first-pin: we hashen een canonieke descriptor (modelId@revision)
-  // die in de catalog is gepind. Wijzigt iemand de catalog of probeert een
-  // ander modelId hier te landen, dan breekt de hash en blokt de gate.
-  // Niet supply-chain-bewijs, maar wel een afdwingbare gate vanuit de UI.
+  // ⚠️ Beperkte garantie: dit is een NAAM-PIN, geen weight-hash.
+  //
+  // We hashen een canonieke descriptor (modelId@revision) uit de catalog.
+  // Wijzigt iemand de catalog of probeert een ander modelId hier te landen,
+  // dan breekt de hash en blokt de gate. Dat is een afdwingbare configuratie-
+  // pin, géén supply-chain-bewijs: een verandering van de ONNX-weights bij
+  // HuggingFace zelf wordt hierdoor NIET gedetecteerd.
+  //
+  // TODO: vervang door echte content-hash van de gedownloade .onnx-bestanden
+  // zodra de transformers.js API de byte-stream eenduidig blootlegt.
   const revision = (MODEL_CATALOG as Record<string, { revision: string }>)[CATALOG_KEY].revision;
   const descriptor = `${MODEL_ID}@${revision}`;
   // Sanity: confirm that the loaded pipeline actually claims this model.
   try {
     const p = pipe as { model?: { config?: { _name_or_path?: string; name_or_path?: string } } };
     const claimed = p?.model?.config?._name_or_path ?? p?.model?.config?.name_or_path;
-    if (claimed && !claimed.includes("bert-base-multilingual-cased-ner-hrl")) {
+    if (claimed && !claimed.includes("ner-hrl")) {
       console.warn("[PIM SLM] loaded model id mismatch:", claimed);
     }
   } catch { /* swallow */ }
@@ -139,8 +145,22 @@ export async function loadNerSlm(): Promise<AnyPipeline | null> {
     }
   })();
 
-  try { return await pipelinePromise; } catch { pipelinePromise = null; return null; }
+  // BELANGRIJK: pipelinePromise NIET nul-zetten op fail. Bij gelijktijdige
+  // callers (try.tsx + PipelineStepsBar) zou anders elke waiter een nieuwe
+  // download triggeren. Wie wil retryen roept retryNerSlm() expliciet aan.
+  try { return await pipelinePromise; } catch { return null; }
 }
+
+/** Reset de gecachte (gefaalde) load zodat de volgende loadNerSlm() opnieuw probeert. */
+export function retryNerSlm(): void {
+  pipelinePromise = null;
+  modelVerified = false;
+  usedRuntime = null;
+  lastError = null;
+  emit({ loading: false, ready: false, error: null, runtime: null, verified: false });
+}
+
+export function getNerLastError(): string | null { return lastError; }
 
 export async function detectPersonsSlm(text: string): Promise<PiiSpan[]> {
   const pipe = await loadNerSlm();

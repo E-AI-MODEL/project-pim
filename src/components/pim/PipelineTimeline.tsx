@@ -38,7 +38,7 @@ const STATUS_LABEL: Record<PipelineStepStatus, string> = {
   ok: "ok",
   found: "actief",
   warn: "let op",
-  block: "blokkeer",
+  block: "geblokkeerd",
 };
 
 interface Props {

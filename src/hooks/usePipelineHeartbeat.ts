@@ -33,9 +33,34 @@ export function usePipelineHeartbeat(stepIds: StepId[]) {
   const ticksRef = useRef<Map<StepId, { last: number; dur: number }>>(new Map());
   const [, setNow] = useState(0);
 
+  // Re-render alleen zolang er recente activiteit is (binnen 2,5 s).
+  // Voorheen draaide setInterval(220ms) ook bij volledig idle pagina's en
+  // forceerde dat onnodige re-renders op /try en in PipelineStepsBar.
   useEffect(() => {
-    const t = setInterval(() => setNow(performance.now()), 220);
-    return () => clearInterval(t);
+    let raf = 0;
+    let stopped = false;
+    const tick = () => {
+      if (stopped) return;
+      const now = performance.now();
+      const map = ticksRef.current;
+      let active = false;
+      for (const v of map.values()) {
+        if (now - v.last < 2500) { active = true; break; }
+      }
+      if (active) {
+        setNow(now);
+        raf = requestAnimationFrame(tick);
+      } else {
+        // Idle: re-check goedkoop elke 600 ms via timeout.
+        raf = window.setTimeout(tick, 600) as unknown as number;
+      }
+    };
+    raf = requestAnimationFrame(tick);
+    return () => {
+      stopped = true;
+      cancelAnimationFrame(raf);
+      clearTimeout(raf);
+    };
   }, []);
 
   const tick = useCallback((id: StepId, durationMs = 0) => {

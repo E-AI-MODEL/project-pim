@@ -76,9 +76,6 @@ export function WriterShell() {
   }, [editor, pimPlugin]);
 
   // Scan + redact loop.
-  const autoRedactKey = useMemo(() => Array.from(autoRedact).sort().join(","), [autoRedact]);
-  const ignoredKey = useMemo(() => Array.from(ignored).sort().join("|"), [ignored]);
-
   const scan = useCallback(() => {
     if (!editor) return;
     const { plain, map } = extractPlain(editor.state.doc);
@@ -211,6 +208,30 @@ export function WriterShell() {
   };
   const onExport = async () => {
     if (!editor) return;
+    // Lichte egress-gate: scan plain text vóór .docx-export. Bij residuele
+    // PII krijgt de gebruiker een keuze (toch / wis-alles / annuleer) i.p.v.
+    // stilzwijgend exporteren — consistent met de "schrijf veilig" claim.
+    const { plain } = (await import("./pimPlugin")).extractPlain(editor.state.doc);
+    const sig = computeSignals(plain, [], DEFAULT_PROFILE, new Set());
+    const total = sig.directPii.length + sig.contextualPii.length;
+    if (total > 0) {
+      const cats = Array.from(new Set([...sig.directPii, ...sig.contextualPii].map((s) => s.category))).join(", ");
+      const choice = window.prompt(
+        `Let op: het document bevat nog ${total} gevoelige term${total === 1 ? "" : "en"} (${cats}).\n\n` +
+          `Typ 'wis' om alles automatisch te vervangen door labels, 'ja' om toch te exporteren, of laat leeg om te annuleren.`,
+        "",
+      );
+      if (!choice) return;
+      if (choice.trim().toLowerCase() === "wis") {
+        // Tijdelijk alles auto-redacten: voeg alle gevonden categorieën toe
+        // aan autoRedact en wacht één scan-cycle af voordat we exporteren.
+        const allCats = new Set<PiiCategory>([...autoRedact, ...sig.directPii.map((s) => s.category), ...sig.contextualPii.map((s) => s.category)]);
+        setAutoRedact(allCats);
+        await new Promise((r) => setTimeout(r, 250));
+      } else if (choice.trim().toLowerCase() !== "ja") {
+        return;
+      }
+    }
     const ts = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 16);
     await exportEditorToDocx(editor, `pim-notitie-${ts}.docx`);
   };

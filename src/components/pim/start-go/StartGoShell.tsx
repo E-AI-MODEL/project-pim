@@ -110,7 +110,25 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
     }
   };
 
-  const onPrimary = async () => {
+  const buildCertified = (editedText: string): CertifiedPayload => {
+    if (!result) throw new Error("no result");
+    // Bij elke bewerking is de payload niet langer "certified" als anoniem
+    // veilig: laat draftCheck herbeoordelen via guardStatus="repair" pad zodat
+    // executeAction de re-consult doet.
+    const guardStatus =
+      result.decision.payloadType === "draft_anonymous_certified" && editedText === result.safeText
+        ? ("pass" as const)
+        : ("repair" as const);
+    return {
+      text: editedText,
+      mode: result.decision.mode,
+      payloadType: result.decision.payloadType ?? "unknown",
+      profileId: result.decision.profileId ?? profileId,
+      guardStatus,
+    };
+  };
+
+  const onPrimary = async (editedText: string) => {
     if (!result) return;
     if (result.decision.verdict === "BLOCK") {
       // Reset → trigger nieuwe ronde; gebruiker past tekst aan.
@@ -120,14 +138,7 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
     }
     setBusy(true);
     try {
-      const guardStatus = result.decision.payloadType === "draft_anonymous_certified" ? "pass" as const : "repair" as const;
-      const certified: CertifiedPayload = {
-        text: result.safeText,
-        mode: result.decision.mode,
-        payloadType: result.decision.payloadType ?? "unknown",
-        profileId: result.decision.profileId ?? profileId,
-        guardStatus,
-      };
+      const certified = buildCertified(editedText);
       const r = await executeAction(result.decision, certified);
       setEgressMsg(r.executed ? `✓ ${r.reason}` : `✗ ${r.reason}`);
       emitDebug("pipeline.execute", r.executed ? "egress toegestaan" : "egress geblokt", {
@@ -137,6 +148,25 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
       setBusy(false);
     }
   };
+
+  // Egress-gated quick-actions vanuit ResultActions. We bouwen een nep-decision
+  // met de juiste action (copy/export_file) en hergebruiken alle drempels.
+  const runQuickAction = async (editedText: string, quickAction: Action) => {
+    if (!result) return { executed: false, reason: "no result" };
+    const certified = buildCertified(editedText);
+    // Hergebruik dezelfde verdict-evaluatie maar laat executeAction zelf
+    // bepalen op basis van payload + decision.action.
+    const quickDecision = { ...result.decision, action: quickAction };
+    const r = await executeAction(quickDecision, certified);
+    emitDebug("pipeline.execute", r.executed ? "quick egress toegestaan" : "quick egress geblokt", {
+      executed: r.executed, reason: r.reason, action: quickAction,
+      quick: true,
+    });
+    return r;
+  };
+
+  const onCopy = (editedText: string) => runQuickAction(editedText, "copy");
+  const onDownload = (editedText: string) => runQuickAction(editedText, "export_file");
 
   const onExample = (e: Example) => {
     setText(e.text);
@@ -193,6 +223,8 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
           mapping={result.mapping}
           integrity={integrity}
           onPrimary={onPrimary}
+          onCopy={onCopy}
+          onDownload={onDownload}
           egressMsg={egressMsg}
           busy={busy}
           onOriginalChange={(v) => { setText(v); setEgressMsg(null); }}
