@@ -1,10 +1,14 @@
 import { COPY } from "@/lib/pim/copy";
 import { StartGoShell } from "./StartGoShell";
 import { TrustBadge } from "./TrustBadge";
+import { PipelineStepsBar } from "./PipelineStepsBar";
+import { LiveTechMonitor } from "./LiveTechMonitor";
 
 export function MonitorShell() {
   return (
-    <div className="bg-[#1e3a5f] rounded-lg border border-[#3b6fa0]/30 shadow-2xl overflow-hidden flex flex-col">
+    <div className="space-y-3">
+      <PipelineStepsBar />
+      <div className="bg-[#1e3a5f] rounded-lg border border-[#3b6fa0]/30 shadow-2xl overflow-hidden flex flex-col">
       {/* window header */}
       <div className="bg-[#0f1b3d]/50 px-4 py-3 border-b border-[#3b6fa0]/20 flex items-center justify-between">
         <span className="font-plex-mono text-[10px] tracking-[0.2em] uppercase font-bold text-[#3b6fa0]">
@@ -31,9 +35,17 @@ export function MonitorShell() {
           </span>
         </div>
         <div className="flex items-center gap-2">
+          <LiveTechMonitor
+            trigger={
+              <button className="font-plex-mono text-[10px] uppercase tracking-wider px-2 py-1 rounded bg-[#3b6fa0]/20 hover:bg-[#3b6fa0]/40 text-[#e8edf3]/80 transition-colors">
+                Live techniek
+              </button>
+            }
+          />
           <TrustBadge />
           <span className="font-plex-mono text-[10px] text-[#e8edf3]/40">v1.0</span>
         </div>
+      </div>
       </div>
     </div>
   );
