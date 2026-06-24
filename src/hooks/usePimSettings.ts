@@ -16,6 +16,8 @@ export interface PimSettings {
   setProfileId: (id: PipelineProfileId) => void;
   thresholdOverrides: Partial<Record<Action, number>>;
   disabledCategories: ReadonlySet<PiiCategory>;
+  /** Zet één categorie aan/uit voor detectie (gebruikt door de schrijfmodus). */
+  setCategoryEnabled: (cat: PiiCategory, enabled: boolean) => void;
   integrity: ModelIntegrityRecord[];
   /** Klaar om te spreaden: <AdvancedPanel {...settings.advancedPanelProps} /> */
   advancedPanelProps: AdvancedPanelProps;
@@ -28,6 +30,13 @@ export function usePimSettings(): PimSettings {
   const [integrity, setIntegrity] = useState<ModelIntegrityRecord[]>([]);
 
   useEffect(() => onModelIntegrity(setIntegrity), []);
+
+  const setCategoryEnabled = (cat: PiiCategory, enabled: boolean) =>
+    setDisabledCategories((prev) => {
+      const next = new Set(prev);
+      if (enabled) next.delete(cat); else next.add(cat);
+      return next;
+    });
 
   const advancedPanelProps = useMemo<AdvancedPanelProps>(() => ({
     profileId,
@@ -45,5 +54,5 @@ export function usePimSettings(): PimSettings {
     onResetCategories: () => setDisabledCategories(new Set()),
   }), [profileId, thresholdOverrides, disabledCategories, integrity]);
 
-  return { profileId, setProfileId, thresholdOverrides, disabledCategories, integrity, advancedPanelProps };
+  return { profileId, setProfileId, thresholdOverrides, disabledCategories, setCategoryEnabled, integrity, advancedPanelProps };
 }
