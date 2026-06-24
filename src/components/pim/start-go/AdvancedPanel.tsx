@@ -280,7 +280,7 @@ export function AdvancedPanel({
                     >
                       <div className="flex items-center justify-between gap-2">
                         <span className={`text-sm font-medium ${active ? "text-primary" : "text-foreground"}`}>
-                          {p.label}
+                          {PROFILE_SHORT_LABEL[p.id] ?? p.label}
                         </span>
                         {active && (
                           <span className="text-[9px] uppercase tracking-wider text-primary font-semibold">
@@ -288,8 +288,8 @@ export function AdvancedPanel({
                           </span>
                         )}
                       </div>
-                      <p className="text-[11px] text-muted-foreground mt-1 leading-snug line-clamp-2">
-                        {p.description}
+                      <p className="text-[11px] text-muted-foreground mt-1 leading-snug">
+                        {PROFILE_SHORT_DESC[p.id] ?? p.description}
                       </p>
                       {PROFILE_WHEN[p.id] && (
                         <p className="text-[10px] text-muted-foreground/70 mt-1 italic">
