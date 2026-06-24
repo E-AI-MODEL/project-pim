@@ -119,6 +119,22 @@ const CATEGORY_EXAMPLE: Partial<Record<PiiCategory, string>> = {
 
 const PROFILE_WHEN: Partial<Record<PipelineProfileId, string>> = {};
 
+// Korte, leesbare labels en beschrijvingen voor de Basis-modus.
+const PROFILE_SHORT_LABEL: Partial<Record<PipelineProfileId, string>> = {
+  "education-nl-full": "Onderwijs — Volledig",
+  "education-nl-rules-only": "Onderwijs — Alleen regels",
+  "healthcare-nl": "Zorg (ontwerp)",
+  "generic-nl": "Algemeen NL (ontwerp)",
+  "generic-en": "Algemeen EN (ontwerp)",
+};
+const PROFILE_SHORT_DESC: Partial<Record<PipelineProfileId, string>> = {
+  "education-nl-full": "Regels + namen-model + onderwijscontext. Volledige bescherming.",
+  "education-nl-rules-only": "Alleen patronen. Geen download, geen extern delen.",
+  "healthcare-nl": "Nog niet vrijgegeven.",
+  "generic-nl": "Nog niet vrijgegeven.",
+  "generic-en": "Nog niet vrijgegeven.",
+};
+
 interface Props {
   profileId: PipelineProfileId;
   onProfileChange: (id: PipelineProfileId) => void;
@@ -264,7 +280,7 @@ export function AdvancedPanel({
                     >
                       <div className="flex items-center justify-between gap-2">
                         <span className={`text-sm font-medium ${active ? "text-primary" : "text-foreground"}`}>
-                          {p.label}
+                          {PROFILE_SHORT_LABEL[p.id] ?? p.label}
                         </span>
                         {active && (
                           <span className="text-[9px] uppercase tracking-wider text-primary font-semibold">
@@ -272,8 +288,8 @@ export function AdvancedPanel({
                           </span>
                         )}
                       </div>
-                      <p className="text-[11px] text-muted-foreground mt-1 leading-snug line-clamp-2">
-                        {p.description}
+                      <p className="text-[11px] text-muted-foreground mt-1 leading-snug">
+                        {PROFILE_SHORT_DESC[p.id] ?? p.description}
                       </p>
                       {PROFILE_WHEN[p.id] && (
                         <p className="text-[10px] text-muted-foreground/70 mt-1 italic">

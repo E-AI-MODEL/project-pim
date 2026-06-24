@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { loadNerSlm, onNerStatus, type NerStatus } from "@/lib/pim/nerSlm";
 import { loadRewriteLlm, onRewriteStatus, type RewriteStatus } from "@/lib/pim/rewriteLlm";
+import { ChevronDown } from "lucide-react";
 
 function useIsMobileLowMem(): { mobile: boolean; lowMem: boolean } {
   const [state, setState] = useState({ mobile: false, lowMem: false });
@@ -75,6 +76,7 @@ export function PipelineStepsBar() {
   const [ner, setNer] = useState<NerStatus | null>(null);
   const [llm, setLlm] = useState<RewriteStatus | null>(null);
   const { mobile, lowMem } = useIsMobileLowMem();
+  const [open, setOpen] = useState(false);
 
   useEffect(() => onNerStatus(setNer), []);
   useEffect(() => onRewriteStatus(setLlm), []);
@@ -89,8 +91,31 @@ export function PipelineStepsBar() {
 
   const llmDisabled = mobile || lowMem;
 
+  const readyCount =
+    1 + (nerStatus === "ready" ? 1 : 0) + (llmStatus === "ready" ? 1 : 0);
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+    <div className="rounded-md border border-[#3b6fa0]/40 bg-[#0f1b3d]/40 overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="w-full flex items-center justify-between gap-2 px-3 py-2 text-left hover:bg-[#3b6fa0]/10 transition-colors"
+      >
+        <span className="flex items-center gap-2 min-w-0">
+          <span className="font-plex-mono text-[10px] tracking-[0.18em] uppercase text-[#e8edf3]/70">
+            Browser-modellen
+          </span>
+          <span className="font-plex-mono text-[10px] text-[#e8edf3]/55">
+            {readyCount}/3 actief
+          </span>
+        </span>
+        <ChevronDown
+          className={`h-4 w-4 text-[#e8edf3]/60 shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+      {open && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 p-2 border-t border-[#3b6fa0]/30">
       <StepPill
         num={1}
         title="Regex & regels"
@@ -116,6 +141,8 @@ export function PipelineStepsBar() {
         onClick={() => loadRewriteLlm().catch(() => {})}
         disabled={llmDisabled}
       />
+        </div>
+      )}
     </div>
   );
 }

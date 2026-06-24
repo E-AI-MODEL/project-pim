@@ -2,7 +2,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   Menu, X, FileText, PenLine, FlaskConical, ShieldCheck,
-  Workflow, Layers, CheckCircle, Flag, Settings, Info, Sparkles,
+  Workflow, Layers, CheckCircle, Flag, Settings, Info, FilePlus2,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
@@ -18,7 +18,7 @@ const GROUPS: Group[] = [
   {
     label: "Aan de slag",
     items: [
-      { kind: "event", event: "pim:reset", label: COPY.menuNewTest, icon: <Sparkles className="h-4 w-4" /> },
+      { kind: "event", event: "pim:reset", label: COPY.menuNewTest, icon: <FilePlus2 className="h-4 w-4" /> },
       { kind: "link",  to: "/schrijven", label: COPY.menuWriter, icon: <PenLine className="h-4 w-4" /> },
       { kind: "link",  to: "/try",       label: COPY.menuExpertLab, icon: <FlaskConical className="h-4 w-4" /> },
     ],
