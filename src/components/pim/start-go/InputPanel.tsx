@@ -403,6 +403,16 @@ function CompactComposer({
         </div>
       )}
 
+      {/* Live wissen — eerste-keer toelichting */}
+      {liveScrubToast && (
+        <div className="flex items-start gap-2 px-3 py-2 rounded-lg border border-rose-400/40 bg-rose-500/10 text-rose-200 text-[11px] leading-relaxed">
+          <Eraser className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+          <div className="flex-1">
+            <span className="font-medium">Live wissen actief.</span> BSN, e-mail, telefoon en IBAN worden direct vervangen door een label (bv. <code>[bsn]</code>). Namen en context blijven staan totdat je verstuurt.
+          </div>
+        </div>
+      )}
+
       {/* Hint onder de composer */}
       {text.trim().length === 0 ? (
         <p className="text-[11px] text-[#e8edf3]/50 leading-relaxed px-1">
