@@ -1,9 +1,10 @@
-// Advanced panel — geeft gebruikers sturing over profiel, drempels en toont
-// modelintegriteit. Alleen UI; alle beslislogica blijft in src/lib/pim.
+// Advanced panel — geeft gebruikers sturing over profiel, gevoeligheid en
+// detectoren. Twee weergaves: Basis (knoppen + uitleg) en Expert (sliders +
+// getallen + modellen-tab). Alle beslislogica blijft in src/lib/pim.
 import { useEffect, useRef, useState } from "react";
 import {
   ChevronDown, RotateCcw, ShieldCheck, ShieldAlert, SlidersHorizontal,
-  Layers, Gauge, Filter, Cpu,
+  Layers, Gauge, Filter, Cpu, Info, AlertTriangle,
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
@@ -28,6 +29,34 @@ const ACTION_LABELS: Record<Action, string> = {
   display: "Alleen scherm",
   restore: "Herstel mapping",
 };
+
+const ACTION_HINT: Partial<Record<Action, string>> = {
+  send_external_ai: "ChatGPT, Copilot, Gemini buiten je organisatie.",
+  export_file: "Download als .txt, .docx of .pdf.",
+  print: "Naar een fysieke of netwerk-printer.",
+  copy: "Kopieer naar klembord (Ctrl/⌘+C).",
+  share: "Link of bericht delen.",
+  save_local: "Opslaan in deze browser of in een bestand.",
+  display: "Alleen tonen op dit scherm — niets verstuurd.",
+};
+
+// Drie vaste niveaus voor de Basis-modus. "Standaard" = profiel-default.
+const STRICT_OFFSET = -0.15;   // strenger dan default
+const RELAXED_OFFSET = +0.25;  // soepeler dan default
+function clampThreshold(v: number) { return Math.max(0.05, Math.min(0.95, v)); }
+function levelFor(value: number, def: number): "strict" | "default" | "relaxed" | "custom" {
+  const eps = 0.005;
+  if (Math.abs(value - def) < eps) return "default";
+  if (Math.abs(value - clampThreshold(def + STRICT_OFFSET)) < eps) return "strict";
+  if (Math.abs(value - clampThreshold(def + RELAXED_OFFSET)) < eps) return "relaxed";
+  return "custom";
+}
+const LEVEL_HINT = {
+  strict:  "Vervangt direct bij elk signaal — ook twijfelgevallen.",
+  default: "Vervangt harde PII direct; twijfel krijg je als keuze.",
+  relaxed: "Vervangt alleen overduidelijke treffers, rest blijft staan.",
+  custom:  "Eigen instelling.",
+} as const;
 
 const TUNEABLE: Action[] = [
   "send_external_ai", "export_file", "print", "copy", "share", "save_local", "display",
@@ -74,6 +103,22 @@ const CATEGORY_LABELS: Partial<Record<PiiCategory, string>> = {
   context_performance: "Prestatie", context_location_specific: "Specifieke locatie",
 };
 
+const CATEGORY_EXAMPLE: Partial<Record<PiiCategory, string>> = {
+  bsn: "9-cijferig burgerservicenummer, bv. 123456789",
+  iban: "Bankrekening, bv. NL91ABNA0417164300",
+  email: "naam@school.nl",
+  phone: "06-12345678",
+  postcode: "1012 AB",
+  name: "Voor- of achternaam (NER-model)",
+  date: "12-03-2025 of 12 maart 2025",
+  url: "https://...",
+  ip_address: "192.168.1.10",
+  credit_card: "Creditcardnummer (16 cijfers)",
+  license_plate: "Kenteken, bv. 12-AB-34",
+};
+
+const PROFILE_WHEN: Partial<Record<PipelineProfileId, string>> = {};
+
 interface Props {
   profileId: PipelineProfileId;
   onProfileChange: (id: PipelineProfileId) => void;
@@ -92,6 +137,7 @@ export function AdvancedPanel({
 }: Props) {
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState("profile");
+  const [expert, setExpert] = useState(false);
   const profile = PIPELINE_PROFILES[profileId];
   const sectionRef = useRef<HTMLElement>(null);
 
@@ -129,7 +175,7 @@ export function AdvancedPanel({
           </div>
           <div className="text-[11px] text-muted-foreground leading-snug truncate">
             {profile.label}
-            {overriddenCount > 0 && ` · ${overriddenCount} drempel${overriddenCount === 1 ? "" : "s"} aangepast`}
+            {overriddenCount > 0 && ` · ${overriddenCount} gevoeligheid${overriddenCount === 1 ? "" : "en"} aangepast`}
             {offCount > 0 && ` · ${offCount} uit`}
           </div>
         </div>
@@ -140,14 +186,45 @@ export function AdvancedPanel({
 
       {open && (
         <div className="border-t border-border/30">
+          {/* Korte uitleg + Basis/Expert-toggle */}
+          <div className="px-4 pt-3 pb-2 space-y-2 border-b border-border/30">
+            <p className="text-[11px] text-muted-foreground leading-snug">
+              PiM stopt nooit je tekst. Het <span className="text-foreground font-medium">vervangt</span> harde PII (BSN, e-mail, telefoon, IBAN) direct door een label zoals <code className="text-foreground">[bsn]</code>. Voor twijfelgevallen (namen, context) krijg je een <span className="text-foreground font-medium">keuze</span>: vervangen of laten staan — die keuze-modus werkt pas nadat het NER-model in je browser is gedownload.
+            </p>
+            <div className="inline-flex items-center rounded-full border border-border/50 p-0.5 text-[11px] font-medium">
+              <button
+                type="button"
+                onClick={() => setExpert(false)}
+                className={`px-3 py-1 rounded-full transition-colors ${!expert ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                Basis
+              </button>
+              <button
+                type="button"
+                onClick={() => setExpert(true)}
+                className={`px-3 py-1 rounded-full transition-colors ${expert ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                Expert
+              </button>
+            </div>
+            {expert && (
+              <div className="flex items-start gap-2 rounded-md border border-amber-400/40 bg-amber-400/10 text-amber-200 px-2.5 py-1.5 text-[11px] leading-snug">
+                <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                <div>
+                  <span className="font-medium">Expert-modus.</span> Je stelt de gevoeligheid handmatig in (0–100). Hoger = PiM laat meer staan, lager = vervangt sneller. Niet zeker? Kies een profiel of klik Standaard.
+                </div>
+              </div>
+            )}
+          </div>
+
           <Tabs value={tab} onValueChange={setTab} className="w-full">
             <TabsList className="w-full justify-start rounded-none bg-transparent border-b border-border/30 px-2 h-auto p-0 gap-0 overflow-x-auto">
-              {[
+              {([
                 { v: "profile",    icon: Layers, label: "Profiel" },
-                { v: "thresholds", icon: Gauge,  label: "Drempels" },
+                { v: "thresholds", icon: Gauge,  label: "Gevoeligheid" },
                 { v: "detectors",  icon: Filter, label: "Detectoren" },
-                { v: "models",     icon: Cpu,    label: "Modellen" },
-              ].map(({ v, icon: Icon, label }) => (
+                ...(expert ? [{ v: "models", icon: Cpu, label: "Modellen" }] : []),
+              ] as Array<{ v: string; icon: typeof Layers; label: string }>).map(({ v, icon: Icon, label }) => (
                 <TabsTrigger
                   key={v}
                   value={v}
@@ -193,17 +270,25 @@ export function AdvancedPanel({
                       <p className="text-[11px] text-muted-foreground mt-1 leading-snug line-clamp-2">
                         {p.description}
                       </p>
+                      {PROFILE_WHEN[p.id] && (
+                        <p className="text-[10px] text-muted-foreground/70 mt-1 italic">
+                          Wanneer: {PROFILE_WHEN[p.id]}
+                        </p>
+                      )}
                     </button>
                   );
                 })}
               </div>
+              <p className="text-[10px] text-muted-foreground/60 pt-1">
+                Tip: <em>Strikt</em> voor klassenlijsten en oudergesprekken · <em>Gebalanceerd</em> voor dagelijks werk met AI-tools · <em>Soepel</em> voor interne notities en brainstorm.
+              </p>
             </TabsContent>
 
-            {/* DREMPELS */}
+            {/* GEVOELIGHEID */}
             <TabsContent value="thresholds" className="p-4 m-0 space-y-3">
               <div className="flex items-start justify-between gap-3">
                 <p className="text-xs text-muted-foreground leading-snug">
-                  Lager = strenger. Boven de drempel blokkeert PiM de actie.
+                  Bepaal per bestemming hoe snel PiM een gevoelig woord vervangt door een label.
                 </p>
                 {overriddenCount > 0 && (
                   <button
@@ -215,28 +300,72 @@ export function AdvancedPanel({
                   </button>
                 )}
               </div>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {TUNEABLE.map((a) => {
                   const def = DEFAULT_ANON_THRESHOLDS[a];
                   const val = thresholds[a] ?? def;
                   const isOverride = thresholds[a] !== undefined && thresholds[a] !== def;
+                  const lvl = levelFor(val, def);
+                  const strictVal  = clampThreshold(def + STRICT_OFFSET);
+                  const relaxedVal = clampThreshold(def + RELAXED_OFFSET);
                   return (
                     <div key={a} className="space-y-1.5">
                       <div className="flex items-center justify-between">
-                        <label className="text-xs font-medium text-foreground">
-                          {ACTION_LABELS[a]}
-                        </label>
-                        <span className={`text-[11px] tabular-nums ${isOverride ? "text-primary font-medium" : "text-muted-foreground"}`}>
-                          {(val * 100).toFixed(0)}%
-                        </span>
+                        <div className="min-w-0">
+                          <label className="text-xs font-medium text-foreground">
+                            {ACTION_LABELS[a]}
+                          </label>
+                          {ACTION_HINT[a] && (
+                            <div className="text-[10px] text-muted-foreground/80 leading-snug">{ACTION_HINT[a]}</div>
+                          )}
+                        </div>
+                        {expert && (
+                          <span className={`text-[11px] tabular-nums shrink-0 ml-2 ${isOverride ? "text-primary font-medium" : "text-muted-foreground"}`}>
+                            {val.toFixed(2)}
+                          </span>
+                        )}
                       </div>
-                      <Slider
-                        min={0}
-                        max={1}
-                        step={0.01}
-                        value={[val]}
-                        onValueChange={([v]) => onThresholdChange(a, v)}
-                      />
+                      {/* 3 grote niveau-knoppen */}
+                      <div className="grid grid-cols-3 gap-1.5">
+                        {[
+                          { id: "strict",  label: "Streng",     v: strictVal },
+                          { id: "default", label: "Standaard",  v: def },
+                          { id: "relaxed", label: "Soepel",     v: relaxedVal },
+                        ].map((b) => {
+                          const active = lvl === b.id;
+                          return (
+                            <button
+                              key={b.id}
+                              type="button"
+                              onClick={() => onThresholdChange(a, b.v)}
+                              className={`rounded-md border px-2 py-1.5 text-[11px] font-medium transition-colors ${
+                                active
+                                  ? "border-primary bg-primary/10 text-primary"
+                                  : "border-border/40 text-muted-foreground hover:text-foreground hover:bg-accent/30"
+                              }`}
+                            >
+                              {b.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <div className="text-[10px] text-muted-foreground/80 leading-snug px-0.5">
+                        → {LEVEL_HINT[lvl]}
+                      </div>
+                      {expert && (
+                        <div className="pt-1">
+                          <Slider
+                            min={0}
+                            max={1}
+                            step={0.01}
+                            value={[val]}
+                            onValueChange={([v]) => onThresholdChange(a, v)}
+                          />
+                          <div className="text-[10px] text-muted-foreground/70 mt-1">
+                            Gevoeligheid: <span className="text-foreground tabular-nums">{val.toFixed(2)}</span> — PiM vervangt vanaf score {(val * 100).toFixed(0)}/100. Lager = strenger.
+                          </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -245,15 +374,16 @@ export function AdvancedPanel({
 
             {/* DETECTOREN */}
             <TabsContent value="detectors" className="p-4 m-0 space-y-3">
-              <div className="flex items-start justify-between gap-3">
-                <p className="text-xs text-muted-foreground leading-snug">
-                  Schakel categorieën uit voor demo of debug van false positives.
-                </p>
+              <div className="flex items-start gap-2 rounded-md border border-rose-500/30 bg-rose-500/5 text-rose-200/90 px-2.5 py-1.5 text-[11px] leading-snug">
+                <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                <div className="flex-1">
+                  <span className="font-medium">Uit = PiM ziet die categorie niet meer</span> en vervangt niets in die groep. Alleen doen voor demo of false-positive debug.
+                </div>
                 {offCount > 0 && (
                   <button
                     type="button"
                     onClick={onResetCategories}
-                    className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground px-2 py-1 rounded hover:bg-accent/40 shrink-0"
+                    className="inline-flex items-center gap-1 text-[11px] text-rose-100 hover:text-white px-2 py-1 rounded hover:bg-rose-500/20 shrink-0"
                   >
                     <RotateCcw className="h-3 w-3" /> Alles aan
                   </button>
@@ -268,14 +398,21 @@ export function AdvancedPanel({
                     <div className="rounded-lg border border-border/40 divide-y divide-border/30 overflow-hidden">
                       {section.cats.map((cat) => {
                         const off = disabledCategories.has(cat);
+                        const example = CATEGORY_EXAMPLE[cat];
                         return (
                           <label
                             key={cat}
-                            className="flex items-center justify-between px-3 py-2 hover:bg-accent/30 cursor-pointer"
+                            className="flex items-center justify-between px-3 py-2 hover:bg-accent/30 cursor-pointer gap-2"
+                            title={example}
                           >
-                            <span className={`text-xs ${off ? "text-muted-foreground line-through" : "text-foreground"}`}>
-                              {CATEGORY_LABELS[cat] ?? cat}
-                            </span>
+                            <div className="min-w-0">
+                              <span className={`text-xs ${off ? "text-muted-foreground line-through" : "text-foreground"}`}>
+                                {CATEGORY_LABELS[cat] ?? cat}
+                              </span>
+                              {example && (
+                                <div className="text-[10px] text-muted-foreground/70 truncate">{example}</div>
+                              )}
+                            </div>
                             <Switch
                               checked={!off}
                               onCheckedChange={() => onToggleCategory(cat)}
@@ -290,8 +427,12 @@ export function AdvancedPanel({
               </div>
             </TabsContent>
 
-            {/* MODELLEN */}
+            {/* MODELLEN — alleen in Expert */}
+            {expert && (
             <TabsContent value="models" className="p-4 m-0">
+              <p className="text-[11px] text-muted-foreground leading-snug mb-2">
+                Het NER-model is nodig voor de keuze-modus op namen en context. <span className="text-foreground font-medium">'Verified'</span> = exact gematcht op onze hash-lijst (geen tampering). <span className="text-foreground font-medium">'Failed'</span> = niet gebruiken, herlaad de pagina.
+              </p>
               {integrity.length === 0 ? (
                 <p className="text-xs text-muted-foreground">Nog geen modellen gecheckt.</p>
               ) : (
@@ -320,6 +461,7 @@ export function AdvancedPanel({
                 </ul>
               )}
             </TabsContent>
+            )}
           </Tabs>
         </div>
       )}
