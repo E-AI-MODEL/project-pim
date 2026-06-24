@@ -92,7 +92,14 @@ async function detectWebGpu(): Promise<boolean> {
 }
 
 export async function loadNerSlm(): Promise<AnyPipeline | null> {
-  if (pipelinePromise) return pipelinePromise;
+  // Guard ook het early-return-pad: bij een eerder GEFAALDE load is
+  // pipelinePromise een afgewezen promise. Die hier rechtstreeks teruggeven
+  // zou elke volgende await laten THROWEN i.p.v. veilig null op te leveren —
+  // waardoor detectPersonsSlm de hele detectie liet klappen. Nu funnelt elke
+  // caller door dezelfde catch (→ null) en valt de pipeline terug op regex.
+  if (pipelinePromise) {
+    try { return await pipelinePromise; } catch { return null; }
+  }
   emit({ loading: true, error: null });
 
   pipelinePromise = (async () => {

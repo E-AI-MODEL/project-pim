@@ -13,10 +13,11 @@ import {
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
-  computeSignals, DEFAULT_PROFILE, onModelIntegrity,
+  computeSignals, DEFAULT_PROFILE, onModelIntegrity, PIPELINE_PROFILES,
   type PiiCategory, type PiiSpan, type PipelineProfileId, type Action,
   type ModelIntegrityRecord,
 } from "@/lib/pim";
+import { useNerSpans } from "@/hooks/useNerSpans";
 import { AdvancedPanel } from "@/components/pim/start-go/AdvancedPanel";
 import { LiveTechMonitor } from "@/components/pim/start-go/LiveTechMonitor";
 import { GENERALIZATIONS, DEFAULT_AUTO_REDACT, CATEGORY_LABELS } from "./pimGeneralizations";
@@ -53,6 +54,12 @@ export function WriterShell() {
   const [disabledCategories, setDisabledCategories] = useState<ReadonlySet<PiiCategory>>(new Set());
   const [integrity, setIntegrity] = useState<ModelIntegrityRecord[]>([]);
   useEffect(() => onModelIntegrity(setIntegrity), []);
+  // Platte tekst van de editor — gedeeld met de NER-hook zodat /schrijven
+  // dezelfde SLM-naamherkenning krijgt als de homepage (spoor A). De SLM
+  // wordt alleen gebruikt als het model al geladen is; geen stille download.
+  const [plainText, setPlainText] = useState("");
+  const usesNerSlm = PIPELINE_PROFILES[profileId].detectors.nerSlm;
+  const { nerSpans } = useNerSpans(plainText, { enabled: usesNerSlm });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editorRootRef = useRef<HTMLDivElement>(null);
 
@@ -89,7 +96,10 @@ export function WriterShell() {
   const scan = useCallback(() => {
     if (!editor) return;
     const { plain, map } = extractPlain(editor.state.doc);
-    const signals = computeSignals(plain, [], profileId, disabledCategories);
+    // Deel de platte tekst met de NER-hook; die levert (gedebounced) SLM-spans
+    // terug die we hieronder samen met regex/lexicon door computeSignals halen.
+    setPlainText(plain);
+    const signals = computeSignals(plain, nerSpans, profileId, disabledCategories);
     let all = [...signals.directPii, ...signals.contextualPii];
 
     // Aanscherping: identifier-validators verwerpen willekeurige cijferreeksen.
@@ -141,7 +151,7 @@ export function WriterShell() {
     const tr = editor.state.tr.setMeta(pimPluginKey, { decorations });
     editor.view.dispatch(tr);
     setStats((p) => ({ scrubbed: p.scrubbed, marked: toMark.length }));
-  }, [editor, autoRedact, ignored, strict, profileId, disabledCategories]);
+  }, [editor, autoRedact, ignored, strict, profileId, disabledCategories, nerSpans]);
 
   useEffect(() => {
     if (!editor) return;
@@ -222,7 +232,7 @@ export function WriterShell() {
     // PII krijgt de gebruiker een keuze (toch / wis-alles / annuleer) i.p.v.
     // stilzwijgend exporteren — consistent met de "schrijf veilig" claim.
     const { plain } = (await import("./pimPlugin")).extractPlain(editor.state.doc);
-    const sig = computeSignals(plain, [], profileId, disabledCategories);
+    const sig = computeSignals(plain, nerSpans, profileId, disabledCategories);
     const total = sig.directPii.length + sig.contextualPii.length;
     if (total > 0) {
       const cats = Array.from(new Set([...sig.directPii, ...sig.contextualPii].map((s) => s.category))).join(", ");

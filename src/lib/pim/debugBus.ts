@@ -7,6 +7,7 @@ export type DebugEventKind =
   | "pipeline.execute"
   | "model.ner.status"
   | "model.llm.status"
+  | "model.llm.rewrite"
   | "model.integrity"
   | "info";
 

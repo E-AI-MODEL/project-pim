@@ -4,12 +4,12 @@ import { AlertTriangle, Check, Cpu, Loader2, Sparkles } from "lucide-react";
 import {
   computeSignals, anonymize, pseudonymize, draftCheck, decide, executeAction,
   modelGateFor, onModelIntegrity, PIPELINE_PROFILES,
-  onNerStatus, loadNerSlm, retryNerSlm, detectPersonsSlm,
   onRewriteStatus, loadRewriteLlm, rewriteAnonymousDraft,
   type ModelIntegrityRecord, type NerStatus, type RewriteStatus,
   DEFAULT_PROFILE, type CertifiedPayload, type PayloadType,
   type Mode, type Action, type PipelineProfileId, type PiiCategory, type PiiSpan,
 } from "@/lib/pim";
+import { useNerSpans } from "@/hooks/useNerSpans";
 import { emitDebug } from "@/lib/pim/debugBus";
 import { InputPanel } from "./InputPanel";
 import { ModeTargetBar } from "./ModeTargetBar";
@@ -33,9 +33,7 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
   const [thresholdOverrides, setThresholdOverrides] = useState<Partial<Record<Action, number>>>({});
   const [disabledCategories, setDisabledCategories] = useState<ReadonlySet<PiiCategory>>(new Set());
   const [integrity, setIntegrity] = useState<ModelIntegrityRecord[]>([]);
-  const [nerStatus, setNerStatus] = useState<NerStatus | null>(null);
   const [nerEnabled, setNerEnabled] = useState(false);
-  const [nerSpans, setNerSpans] = useState<PiiSpan[]>([]);
   const [llmStatus, setLlmStatus] = useState<RewriteStatus | null>(null);
   const [llmMsg, setLlmMsg] = useState<string | null>(null);
   const [result, setResult] = useState<ResultState | null>(null);
@@ -45,11 +43,15 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
   const usesNerSlm = profile.detectors.nerSlm;
   const llmDevice = useLlmDeviceGuard();
 
+  // Gedeelde NER-hook (spoor A): identiek SLM-pad als /schrijven.
+  const { nerSpans, nerStatus, startNer: startNerLoad } = useNerSpans(text, {
+    enabled: usesNerSlm && nerEnabled,
+  });
+
   useEffect(() => {
     const offIntegrity = onModelIntegrity(setIntegrity);
-    const offNer = onNerStatus(setNerStatus);
     const offLlm = onRewriteStatus(setLlmStatus);
-    return () => { offIntegrity(); offNer(); offLlm(); };
+    return () => { offIntegrity(); offLlm(); };
   }, []);
 
   // Globaal reset-event (uit burgermenu "Nieuwe controle").
@@ -66,34 +68,15 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
   }, []);
 
   useEffect(() => {
-    if (!usesNerSlm) {
-      setNerEnabled(false);
-      setNerSpans([]);
-    }
+    if (!usesNerSlm) setNerEnabled(false);
   }, [usesNerSlm]);
 
   useEffect(() => {
     if (usesNerSlm && nerStatus?.ready) setNerEnabled(true);
   }, [usesNerSlm, nerStatus?.ready]);
 
-  useEffect(() => {
-    if (!usesNerSlm || !nerEnabled || !nerStatus?.ready || !text.trim()) {
-      setNerSpans([]);
-      return;
-    }
-    let cancelled = false;
-    const id = window.setTimeout(() => {
-      detectPersonsSlm(text)
-        .then((spans) => { if (!cancelled) setNerSpans(spans); })
-        .catch(() => { if (!cancelled) setNerSpans([]); });
-    }, 260);
-    return () => { cancelled = true; window.clearTimeout(id); };
-  }, [text, usesNerSlm, nerEnabled, nerStatus?.ready]);
-
-  const modelSpans = useMemo(
-    () => (usesNerSlm && nerEnabled && nerStatus?.ready ? nerSpans : []),
-    [usesNerSlm, nerEnabled, nerStatus?.ready, nerSpans],
-  );
+  // De hook gate't al op enabled+ready; modelSpans is hier puur de SLM-output.
+  const modelSpans = nerSpans;
 
   // Live preview-signals (zonder PiM uit te voeren).
   const previewSignals = useMemo(
@@ -116,8 +99,7 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
   const startNer = () => {
     if (!usesNerSlm) return;
     setNerEnabled(true);
-    if (nerStatus?.error) retryNerSlm();
-    void loadNerSlm().catch(() => {});
+    startNerLoad();
   };
 
   const startLlm = () => {
