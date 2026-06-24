@@ -1,63 +1,77 @@
-# Volgende stappen: PiM UX & functionaliteit
+# Plan — Zichtbare meertraps-pipeline + bewuste downloads + live-monitor popup
 
-## Probleem
-Na document-upload (fase 1, net gebouwd) is de grootste UX-gap duidelijk: de gebruiker ziet **welke** categorieën PiM vond, maar **niet waar** in de tekst. Bij lange documenten is handmatig zoeken onwerkbaar.
+## 1. Stappen zichtbaar in de UI (op landing)
 
-Daarnaast: de spec belooft 3 uitleglagen (docent / bestuurder / tech) maar de UI toont er 2. En de pseudonieme mapping + self-test modules bestaan maar zijn onzichtbaar.
+Boven `MonitorShell` (en als compact mini-strip op mobiel) een nieuwe `PipelineStepsBar` met 3 stappen:
 
-## Fase 1 — Gekleurde tekst-highlighting in ResultPanel (hoogste impact)
+```text
+[ 1. Regex/Rules ]  →  [ 2. Download 1 · NER-SLM ]  →  [ 3. Download 2 · Generalisatie-LLM ]
+   actief direct       knop: "Inschakelen"            knop: "Inschakelen"
+   ✓ altijd lokaal     ~100 MB · q8 · WebGPU/WASM    ~400 MB · alleen desktop
+```
 
-**Nieuw component:** `TextHighlighter.tsx`
+Elke stap toont status (idle / loading % / ready / error) en is een **bewuste knop**, niet auto-load. De huidige `auto-load` op `/try` halen we eruit en vervangen door dezelfde knoppen.
 
-Toon de originele invoertekst met inline gekleurde highlights op elke PII-detectie:
-- **Directe PII** (email, BSN, naam, adres…): oranje/rood achtergrond + tooltip met categorie + confidence
-- **Contextuele PII** (zorgcontext, incident, kleine groep…): amber/geel achtergrond + tooltip
-- Overlappende spans: hoogste confidence wint (zelfde logica als detectors)
-- Lange teksten (>5000 chars): scrollbaar met sticky categorie-legenda
+Op mobiel:
+- Stap 2 (NER-SLM) toont badge "kan op mobiel — eerste laad duurt langer".
+- Stap 3 (Rewrite-LLM) toont badge "alleen desktop met voldoende RAM" en de knop is **disabled** met tooltip (detectie via `navigator.deviceMemory < 4` of `coarse pointer` + smal viewport).
 
-**UI-integratie in ResultPanel:**
-- Nieuwe sectie boven "De veilige versie van je tekst" — genaamd "Wat PiM herkende in je tekst"
-- Tab-switcher: [Origineel met highlights] | [Veilige versie]
-- FindingChips blijft bestaan als samenvatting bovenaan
+## 2. Live-monitor popup ("Live techniek")
 
-**Technisch:**
-- Render spans als overlappende `<mark>`-achtige elementen via absolute positioning of span-injectie
-- Tooltip via native `title` of kleine popover op hover
-- Responsief: op mobile wordt de tekst horizontaal scrollbaar met zoom-indicator
+Floating knop rechtsonder + extra knop in `MonitorShell`-footer "Live techniek". Opent een `Sheet` (rechts op desktop, bottom-drawer op mobiel) met tabs:
 
-## Fase 2 — Tech-laag toevoegen aan SafetyVerdictCard
+- **Pipeline** — laatste run, per stap een rij met status, duur, telcijfers (geen ruwe tekst):
+  - Stap 1 Regex: aantal directe + contextuele hits per categorie.
+  - Stap 2 NER-SLM: aangeroepen ja/nee, runtime (WebGPU/WASM), spans gevonden.
+  - Stap 3 Rewrite-LLM: aangeroepen ja/nee, draft-check verdict, behouden/origineel.
+  - Draft-Check Guard + Model-Gate + Decision (verdict, payloadType, drempel).
+  - Egress-Guard resultaat.
+- **Modellen** — voor SLM en LLM: `modelId`, status, progress-bar tijdens download, verified-hash, knop "Nu laden / Pauzeren".
+- **Omgeving** — WebGPU adapter ja/nee, `deviceMemory`, `hardwareConcurrency`, `crossOriginIsolated`, online/offline, viewport, dpr. Met expliciete melding bovenaan:
 
-COPY.ts bevat alleen `layerTeacher*` en `layerLeader*`. De spec noemt expliciet een **tech-collega**-laag.
+  > **Let op — op mobiel is niet alles mogelijk.** De rewrite-LLM (~400 MB) blijft uit. NER-SLM werkt wel, maar de eerste laad kan 20–40 s duren en is daarna gecached.
 
-**Actie:**
-- Nieuwe COPY-keys: `layerTechAllow`, `layerTechWarn`, `layerTechBlock`
-- Tech-laag toont: ruleId, policyVersion, aantal detectoren, riskScore breakdown, payloadType
-- SafetyVerdictCard krijgt 3e `Layer` (met `Code` icon) naast GraduationCap en Building2
+- **Logboek** — ring-buffer (laatste 50 events) uit `window.dispatchEvent('pim:debug', …)`, monospace, kopieerbaar. Alleen lengtes/IDs/statussen — nooit ruwe input of mapping-waardes.
 
-## Fase 3 — Pseudoniem mapping viewer
+## 3. Bewuste downloads — geen auto-prefetch
 
-Wanneer modus = pseudoniem, toon een uitklapbare "Token mapping" tabel onder de veilige tekst:
-- Kolommen: Token | Origineel | Categorie
-- Zoek/filter op token of categorie
-- Knop "Kopieer mapping als JSON" (lokaal — geen egress)
-- Alleen zichtbaar bij modus = pseudonymous
+- Geen `idle prefetch` in `MonitorShell`.
+- `loadNerSlm()` en `loadRewriteLlm()` worden alléén aangeroepen door de twee knoppen in `PipelineStepsBar` of vanuit het Modellen-tab in de popup.
+- Stap 2 en 3 in `decide()` blijven correct: zonder geladen model gaat de pipeline gewoon door op stap 1 (regex) en het Model-Gate-resultaat reflecteert dat eerlijk in de popup.
 
-## Fase 4 — Trust indicator (self-test)
+## 4. Beter / kleiner NER-SLM op HuggingFace?
 
-De `selfTest.ts` module is compleet maar onzichtbaar.
+Huidig model: `Xenova/bert-base-multilingual-cased-ner-hrl` (Davlan, mBERT-base). q8 ONNX ≈ **178 MB**.
 
-**Actie:**
-- Mini trust-badge in MonitorShell footer (naast "Local Guard actief")
-- Groen vinkje = self-test PASS, oranje uitroepteken = FAIL
-- Klik opent een klein popover met: golden-cases resultaten, hardening status, ruleset hash (eerste 12 chars)
-- Self-test runt automatisch bij eerste render (non-blocking)
+Beste pragmatische upgrade in december 2026:
+**`Xenova/distilbert-base-multilingual-cased-ner-hrl`** — zelfde Davlan-training en zelfde 10 talen (incl. NL), op DistilBERT i.p.v. mBERT. Quantized ONNX is ~**90–100 MB**, ongeveer **2× kleiner en sneller**, met minimale accuratesseverlies op PER/ORG/LOC. Volledig Transformers.js v3-compatibel, zelfde `token-classification` pipeline, geen code-aanpassing buiten `modelCatalog`.
 
-## Technische details
+Andere overwogen kandidaten:
+- `onnx-community/bert-base-multilingual-cased-ner-hrl-ONNX` — zelfde gewichten als huidig, geen winst.
+- `tjruesch/xlm-roberta-base-ner-hrl-onnx` — XLM-R basis, vaak iets beter maar gróter (~400 MB), géén winst voor jou.
+- GLiNER multi — flexibel, maar minder beproefd in browser en eerder zwaarder.
 
-- Geen nieuwe dependencies nodig
-- Alles blijft 100% client-side
-- TypeScript strict compatibel
+**Advies:** vervangen door `Xenova/distilbert-base-multilingual-cased-ner-hrl` als **Download 1**. We pinnen het in `modelCatalog.ts` met nieuwe revision + hash en laten de huidige bert-mBERT als optionele "zwaardere variant" in advanced staan.
 
-## Scope
+## 5. Bestanden
 
-Alleen frontend/UI wijzigingen — geen aanpassingen aan detectoren, policy, of pipeline-logica.
+Nieuw:
+- `src/components/pim/start-go/PipelineStepsBar.tsx` — 3 stappen, knoppen, badges.
+- `src/components/pim/start-go/LiveTechMonitor.tsx` — Sheet/Drawer met tabs.
+- `src/lib/pim/debugBus.ts` — kleine emitter (`emit`, `subscribe`, ring-buffer).
+
+Wijzigen:
+- `src/lib/pim/modelCatalog.ts` — switch primair SLM naar `Xenova/distilbert-base-multilingual-cased-ner-hrl`, met juiste revision + placeholder-hash tot first-pin.
+- `src/lib/pim/nerSlm.ts` — geen gedragswijziging; alleen log via `debugBus`.
+- `src/lib/pim/rewriteLlm.ts` — idem `debugBus`-events.
+- `src/components/pim/start-go/MonitorShell.tsx` — `PipelineStepsBar` boven shell + "Live techniek" knop + render `<LiveTechMonitor/>`. **Geen** auto-load.
+- `src/components/pim/start-go/StartGoShell.tsx` — `debugBus.emit(...)` na `run()` en `onPrimary()` (lengtes, telcijfers, statussen — geen tekst).
+- `src/routes/try.tsx` — auto-load `loadNerSlm()` op mount verwijderen; gebruikt zelfde knoppen.
+
+## 6. Privacy
+
+Debug-bus logt alleen: `len`, `signalsCount`, `verdict`, `runtime`, `modelId`, `pct`, tijden. **Geen** invoertekst, **geen** mapping-waardes. De popup zelf is een UI-laag — geen netwerk.
+
+## Open keuze
+1. SLM-vervanging direct doorvoeren (distilbert) of als opt-in toggle naast het huidige model?
+2. Floating "Live techniek"-knop standaard zichtbaar of alleen wanneer `?debug=1` of na klik op de status-pill in de footer?

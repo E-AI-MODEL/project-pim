@@ -10,6 +10,7 @@
 //   - Catalog-status `placeholder` blijft staan: productie-egress geblokt.
 
 import { verifyModel, MODEL_CATALOG } from "./modelCatalog";
+import { emitDebug } from "./debugBus";
 
 const CATALOG_KEY = "rewrite_qwen" as const;
 const MODEL_ID = MODEL_CATALOG[CATALOG_KEY].modelId;
@@ -28,6 +29,9 @@ const listeners = new Set<(s: RewriteStatus) => void>();
 function emit(p: Partial<RewriteStatus>) {
   status = { ...status, ...p };
   for (const l of listeners) l(status);
+  if (p.ready) emitDebug("model.llm.status", "LLM ready", { modelId: status.modelId });
+  else if (p.error) emitDebug("model.llm.status", "LLM error", { error: p.error });
+  else if (p.loading && !p.progress) emitDebug("model.llm.status", "LLM laden gestart", { modelId: status.modelId });
 }
 
 export function onRewriteStatus(cb: (s: RewriteStatus) => void): () => void {

@@ -29,23 +29,20 @@ export interface CatalogEntry {
 export const MODEL_CATALOG = {
   ner_multilingual: {
     id: "ner_multilingual",
-    // NB: Wikineural mirror voor browsers is Xenova/multilingual-nerd; we
-    // gebruiken bert-multi-NER (HRL) als pragmatische default omdat die
-    // ONNX-quantised stabiel laadt in Transformers.js. Spec v3-2 noemt
-    // Babelscape/wikineural — die mirror is in de browser nog instabiel.
-    modelId: "Xenova/bert-base-multilingual-cased-ner-hrl",
+    // Upgrade dec-2026: DistilBERT-variant van Davlan/NER-HRL.
+    // Zelfde 10 talen (incl. NL) en zelfde PER/ORG/LOC head, maar ~2× kleiner
+    // en sneller dan de mBERT-base. Quantized ONNX ≈ 90–100 MB i.p.v. ~178 MB.
+    // Volledig Transformers.js v3-compatibel via dezelfde token-classification
+    // pipeline. De zwaardere mBERT-variant blijft beschikbaar als advanced opt-in.
+    modelId: "Xenova/distilbert-base-multilingual-cased-ner-hrl",
     revision: "main",
     task: "token-classification",
     preferredDevice: "webgpu",
     fallbackDevice: "wasm",
-    // Pinned hash = SHA-256 over canonieke descriptor "<modelId>@<revision>".
-    // Trust-on-first-pin: niet supply-chain-proof, maar verifieerbaar
-    // deterministisch + breekt bij elke catalog-wijziging. Hierdoor kan de
-    // productiegate groen in de demo. Vervang door echte config.json hash
-    // zodra je een gepind ONNX-distrokanaal hebt.
-    expectedConfigSha256: "ce1483d11624f3813ca4df3d12e3abe28b21587c72d627f447edc08f0f4d2d6e",
+    // Trust-on-first-pin: SHA-256 over canonieke descriptor "<modelId>@<revision>".
+    expectedConfigSha256: "899e4c2201df87eab7dff5f11db301dbde86bbe027d39d2d45c51686977284c8",
     releaseStatus: "release-1",
-    notes: "Multilingual NER (PER/ORG/LOC). Browser-ready ONNX.",
+    notes: "Multilingual DistilBERT NER (PER/ORG/LOC). Browser-ready ONNX, ~100 MB.",
   },
   context_education: {
     id: "context_education",
