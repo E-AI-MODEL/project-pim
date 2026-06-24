@@ -42,6 +42,7 @@ export function WriterShell() {
   const [stats, setStats] = useState({ scrubbed: 0, marked: 0 });
   const [clicked, setClicked] = useState<ClickedSpan | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
+  const [importWarnings, setImportWarnings] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editorRootRef = useRef<HTMLDivElement>(null);
 
@@ -148,7 +149,7 @@ export function WriterShell() {
       cancelAnimationFrame(raf);
       editor.off("update", debounced);
     };
-  }, [editor, scan, autoRedactKey, ignoredKey, strict]);
+  }, [editor, scan]);
 
   // Klik op highlight → popover.
   useEffect(() => {
@@ -193,6 +194,7 @@ export function WriterShell() {
   const onImportClick = () => fileInputRef.current?.click();
   const onFile = async (files: FileList | null) => {
     setImportError(null);
+    setImportWarnings([]);
     if (!files || files.length === 0 || !editor) return;
     const file = files[0];
     if (!/\.docx$/i.test(file.name)) {
@@ -200,7 +202,8 @@ export function WriterShell() {
       return;
     }
     try {
-      await importDocxToEditor(file, editor);
+      const { warnings } = await importDocxToEditor(file, editor);
+      if (warnings.length > 0) setImportWarnings(warnings);
     } catch (err) {
       setImportError(err instanceof Error ? err.message : "Kon document niet lezen.");
     }
@@ -262,6 +265,14 @@ export function WriterShell() {
       {importError && (
         <div className="text-xs rounded-md border border-rose-500/40 bg-rose-500/10 text-rose-200 px-3 py-2">
           {importError}
+        </div>
+      )}
+      {importWarnings.length > 0 && (
+        <div className="text-xs rounded-md border border-amber-400/40 bg-amber-400/10 text-amber-200 px-3 py-2 space-y-1">
+          <div className="font-medium">Let op bij import</div>
+          <ul className="list-disc pl-4 space-y-0.5">
+            {importWarnings.map((w, i) => <li key={i}>{w}</li>)}
+          </ul>
         </div>
       )}
 
