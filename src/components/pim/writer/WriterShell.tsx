@@ -13,8 +13,11 @@ import {
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
-  computeSignals, DEFAULT_PROFILE, type PiiCategory, type PiiSpan,
+  computeSignals, DEFAULT_PROFILE, onModelIntegrity,
+  type PiiCategory, type PiiSpan, type PipelineProfileId, type Action,
+  type ModelIntegrityRecord,
 } from "@/lib/pim";
+import { AdvancedPanel } from "@/components/pim/start-go/AdvancedPanel";
 import { GENERALIZATIONS, DEFAULT_AUTO_REDACT, CATEGORY_LABELS } from "./pimGeneralizations";
 import {
   createPimPlugin, pimPluginKey, extractPlain, spanToRange, buildDecorations,
@@ -43,6 +46,12 @@ export function WriterShell() {
   const [clicked, setClicked] = useState<ClickedSpan | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const [importWarnings, setImportWarnings] = useState<string[]>([]);
+  // Profiel + detector-instellingen, gelijk aan de homepage.
+  const [profileId, setProfileId] = useState<PipelineProfileId>(DEFAULT_PROFILE);
+  const [thresholdOverrides, setThresholdOverrides] = useState<Partial<Record<Action, number>>>({});
+  const [disabledCategories, setDisabledCategories] = useState<ReadonlySet<PiiCategory>>(new Set());
+  const [integrity, setIntegrity] = useState<ModelIntegrityRecord[]>([]);
+  useEffect(() => onModelIntegrity(setIntegrity), []);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editorRootRef = useRef<HTMLDivElement>(null);
 
@@ -79,7 +88,7 @@ export function WriterShell() {
   const scan = useCallback(() => {
     if (!editor) return;
     const { plain, map } = extractPlain(editor.state.doc);
-    const signals = computeSignals(plain, [], DEFAULT_PROFILE, new Set());
+    const signals = computeSignals(plain, [], profileId, disabledCategories);
     let all = [...signals.directPii, ...signals.contextualPii];
 
     // Aanscherping: identifier-validators verwerpen willekeurige cijferreeksen.
@@ -131,7 +140,7 @@ export function WriterShell() {
     const tr = editor.state.tr.setMeta(pimPluginKey, { decorations });
     editor.view.dispatch(tr);
     setStats((p) => ({ scrubbed: p.scrubbed, marked: toMark.length }));
-  }, [editor, autoRedact, ignored, strict]);
+  }, [editor, autoRedact, ignored, strict, profileId, disabledCategories]);
 
   useEffect(() => {
     if (!editor) return;
@@ -212,7 +221,7 @@ export function WriterShell() {
     // PII krijgt de gebruiker een keuze (toch / wis-alles / annuleer) i.p.v.
     // stilzwijgend exporteren — consistent met de "schrijf veilig" claim.
     const { plain } = (await import("./pimPlugin")).extractPlain(editor.state.doc);
-    const sig = computeSignals(plain, [], DEFAULT_PROFILE, new Set());
+    const sig = computeSignals(plain, [], profileId, disabledCategories);
     const total = sig.directPii.length + sig.contextualPii.length;
     if (total > 0) {
       const cats = Array.from(new Set([...sig.directPii, ...sig.contextualPii].map((s) => s.category))).join(", ");
@@ -296,6 +305,22 @@ export function WriterShell() {
           </ul>
         </div>
       )}
+
+      <AdvancedPanel
+        profileId={profileId}
+        onProfileChange={setProfileId}
+        thresholds={thresholdOverrides}
+        onThresholdChange={(a, v) => setThresholdOverrides((prev) => ({ ...prev, [a]: v }))}
+        onResetThresholds={() => setThresholdOverrides({})}
+        integrity={integrity}
+        disabledCategories={disabledCategories}
+        onToggleCategory={(cat) => setDisabledCategories((prev) => {
+          const next = new Set(prev);
+          if (next.has(cat)) next.delete(cat); else next.add(cat);
+          return next;
+        })}
+        onResetCategories={() => setDisabledCategories(new Set())}
+      />
 
       <div
         ref={editorRootRef}
