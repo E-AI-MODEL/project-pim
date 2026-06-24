@@ -17,7 +17,12 @@ interface Props {
   signals: PrivacySignals;
   mapping: Map<string, string>;
   integrity: ModelIntegrityRecord[];
-  onPrimary: () => void;
+  /** Wordt aangeroepen met de huidige (mogelijk bewerkte) veilige tekst. */
+  onPrimary: (editedSafeText: string) => void;
+  /** Egress-gated kopie van de bewerkte tekst. */
+  onCopy?: (editedSafeText: string) => Promise<{ executed: boolean; reason: string }>;
+  /** Egress-gated download van de bewerkte tekst. */
+  onDownload?: (editedSafeText: string) => Promise<{ executed: boolean; reason: string }>;
   egressMsg: string | null;
   busy?: boolean;
   /** Live-bewerken van de origineel-tekst (gaat terug naar StartGoShell.text) */
@@ -29,7 +34,7 @@ interface Props {
 }
 
 export function ResultPanel({
-  decision, safeText, originalText, signals, mapping, integrity, onPrimary, egressMsg, busy,
+  decision, safeText, originalText, signals, mapping, integrity, onPrimary, onCopy, onDownload, egressMsg, busy,
   onOriginalChange, profileId, disabledCategories, thresholdOverrides,
 }: Props) {
   const directSpans = signals.directPii;
@@ -178,7 +183,10 @@ export function ResultPanel({
 
       <ResultActions
         verdict={isEdited && liveSafeVerdict ? liveSafeVerdict : decision.verdict}
-        onPrimary={onPrimary}
+        liveVerdict={isEdited ? liveSafeVerdict : null}
+        onPrimary={() => onPrimary(editedSafe)}
+        onCopy={onCopy ? () => onCopy(editedSafe) : undefined}
+        onDownload={onDownload ? () => onDownload(editedSafe) : undefined}
         safeText={editedSafe}
         busy={busy}
       />
