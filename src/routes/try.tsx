@@ -347,9 +347,8 @@ function TryPage() {
     if (!profile.detectors.nerSlm) setSlmEnabled(false);
   }, [profile.detectors.nerSlm]);
 
-  useEffect(() => {
-    if (slmEnabled && profile.detectors.nerSlm) loadNerSlm().catch(() => {});
-  }, [slmEnabled, profile.detectors.nerSlm]);
+  // Geen auto-load: NER-SLM start nu uitsluitend via de bewuste knop
+  // ("Inschakelen") in de PipelineStepsBar of via de Live Tech Monitor.
 
   useEffect(() => { tick("input", 0); }, [text, tick]);
 

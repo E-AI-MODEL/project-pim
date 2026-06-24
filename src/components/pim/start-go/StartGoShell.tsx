@@ -6,6 +6,7 @@ import {
   DEFAULT_PROFILE, type CertifiedPayload, type PayloadType,
   type Mode, type Action, type PipelineProfileId, type PiiCategory,
 } from "@/lib/pim";
+import { emitDebug } from "@/lib/pim/debugBus";
 import { InputPanel } from "./InputPanel";
 import { ModeTargetBar } from "./ModeTargetBar";
 import { ResultPanel } from "./ResultPanel";
@@ -67,6 +68,7 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
   const run = () => {
     if (!text.trim()) return;
     setBusy(true);
+    const t0 = performance.now();
     try {
       const signals = computeSignals(text, [], profileId, disabledCategories);
       let draft;
@@ -91,6 +93,18 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
       });
       setResult({ decision, safeText: draft.text, originalText: text, signals, mapping });
       setEgressMsg(null);
+      emitDebug("pipeline.run", `run: ${decision.verdict}`, {
+        ms: Math.round(performance.now() - t0),
+        inputLen: text.length,
+        mode, action, profile: profileId,
+        signals: signals.directPii.length + signals.contextualPii.length,
+        directHits: signals.directPii.length,
+        contextualHits: signals.contextualPii.length,
+        draftCheck: guard.status,
+        modelGate: gate.reason,
+        verdict: decision.verdict,
+        payloadType,
+      });
     } finally {
       setBusy(false);
     }
@@ -116,6 +130,9 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
       };
       const r = await executeAction(result.decision, certified);
       setEgressMsg(r.executed ? `✓ ${r.reason}` : `✗ ${r.reason}`);
+      emitDebug("pipeline.execute", r.executed ? "egress toegestaan" : "egress geblokt", {
+        executed: r.executed, reason: r.reason, action: result.decision.action,
+      });
     } finally {
       setBusy(false);
     }

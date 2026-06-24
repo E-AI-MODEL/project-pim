@@ -4,6 +4,7 @@
 
 import type { PiiSpan } from "./types";
 import { verifyModel, MODEL_CATALOG } from "./modelCatalog";
+import { emitDebug } from "./debugBus";
 
 type AnyPipeline = (text: string, opts?: Record<string, unknown>) => Promise<unknown>;
 
@@ -45,6 +46,9 @@ let currentStatus: NerStatus = {
 function emit(patch: Partial<NerStatus>) {
   currentStatus = { ...currentStatus, ...patch };
   for (const l of listeners) l(currentStatus);
+  if (patch.ready) emitDebug("model.ner.status", `NER-SLM ready (${currentStatus.runtime})`, { modelId: currentStatus.modelId, runtime: currentStatus.runtime, verified: currentStatus.verified });
+  else if (patch.error) emitDebug("model.ner.status", `NER-SLM error`, { error: patch.error });
+  else if (patch.loading && !patch.progress) emitDebug("model.ner.status", `NER-SLM laden gestart`, { modelId: currentStatus.modelId });
 }
 
 export function onNerStatus(cb: (s: NerStatus) => void): () => void {
