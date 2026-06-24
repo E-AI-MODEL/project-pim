@@ -12,6 +12,7 @@
 
 import { computeSignals } from "./risk";
 import { getViolations } from "./runtimeHardening";
+import { sha256Hex } from "./modelCatalog";
 
 export type SelfTestStatus = "idle" | "running" | "pass" | "fail";
 
@@ -62,34 +63,26 @@ export function getSelfTest(): SelfTestReport | null {
   return cached;
 }
 
-async function sha256Hex(s: string): Promise<string> {
-  const buf = new TextEncoder().encode(s);
-  const hash = await crypto.subtle.digest("SHA-256", buf);
-  return Array.from(new Uint8Array(hash))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
 async function probeHardening(): Promise<{ fetchWrapped: boolean; probeLogged: boolean; note: string }> {
-  // Wrapper is geïnstalleerd als window.fetch een ander object is dan de
-  // originele native. We kunnen dat niet 100% bewijzen, maar wel een
-  // gedragstest doen: fetch naar example.invalid moet een violation loggen.
+  // Gedragstest zonder echte DNS: een loopback-poort 0 wordt direct geweigerd
+  // (connection refused), terwijl de hardening-wrapper synchroon mag loggen
+  // vóór de error. Eerder gebruikten we een ".invalid"-host, maar dat
+  // veroorzaakte een echte DNS-lookup vanaf elke gebruiker bij boot — wat
+  // tegenstrijdig leek met "niets verlaat je apparaat".
   const before = getViolations().length;
-  const PROBE = "https://pim-selftest.invalid/probe";
+  const PROBE = "http://127.0.0.1:0/pim-selftest-probe";
   try {
-    // We verwachten dat dit faalt (DNS), maar de wrapper moet logging hebben
-    // gedaan voordat de error optreedt.
     await fetch(PROBE, { method: "GET", mode: "no-cors" });
   } catch {
-    /* expected */
+    /* expected — geen TCP-verbinding */
   }
   const after = getViolations().length;
-  const logged = after > before && getViolations().slice(before).some((v) => v.includes("pim-selftest.invalid"));
+  const logged = after > before && getViolations().slice(before).some((v) => v.includes("pim-selftest-probe"));
   return {
     fetchWrapped: typeof window !== "undefined" && window.fetch.length >= 0,
     probeLogged: logged,
     note: logged
-      ? "Probe naar pim-selftest.invalid werd door wrapper gelogd."
+      ? "Lokale probe (127.0.0.1:0) werd door wrapper gelogd zonder netwerkverkeer."
       : "Wrapper heeft probe NIET gelogd — fetch-interceptor mogelijk omzeild.",
   };
 }

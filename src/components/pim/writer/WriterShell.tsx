@@ -76,9 +76,6 @@ export function WriterShell() {
   }, [editor, pimPlugin]);
 
   // Scan + redact loop.
-  const autoRedactKey = useMemo(() => Array.from(autoRedact).sort().join(","), [autoRedact]);
-  const ignoredKey = useMemo(() => Array.from(ignored).sort().join("|"), [ignored]);
-
   const scan = useCallback(() => {
     if (!editor) return;
     const { plain, map } = extractPlain(editor.state.doc);

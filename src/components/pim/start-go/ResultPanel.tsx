@@ -67,7 +67,7 @@ export function ResultPanel({
       thresholdOverrides: thresholdOverrides ?? {},
     });
     return d.verdict;
-  }, [editedSafe, isEdited, profileId, disabledCategories, thresholdOverrides, decision]);
+  }, [editedSafe, profileId, disabledCategories, thresholdOverrides, decision, signals.directPii.length]);
 
   // Live highlights voor de origineel-tab — herberekend op elke toetsaanslag.
   const liveOriginalSpans = useMemo(() => {
