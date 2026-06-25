@@ -25,6 +25,7 @@ bun run check
 - Mapping mag nooit worden gelogd of geëxporteerd.
 - Audit mag geen originele tekst bevatten.
 - Egress moet fail-closed blijven.
+- Modelintegriteit mag alleen publieke modelmetadata ophalen, nooit inhoudelijke tekst.
 - Nieuwe detectors moeten liever te veel dan te weinig signaleren, maar brede regels moeten een post-filter krijgen.
 
 ## Pull requests
@@ -34,7 +35,3 @@ Een PR bevat minimaal:
 - korte uitleg van de wijziging
 - testbewijs of reden waarom testen niet kan
 - privacy-impact, zeker bij detectoren, egress, modelintegriteit of mapping
-
-## Licentie
-
-De huidige `LICENSE` is een tijdelijke all-rights-reserved placeholder. Accepteer geen externe bijdragen voordat er bewust een definitieve licentie is gekozen.
