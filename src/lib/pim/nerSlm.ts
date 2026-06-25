@@ -4,7 +4,8 @@
 // never sent to Hugging Face; inference stays local in the browser after load.
 
 import type { PiiSpan } from "./types";
-import { verifyModel, NER_VARIANTS, DEFAULT_NER_VARIANT, type NerVariantKey } from "./modelCatalog";
+import { NER_VARIANTS, DEFAULT_NER_VARIANT, type NerVariantKey } from "./modelCatalog";
+import { verifyModel } from "./modelIntegrity";
 import { emitDebug } from "./debugBus";
 
 type AnyPipeline = (text: string, opts?: Record<string, unknown>) => Promise<unknown>;
