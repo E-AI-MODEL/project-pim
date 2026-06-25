@@ -1,13 +1,13 @@
-// Gedeelde PiM-instellingen — profile-free layers.
-
 import { useEffect, useMemo, useState } from "react";
 import {
-  DEFAULT_DETECTION_SETTINGS, onModelIntegrity,
-  type DetectionLayerSettings, type Action, type PiiCategory, type ModelIntegrityRecord,
+  DEFAULT_DETECTION_SETTINGS, DEFAULT_PROFILE, onModelIntegrity,
+  type DetectionLayerSettings, type PipelineProfileId, type Action, type PiiCategory, type ModelIntegrityRecord,
 } from "@/lib/pim";
 import type { AdvancedPanelProps } from "@/components/pim/start-go/AdvancedPanel";
 
 export interface PimSettings {
+  profileId: PipelineProfileId;
+  setProfileId: (id: PipelineProfileId) => void;
   detectionSettings: DetectionLayerSettings;
   setDetectionSettings: (settings: DetectionLayerSettings) => void;
   thresholdOverrides: Partial<Record<Action, number>>;
@@ -18,6 +18,7 @@ export interface PimSettings {
 }
 
 export function usePimSettings(): PimSettings {
+  const [profileId, setProfileId] = useState<PipelineProfileId>(DEFAULT_PROFILE);
   const [detectionSettings, setDetectionSettings] = useState<DetectionLayerSettings>(DEFAULT_DETECTION_SETTINGS);
   const [thresholdOverrides, setThresholdOverrides] = useState<Partial<Record<Action, number>>>({});
   const [disabledCategories, setDisabledCategories] = useState<ReadonlySet<PiiCategory>>(new Set());
@@ -48,5 +49,5 @@ export function usePimSettings(): PimSettings {
     onResetCategories: () => setDisabledCategories(new Set()),
   }), [detectionSettings, thresholdOverrides, disabledCategories, integrity]);
 
-  return { detectionSettings, setDetectionSettings, thresholdOverrides, disabledCategories, setCategoryEnabled, integrity, advancedPanelProps };
+  return { profileId, setProfileId, detectionSettings, setDetectionSettings, thresholdOverrides, disabledCategories, setCategoryEnabled, integrity, advancedPanelProps };
 }
