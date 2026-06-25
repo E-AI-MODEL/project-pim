@@ -16,22 +16,37 @@ gaat. Alle verwerking is client-side; er is geen server.
 
 Live: https://project-pim.lovable.app
 
+## Lokale privacygrens
+
+Project PiM heeft geen backend. Ruwe invoer, drafts, mappings, auditinhoud en detectoruitkomsten blijven in de browser. Alleen publieke modelbestanden en publieke `config.json`-metadata worden gedownload wanneer de gebruiker de NER-SLM bewust activeert.
+
+De browser mag lokaal opslaan:
+
+- versleutelde pseudoniem-mapping in de in-memory mapping container;
+- browser-cache van modelbestanden;
+- een SHA-256 hash van publieke modelconfiguratie in `localStorage` voor modelintegriteit.
+
+De browser mag niet opslaan of versturen:
+
+- ruwe leerlingtekst buiten de actieve browsercontext;
+- originele waarden uit de mapping;
+- review- of auditdata met originele tekstinhoud;
+- anonymous drafts naar externe AI zonder gecertificeerde payload en egress re-consult.
+
 ## Modelintegriteit
 
-`modelCatalog.ts` pint modellen op `modelId`, `revision` en een verwachte hash.
-Voor de NER-releasevarianten is die hash nu een SHA-256 over de canonieke descriptor
-`<modelId>@<revision>`. Dat is een deterministische configuratiepin, maar geen
-hash over de werkelijke modelweights.
+`modelCatalog.ts` pint modellen op `modelId`, `revision` en een verwachte integriteitsstrategie.
+Voor de NER-releasevarianten gebruikt PiM nu browser-local config pins:
 
-Daarom geldt voor productie:
+1. De browser haalt alleen publieke `config.json` op voor het gekozen model.
+2. PiM berekent lokaal `SHA-256(config.json)`.
+3. Bij de eerste succesvolle load wordt die hash lokaal in `localStorage` gepind.
+4. Latere loads moeten exact dezelfde hash opleveren.
+5. Een afwijkende hash geeft `mismatch` en blokkeert egress.
 
-- Descriptor-hashes zijn demo-verificatie, geen supply-chain garantie.
-- `revision: "main"` moet vóór productie worden vervangen door een immutable commit SHA.
-- Productieverificatie moet uiteindelijk een content-hash controleren van `config.json`
-  en, waar de runtime dat toelaat, de gedownloade modelbestanden.
-- Catalog-entries met `PLACEHOLDER:*` blijven productie-egress blokkeren.
-- Modeldownload via Hugging Face en Qwen-download via `@mlc-ai/web-llm` zijn aparte
-  trust-bronnen. Beide draaien lokaal na download; alleen de download raakt het netwerk.
+Dit vervangt de oude descriptor-hash. Het is bewust browser-lokaal en stuurt geen invoer naar Hugging Face. Voor distributies die volledig reproduceerbaar moeten zijn, kan `LOCAL_PIN:*` later worden vervangen door een statische SHA-256 over een immutable modelrevision.
+
+Catalog-entries met `PLACEHOLDER:*` blijven productie-egress blokkeren. Modeldownload via Hugging Face en Qwen-download via `@mlc-ai/web-llm` zijn aparte trust-bronnen. Beide draaien lokaal na download; alleen de download raakt het netwerk.
 
 ## Mapping spec v3-2 naar code
 
@@ -53,11 +68,11 @@ Daarom geldt voor productie:
 
 ## Invarianten
 
-1. **No raw egress**: ruwe input verlaat de browser nooit. Egress acties krijgen alleen de geanonimiseerde of gepseudonimiseerde draft.
+1. **No raw egress**: ruwe input verlaat de browser nooit. Egress acties krijgen alleen de gecertificeerde anonymous draft.
 2. **Fail-closed**: als de Draft Check Guard niet `pass` is, of de modelintegriteit niet voldoet aan de gate, blokkeert de policy.
 3. **Mapping is local-only**: pseudoniem-mappings staan in een AES-GCM-versleuteld register dat de UI niet direct kan uitlezen.
 4. **Audit zonder origineel**: audit-records bevatten alleen metadata (mode, action, verdict, reasonCode, ruleId), nooit ruwe invoer.
-5. **Productiegate verplicht concrete hashes**: catalog-entries met `PLACEHOLDER:*` tellen als `placeholder` en blokkeren productie-egress.
+5. **Productiegate verplicht verificatie**: egress vereist `verified`; `placeholder`, `missing` en `mismatch` blokkeren.
 
 ## Pipeline profielen (release 1)
 
@@ -75,16 +90,27 @@ Detectors zijn plug-ins (`src/lib/pim/detectorRegistry.ts`). Een nieuw detectort
 - `builtin.nerSlm`: multilingual NER via Transformers.js (WebGPU/WASM)
 - `builtin.contextSlm`: heuristische contextdetector, nog geen modelgebaseerde SLM
 
+## Hardening
+
+- BSN-detectie gebruikt de Nederlandse elfproef als post-filter.
+- Egress paden doen re-consult op de werkelijke payload vlak voor copy, export, print, share of externe AI.
+- `send_external_ai` heeft in deze build geen endpoint en voert geen fetch uit.
+- CSP-headers staan in `vite.config.ts` voor dev/preview en in `public/_headers` voor hosts die dat bestand ondersteunen.
+- CI draait typecheck, lint, tests, build en dependency audit.
+- E2E-tests dekken copy, export, print, share en send_external_ai.
+
 ## Stack
 
 TanStack Start v1 + React 19 + Vite 7 + Tailwind v4. Inferentie via
 `@huggingface/transformers` (ONNX, WebGPU/WASM). Geen backend nodig.
 
-## Belangrijke beperkingen demo
+## Licentie
 
-- NER-integriteit gebruikt nu descriptor-hashes. Dat is demo-verificatie, geen echte weight-verificatie.
-- `context_education` en `rewrite_qwen` hebben nog `PLACEHOLDER:*` in de catalogus.
-- De NER-revisies gebruiken nog `main`; productie moet pinnen op immutable commit SHA's.
+Project PiM gebruikt de MIT-licentie.
+
+## Bekende grenzen
+
+- `LOCAL_PIN:*` is browser-lokaal. Voor strikt reproduceerbare builds kan later een statische hash op een immutable modelrevision worden gebruikt.
+- `context_education` en `rewrite_qwen` hebben nog `PLACEHOLDER:*` in de catalogus en zijn design-only.
 - De Qwen rewrite-LLM staat in de catalog maar wordt niet auto-geladen.
 - `contextSlm` is nu heuristisch. Een echte context-SLM staat nog op de roadmap.
-- De huidige `LICENSE` is tijdelijk all-rights-reserved. Kies een definitieve licentie vóór open-source publicatie.
