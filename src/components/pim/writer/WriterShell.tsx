@@ -168,7 +168,7 @@ export function WriterShell() {
     <div className="min-h-screen bg-[#0a142e] text-[#e8edf3]">
       <header className="sticky top-0 z-20 border-b border-white/10 bg-[#0a142e]/90 backdrop-blur px-4 py-3 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2"><Shield className="h-5 w-5 text-[#7fb4ff]" /><span className="font-serif-display text-lg">PiM schrijven</span><WriterStatusBar nerStatus={nerStatus} onStartNer={startNer} /></div>
-        <div className="flex items-center gap-2"><LiveTechMonitor triggerLabel="Status" /><button onClick={onImportClick} className="btn-lite"><Upload className="h-4 w-4" /> Import</button><button onClick={onExport} className="btn-lite"><Download className="h-4 w-4" /> Export</button><button onClick={onClear} className="btn-lite"><Trash2 className="h-4 w-4" /> Leeg</button></div>
+        <div className="flex items-center gap-2"><LiveTechMonitor trigger={<button type="button" className="btn-lite">Status</button>} /><button onClick={onImportClick} className="btn-lite"><Upload className="h-4 w-4" /> Import</button><button onClick={onExport} className="btn-lite"><Download className="h-4 w-4" /> Export</button><button onClick={onClear} className="btn-lite"><Trash2 className="h-4 w-4" /> Leeg</button></div>
       </header>
       <main className="max-w-5xl mx-auto px-4 py-6 space-y-4">
         <AdvancedPanel {...advancedPanelProps} writer={{ autoRedact, onAutoRedactChange: (cat, scrub) => setAutoRedact((p) => { const n = new Set(p); if (scrub) n.add(cat); else n.delete(cat); return n; }), strict, onStrictChange: setStrict }} ner={{ status: nerStatus, onStart: startNer, available: usesNerSlm }} />
