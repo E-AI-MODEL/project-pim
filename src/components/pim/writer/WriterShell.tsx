@@ -9,17 +9,16 @@ import StarterKit from "@tiptap/starter-kit";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import {
   Bold, Italic, Heading1, Heading2, List, ListOrdered, Quote, Undo2, Redo2,
-  Upload, Download, Settings2, Shield, Trash2, X, Cpu, Loader2, AlertTriangle,
+  Upload, Download, Shield, Trash2, X,
 } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   computeSignals, PIPELINE_PROFILES,
-  type PiiCategory, type PiiSpan, type NerStatus,
+  type PiiCategory, type PiiSpan,
 } from "@/lib/pim";
 import { useNerSpans } from "@/hooks/useNerSpans";
 import { usePimSettings } from "@/hooks/usePimSettings";
 import { LiveTechMonitor } from "@/components/pim/start-go/LiveTechMonitor";
-import { NerVariantPicker } from "@/components/pim/start-go/NerVariantPicker";
+import { AdvancedPanel } from "@/components/pim/start-go/AdvancedPanel";
 import { GENERALIZATIONS, DEFAULT_AUTO_REDACT, CATEGORY_LABELS } from "./pimGeneralizations";
 import {
   createPimPlugin, pimPluginKey, extractPlain, spanToRange, buildDecorations,
