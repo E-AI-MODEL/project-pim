@@ -9,6 +9,7 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
+import { NerVariantPicker } from "./NerVariantPicker";
 import {
   PIPELINE_PROFILES,
   RELEASE_1_PROFILES,
@@ -17,6 +18,7 @@ import {
   type Action,
   type ModelIntegrityRecord,
   type PiiCategory,
+  type NerStatus,
 } from "@/lib/pim";
 
 const ACTION_LABELS: Record<Action, string> = {
@@ -147,22 +149,33 @@ export interface AdvancedPanelProps {
   disabledCategories: ReadonlySet<PiiCategory>;
   onToggleCategory: (cat: PiiCategory) => void;
   onResetCategories: () => void;
+  /** Optioneel: schrijfmodus-uitbreiding. Vervangt de eenvoudige aan/uit-switch
+   *  in de Detectoren-tab door een Uit/Markeer/Wis-segmented control en voegt
+   *  een "Strenge cijfercontrole"-rij toe. Alleen renderen als gezet. */
+  writer?: {
+    autoRedact: ReadonlySet<PiiCategory>;
+    onAutoRedactChange: (cat: PiiCategory, scrub: boolean) => void;
+    strict: boolean;
+    onStrictChange: (v: boolean) => void;
+  };
+  /** Optioneel: NER aan/uit in de Modellen-tab. Beide pagina's gebruiken dit
+   *  zodat het downloaden van het naam-model op één plek leeft. */
+  ner?: {
+    status: NerStatus | null;
+    onStart: () => void;
+    available: boolean;
+  };
 }
 
 export function AdvancedPanel({
   profileId, onProfileChange, thresholds, onThresholdChange, onResetThresholds, integrity,
-  disabledCategories, onToggleCategory, onResetCategories,
+  disabledCategories, onToggleCategory, onResetCategories, writer, ner,
 }: AdvancedPanelProps) {
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState("profile");
   const [expert, setExpert] = useState(false);
   const profile = PIPELINE_PROFILES[profileId];
   const sectionRef = useRef<HTMLElement>(null);
-
-  // Modellen-tab is alleen in Expert beschikbaar — fallback bij toggle.
-  useEffect(() => {
-    if (!expert && tab === "models") setTab("profile");
-  }, [expert, tab]);
 
   useEffect(() => {
     const onOpen = () => {
@@ -177,6 +190,7 @@ export function AdvancedPanel({
     (a) => thresholds[a] !== undefined && thresholds[a] !== DEFAULT_ANON_THRESHOLDS[a],
   ).length;
   const offCount = disabledCategories.size;
+  const scrubCount = writer ? writer.autoRedact.size : 0;
 
   return (
     <section
