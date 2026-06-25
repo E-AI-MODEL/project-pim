@@ -10,6 +10,7 @@ export * from './runtimeHardening';
 export * from './nerSlm';
 export * from './modelCatalog';
 export * from './modelIntegrity';
+export * from './detectionSettings';
 export * from './pipelineProfile';
 export * from './contextualGeneralization';
 export * from './detectorRegistry';
