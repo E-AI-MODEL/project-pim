@@ -12,7 +12,7 @@ import {
   Upload, Download, Shield, ShieldCheck, Trash2, X, Cpu, Loader2, AlertTriangle,
 } from "lucide-react";
 import {
-  computeSignals, PIPELINE_PROFILES,
+  computeSignals, usesBert,
   type PiiCategory, type PiiSpan, type NerStatus,
 } from "@/lib/pim";
 import { useNerSpans } from "@/hooks/useNerSpans";
@@ -20,75 +20,49 @@ import { usePimSettings } from "@/hooks/usePimSettings";
 import { LiveTechMonitor } from "@/components/pim/start-go/LiveTechMonitor";
 import { AdvancedPanel } from "@/components/pim/start-go/AdvancedPanel";
 import { GENERALIZATIONS, DEFAULT_AUTO_REDACT, CATEGORY_LABELS } from "./pimGeneralizations";
-import {
-  createPimPlugin, pimPluginKey, extractPlain, spanToRange, buildDecorations,
-} from "./pimPlugin";
+import { createPimPlugin, pimPluginKey, extractPlain, spanToRange, buildDecorations } from "./pimPlugin";
 import { importDocxToEditor, exportEditorToDocx } from "./docxIO";
 import { isValidBsn, isValidIban, isValidLicensePlate, hasStudentIdContext } from "./validators";
 
-interface ClickedSpan {
-  from: number;
-  to: number;
-  cat: PiiCategory;
-  text: string;
-  x: number;
-  y: number;
-}
+interface ClickedSpan { from: number; to: number; cat: PiiCategory; text: string; x: number; y: number; }
 
 export function WriterShell() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
-  const [autoRedact, setAutoRedact] = useState<Set<PiiCategory>>(
-    () => new Set(DEFAULT_AUTO_REDACT),
-  );
+  const [autoRedact, setAutoRedact] = useState<Set<PiiCategory>>(() => new Set(DEFAULT_AUTO_REDACT));
   const [strict, setStrict] = useState(false);
   const [ignored, setIgnored] = useState<Set<string>>(new Set());
   const [stats, setStats] = useState({ scrubbed: 0, marked: 0 });
   const [clicked, setClicked] = useState<ClickedSpan | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const [importWarnings, setImportWarnings] = useState<string[]>([]);
-  const { profileId, disabledCategories, advancedPanelProps } = usePimSettings();
+  const { detectionSettings, disabledCategories, advancedPanelProps } = usePimSettings();
   const [plainText, setPlainText] = useState("");
-  const usesNerSlm = PIPELINE_PROFILES[profileId].detectors.nerSlm;
+  const usesNerSlm = usesBert(detectionSettings);
   const { nerSpans, nerStatus, startNer } = useNerSpans(plainText, { enabled: usesNerSlm });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editorRootRef = useRef<HTMLDivElement>(null);
 
   const pimPlugin = useMemo(() => createPimPlugin(), []);
-
   const editor = useEditor({
     immediatelyRender: false,
-    extensions: [
-      StarterKit.configure({
-        heading: { levels: [1, 2, 3] },
-      }),
-    ],
-    content:
-      "<h1>Nieuwe notitie</h1><p>Begin met typen — PiM leest mee. Namen krijgen een onderstreping; harde PII (BSN, e-mail, telefoon…) wordt direct vervangen door een label.</p>",
-    editorProps: {
-      attributes: {
-        class:
-          "prose prose-invert max-w-none focus:outline-none min-h-[50vh] px-6 py-8 text-[15px] leading-relaxed",
-      },
-    },
+    extensions: [StarterKit.configure({ heading: { levels: [1, 2, 3] } })],
+    content: "<h1>Nieuwe notitie</h1><p>Begin met typen — PiM leest mee. Namen krijgen een onderstreping; harde PII (BSN, e-mail, telefoon…) wordt direct vervangen door een label.</p>",
+    editorProps: { attributes: { class: "prose prose-invert max-w-none focus:outline-none min-h-[50vh] px-6 py-8 text-[15px] leading-relaxed" } },
   });
 
   useEffect(() => {
     if (!editor) return;
     const view = editor.view;
-    const newState = view.state.reconfigure({
-      plugins: [...view.state.plugins, pimPlugin],
-    });
-    view.updateState(newState);
+    view.updateState(view.state.reconfigure({ plugins: [...view.state.plugins, pimPlugin] }));
   }, [editor, pimPlugin]);
 
   const scan = useCallback(() => {
     if (!editor) return;
     const { plain, map } = extractPlain(editor.state.doc);
     setPlainText(plain);
-    const signals = computeSignals(plain, nerSpans, profileId, disabledCategories);
+    const signals = computeSignals(plain, nerSpans, detectionSettings, disabledCategories);
     let all = [...signals.directPii, ...signals.contextualPii];
-
     if (strict) {
       all = all.filter((s) => {
         if (s.category === "bsn") return isValidBsn(s.text);
@@ -98,58 +72,40 @@ export function WriterShell() {
         return true;
       });
     }
-
     const sel = editor.state.selection;
     const cursorFrom = Math.min(sel.from, sel.to);
-
     const toReplace: { from: number; to: number; label: string }[] = [];
     const toMark: PiiSpan[] = [];
     for (const s of all) {
       const r = spanToRange(s, map);
       if (!r) continue;
       if (autoRedact.has(s.category)) {
-        if (r.to + 1 <= cursorFrom) {
-          toReplace.push({ ...r, label: GENERALIZATIONS[s.category] ?? "[geredacteerd]" });
-        } else {
-          toMark.push(s);
-        }
+        if (r.to + 1 <= cursorFrom) toReplace.push({ ...r, label: GENERALIZATIONS[s.category] ?? "[geredacteerd]" });
+        else toMark.push(s);
       } else {
         const ignKey = `${s.category}:${s.text.toLowerCase()}`;
         if (!ignored.has(ignKey)) toMark.push(s);
       }
     }
-
     if (toReplace.length > 0) {
       toReplace.sort((a, b) => b.from - a.from);
       const tr = editor.state.tr;
-      for (const r of toReplace) {
-        tr.replaceWith(r.from, r.to, editor.schema.text(r.label));
-      }
+      for (const r of toReplace) tr.replaceWith(r.from, r.to, editor.schema.text(r.label));
       tr.setMeta("addToHistory", false);
       editor.view.dispatch(tr);
       setStats((p) => ({ scrubbed: p.scrubbed + toReplace.length, marked: p.marked }));
       return;
     }
-
-    const decorations = buildDecorations(toMark, map, editor.state.doc);
-    const tr = editor.state.tr.setMeta(pimPluginKey, { decorations });
-    editor.view.dispatch(tr);
+    editor.view.dispatch(editor.state.tr.setMeta(pimPluginKey, { decorations: buildDecorations(toMark, map, editor.state.doc) }));
     setStats((p) => ({ scrubbed: p.scrubbed, marked: toMark.length }));
-  }, [editor, autoRedact, ignored, strict, profileId, disabledCategories, nerSpans]);
+  }, [editor, autoRedact, ignored, strict, detectionSettings, disabledCategories, nerSpans]);
 
   useEffect(() => {
     if (!editor) return;
     let raf = 0;
-    const debounced = () => {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() => setTimeout(scan, 120));
-    };
-    editor.on("update", debounced);
-    debounced();
-    return () => {
-      cancelAnimationFrame(raf);
-      editor.off("update", debounced);
-    };
+    const debounced = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => setTimeout(scan, 120)); };
+    editor.on("update", debounced); debounced();
+    return () => { cancelAnimationFrame(raf); editor.off("update", debounced); };
   }, [editor, scan]);
 
   useEffect(() => {
@@ -157,16 +113,9 @@ export function WriterShell() {
     if (!root) return;
     const onClick = (e: MouseEvent) => {
       const target = (e.target as HTMLElement).closest(".pim-pii") as HTMLElement | null;
-      if (!target) {
-        setClicked(null);
-        return;
-      }
-      const from = Number(target.dataset.from);
-      const to = Number(target.dataset.to);
-      const cat = target.dataset.cat as PiiCategory;
-      const text = target.dataset.text ?? "";
+      if (!target) { setClicked(null); return; }
       const rect = target.getBoundingClientRect();
-      setClicked({ from, to, cat, text, x: rect.left, y: rect.bottom + window.scrollY });
+      setClicked({ from: Number(target.dataset.from), to: Number(target.dataset.to), cat: target.dataset.cat as PiiCategory, text: target.dataset.text ?? "", x: rect.left, y: rect.bottom + window.scrollY });
     };
     root.addEventListener("click", onClick);
     return () => root.removeEventListener("click", onClick);
@@ -174,245 +123,73 @@ export function WriterShell() {
 
   const replaceClicked = () => {
     if (!editor || !clicked) return;
-    const label = GENERALIZATIONS[clicked.cat] ?? "[geredacteerd]";
-    editor.chain().focus().command(({ tr }) => {
-      tr.replaceWith(clicked.from, clicked.to, editor.schema.text(label));
-      return true;
-    }).run();
+    editor.chain().focus().command(({ tr }) => { tr.replaceWith(clicked.from, clicked.to, editor.schema.text(GENERALIZATIONS[clicked.cat] ?? "[geredacteerd]")); return true; }).run();
     setClicked(null);
   };
   const ignoreClicked = () => {
     if (!clicked) return;
-    setIgnored((prev) => {
-      const next = new Set(prev);
-      next.add(`${clicked.cat}:${clicked.text.toLowerCase()}`);
-      return next;
-    });
+    setIgnored((prev) => { const next = new Set(prev); next.add(`${clicked.cat}:${clicked.text.toLowerCase()}`); return next; });
     setClicked(null);
   };
 
   const onImportClick = () => fileInputRef.current?.click();
   const onFile = async (files: FileList | null) => {
-    setImportError(null);
-    setImportWarnings([]);
+    setImportError(null); setImportWarnings([]);
     if (!files || files.length === 0 || !editor) return;
     const file = files[0];
-    if (!/\.docx$/i.test(file.name)) {
-      setImportError("Alleen .docx-bestanden — voor andere formaten gebruik je de homepage.");
-      return;
-    }
-    try {
-      const { warnings } = await importDocxToEditor(file, editor);
-      if (warnings.length > 0) setImportWarnings(warnings);
-    } catch (err) {
-      setImportError(err instanceof Error ? err.message : "Kon document niet lezen.");
-    }
+    if (!/\.docx$/i.test(file.name)) { setImportError("Alleen .docx-bestanden — voor andere formaten gebruik je de homepage."); return; }
+    try { const { warnings } = await importDocxToEditor(file, editor); if (warnings.length > 0) setImportWarnings(warnings); }
+    catch (err) { setImportError(err instanceof Error ? err.message : "Kon document niet lezen."); }
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
   const onExport = async () => {
     if (!editor) return;
     const { plain } = (await import("./pimPlugin")).extractPlain(editor.state.doc);
-    const sig = computeSignals(plain, nerSpans, profileId, disabledCategories);
+    const sig = computeSignals(plain, nerSpans, detectionSettings, disabledCategories);
     const total = sig.directPii.length + sig.contextualPii.length;
     if (total > 0) {
       const cats = Array.from(new Set([...sig.directPii, ...sig.contextualPii].map((s) => s.category))).join(", ");
-      const choice = window.prompt(
-        `Let op: het document bevat nog ${total} gevoelige term${total === 1 ? "" : "en"} (${cats}).\n\n` +
-          `Typ 'wis' om alles automatisch te vervangen door labels, 'ja' om toch te exporteren, of laat leeg om te annuleren.`,
-        "",
-      );
+      const choice = window.prompt(`Let op: het document bevat nog ${total} gevoelige term${total === 1 ? "" : "en"} (${cats}).\n\nTyp 'wis' om alles automatisch te vervangen door labels, 'ja' om toch te exporteren, of laat leeg om te annuleren.`, "");
       if (!choice) return;
-      if (choice.trim().toLowerCase() === "wis") {
-        const allCats = new Set<PiiCategory>([...autoRedact, ...sig.directPii.map((s) => s.category), ...sig.contextualPii.map((s) => s.category)]);
-        setAutoRedact(allCats);
-        await new Promise((r) => setTimeout(r, 250));
-      } else if (choice.trim().toLowerCase() !== "ja") {
-        return;
-      }
+      if (choice.trim().toLowerCase() === "wis") { setAutoRedact(new Set<PiiCategory>([...autoRedact, ...sig.directPii.map((s) => s.category), ...sig.contextualPii.map((s) => s.category)])); await new Promise((r) => setTimeout(r, 250)); }
+      else if (choice.trim().toLowerCase() !== "ja") return;
     }
     const ts = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 16);
     await exportEditorToDocx(editor, `pim-notitie-${ts}.docx`);
   };
-  const onClear = () => {
+  const onClear = useCallback(() => {
     if (!editor) return;
-    editor.commands.setContent("<p></p>");
-    setIgnored(new Set());
-    setStats({ scrubbed: 0, marked: 0 });
-  };
+    editor.commands.setContent("<p></p>"); setIgnored(new Set()); setStats({ scrubbed: 0, marked: 0 });
+  }, [editor]);
+  useEffect(() => { window.addEventListener("pim:reset", onClear); return () => window.removeEventListener("pim:reset", onClear); }, [onClear]);
 
-  if (!mounted || !editor) {
-    return <div className="p-10 text-sm text-muted-foreground">Editor laden…</div>;
-  }
-
+  if (!mounted || !editor) return null;
   return (
-    <div className="mx-auto max-w-4xl px-4 sm:px-6 py-6 sm:py-10 space-y-4">
-      <header className="flex items-end justify-between gap-3">
-        <div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[11px] font-medium text-primary uppercase tracking-wider mb-2">
-            <Shield className="h-3 w-3" /> Schrijfmodus · live PiM
-          </div>
-          <h1 className="font-display font-bold text-2xl sm:text-3xl tracking-tight">
-            Schrijf veilig — PiM redigeert mee
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
-            Type of plak uit Word. Gevoelige tekst wordt gemarkeerd of direct vervangen, afhankelijk van je schrijfinstellingen.
-          </p>
-        </div>
-        <LiveTechMonitor
-          trigger={
-            <button className="font-plex-mono text-[10px] uppercase tracking-wider px-2 py-1 rounded bg-[#3b6fa0]/20 hover:bg-[#3b6fa0]/40 text-foreground/80 transition-colors inline-flex items-center gap-1.5 shrink-0">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-              Live techniek
-            </button>
-          }
-        />
+    <div className="min-h-screen bg-[#0a142e] text-[#e8edf3]">
+      <header className="sticky top-0 z-20 border-b border-white/10 bg-[#0a142e]/90 backdrop-blur px-4 py-3 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2"><Shield className="h-5 w-5 text-[#7fb4ff]" /><span className="font-serif-display text-lg">PiM schrijven</span><WriterStatusBar nerStatus={nerStatus} onStartNer={startNer} /></div>
+        <div className="flex items-center gap-2"><LiveTechMonitor triggerLabel="Status" /><button onClick={onImportClick} className="btn-lite"><Upload className="h-4 w-4" /> Import</button><button onClick={onExport} className="btn-lite"><Download className="h-4 w-4" /> Export</button><button onClick={onClear} className="btn-lite"><Trash2 className="h-4 w-4" /> Leeg</button></div>
       </header>
-
-      <input ref={fileInputRef} type="file" accept=".docx" className="sr-only" onChange={(e) => onFile(e.target.files)} />
-
-      <section className="rounded-2xl border border-border/70 bg-card/50 shadow-sm overflow-hidden">
-        <WriterToolbar editor={editor} onImport={onImportClick} onExport={onExport} onClear={onClear} />
-        <WriterStatusBar nerAvailable={usesNerSlm} nerStatus={nerStatus} onStartNer={startNer} stats={stats} />
-        {importError && (
-          <div className="mx-3 mt-3 text-xs rounded-md border border-rose-500/40 bg-rose-500/10 text-rose-200 px-3 py-2">{importError}</div>
-        )}
-        {importWarnings.length > 0 && (
-          <div className="mx-3 mt-3 text-xs rounded-md border border-amber-400/40 bg-amber-400/10 text-amber-200 px-3 py-2 space-y-1">
-            <div className="font-medium">Let op bij import</div>
-            <ul className="list-disc pl-4 space-y-0.5">{importWarnings.map((w, i) => <li key={i}>{w}</li>)}</ul>
-          </div>
-        )}
-        <div ref={editorRootRef} className="relative border-t border-border/50 bg-card/30">
-          <EditorContent editor={editor} />
-        </div>
-      </section>
-
-      {clicked && (
-        <ClickedPopover clicked={clicked} onReplace={replaceClicked} onIgnore={ignoreClicked} onClose={() => setClicked(null)} />
-      )}
-
-      {ignored.size > 0 && (
-        <div className="text-[11px] text-muted-foreground flex items-center gap-2 flex-wrap">
-          <span>Genegeerd:</span>
-          {Array.from(ignored).map((k) => {
-            const [, text] = k.split(":");
-            return (
-              <button key={k} type="button" onClick={() => setIgnored((prev) => { const n = new Set(prev); n.delete(k); return n; })} className="inline-flex items-center gap-1 rounded-full border border-border/60 px-2 py-0.5 hover:bg-accent/30" title="Klik om de markering weer te tonen">
-                {text} <X className="h-2.5 w-2.5" />
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      <div className="pt-2 border-t border-border/40">
-        <AdvancedPanel
-          {...advancedPanelProps}
-          ner={{ status: nerStatus, onStart: startNer, available: usesNerSlm }}
-          writer={{
-            autoRedact,
-            onAutoRedactChange: (cat, scrub) => {
-              const next = new Set(autoRedact);
-              if (scrub) next.add(cat); else next.delete(cat);
-              setAutoRedact(next);
-            },
-            strict,
-            onStrictChange: setStrict,
-          }}
-        />
-      </div>
+      <main className="max-w-5xl mx-auto px-4 py-6 space-y-4">
+        <AdvancedPanel {...advancedPanelProps} writer={{ autoRedact, onAutoRedactChange: (cat, scrub) => setAutoRedact((p) => { const n = new Set(p); if (scrub) n.add(cat); else n.delete(cat); return n; }), strict, onStrictChange: setStrict }} ner={{ status: nerStatus, onStart: startNer, available: usesNerSlm }} />
+        {importError && <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">{importError}</div>}
+        {importWarnings.length > 0 && <div className="rounded-lg border border-amber-400/30 bg-amber-400/10 p-3 text-sm text-amber-100">{importWarnings.join(" · ")}</div>}
+        <Toolbar editor={editor} />
+        <div ref={editorRootRef} className="rounded-2xl border border-white/10 bg-[#0f1b3d] shadow-xl overflow-hidden"><EditorContent editor={editor} /></div>
+        <div className="text-xs text-[#e8edf3]/55 flex gap-3"><span>Gewist: {stats.scrubbed}</span><span>Gemarkeerd: {stats.marked}</span></div>
+      </main>
+      <input ref={fileInputRef} type="file" accept=".docx" hidden onChange={(e) => void onFile(e.target.files)} />
+      {clicked && <div style={{ position: "absolute", left: clicked.x, top: clicked.y }} className="z-50 rounded-xl border border-white/15 bg-[#101b35] p-2 shadow-xl flex gap-2"><button className="btn-lite" onClick={replaceClicked}>Vervang</button><button className="btn-lite" onClick={ignoreClicked}>Negeer</button><button className="btn-lite" onClick={() => setClicked(null)}><X className="h-3 w-3" /></button></div>}
     </div>
   );
 }
 
-function WriterToolbar({
-  editor, onImport, onExport, onClear,
-}: {
-  editor: Editor;
-  onImport: () => void;
-  onExport: () => void;
-  onClear: () => void;
-}) {
-  const btn = "inline-flex items-center justify-center h-8 w-8 rounded-md text-foreground/70 hover:text-foreground hover:bg-accent/40 transition-colors";
-  const btnActive = "bg-accent/60 text-foreground";
-  return (
-    <div className="flex flex-wrap items-center gap-1 px-2 py-1.5 border-b border-border/50 bg-card/70">
-      <button className={`${btn} ${editor.isActive("bold") ? btnActive : ""}`} onClick={() => editor.chain().focus().toggleBold().run()} title="Vet"><Bold className="h-4 w-4" /></button>
-      <button className={`${btn} ${editor.isActive("italic") ? btnActive : ""}`} onClick={() => editor.chain().focus().toggleItalic().run()} title="Cursief"><Italic className="h-4 w-4" /></button>
-      <span className="h-5 w-px bg-border/60 mx-1" />
-      <button className={`${btn} ${editor.isActive("heading", { level: 1 }) ? btnActive : ""}`} onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} title="Kop 1"><Heading1 className="h-4 w-4" /></button>
-      <button className={`${btn} ${editor.isActive("heading", { level: 2 }) ? btnActive : ""}`} onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} title="Kop 2"><Heading2 className="h-4 w-4" /></button>
-      <button className={`${btn} ${editor.isActive("bulletList") ? btnActive : ""}`} onClick={() => editor.chain().focus().toggleBulletList().run()} title="Opsomming"><List className="h-4 w-4" /></button>
-      <button className={`${btn} ${editor.isActive("orderedList") ? btnActive : ""}`} onClick={() => editor.chain().focus().toggleOrderedList().run()} title="Nummering"><ListOrdered className="h-4 w-4" /></button>
-      <button className={`${btn} ${editor.isActive("blockquote") ? btnActive : ""}`} onClick={() => editor.chain().focus().toggleBlockquote().run()} title="Citaat"><Quote className="h-4 w-4" /></button>
-      <span className="h-5 w-px bg-border/60 mx-1" />
-      <button className={btn} onClick={() => editor.chain().focus().undo().run()} title="Ongedaan maken"><Undo2 className="h-4 w-4" /></button>
-      <button className={btn} onClick={() => editor.chain().focus().redo().run()} title="Opnieuw"><Redo2 className="h-4 w-4" /></button>
-      <span className="h-5 w-px bg-border/60 mx-1" />
-      <button className={btn} onClick={onImport} title="Importeer .docx"><Upload className="h-4 w-4" /></button>
-      <button className={btn} onClick={onExport} title="Exporteer .docx"><Download className="h-4 w-4" /></button>
-      <button className={btn} onClick={onClear} title="Leegmaken"><Trash2 className="h-4 w-4" /></button>
-      <span className="flex-1" />
-    </div>
-  );
+function Toolbar({ editor }: { editor: Editor }) {
+  const btn = (label: string, icon: React.ReactNode, action: () => void, active = false) => <button type="button" title={label} onClick={action} className={`btn-lite ${active ? "bg-[#3b6fa0]/40" : ""}`}>{icon}</button>;
+  return <div className="rounded-xl border border-white/10 bg-[#0f1b3d] p-2 flex flex-wrap gap-1">{btn("Vet", <Bold className="h-4 w-4" />, () => editor.chain().focus().toggleBold().run(), editor.isActive("bold"))}{btn("Cursief", <Italic className="h-4 w-4" />, () => editor.chain().focus().toggleItalic().run(), editor.isActive("italic"))}{btn("Kop 1", <Heading1 className="h-4 w-4" />, () => editor.chain().focus().toggleHeading({ level: 1 }).run(), editor.isActive("heading", { level: 1 }))}{btn("Kop 2", <Heading2 className="h-4 w-4" />, () => editor.chain().focus().toggleHeading({ level: 2 }).run(), editor.isActive("heading", { level: 2 }))}{btn("Lijst", <List className="h-4 w-4" />, () => editor.chain().focus().toggleBulletList().run(), editor.isActive("bulletList"))}{btn("Nummerlijst", <ListOrdered className="h-4 w-4" />, () => editor.chain().focus().toggleOrderedList().run(), editor.isActive("orderedList"))}{btn("Quote", <Quote className="h-4 w-4" />, () => editor.chain().focus().toggleBlockquote().run(), editor.isActive("blockquote"))}<span className="mx-1 w-px bg-white/10" />{btn("Ongedaan", <Undo2 className="h-4 w-4" />, () => editor.chain().focus().undo().run())}{btn("Opnieuw", <Redo2 className="h-4 w-4" />, () => editor.chain().focus().redo().run())}</div>;
 }
 
-function WriterStatusBar({
-  nerAvailable, nerStatus, onStartNer, stats,
-}: {
-  nerAvailable: boolean;
-  nerStatus: NerStatus | null;
-  onStartNer: () => void;
-  stats: { scrubbed: number; marked: number };
-}) {
-  const kind = nerStatus?.error ? "error" : nerStatus?.ready ? "ready" : nerStatus?.loading ? "loading" : "idle";
-  const rawPct = nerStatus?.progress?.pct;
-  const pct = typeof rawPct === "number" ? Math.round(rawPct <= 1 ? rawPct * 100 : rawPct) : undefined;
-  const Icon = kind === "loading" ? Loader2 : kind === "error" ? AlertTriangle : kind === "ready" ? ShieldCheck : Cpu;
-  return (
-    <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-[12px] border-b border-border/50 bg-background/30">
-      <div className="flex items-center gap-2 min-w-0">
-        <Icon className={`h-4 w-4 shrink-0 ${kind === "loading" ? "animate-spin" : ""} ${kind === "ready" ? "text-emerald-400" : "text-muted-foreground"}`} />
-        {!nerAvailable ? (
-          <span className="text-muted-foreground">Naamherkenning uit in dit profiel</span>
-        ) : kind === "ready" ? (
-          <span className="text-emerald-300 font-medium">Naam-AI aan</span>
-        ) : kind === "loading" ? (
-          <span className="text-amber-300">Naam-model downloaden… {typeof pct === "number" ? `${pct}%` : ""}</span>
-        ) : (
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="text-muted-foreground truncate">{kind === "error" ? "Naam-model laden mislukt." : "Naam-AI uit"}</span>
-            <button type="button" onClick={onStartNer} className="shrink-0 rounded-md bg-primary px-2.5 py-1 text-[11px] font-semibold text-primary-foreground hover:bg-primary/90">
-              {kind === "error" ? "Opnieuw" : "Zet aan"}
-            </button>
-          </div>
-        )}
-      </div>
-      <div className="shrink-0 font-medium tabular-nums">
-        <span className="text-primary">{stats.scrubbed}</span>
-        <span className="text-muted-foreground"> gewist · </span>
-        <span className="text-amber-300">{stats.marked}</span>
-        <span className="text-muted-foreground"> gemarkeerd</span>
-      </div>
-    </div>
-  );
-}
-
-function ClickedPopover({
-  clicked, onReplace, onIgnore, onClose,
-}: {
-  clicked: ClickedSpan;
-  onReplace: () => void;
-  onIgnore: () => void;
-  onClose: () => void;
-}) {
-  const label = GENERALIZATIONS[clicked.cat] ?? "[geredacteerd]";
-  return (
-    <div role="dialog" style={{ position: "absolute", left: clicked.x, top: clicked.y + 4, zIndex: 60 }} className="rounded-lg border border-border/70 bg-popover shadow-lg p-2 flex items-center gap-1 text-xs" onClick={(e) => e.stopPropagation()}>
-      <span className="px-2 text-muted-foreground"><span className="font-medium text-foreground">{CATEGORY_LABELS[clicked.cat]}</span></span>
-      <button type="button" onClick={onReplace} className="inline-flex items-center gap-1 rounded-md bg-primary text-primary-foreground px-2.5 py-1 hover:bg-primary/90 font-medium">Vervang met {label}</button>
-      <button type="button" onClick={onIgnore} className="inline-flex items-center gap-1 rounded-md border border-border/60 px-2.5 py-1 hover:bg-accent/40">Negeer</button>
-      <button type="button" onClick={onClose} aria-label="Sluiten" className="h-6 w-6 inline-flex items-center justify-center rounded-md hover:bg-accent/40"><X className="h-3 w-3" /></button>
-    </div>
-  );
+function WriterStatusBar({ nerStatus, onStartNer }: { nerStatus: NerStatus | null; onStartNer: () => void }) {
+  const ready = !!nerStatus?.working;
+  return <div className="hidden sm:flex items-center gap-2 text-[11px] text-[#e8edf3]/60"><span className={`h-2 w-2 rounded-full ${ready ? "bg-emerald-400" : nerStatus?.loading ? "bg-amber-300 animate-pulse" : nerStatus?.error ? "bg-red-400" : "bg-[#3b6fa0]"}`} />{ready ? "BERT werkt" : nerStatus?.loading ? "BERT laden/testen" : nerStatus?.error ? "BERT fout" : "BERT uit"}{!ready && <button onClick={onStartNer} className="underline underline-offset-2">Zet aan</button>}</div>;
 }
