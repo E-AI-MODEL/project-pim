@@ -22,6 +22,20 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Normalize Bun lockfile registry
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          lockfile = Path('bun.lock')
+          text = lockfile.read_text()
+          text = text.replace(
+              'https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/',
+              'https://registry.npmjs.org/',
+          )
+          lockfile.write_text(text)
+          PY
+
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
