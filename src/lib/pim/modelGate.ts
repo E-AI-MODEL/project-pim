@@ -1,14 +1,7 @@
-// Model integrity gate — spec derde analyse §4.4.
-// Vervangt de hardcoded `modelVerified: true` in try.tsx.
-//
-// Regels:
-//  - Rules-only profiel heeft GEEN model nodig → altijd verified.
-//  - Lokale acties (display/save_local/restore) mogen bij placeholder/demo.
-//  - Uitgaande acties (copy/export/print/share/send_external_ai) vereisen
-//    een ECHTE verified status; placeholder of mismatch/missing = false.
+// Model integrity gate for profile-free detection layers.
 
 import type { Action } from "./types";
-import { PIPELINE_PROFILES, type PipelineProfileId } from "./pipelineProfile";
+import { coerceDetectionSettings, usesBert, type DetectionLayerSettings } from "./detectionSettings";
 import type { ModelIntegrityRecord } from "./modelIntegrity";
 
 const EGRESS_ACTIONS: ReadonlySet<Action> = new Set([
@@ -16,13 +9,13 @@ const EGRESS_ACTIONS: ReadonlySet<Action> = new Set([
 ]);
 
 export type ModelGateReason =
-  | "rules-only-profile-no-model-needed"
-  | "local-action-demo-acceptable"
-  | "ner-required-and-verified"
-  | "ner-required-but-placeholder"
-  | "ner-required-but-mismatch"
-  | "ner-required-but-missing"
-  | "ner-required-but-unverified";
+  | "no-model-needed"
+  | "local-action-model-not-required"
+  | "bert-required-and-verified"
+  | "bert-required-but-placeholder"
+  | "bert-required-but-mismatch"
+  | "bert-required-but-missing"
+  | "bert-required-but-unverified";
 
 export interface ModelGateResult {
   verified: boolean;
@@ -31,50 +24,46 @@ export interface ModelGateResult {
 }
 
 export function modelGateFor(
-  profileId: PipelineProfileId,
   action: Action,
+  detectionSettings: DetectionLayerSettings | string,
   integrity: ModelIntegrityRecord[],
 ): ModelGateResult {
-  const profile = PIPELINE_PROFILES[profileId];
+  const settings = coerceDetectionSettings(detectionSettings);
+  const isLocal = !EGRESS_ACTIONS.has(action);
 
-  // Rules-only — geen modelafhankelijkheid, altijd verified.
-  if (!profile.detectors.nerSlm) {
+  if (!usesBert(settings)) {
     return {
       verified: true,
-      reason: "rules-only-profile-no-model-needed",
-      detail: "Profiel gebruikt geen modellen — integriteitsgate niet van toepassing.",
+      reason: "no-model-needed",
+      detail: "BERT staat uit — Regex, Lexicon en Context blijven werken.",
     };
   }
 
   const ner = integrity.find((r) => r.key === "ner_multilingual");
-  const isLocal = !EGRESS_ACTIONS.has(action);
 
   if (!ner) {
-    // Voor lokale acties zonder NER toegestaan; egress blokkeert.
     return isLocal
-      ? { verified: true, reason: "local-action-demo-acceptable", detail: "NER nog niet geladen — lokale actie toegestaan." }
-      : { verified: false, reason: "ner-required-but-missing", detail: "NER vereist voor uitgaande actie — model nog niet geladen." };
+      ? { verified: true, reason: "local-action-model-not-required", detail: "BERT is nog niet geverifieerd — lokale actie toegestaan." }
+      : { verified: false, reason: "bert-required-but-missing", detail: "BERT is gekozen voor deze controle, maar nog niet geladen of geverifieerd." };
   }
 
   if (ner.status === "verified") {
-    return { verified: true, reason: "ner-required-and-verified", detail: "NER hash match — productiegate groen." };
+    return { verified: true, reason: "bert-required-and-verified", detail: "BERT-integriteit is geverifieerd." };
   }
   if (ner.status === "mismatch") {
-    return { verified: false, reason: "ner-required-but-mismatch", detail: "NER hash mismatch — alle uitgaande acties geblokkeerd." };
+    return { verified: false, reason: "bert-required-but-mismatch", detail: "BERT-integriteit klopt niet. Uitgaande acties blijven geblokkeerd." };
   }
   if (ner.status === "missing") {
     return isLocal
-      ? { verified: true, reason: "local-action-demo-acceptable", detail: "NER missing — lokale actie toegestaan." }
-      : { verified: false, reason: "ner-required-but-missing", detail: "NER ontbreekt — uitgaande actie geblokkeerd." };
+      ? { verified: true, reason: "local-action-model-not-required", detail: "BERT ontbreekt — lokale actie toegestaan." }
+      : { verified: false, reason: "bert-required-but-missing", detail: "BERT ontbreekt — uitgaande actie geblokkeerd." };
   }
   if (ner.status === "placeholder") {
-    // Demo-hash mag wel lokaal, maar niet productie-egress (§4.8).
     return isLocal
-      ? { verified: true, reason: "local-action-demo-acceptable", detail: "Demo-hash (placeholder) — alleen lokale actie." }
-      : { verified: false, reason: "ner-required-but-placeholder", detail: "Modelhash is een demo-placeholder — uitgaande acties vereisen productie-verified status." };
+      ? { verified: true, reason: "local-action-model-not-required", detail: "BERT heeft alleen lokale pin/config — lokale actie toegestaan." }
+      : { verified: false, reason: "bert-required-but-placeholder", detail: "BERT is niet productie-verified voor uitgaande actie." };
   }
-  // unverified / unknown
   return isLocal
-    ? { verified: true, reason: "local-action-demo-acceptable", detail: "NER nog niet geverifieerd — lokale actie toegestaan." }
-    : { verified: false, reason: "ner-required-but-unverified", detail: "NER nog niet geverifieerd — uitgaande actie geblokkeerd." };
+    ? { verified: true, reason: "local-action-model-not-required", detail: "BERT nog niet geverifieerd — lokale actie toegestaan." }
+    : { verified: false, reason: "bert-required-but-unverified", detail: "BERT nog niet geverifieerd — uitgaande actie geblokkeerd." };
 }
