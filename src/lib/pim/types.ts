@@ -104,7 +104,7 @@ export interface CertifiedPayload {
   text: string;
   mode: Mode;
   payloadType: PayloadType;
-  profileId: import("./pipelineProfile").PipelineProfileId;
+  detectionSettings: import("./detectionSettings").DetectionLayerSettings;
   guardStatus: DraftCheckResult["status"];
 }
 
@@ -119,9 +119,8 @@ export interface PimDecision {
   action: Action;
   timestamp: string;
   flag?: string; // PIM_* flag code
-  /** Pipeline-profiel waaronder dit besluit is genomen (spec derde analyse §4.5). */
-  profileId?: import("./pipelineProfile").PipelineProfileId;
-  /** Type payload waarvoor besluit gold (spec derde analyse §4.7). */
+  detectionSettings?: import("./detectionSettings").DetectionLayerSettings;
+  /** Type payload waarvoor besluit gold (spec §4.7). */
   payloadType?: PayloadType;
 }
 
