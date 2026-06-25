@@ -1,9 +1,8 @@
 import type { Action, Mode, PimDecision, PrivacySignals, DraftCheckResult, PayloadType } from "./types";
 import { PIM_FLAGS, type PimFlagCode } from "./flags";
-import type { PipelineProfileId } from "./pipelineProfile";
-import { PIPELINE_PROFILES } from "./pipelineProfile";
+import { DEFAULT_DETECTION_SETTINGS, type DetectionLayerSettings } from "./detectionSettings";
 
-export const POLICY_VERSION = "pim.policy/v2.1";
+export const POLICY_VERSION = "pim.policy/v3-profile-free";
 
 export const DEFAULT_ANON_THRESHOLDS: Record<Action, number> = {
   send_external_ai: 0.18,
@@ -22,15 +21,18 @@ export interface DecideInput {
   signals: PrivacySignals;
   draftCheck: DraftCheckResult;
   modelVerified: boolean;
-  /** Pipeline-profiel (spec derde analyse §4.5 — rules-only enforcement). */
-  profileId: PipelineProfileId;
+  detectionSettings?: DetectionLayerSettings;
   /** Type payload waarvoor besluit gevraagd wordt (spec §4.7). */
   payloadType: PayloadType;
-  /** Optionele runtime-overrides van de risico-drempels per actie (Advanced panel). */
+  /** Optionele runtime-overrides van de risico-drempels per actie (Techdetails). */
   thresholdOverrides?: Partial<Record<Action, number>>;
 }
 
-function fromFlag(code: PimFlagCode, base: Pick<PimDecision, "mode" | "action" | "riskLevel" | "policyVersion" | "timestamp" | "profileId" | "payloadType">, reason?: string): PimDecision {
+function fromFlag(
+  code: PimFlagCode,
+  base: Pick<PimDecision, "mode" | "action" | "riskLevel" | "policyVersion" | "timestamp" | "payloadType" | "detectionSettings">,
+  reason?: string,
+): PimDecision {
   const f = PIM_FLAGS[code];
   return {
     ...base,
@@ -46,38 +48,30 @@ const EGRESS_ACTIONS: ReadonlySet<Action> = new Set([
   "copy", "export_file", "print", "share", "send_external_ai",
 ]);
 
-export function decide({ mode, action, signals, draftCheck, modelVerified, profileId, payloadType, thresholdOverrides }: DecideInput): PimDecision {
+export function decide({
+  mode, action, signals, draftCheck, modelVerified,
+  detectionSettings = DEFAULT_DETECTION_SETTINGS,
+  payloadType, thresholdOverrides,
+}: DecideInput): PimDecision {
   const base = {
     policyVersion: POLICY_VERSION,
     riskLevel: signals.riskLevel,
     mode,
     action,
     timestamp: new Date().toISOString(),
-    profileId,
+    detectionSettings,
     payloadType,
   };
 
-  const profile = PIPELINE_PROFILES[profileId];
   const isEgressAction = EGRESS_ACTIONS.has(action);
 
-  // 0. Profielbeleid (spec derde analyse §4.5)
-  // Rules-only mag geen export of externe AI.
-  if (profile.egressPolicy === "degrade_no_export") {
-    if (action === "send_external_ai") return fromFlag("PIM_RULES_ONLY_EXTERNAL_AI_BLOCK", base);
-    if (action === "export_file") return fromFlag("PIM_RULES_ONLY_EXPORT_BLOCK", base);
-  }
-  if (profile.egressPolicy === "design_only" && isEgressAction) {
-    return fromFlag("PIM_PROFILE_DESIGN_ONLY_BLOCK", base);
-  }
-
-  // 0b. Payload-gate (spec derde analyse §4.7)
-  // Alleen `draft_anonymous_certified` mag de browser uit.
+  // Payload-gate: alleen certified anonymous drafts mogen de browser uit.
   if (isEgressAction && payloadType !== "draft_anonymous_certified") {
     return fromFlag("PIM_PAYLOAD_TYPE_EGRESS_BLOCK", base,
       `Payload-type '${payloadType}' mag de browser niet verlaten — alleen 'draft_anonymous_certified'.`);
   }
 
-  // Fail-closed gates first
+  // Fail-closed gates first.
   if (!modelVerified) return fromFlag("PIM_MODEL_INTEGRITY_BLOCK", base);
   if (draftCheck.status === "fail") {
     const issue = draftCheck.issues[0] ?? "";
@@ -86,7 +80,7 @@ export function decide({ mode, action, signals, draftCheck, modelVerified, profi
     return fromFlag("PIM_GUARD_FAILURE_BLOCK", base, issue);
   }
 
-  // Pseudonymous — egress forbidden
+  // Pseudonymous stays local.
   if (mode === "pseudonymous") {
     if (action === "send_external_ai") return fromFlag("PIM_PSEUDONYM_EXTERNAL_AI_BLOCK", base);
     const forbidden: Action[] = ["copy", "export_file", "print", "share"];
@@ -96,15 +90,13 @@ export function decide({ mode, action, signals, draftCheck, modelVerified, profi
     }
   }
 
-  // Anonymous
+  // Anonymous.
   if (mode === "anonymous") {
     if (action === "restore") return fromFlag("PIM_ANONYMOUS_RESTORE_BLOCK", base);
 
-    // Special-context combo block (spec acceptance #21)
     const cats = new Set([...signals.directPii, ...signals.contextualPii].map((s) => s.category));
     const specialCombo = cats.has("context_small_group") && (cats.has("context_care") || cats.has("context_incident"));
-    const isEgress = (["copy", "export_file", "print", "share", "send_external_ai"] as Action[]).includes(action);
-    if (specialCombo && isEgress) return fromFlag("PIM_SPECIAL_CONTEXT_EGRESS_BLOCK", base);
+    if (specialCombo && isEgressAction) return fromFlag("PIM_SPECIAL_CONTEXT_EGRESS_BLOCK", base);
 
     const threshold = thresholdOverrides?.[action] ?? DEFAULT_ANON_THRESHOLDS[action];
     if (signals.riskScore > threshold) {
