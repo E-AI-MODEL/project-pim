@@ -287,7 +287,10 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
         busy={busy}
       />
 
-      <AdvancedPanel {...advancedPanelProps} />
+      <AdvancedPanel
+        {...advancedPanelProps}
+        ner={{ status: nerStatus, onStart: startNer, available: usesNerSlm }}
+      />
 
       {!result && text.trim().length > 0 && (
         <div className={`text-xs border-l-2 pl-3 animate-pulse ${compact ? "text-[#e8edf3]/60 border-[#3b6fa0]/50" : "text-muted-foreground border-primary/40"}`}>
