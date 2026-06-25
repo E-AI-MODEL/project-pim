@@ -7,6 +7,7 @@ import {
   type NerStatus, type RewriteStatus,
   type CertifiedPayload, type PayloadType,
   type Mode, type Action, type PiiSpan,
+  type DraftCandidate, type EgressResult, type PimDecision, type PrivacySignals,
 } from "@/lib/pim";
 import { useNerSpans } from "@/hooks/useNerSpans";
 import { usePimSettings } from "@/hooks/usePimSettings";
@@ -18,10 +19,10 @@ import { AdvancedPanel } from "./AdvancedPanel";
 import type { Example } from "./ExamplePicker";
 
 interface ResultState {
-  decision: ReturnType<typeof decide>;
+  decision: PimDecision;
   safeText: string;
   originalText: string;
-  signals: ReturnType<typeof computeSignals>;
+  signals: PrivacySignals;
   mapping: Map<string, string>;
 }
 
@@ -99,7 +100,7 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
     const t0 = performance.now();
     try {
       const signals = computeSignals(text, modelSpans, profileId, disabledCategories);
-      let draft;
+      let draft: DraftCandidate;
       let mapping = new Map<string, string>();
       if (mode === "anonymous") {
         draft = anonymize(text, signals);
@@ -115,7 +116,7 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
         mode === "pseudonymous" ? "draft_pseudonymous_local" :
         "unknown";
       const decisionSignals = computeSignals(draft.text, [], profileId, disabledCategories);
-      const decision = decide({
+      const decision: PimDecision = decide({
         mode, action, signals: decisionSignals, draftCheck: guard,
         modelVerified: gate.verified, profileId, payloadType, thresholdOverrides,
       });
@@ -159,7 +160,7 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
       const gate = modelGateFor(profileId, action, integrity);
       const payloadType: PayloadType = guard.status === "pass" ? "draft_anonymous_certified" : "unknown";
       const decisionSignals = computeSignals(rewrite.text, [], profileId, disabledCategories);
-      const decision = decide({
+      const decision: PimDecision = decide({
         mode: "anonymous", action, signals: decisionSignals, draftCheck: guard,
         modelVerified: gate.verified, profileId, payloadType, thresholdOverrides,
       });
@@ -211,10 +212,10 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
     }
   };
 
-  const runQuickAction = async (editedText: string, quickAction: Action) => {
+  const runQuickAction = async (editedText: string, quickAction: Action): Promise<EgressResult> => {
     if (!result) return { executed: false, reason: "no result" };
     const certified = buildCertified(editedText);
-    const quickDecision = { ...result.decision, action: quickAction };
+    const quickDecision: PimDecision = { ...result.decision, action: quickAction };
     const r = await executeAction(quickDecision, certified);
     emitDebug("pipeline.execute", r.executed ? "quick egress toegestaan" : "quick egress geblokt", {
       executed: r.executed, reason: r.reason, action: quickAction,
