@@ -9,11 +9,11 @@ import StarterKit from "@tiptap/starter-kit";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import {
   Bold, Italic, Heading1, Heading2, List, ListOrdered, Quote, Undo2, Redo2,
-  Upload, Download, Shield, ShieldCheck, Trash2, X, Cpu, Loader2, AlertTriangle,
+  Upload, Download, Shield, ShieldCheck, Trash2, X,
 } from "lucide-react";
 import {
   computeSignals, usesBert,
-  type PiiCategory, type PiiSpan, type NerStatus,
+  type DetectionLayerSettings, type PiiCategory, type PiiSpan, type NerStatus,
 } from "@/lib/pim";
 import { useNerSpans } from "@/hooks/useNerSpans";
 import { usePimSettings } from "@/hooks/usePimSettings";
@@ -47,7 +47,7 @@ export function WriterShell() {
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [StarterKit.configure({ heading: { levels: [1, 2, 3] } })],
-    content: "<h1>Nieuwe notitie</h1><p>Begin met typen — PiM leest mee. Namen krijgen een onderstreping; harde PII (BSN, e-mail, telefoon…) wordt direct vervangen door een label.</p>",
+    content: "<h1>Nieuwe notitie</h1><p>Begin met typen — PiM leest mee. Namen worden gemarkeerd; harde gegevens zoals BSN, e-mail en telefoonnummer worden direct vervangen door een label.</p>",
     editorProps: { attributes: { class: "prose prose-invert max-w-none focus:outline-none min-h-[50vh] px-6 py-8 text-[15px] leading-relaxed" } },
   });
 
@@ -165,17 +165,32 @@ export function WriterShell() {
 
   if (!mounted || !editor) return null;
   return (
-    <div className="min-h-screen bg-[#0a142e] text-[#e8edf3]">
-      <header className="sticky top-0 z-20 border-b border-white/10 bg-[#0a142e]/90 backdrop-blur px-4 py-3 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2"><Shield className="h-5 w-5 text-[#7fb4ff]" /><span className="font-serif-display text-lg">PiM schrijven</span><WriterStatusBar nerStatus={nerStatus} onStartNer={startNer} /></div>
-        <div className="flex items-center gap-2"><LiveTechMonitor trigger={<button type="button" className="btn-lite">Status</button>} /><button onClick={onImportClick} className="btn-lite"><Upload className="h-4 w-4" /> Import</button><button onClick={onExport} className="btn-lite"><Download className="h-4 w-4" /> Export</button><button onClick={onClear} className="btn-lite"><Trash2 className="h-4 w-4" /> Leeg</button></div>
+    <div className="min-h-screen bg-[#071527] text-[#e8edf3]">
+      <header className="sticky top-0 z-20 border-b border-white/10 bg-[#071527]/94 backdrop-blur px-4 py-3">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-cyan-300/25 bg-cyan-300/10">
+              <Shield className="h-5 w-5 text-cyan-200" />
+            </span>
+            <div className="min-w-0">
+              <div className="truncate font-serif-display text-xl font-semibold tracking-tight text-[#f3f8ff]">PiM schrijven</div>
+              <WriterStatusBar nerStatus={nerStatus} onStartNer={startNer} detectionSettings={detectionSettings} />
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <LiveTechMonitor trigger={<HeaderAction icon={<ShieldCheck className="h-4 w-4" />} label="Status" />} />
+            <HeaderAction icon={<Upload className="h-4 w-4" />} label="Import" onClick={onImportClick} />
+            <HeaderAction icon={<Download className="h-4 w-4" />} label="Export" onClick={onExport} />
+            <HeaderAction icon={<Trash2 className="h-4 w-4" />} label="Leeg" onClick={onClear} />
+          </div>
+        </div>
       </header>
-      <main className="max-w-5xl mx-auto px-4 py-6 space-y-4">
+      <main className="mx-auto max-w-6xl px-4 py-6 space-y-4">
         <AdvancedPanel {...advancedPanelProps} writer={{ autoRedact, onAutoRedactChange: (cat, scrub) => setAutoRedact((p) => { const n = new Set(p); if (scrub) n.add(cat); else n.delete(cat); return n; }), strict, onStrictChange: setStrict }} ner={{ status: nerStatus, onStart: startNer, available: usesNerSlm }} />
         {importError && <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">{importError}</div>}
         {importWarnings.length > 0 && <div className="rounded-lg border border-amber-400/30 bg-amber-400/10 p-3 text-sm text-amber-100">{importWarnings.join(" · ")}</div>}
         <Toolbar editor={editor} />
-        <div ref={editorRootRef} className="rounded-2xl border border-white/10 bg-[#0f1b3d] shadow-xl overflow-hidden"><EditorContent editor={editor} /></div>
+        <div ref={editorRootRef} className="rounded-[1.75rem] border border-white/10 bg-[#101f3d] shadow-[0_18px_55px_rgba(0,0,0,0.25)] overflow-hidden"><EditorContent editor={editor} /></div>
         <div className="text-xs text-[#e8edf3]/55 flex gap-3"><span>Gewist: {stats.scrubbed}</span><span>Gemarkeerd: {stats.marked}</span></div>
       </main>
       <input ref={fileInputRef} type="file" accept=".docx" hidden onChange={(e) => void onFile(e.target.files)} />
@@ -184,12 +199,38 @@ export function WriterShell() {
   );
 }
 
-function Toolbar({ editor }: { editor: Editor }) {
-  const btn = (label: string, icon: React.ReactNode, action: () => void, active = false) => <button type="button" title={label} onClick={action} className={`btn-lite ${active ? "bg-[#3b6fa0]/40" : ""}`}>{icon}</button>;
-  return <div className="rounded-xl border border-white/10 bg-[#0f1b3d] p-2 flex flex-wrap gap-1">{btn("Vet", <Bold className="h-4 w-4" />, () => editor.chain().focus().toggleBold().run(), editor.isActive("bold"))}{btn("Cursief", <Italic className="h-4 w-4" />, () => editor.chain().focus().toggleItalic().run(), editor.isActive("italic"))}{btn("Kop 1", <Heading1 className="h-4 w-4" />, () => editor.chain().focus().toggleHeading({ level: 1 }).run(), editor.isActive("heading", { level: 1 }))}{btn("Kop 2", <Heading2 className="h-4 w-4" />, () => editor.chain().focus().toggleHeading({ level: 2 }).run(), editor.isActive("heading", { level: 2 }))}{btn("Lijst", <List className="h-4 w-4" />, () => editor.chain().focus().toggleBulletList().run(), editor.isActive("bulletList"))}{btn("Nummerlijst", <ListOrdered className="h-4 w-4" />, () => editor.chain().focus().toggleOrderedList().run(), editor.isActive("orderedList"))}{btn("Quote", <Quote className="h-4 w-4" />, () => editor.chain().focus().toggleBlockquote().run(), editor.isActive("blockquote"))}<span className="mx-1 w-px bg-white/10" />{btn("Ongedaan", <Undo2 className="h-4 w-4" />, () => editor.chain().focus().undo().run())}{btn("Opnieuw", <Redo2 className="h-4 w-4" />, () => editor.chain().focus().redo().run())}</div>;
+function HeaderAction({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick?: () => void }) {
+  return (
+    <button type="button" onClick={onClick} className="inline-flex h-10 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.035] px-3 text-sm font-semibold text-slate-100 transition-colors hover:bg-white/[0.07]">
+      {icon}
+      <span className="hidden sm:inline">{label}</span>
+    </button>
+  );
 }
 
-function WriterStatusBar({ nerStatus, onStartNer }: { nerStatus: NerStatus | null; onStartNer: () => void }) {
-  const ready = !!nerStatus?.working;
-  return <div className="hidden sm:flex items-center gap-2 text-[11px] text-[#e8edf3]/60"><span className={`h-2 w-2 rounded-full ${ready ? "bg-emerald-400" : nerStatus?.loading ? "bg-amber-300 animate-pulse" : nerStatus?.error ? "bg-red-400" : "bg-[#3b6fa0]"}`} />{ready ? "BERT werkt" : nerStatus?.loading ? "BERT laden/testen" : nerStatus?.error ? "BERT fout" : "BERT uit"}{!ready && <button onClick={onStartNer} className="underline underline-offset-2">Zet aan</button>}</div>;
+function Toolbar({ editor }: { editor: Editor }) {
+  const btn = (label: string, icon: React.ReactNode, action: () => void, active = false) => <button type="button" title={label} onClick={action} className={`inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-200 transition-colors hover:bg-white/[0.07] ${active ? "bg-cyan-300/14 text-cyan-100" : ""}`}>{icon}</button>;
+  return <div className="rounded-2xl border border-white/10 bg-[#101f3d] p-2 flex flex-wrap gap-1">{btn("Vet", <Bold className="h-4 w-4" />, () => editor.chain().focus().toggleBold().run(), editor.isActive("bold"))}{btn("Cursief", <Italic className="h-4 w-4" />, () => editor.chain().focus().toggleItalic().run(), editor.isActive("italic"))}{btn("Kop 1", <Heading1 className="h-4 w-4" />, () => editor.chain().focus().toggleHeading({ level: 1 }).run(), editor.isActive("heading", { level: 1 }))}{btn("Kop 2", <Heading2 className="h-4 w-4" />, () => editor.chain().focus().toggleHeading({ level: 2 }).run(), editor.isActive("heading", { level: 2 }))}{btn("Lijst", <List className="h-4 w-4" />, () => editor.chain().focus().toggleBulletList().run(), editor.isActive("bulletList"))}{btn("Nummerlijst", <ListOrdered className="h-4 w-4" />, () => editor.chain().focus().toggleOrderedList().run(), editor.isActive("orderedList"))}{btn("Quote", <Quote className="h-4 w-4" />, () => editor.chain().focus().toggleBlockquote().run(), editor.isActive("blockquote"))}<span className="mx-1 w-px bg-white/10" />{btn("Ongedaan", <Undo2 className="h-4 w-4" />, () => editor.chain().focus().undo().run())}{btn("Opnieuw", <Redo2 className="h-4 w-4" />, () => editor.chain().focus().redo().run())}</div>;
+}
+
+function WriterStatusBar({ nerStatus, onStartNer, detectionSettings }: { nerStatus: NerStatus | null; onStartNer: () => void; detectionSettings: DetectionLayerSettings }) {
+  const label = writerBertLabel(nerStatus, detectionSettings);
+  const tone = nerStatus?.working ? "bg-emerald-400" : nerStatus?.loading ? "bg-amber-300 animate-pulse" : nerStatus?.error ? "bg-red-400" : "bg-cyan-400/70";
+  const canStart = detectionSettings.bert !== "off" && !nerStatus?.working && !nerStatus?.loading;
+  return (
+    <div className="mt-1 flex items-center gap-2 text-[11px] text-slate-300/70">
+      <span className={`h-2 w-2 rounded-full ${tone}`} />
+      <span>{label}</span>
+      {canStart && <button onClick={onStartNer} className="font-medium text-slate-200 underline underline-offset-2 hover:text-white">Zet aan</button>}
+    </div>
+  );
+}
+
+function writerBertLabel(status: NerStatus | null, settings: DetectionLayerSettings): string {
+  if (settings.bert === "off") return "BERT uit";
+  const size = settings.bert === "100mb" ? "BERT 100 MB" : "BERT 180 MB";
+  if (status?.working) return `${size} werkt`;
+  if (status?.loading) return `${size} laden/testen`;
+  if (status?.error || status?.healthError) return `${size} fout`;
+  return `${size} niet geladen`;
 }
