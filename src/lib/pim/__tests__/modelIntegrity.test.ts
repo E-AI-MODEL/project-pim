@@ -1,7 +1,7 @@
 // §11.3 1.41-1.42 — modelgate gedrag.
-import { describe, expect, it, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { modelGateFor } from "../modelGate";
-import { _resetIntegrityRegistry, verifyModel, type ModelIntegrityRecord } from "../modelCatalog";
+import { _resetIntegrityRegistry, verifyModel, type ModelIntegrityRecord } from "../modelIntegrity";
 
 const rec = (status: ModelIntegrityRecord["status"]): ModelIntegrityRecord => ({
   key: "ner_multilingual", modelId: "x", status,
