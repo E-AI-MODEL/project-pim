@@ -14,6 +14,7 @@ export * from './pipelineProfile';
 export * from './contextualGeneralization';
 export * from './detectorRegistry';
 export * from './reviewQueue';
+export * from './abuseDetection';
 export * from './rewriteLlm';
 export * from './selfTest';
 export * from './modelGate';
