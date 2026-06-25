@@ -9,11 +9,11 @@ import StarterKit from "@tiptap/starter-kit";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import {
   Bold, Italic, Heading1, Heading2, List, ListOrdered, Quote, Undo2, Redo2,
-  Upload, Download, Shield, Trash2, X,
+  Upload, Download, Shield, ShieldCheck, Trash2, X, Cpu, Loader2, AlertTriangle,
 } from "lucide-react";
 import {
   computeSignals, PIPELINE_PROFILES,
-  type PiiCategory, type PiiSpan,
+  type PiiCategory, type PiiSpan, type NerStatus,
 } from "@/lib/pim";
 import { useNerSpans } from "@/hooks/useNerSpans";
 import { usePimSettings } from "@/hooks/usePimSettings";
@@ -300,6 +300,12 @@ export function WriterShell() {
         onImport={onImportClick}
         onExport={onExport}
         onClear={onClear}
+      />
+
+      <WriterStatusBar
+        nerAvailable={usesNerSlm}
+        nerStatus={nerStatus}
+        onStartNer={startNer}
         stats={stats}
       />
 
@@ -372,13 +378,12 @@ export function WriterShell() {
 }
 
 function WriterToolbar({
-  editor, onImport, onExport, onClear, stats,
+  editor, onImport, onExport, onClear,
 }: {
   editor: Editor;
   onImport: () => void;
   onExport: () => void;
   onClear: () => void;
-  stats: { scrubbed: number; marked: number };
 }) {
   const btn = "inline-flex items-center justify-center h-8 w-8 rounded-md text-foreground/70 hover:text-foreground hover:bg-accent/40 transition-colors";
   const btnActive = "bg-accent/60 text-foreground";
@@ -400,9 +405,58 @@ function WriterToolbar({
       <button className={btn} onClick={onExport} title="Exporteer .docx"><Download className="h-4 w-4" /></button>
       <button className={btn} onClick={onClear} title="Leegmaken"><Trash2 className="h-4 w-4" /></button>
       <span className="flex-1" />
-      <span className="text-[11px] text-muted-foreground px-2">
-        {stats.scrubbed > 0 && <>{stats.scrubbed} gewist · </>}{stats.marked} gemarkeerd
-      </span>
+    </div>
+  );
+}
+
+/**
+ * Zichtbare statusbalk onder de werkbalk: links de naamherkenning-schakelaar
+ * (de grootste detectie-booster — vangt namen die de regels missen), rechts
+ * een altijd-zichtbare teller "X gewist · Y gemarkeerd".
+ */
+function WriterStatusBar({
+  nerAvailable, nerStatus, onStartNer, stats,
+}: {
+  nerAvailable: boolean;
+  nerStatus: NerStatus | null;
+  onStartNer: () => void;
+  stats: { scrubbed: number; marked: number };
+}) {
+  const kind = nerStatus?.error ? "error" : nerStatus?.ready ? "ready" : nerStatus?.loading ? "loading" : "idle";
+  const rawPct = nerStatus?.progress?.pct;
+  const pct = typeof rawPct === "number" ? Math.round(rawPct <= 1 ? rawPct * 100 : rawPct) : undefined;
+  const Icon = kind === "loading" ? Loader2 : kind === "error" ? AlertTriangle : kind === "ready" ? ShieldCheck : Cpu;
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border/60 bg-card/40 px-3 py-2 text-[12px]">
+      <div className="flex items-center gap-2 min-w-0">
+        <Icon className={`h-4 w-4 shrink-0 ${kind === "loading" ? "animate-spin" : ""} ${kind === "ready" ? "text-emerald-400" : "text-muted-foreground"}`} />
+        {!nerAvailable ? (
+          <span className="text-muted-foreground">Naamherkenning uit in dit profiel</span>
+        ) : kind === "ready" ? (
+          <span className="text-emerald-300 font-medium">Naam-AI aan — vangt ook namen die de regels missen</span>
+        ) : kind === "loading" ? (
+          <span className="text-amber-300">Naam-model downloaden… {typeof pct === "number" ? `${pct}%` : ""}</span>
+        ) : (
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-muted-foreground truncate">
+              {kind === "error" ? "Naam-model laden mislukt." : "Naam-AI staat uit — zonder dit worden veel namen gemist."}
+            </span>
+            <button
+              type="button"
+              onClick={onStartNer}
+              className="shrink-0 rounded-md bg-primary px-2.5 py-1 text-[11px] font-semibold text-primary-foreground hover:bg-primary/90"
+            >
+              {kind === "error" ? "Opnieuw" : "Zet aan"}
+            </button>
+          </div>
+        )}
+      </div>
+      <div className="shrink-0 font-medium tabular-nums">
+        <span className="text-primary">{stats.scrubbed}</span>
+        <span className="text-muted-foreground"> gewist · </span>
+        <span className="text-amber-300">{stats.marked}</span>
+        <span className="text-muted-foreground"> gemarkeerd</span>
+      </div>
     </div>
   );
 }
