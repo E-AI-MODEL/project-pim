@@ -1,51 +1,48 @@
-## Probleem
+## Wat er nu dubbel staat
 
-1. `PipelineStepsBar` boven het monitorvenster klapt **in de pagina open** en duwt hero-tekst weg → storend.
-2. Alles wat in het popup-paneel (`LiveTechMonitor`) staat, hoort niet óók op de startpagina te staan.
-3. Het popup-paneel toont vooral statussen — gebruiker ziet *het gevolg* van PiM, niet *wat PiM op dat moment doet*.
+**Homepage (`/` → `StartGoShell`)**
+- `AdvancedPanel` (uitklap): Profiel, Gevoeligheid, Detectoren per categorie, Modellen (Expert).
+- `LocalModelStrip` met daarboven een **NerVariantPicker** → variantkeuze leeft ook al in AdvancedPanel → Modellen.
+- Burgermenu → "Geavanceerde instellingen" opent dezelfde `AdvancedPanel`.
+
+**Schrijfpagina (`/schrijven` → `WriterShell`)**
+- `AdvancedPanel` (recent toegevoegd): Profiel, Gevoeligheid, Detectoren, Modellen.
+- `WriterToolbar` heeft een **Settings2-popover** met:
+  - NER aan/uit + NER-variant kiezen (zit ook in AdvancedPanel → Modellen)
+  - Per-categorie Uit / Markeer / Wis (Uit zit al in AdvancedPanel → Detectoren)
+  - Strenge cijfercontrole (writer-only)
+
+Resultaat: profielen, detectoren en NER-keuzes kun je nu op 2 plekken anders zetten, met kans op tegenstrijdige state.
 
 ## Doel
 
-- Op de startpagina staat **geen** modellen-/techniek-strip meer. Geen inline-uitklap, geen 1/3-actief regel, geen StepPills.
-- Eén toegang tot techniek: de bestaande "Live techniek"-knop in de footer van het monitorvenster opent het zij-paneel.
-- In dat paneel zie je PiM écht aan het werk, niet alleen het eindresultaat.
+Per pagina precies **één** instellingenmenu: `AdvancedPanel`. Alle pagina-specifieke opties leven binnen dezelfde uitklap (extra props), zodat de gebruiker niet hoeft te zoeken.
 
-## Wijzigingen
+## Aanpak
 
-### 1. `MonitorShell.tsx` — strip uit de hero
-- `<PipelineStepsBar />` verwijderen.
-- De wrapper `<div className="space-y-3">` mag weg; alleen het monitor-window blijft.
-- Footer-knop "Live techniek" blijft staan (enige ingang).
+### 1. Homepage (`/`)
+- Verwijder `NerVariantPicker` uit `LocalModelStrip`. `LocalModelStrip` blijft puur "operationeel" (model downloaden, Qwen herschrijven, status zien) — geen configuratie.
+- Variantkeuze blijft enkel in `AdvancedPanel` → tab **Modellen** (al aanwezig in Expert). Promoveer dit blok ook naar de Basis-modus zodat hij vindbaar is zonder Expert-toggle.
 
-### 2. `PipelineStepsBar.tsx` — wordt niet meer gebruikt op `/`
-- Bestand laten staan (kan elders in docs-routes gebruikt worden); geen edit nodig. Geen import meer vanuit `MonitorShell`.
+### 2. Schrijfpagina (`/schrijven`)
+- Verwijder de Settings2-popover uit `WriterToolbar` volledig. Toolbar houdt alleen formatteer-, import/export- en wis-knoppen.
+- Breid `AdvancedPanel` uit met optionele writer-secties via nieuwe props (alleen renderen als props gezet zijn):
+  - **Per-categorie modus** (`Uit / Markeer / Wis`) — vervangt zowel de "Detectoren-Uit"-rij als het writer-popover-blok. Op `/` bestaat alleen `Uit / Aan`; op `/schrijven` voegen we de derde stand `Wis` toe. Eén enkele lijst, één bron van waarheid.
+  - **Strenge cijfercontrole** (BSN-elfproef, IBAN mod-97, kenteken, student-ID context) — alleen op `/schrijven`.
+- NER aanzetten / variant kiezen verloopt op beide pagina's via de Modellen-tab van `AdvancedPanel`. `WriterShell` koppelt z'n `startNer` aan dezelfde knop.
 
-### 3. `LiveTechMonitor.tsx` — Modellen-tab krijgt de 3 stap-kaarten
-- De drie kaarten (Regex/regels, NER-SLM, Generalisatie-LLM, met progress + "Inschakelen"-knoppen + mobiel-badge) verhuizen integraal naar de **Modellen**-tab. Dat is precies de inhoud die nu uit de hero verdwijnt.
-- Bestaande integrity-blok blijft eronder.
+### 3. Gedeelde gedragingen
+- `pim:open-advanced` event uit het burgermenu blijft hetzelfde — opent en scrollt naar `AdvancedPanel` op de huidige pagina.
+- Labeltekst van de uitklap toont per pagina hoeveel overrides actief zijn (al aanwezig); breid uit met aantal "Wis"-categorieën op `/schrijven`.
 
-### 4. Nieuwe **Live**-tab (default) — toont wat PiM nu doet
-Vervangt de huidige magere "Pipeline"-tab. Tabvolgorde: **Live · Modellen · Omgeving · Log**.
+## Bestanden die wijzigen
 
-Inhoud (alles uit `debugBus` + bestaande hooks, geen nieuwe data over de privacy-grens):
-- **Nu actief**: laatste step uit `usePipelineHeartbeat` met pulsing dot + "x ms geleden". Idle → "Wacht op invoer".
-- **Stap-heartbeat**: alle steps (regex → ner → llm → policy → draftcheck → egress) met per stap *laatste duur in ms* en *aantal keer uitgevoerd*.
-- **Detector-tellingen (laatste run)**: per categorie (BSN, email, telefoon, NER-persoon, etc.) het aantal hits — alléén tellingen, geen waarden. Uit het laatste `pipeline.run`-event.
-- **Beslissing**: laatste verdict (`ALLOW`/`WARN`/`BLOCK`) + reden-codes.
-- **Egress-poort**: laatste `pipeline.execute` — toegestaan/geblokt + reden.
-- **Modellen-mini**: NER runtime (`webgpu`/`wasm`) en LLM-status als one-liner met dot.
+- `src/components/pim/start-go/AdvancedPanel.tsx` — extra optionele props (`categoryMode`, `onCategoryModeChange`, `strict`, `onStrictChange`), Modellen-blok ook in Basis tonen.
+- `src/components/pim/start-go/StartGoShell.tsx` — `NerVariantPicker` weghalen uit `LocalModelStrip`, panel-props ongewijzigd.
+- `src/components/pim/writer/WriterShell.tsx` — Settings2-popover en bijbehorende helpers (`CategoryModeToggle`, `NerToggleRow`, NER-imports in toolbar) verwijderen, `AdvancedPanel` aanroepen met de writer-specifieke props.
 
-De huidige "Laatste run"-JSON-dump blijft als inklapbare "Ruwe data" onderaan voor wie het wil.
+## Niet in scope
 
-### 5. Geen wijzigingen aan
-- `BurgerMenu`, copy, kleuren, fonts, pipeline-logica, detectors, server-functies.
-- Privacy-belofte: events bevatten nog steeds alleen tellingen/IDs/statussen, geen ruwe tekst.
-
-## Bestanden
-- `src/components/pim/start-go/MonitorShell.tsx` — import + render van `PipelineStepsBar` weg.
-- `src/components/pim/start-go/LiveTechMonitor.tsx` — Live-tab toevoegen; Modellen-tab uitbreiden met de 3 kaarten (StepPill-component intern overnemen).
-
-## Validatie
-- Typecheck.
-- Visueel: hero-tekst blijft staan, niets duwt 'm meer weg.
-- Klik op "Live techniek" → paneel rechts opent met Live-tab actief; tijdens een testrun lichten step-heartbeat en tellingen op.
+- Geen wijziging aan beslislogica in `src/lib/pim/*` of aan `usePimSettings`.
+- Geen UI-restyle van `AdvancedPanel` zelf — alleen inhoud uitbreiden.
+- Pagina's `/try`, `/pipeline`, etc. blijven ongemoeid.
