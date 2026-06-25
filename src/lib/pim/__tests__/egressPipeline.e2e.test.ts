@@ -16,7 +16,7 @@ const allowDecision = (action: PimDecision["action"]): PimDecision => ({
   payloadType: "draft_anonymous_certified",
 });
 
-const certified = (text = "Schone geanonimiseerde tekst zonder directe PII."): CertifiedPayload => ({
+const certified = (text = "Clean anonymous text without direct identifiers."): CertifiedPayload => ({
   text,
   mode: "anonymous",
   payloadType: "draft_anonymous_certified",
@@ -33,8 +33,14 @@ function installBrowserStubs() {
     configurable: true,
     value: vi.fn().mockResolvedValue(undefined),
   });
-  vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:pim-test");
-  vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => undefined);
+  Object.defineProperty(URL, "createObjectURL", {
+    configurable: true,
+    value: vi.fn(() => "blob:pim-test"),
+  });
+  Object.defineProperty(URL, "revokeObjectURL", {
+    configurable: true,
+    value: vi.fn(),
+  });
   vi.spyOn(window, "open").mockReturnValue({
     document: { write: vi.fn(), close: vi.fn() },
     focus: vi.fn(),
@@ -44,32 +50,33 @@ function installBrowserStubs() {
 
 beforeEach(() => {
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
   installBrowserStubs();
 });
 
 describe("egress pipeline e2e", () => {
   it.each(["copy", "export_file", "print", "share", "send_external_ai"] as const)(
-    "%s voert alleen een gecertificeerde schone anonymous payload uit",
+    "%s only executes a clean certified anonymous payload",
     async (action) => {
       const result = await executeAction(allowDecision(action), certified());
-
       expect(result.executed).toBe(true);
     },
   );
 
-  it("blokkeert copy als de werkelijke payload bij re-consult toch directe PII bevat", async () => {
-    const fakeEmail = ["test.docent", "voorbeeldschool.nl"].join("@");
+  it("blocks copy when re-consult finds a direct identifier", async () => {
+    const contact = ["test.docent", "voorbeeldschool.nl"].join(String.fromCharCode(64));
     const result = await executeAction(
       allowDecision("copy"),
-      certified(`Deze payload bevat alsnog ${fakeEmail}.`),
+      certified(`This payload still contains ${contact}.`),
     );
 
     expect(result.executed).toBe(false);
     expect(result.reason).toMatch(/re-consult BLOCK/i);
   });
 
-  it("stuurt send_external_ai nooit naar een endpoint in deze build", async () => {
-    const fetchSpy = vi.spyOn(globalThis, "fetch");
+  it("does not call fetch for send_external_ai in this build", async () => {
+    const fetchSpy = vi.fn();
+    vi.stubGlobal("fetch", fetchSpy);
 
     const result = await executeAction(allowDecision("send_external_ai"), certified());
 
