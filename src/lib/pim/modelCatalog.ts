@@ -1,6 +1,6 @@
 // Model Catalog — spec hfst 9 / 14 / v3-2.
 //
-// Dit bestand bevat alleen catalogusdata en types. Runtime-integriteit,
+// Dit bestand bevat catalogusdata en types. Runtime-integriteit,
 // browser-local pins en registry-state staan in modelIntegrity.ts.
 
 export type ModelTask = "token-classification" | "text-classification" | "text-generation";
@@ -13,7 +13,6 @@ export interface CatalogEntry {
   task: ModelTask;
   preferredDevice: ModelDevice;
   fallbackDevice: ModelDevice | null;
-  /** Concrete SHA-256, PLACEHOLDER:* or LOCAL_PIN:* */
   expectedConfigSha256: string;
   releaseStatus: "release-1" | "design-only";
   notes: string;
@@ -91,3 +90,14 @@ export const NER_VARIANTS: Record<NerVariantKey, NerVariant> = {
 };
 
 export const DEFAULT_NER_VARIANT: NerVariantKey = "small";
+
+export {
+  _resetIntegrityRegistry,
+  getModelIntegrity,
+  isDemoAcceptable,
+  isProductionVerified,
+  onModelIntegrity,
+  sha256Hex,
+  verifyModel,
+} from "./modelIntegrity";
+export type { ModelIntegrityRecord, ModelIntegrityStatus } from "./modelIntegrity";
