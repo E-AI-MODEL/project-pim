@@ -1,4 +1,4 @@
-// Spec §7.2 — 10 menu-items in vaste volgorde.
+// Spec §7.2 — menu-items in vaste volgorde.
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   Menu, X, FileText, PenLine, FlaskConical, ShieldCheck,
@@ -18,16 +18,16 @@ type Group = { label: string; items: Item[] };
 
 const GROUPS: Group[] = [
   {
-    label: "Aan de slag",
+    label: "Werken met tekst",
     items: [
       { kind: "event", event: "pim:reset", label: COPY.menuNewTest, icon: <FilePlus2 className="h-4 w-4" /> },
       { kind: "link",  to: "/schrijven", label: COPY.menuWriter, icon: <PenLine className="h-4 w-4" /> },
-      { kind: "link",  to: "/try",       label: COPY.menuExpertLab, icon: <FlaskConical className="h-4 w-4" /> },
     ],
   },
   {
-    label: "Onder de motorkap",
+    label: "Tech-expert",
     items: [
+      { kind: "link",  to: "/try",       label: COPY.menuExpertLab, icon: <FlaskConical className="h-4 w-4" /> },
       { kind: "link", to: "/pipeline", label: COPY.menuPipeline, icon: <Workflow className="h-4 w-4" /> },
       { kind: "link", to: "/modes",    label: COPY.menuModes,    icon: <Layers className="h-4 w-4" /> },
       { kind: "link", to: "/flags",    label: COPY.menuFlags,    icon: <Flag className="h-4 w-4" /> },
@@ -60,8 +60,8 @@ export function BurgerMenu() {
     const includeModels = window.confirm(
       "Lokale opslag wissen?\n\n" +
         "Dit ruimt je werkdata op: token-mappings, de review-queue, en lokale " +
-        "opslag van deze browser. Klik OK om óók de gedownloade modellen " +
-        "(NER ~100 MB, Qwen ~400 MB) te wissen — die worden dan opnieuw " +
+        "opslag van deze browser. Klik OK om ook de gedownloade modellen " +
+        "(NER ~100 MB, Qwen ~400 MB) te wissen. Die worden dan opnieuw " +
         "gedownload zodra je ze weer aanzet.\n\n" +
         "Annuleer om niets te wissen.",
     );
