@@ -21,7 +21,7 @@ import type { PiiSpan, PiiCategory } from "./types";
 const STRUCTURED_IDENTIFIER: ReadonlySet<PiiCategory> = new Set([
   "email", "phone", "bsn", "iban", "postcode", "student_id", "credit_card",
   "license_plate", "url", "ip_address", "social_handle", "birthdate_text",
-  "date", "class_code",
+  "date", "class_code", "id_document",
 ]);
 
 /** Herkomst afleiden uit de ruleId-prefix (zelfde conventie als detectorSourceLabel). */

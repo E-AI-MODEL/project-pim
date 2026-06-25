@@ -5,7 +5,7 @@ import { DEFAULT_PROFILE, type PipelineProfileId } from "./pipelineProfile";
 
 const HIGH_SEVERITY: ReadonlySet<string> = new Set([
   "bsn", "iban", "email", "phone", "address", "student_id",
-  "credit_card", "license_plate", "birthdate_text",
+  "credit_card", "license_plate", "birthdate_text", "id_document",
 ]);
 
 export function computeSignals(

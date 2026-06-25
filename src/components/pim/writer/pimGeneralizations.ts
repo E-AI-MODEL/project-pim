@@ -12,6 +12,7 @@ export const GENERALIZATIONS: Record<PiiCategory, string> = {
   address: "[adres]",
   student_id: "[leerlingnummer]",
   class_code: "[klas]",
+  id_document: "[documentnummer]",
   credit_card: "[creditcard]",
   license_plate: "[kenteken]",
   url: "[link]",
@@ -34,7 +35,7 @@ export const GENERALIZATIONS: Record<PiiCategory, string> = {
 /** Standaard: harde, ondubbelzinnige identificatoren worden direct gewist. */
 export const DEFAULT_AUTO_REDACT: ReadonlySet<PiiCategory> = new Set<PiiCategory>([
   "email", "phone", "bsn", "iban", "credit_card", "postcode",
-  "address", "birthdate_text", "student_id", "ip_address",
+  "address", "birthdate_text", "student_id", "ip_address", "id_document",
 ]);
 
 export const CATEGORY_LABELS: Record<PiiCategory, string> = {
@@ -49,6 +50,7 @@ export const CATEGORY_LABELS: Record<PiiCategory, string> = {
   address: "Adres",
   student_id: "Leerlingnummer",
   class_code: "Klascode",
+  id_document: "Documentnummer",
   credit_card: "Creditcard",
   license_plate: "Kenteken",
   url: "Link",

@@ -17,8 +17,15 @@ const RULES: RuleDef[] = [
   // Leerlingnummer: 6-8 cijfers. Negative lookahead/lookbehind voorkomt overlap met BSN (9) en jaartallen in datums.
   { id: "rule.student_id", category: "student_id", regex: /(?<!\d)\d{6,8}(?!\d)/g, confidence: 0.55 },
   { id: "rule.iban", category: "iban", regex: /\b[A-Z]{2}\d{2}[A-Z0-9]{4}\d{7,16}\b/g, confidence: 0.95 },
+  // Identiteitsdocument (paspoort/ID-kaart/rijbewijs). Alleen ná een trefwoord
+  // gematcht (variabele lookbehind) zodat we niet elk 7–10-teken codewoord
+  // oppikken. Het trefwoord zelf blijft staan; alleen het nummer wordt PII.
+  { id: "rule.id_document", category: "id_document", regex: /(?<=\b(?:paspoort(?:nummer)?|identiteitsbewijs|identiteitskaart|id-?kaart|rijbewijs(?:nummer)?|documentnummer)\b[\s:#.]{0,4})[A-Z0-9]{7,10}\b/gi, confidence: 0.8 },
   { id: "rule.postcode", category: "postcode", regex: /\b\d{4}\s?[A-Z]{2}\b/g, confidence: 0.9 },
   { id: "rule.date", category: "date", regex: /\b\d{1,2}[-/]\d{1,2}[-/]\d{2,4}\b/g, confidence: 0.7 },
+  // ISO-datum (jaar-maand-dag): 2025-03-12. Apart van rule.date, die alleen
+  // dag-eerst NL-notatie ving en ISO daardoor compleet miste.
+  { id: "rule.date_iso", category: "date", regex: /\b(?:19|20)\d{2}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])\b/g, confidence: 0.8 },
   // Klascode VO (NL): jaar (1-6) + stroom (H/V/M/G/A/T) + optionele letter/cijfer. Bv 4H1, V5B, 3V, 2M, 6Va.
   { id: "rule.class_code", category: "class_code", regex: /\b(?:[1-6][HVMGAT][a-zA-Z]?\d?|[HVMGAT][1-6][a-zA-Z]?)\b/g, contextual: true, confidence: 0.6 },
   // Naive name: capitalised word, not at sentence start. Browser SLM stub.

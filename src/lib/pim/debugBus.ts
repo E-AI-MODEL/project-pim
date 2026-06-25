@@ -9,6 +9,7 @@ export type DebugEventKind =
   | "model.llm.status"
   | "model.llm.rewrite"
   | "model.integrity"
+  | "storage.clear"
   | "info";
 
 export interface DebugEvent {

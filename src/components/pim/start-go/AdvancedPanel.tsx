@@ -66,7 +66,7 @@ const TUNEABLE: Action[] = [
 const CATEGORY_SECTIONS: { label: string; cats: PiiCategory[] }[] = [
   {
     label: "Identiteit",
-    cats: ["name", "bsn", "student_id", "birthdate_text", "date"],
+    cats: ["name", "bsn", "student_id", "id_document", "birthdate_text", "date"],
   },
   {
     label: "Contact",
@@ -95,6 +95,7 @@ const CATEGORY_LABELS: Partial<Record<PiiCategory, string>> = {
   credit_card: "Creditcard", postcode: "Postcode", address: "Adres",
   name: "Naam", school: "School", date: "Datum", birthdate_text: "Geboortedatum",
   student_id: "Leerling-ID", class_code: "Klascode", license_plate: "Kenteken",
+  id_document: "Documentnummer",
   url: "URL", ip_address: "IP-adres", social_handle: "Social handle",
   context_small_group: "Kleine groep", context_care: "Zorg",
   context_incident: "Incident", context_role: "Rol", context_health: "Gezondheid",
@@ -115,6 +116,7 @@ const CATEGORY_EXAMPLE: Partial<Record<PiiCategory, string>> = {
   ip_address: "192.168.1.10",
   credit_card: "Creditcardnummer (16 cijfers)",
   license_plate: "Kenteken, bv. 12-AB-34",
+  id_document: "Paspoort-/ID-/rijbewijsnummer na een trefwoord",
 };
 
 const PROFILE_WHEN: Partial<Record<PipelineProfileId, string>> = {};

@@ -2,15 +2,17 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   Menu, X, FileText, PenLine, FlaskConical, ShieldCheck,
-  Workflow, Layers, CheckCircle, Flag, Settings, Info, FilePlus2,
+  Workflow, Layers, CheckCircle, Flag, Settings, Info, FilePlus2, Trash2, Loader2,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { COPY } from "@/lib/pim/copy";
+import { clearAllLocalData } from "@/lib/pim";
 
 type Item =
   | { kind: "link"; to: string; label: string; icon: React.ReactNode; hash?: string }
-  | { kind: "event"; event: string; label: string; icon: React.ReactNode };
+  | { kind: "event"; event: string; label: string; icon: React.ReactNode }
+  | { kind: "clear-storage"; label: string; icon: React.ReactNode };
 
 type Group = { label: string; items: Item[] };
 
@@ -42,6 +44,7 @@ const GROUPS: Group[] = [
     label: "Systeem",
     items: [
       { kind: "event", event: "pim:open-advanced", label: COPY.menuSettings, icon: <Settings className="h-4 w-4" /> },
+      { kind: "clear-storage", label: COPY.menuClearStorage, icon: <Trash2 className="h-4 w-4" /> },
       { kind: "link",  to: "/over",                label: COPY.menuAbout,    icon: <Info className="h-4 w-4" /> },
     ],
   },
@@ -49,7 +52,39 @@ const GROUPS: Group[] = [
 
 export function BurgerMenu() {
   const [open, setOpen] = useState(false);
+  const [clearing, setClearing] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  const handleClearStorage = async () => {
+    if (clearing) return;
+    const includeModels = window.confirm(
+      "Lokale opslag wissen?\n\n" +
+        "Dit ruimt je werkdata op: token-mappings, de review-queue, en lokale " +
+        "opslag van deze browser. Klik OK om óók de gedownloade modellen " +
+        "(NER ~100 MB, Qwen ~400 MB) te wissen — die worden dan opnieuw " +
+        "gedownload zodra je ze weer aanzet.\n\n" +
+        "Annuleer om niets te wissen.",
+    );
+    if (!includeModels && !window.confirm("Alleen werkdata wissen, modellen behouden?")) {
+      return;
+    }
+    setClearing(true);
+    try {
+      const r = await clearAllLocalData({ includeModels });
+      window.dispatchEvent(new CustomEvent("pim:reset"));
+      setOpen(false);
+      const parts = [
+        `${r.localStorage + r.sessionStorage} opslagsleutels`,
+        r.modelsCleared ? `${r.caches} caches · ${r.indexedDb} databases` : "modellen behouden",
+      ];
+      window.alert(
+        `Lokale opslag gewist (${parts.join(", ")}).` +
+          (r.errors.length ? `\n\nLet op: ${r.errors.length} onderdeel kon niet volledig worden gewist.` : ""),
+      );
+    } finally {
+      setClearing(false);
+    }
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -118,6 +153,18 @@ export function BurgerMenu() {
                             </span>
                             {item.label}
                           </Link>
+                        ) : item.kind === "clear-storage" ? (
+                          <button
+                            type="button"
+                            onClick={handleClearStorage}
+                            disabled={clearing}
+                            className="w-full text-left flex items-center gap-3 px-4 py-2 text-[13px] font-medium rounded-md mx-2 my-0.5 text-foreground/80 hover:bg-rose-500/10 hover:text-rose-200 disabled:opacity-50 transition-colors"
+                          >
+                            <span className="text-muted-foreground">
+                              {clearing ? <Loader2 className="h-4 w-4 animate-spin" /> : item.icon}
+                            </span>
+                            {clearing ? "Bezig met wissen…" : item.label}
+                          </button>
                         ) : (
                           <button
                             type="button"

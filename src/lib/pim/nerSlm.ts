@@ -194,13 +194,18 @@ export async function detectPersonsSlm(text: string): Promise<PiiSpan[]> {
       const around = text.slice(Math.max(0, ent.start - 60), Math.min(text.length, ent.end + 20)).toLowerCase();
       const isSchoolish = /\b(basisschool|school|gymnasium|havo|vwo|vmbo|college|lyceum|onderwijs)\b/.test(around);
       if (tag.includes("PER")) {
-        if (ent.score < 0.45) continue;
+        // Drempels bewust laag: dit is een privacy-tool, dus recall (een naam
+        // missen) weegt zwaarder dan precisie (een woord teveel labelen). De
+        // kleinere DistilBERT-NER scoort gemiddeld lager dan de mBERT-base;
+        // met 0.45 als ondergrens viel een deel van de namen weg. Verlaagd naar
+        // 0.30 zodat het lichtere model meer namen oppikt.
+        if (ent.score < 0.3) continue;
         spans.push({
           start: ent.start, end: ent.end, text: surface,
           category: "name", ruleId: "slm.ner.per", confidence: ent.score, contextual: false,
         });
       } else if (tag.includes("ORG")) {
-        if (ent.score < 0.45) continue;
+        if (ent.score < 0.35) continue;
         spans.push({
           start: ent.start, end: ent.end, text: surface,
           category: isSchoolish ? "school" : "name",
@@ -208,13 +213,13 @@ export async function detectPersonsSlm(text: string): Promise<PiiSpan[]> {
           confidence: ent.score, contextual: false,
         });
       } else if (tag.includes("LOC")) {
-        if (ent.score < 0.5) continue;
+        if (ent.score < 0.4) continue;
         spans.push({
           start: ent.start, end: ent.end, text: surface,
           category: "address", ruleId: "slm.ner.loc", confidence: ent.score, contextual: false,
         });
       } else if (tag.includes("MISC")) {
-        if (ent.score < 0.55) continue;
+        if (ent.score < 0.45) continue;
         spans.push({
           start: ent.start, end: ent.end, text: surface,
           category: isSchoolish ? "school" : "name",
