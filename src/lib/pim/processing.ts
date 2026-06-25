@@ -15,6 +15,7 @@ const GENERALIZATIONS: Record<string, string> = {
   address: "[adres]",
   student_id: "[leerlingnummer]",
   class_code: "[klas]",
+  id_document: "[documentnummer]",
   credit_card: "[creditcard]",
   license_plate: "[kenteken]",
   url: "[link]",

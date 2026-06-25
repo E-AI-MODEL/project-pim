@@ -103,6 +103,7 @@ export const COPY = {
   menuCompliance: "Compliance",
   menuFlags: "Beslissingscodes",
   menuSettings: "Instellingen",
+  menuClearStorage: "Lokale opslag wissen",
   menuAbout: "Over Project PiM",
 
   // Tech-laag — voor de tech-collega / reviewer

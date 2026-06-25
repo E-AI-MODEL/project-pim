@@ -11,6 +11,7 @@ import {
   createMappingContainer, restoreFromContainer, destroyContainer,
   installRuntimeHardening, onViolations,
   detectPersonsSlm, loadNerSlm, onNerStatus, type NerStatus,
+  getNerVariant, setNerVariant, NER_VARIANTS, type NerVariantKey,
   PIPELINE_PROFILES, RELEASE_1_PROFILES, DEFAULT_PROFILE, type PipelineProfileId,
   onModelIntegrity, type ModelIntegrityRecord,
   repairAnonymousDraft,
@@ -296,6 +297,7 @@ function TryPage() {
   const [egress, setEgress] = useState<{ ok: boolean; msg: string } | null>(null);
   const [violations, setViolations] = useState<string[]>([]);
   const [slmEnabled, setSlmEnabled] = useState(false);
+  const [nerVariant, setNerVariantState] = useState<NerVariantKey>(getNerVariant());
   const [slmStatus, setSlmStatus] = useState<NerStatus | null>(null);
   const [slmSpans, setSlmSpans] = useState<PiiSpan[]>([]);
   const [profileId, setProfileId] = useState<PipelineProfileId>(DEFAULT_PROFILE);
@@ -327,6 +329,13 @@ function TryPage() {
     if (!profile.detectors.nerSlm) return;
     setSlmEnabled(true);
     loadNerSlm().catch(() => {});
+  };
+
+  const selectNerVariant = (v: NerVariantKey) => {
+    if (v === nerVariant) return;
+    setNerVariant(v); // reset de pipeline; status springt naar idle
+    setNerVariantState(v);
+    if (slmEnabled) loadNerSlm().catch(() => {}); // direct opnieuw downloaden
   };
 
   const profile = PIPELINE_PROFILES[profileId];
@@ -732,10 +741,34 @@ function TryPage() {
             </div>
             <span className="font-mono text-[10px] text-muted-foreground">geen egress</span>
           </div>
+          {/* NER-variant keuze — compact (standaard) vs. volledig (hogere recall) */}
+          <div className="mb-2 flex items-center justify-between gap-2 rounded-md border border-border/40 bg-background/30 px-2.5 py-1.5">
+            <div className="font-mono text-[10px] uppercase tracking-wider text-foreground/60">
+              NER-model
+            </div>
+            <div className="inline-flex rounded-md border border-border/50 overflow-hidden text-[11px]">
+              {(Object.keys(NER_VARIANTS) as NerVariantKey[]).map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => selectNerVariant(v)}
+                  aria-pressed={nerVariant === v}
+                  title={NER_VARIANTS[v].notes}
+                  className={`px-2.5 py-1 transition-colors ${
+                    nerVariant === v
+                      ? "bg-primary text-primary-foreground font-semibold"
+                      : "text-muted-foreground hover:bg-accent/40"
+                  }`}
+                >
+                  {NER_VARIANTS[v].label} · {NER_VARIANTS[v].sizeLabel}
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <ModelStatusCard
               name="NER · naamherkenning"
-              sizeLabel="~180MB"
+              sizeLabel={NER_VARIANTS[nerVariant].sizeLabel}
               tone="cyan"
               available={profile.detectors.nerSlm}
               status={

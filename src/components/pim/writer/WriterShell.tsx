@@ -19,12 +19,13 @@ import {
 import { useNerSpans } from "@/hooks/useNerSpans";
 import { usePimSettings } from "@/hooks/usePimSettings";
 import { LiveTechMonitor } from "@/components/pim/start-go/LiveTechMonitor";
+import { NerVariantPicker } from "@/components/pim/start-go/NerVariantPicker";
 import { GENERALIZATIONS, DEFAULT_AUTO_REDACT, CATEGORY_LABELS } from "./pimGeneralizations";
 import {
   createPimPlugin, pimPluginKey, extractPlain, spanToRange, buildDecorations,
 } from "./pimPlugin";
 import { importDocxToEditor, exportEditorToDocx } from "./docxIO";
-import { isValidBsn, isValidIban, isValidLicensePlate } from "./validators";
+import { isValidBsn, isValidIban, isValidLicensePlate, hasStudentIdContext } from "./validators";
 
 interface ClickedSpan {
   from: number;
@@ -103,6 +104,7 @@ export function WriterShell() {
         if (s.category === "bsn") return isValidBsn(s.text);
         if (s.category === "iban") return isValidIban(s.text);
         if (s.category === "license_plate") return isValidLicensePlate(s.text);
+        if (s.category === "student_id") return hasStudentIdContext(plain, s.start, s.end);
         return true;
       });
     }
@@ -419,6 +421,10 @@ function WriterToolbar({
         </PopoverTrigger>
         <PopoverContent align="end" className="w-80 p-3 space-y-3 max-h-[70vh] overflow-y-auto">
           <NerToggleRow nerStatus={nerStatus} onStartNer={onStartNer} />
+          <NerVariantPicker
+            tone="light"
+            onChange={() => { if (nerStatus?.ready || nerStatus?.loading) onStartNer(); }}
+          />
 
           <div className="h-px bg-border/40" />
 
@@ -436,7 +442,7 @@ function WriterToolbar({
             <span className="min-w-0">
               <span className="block text-xs font-medium text-foreground">Strenge cijfercontrole</span>
               <span className="block text-[11px] text-muted-foreground leading-snug mt-0.5">
-                Filtert willekeurige cijferreeksen: BSN-elfproef, IBAN mod-97 en kenteken-formaat moeten kloppen.
+                Filtert willekeurige cijferreeksen: BSN-elfproef, IBAN mod-97, kenteken-formaat en leerlingnummer-context moeten kloppen.
               </span>
             </span>
             <span className={`shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider border ${

@@ -24,6 +24,7 @@ export type PiiCategory =
   | "address"
   | "student_id"
   | "class_code"
+  | "id_document"
   | "credit_card"
   | "license_plate"
   | "url"

@@ -17,8 +17,15 @@ const RULES: RuleDef[] = [
   // Leerlingnummer: 6-8 cijfers. Negative lookahead/lookbehind voorkomt overlap met BSN (9) en jaartallen in datums.
   { id: "rule.student_id", category: "student_id", regex: /(?<!\d)\d{6,8}(?!\d)/g, confidence: 0.55 },
   { id: "rule.iban", category: "iban", regex: /\b[A-Z]{2}\d{2}[A-Z0-9]{4}\d{7,16}\b/g, confidence: 0.95 },
+  // Identiteitsdocument (paspoort/ID-kaart/rijbewijs). Alleen ná een trefwoord
+  // gematcht (variabele lookbehind) zodat we niet elk 7–10-teken codewoord
+  // oppikken. Het trefwoord zelf blijft staan; alleen het nummer wordt PII.
+  { id: "rule.id_document", category: "id_document", regex: /(?<=\b(?:paspoort(?:[-\s]?nummer)?|identiteitsbewijs|identiteits[-\s]?kaart|id[-\s]?kaart|rijbewijs(?:[-\s]?nummer)?|document[-\s]?nummer)\b[\s:#.]{0,4})[A-Z0-9]{7,10}\b/gi, confidence: 0.8 },
   { id: "rule.postcode", category: "postcode", regex: /\b\d{4}\s?[A-Z]{2}\b/g, confidence: 0.9 },
   { id: "rule.date", category: "date", regex: /\b\d{1,2}[-/]\d{1,2}[-/]\d{2,4}\b/g, confidence: 0.7 },
+  // ISO-datum (jaar-maand-dag): 2025-03-12. Apart van rule.date, die alleen
+  // dag-eerst NL-notatie ving en ISO daardoor compleet miste.
+  { id: "rule.date_iso", category: "date", regex: /\b(?:19|20)\d{2}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])\b/g, confidence: 0.8 },
   // Klascode VO (NL): jaar (1-6) + stroom (H/V/M/G/A/T) + optionele letter/cijfer. Bv 4H1, V5B, 3V, 2M, 6Va.
   { id: "rule.class_code", category: "class_code", regex: /\b(?:[1-6][HVMGAT][a-zA-Z]?\d?|[HVMGAT][1-6][a-zA-Z]?)\b/g, contextual: true, confidence: 0.6 },
   // Naive name: capitalised word, not at sentence start. Browser SLM stub.
@@ -40,6 +47,11 @@ const RULES: RuleDef[] = [
   // Naam na introductie-patroon: "ik heet Klaas", "mijn naam is Sanne", "noem mij Jan".
   // Variable-length lookbehind wordt door moderne V8/Safari ondersteund.
   { id: "rule.name_intro", category: "name", regex: /(?<=\b(?:ik heet|mijn naam is|noem (?:mij|me)|ik ben)\s+)[A-Z][a-zà-ÿ]+(?:\s+(?:van|de|der|den|ten|ter)\s+[A-Z][a-zà-ÿ]+|\s+[A-Z][a-zà-ÿ]+)?/g, confidence: 0.8 },
+  // Kleine-letter-namen na een STERKE introductie-cue ("ik heet jan jansen").
+  // Bewust zonder "ik ben" (dat geeft "ik ben ziek/moe" als false positive).
+  // `i`-flag laat de naam in willekeurige casing toe; merge ontdubbelt overlap
+  // met rule.name_intro. Iets lagere confidence dan de hoofdletter-variant.
+  { id: "rule.name_intro_ci", category: "name", regex: /(?<=\b(?:ik heet|mijn naam is|noem (?:mij|me))\s+)[a-zà-ÿ]{2,}(?:\s+(?:van|de|der|den|ten|ter)\s+[a-zà-ÿ]+|\s+[a-zà-ÿ]{2,})?/gi, confidence: 0.7 },
   // Social handle (@user).
   { id: "rule.social_handle", category: "social_handle", regex: /(?<![A-Za-z0-9])@[A-Za-z0-9_]{3,}/g, confidence: 0.75 },
   // Geboortedatum/datum in tekst: "12 januari 1985" — NL maanden.
