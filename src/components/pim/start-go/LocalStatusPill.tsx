@@ -1,10 +1,9 @@
-// Spec §7.1 — 3-staten statuspill, gevoed door self-test + modelgate.
 import { useEffect, useState } from "react";
 import { onSelfTest, getSelfTest } from "@/lib/pim/selfTest";
 import { onModelIntegrity, type ModelIntegrityRecord } from "@/lib/pim/modelCatalog";
 import { COPY } from "@/lib/pim/copy";
 
-type Status = "ok" | "limited" | "not-ready";
+type Status = "ok" | "checking" | "attention";
 
 export function LocalStatusPill() {
   const [selfTestStatus, setSelfTestStatus] = useState(getSelfTest()?.status ?? "running");
@@ -16,36 +15,42 @@ export function LocalStatusPill() {
     return () => { off1(); off2(); };
   }, []);
 
-  let status: Status;
-  let label: string;
-  if (selfTestStatus === "fail") {
-    status = "not-ready";
-    label = COPY.pillNotReady;
-  } else {
-    const ner = integrity.find((r) => r.key === "ner_multilingual");
-    if (ner && (ner.status === "mismatch" || ner.status === "missing")) {
-      status = "not-ready";
-      label = COPY.pillNotReady;
-    } else if (!ner || ner.status === "placeholder" || ner.status === "unverified") {
-      status = "limited";
-      label = COPY.pillLimited;
-    } else {
-      status = "ok";
-      label = COPY.pillLocalActive;
-    }
+  const hasModelMismatch = integrity.some((r) => r.status === "mismatch");
+
+  let status: Status = "ok";
+  let label = COPY.pillLocalActive;
+  let title = "Basiscontrole draait lokaal in je browser.";
+
+  if (selfTestStatus === "running" || selfTestStatus === "idle") {
+    status = "checking";
+    label = "Controle start";
+    title = "PiM start de lokale controle. Je tekst blijft in de browser.";
+  } else if (selfTestStatus === "fail") {
+    status = "attention";
+    label = "Controle nodig";
+    title = "De lokale basiscontrole draait, maar de self-test vraagt aandacht. Bekijk Trust voor details.";
+  } else if (hasModelMismatch) {
+    status = "attention";
+    label = "Modelcheck nodig";
+    title = "Een optioneel model wijkt af. De lokale basiscontrole blijft actief.";
   }
 
   const color =
     status === "ok" ? "bg-green-500/15 text-green-400 border-green-500/30" :
-    status === "limited" ? "bg-orange-500/15 text-orange-400 border-orange-500/30" :
-    "bg-red-500/15 text-red-400 border-red-500/30";
+    status === "checking" ? "bg-sky-500/15 text-sky-300 border-sky-500/30" :
+    "bg-orange-500/15 text-orange-300 border-orange-500/30";
+
+  const dot =
+    status === "ok" ? "bg-green-400" :
+    status === "checking" ? "bg-sky-300" :
+    "bg-orange-300";
 
   return (
     <span
       className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium ${color}`}
-      title={`Self-test: ${selfTestStatus}`}
+      title={title}
     >
-      <span className={`h-1.5 w-1.5 rounded-full ${status === "ok" ? "bg-green-400" : status === "limited" ? "bg-orange-400" : "bg-red-400"}`} />
+      <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
       {label}
     </span>
   );
