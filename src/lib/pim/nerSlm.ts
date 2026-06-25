@@ -179,6 +179,16 @@ export function retryNerSlm(): void {
 
 export function getNerVariant(): NerVariantKey { return currentVariant; }
 
+/** Best-effort: verwijder de gecachte weights van één model uit de transformers-cache. */
+async function purgeModelCache(modelId: string): Promise<void> {
+  try {
+    if (typeof caches === "undefined") return;
+    const cache = await caches.open("transformers-cache");
+    const reqs = await cache.keys();
+    await Promise.all(reqs.map((r) => (r.url.includes(modelId) ? cache.delete(r) : Promise.resolve(false))));
+  } catch { /* cache opruimen is niet kritisch */ }
+}
+
 /**
  * Wissel van NER-variant (compact ↔ volledig). Reset de pipeline zodat de
  * volgende loadNerSlm() de gekozen modelgewichten ophaalt. Caller beslist of
@@ -186,8 +196,10 @@ export function getNerVariant(): NerVariantKey { return currentVariant; }
  */
 export function setNerVariant(variant: NerVariantKey): void {
   if (variant === currentVariant) return;
+  const previousModelId = NER_VARIANTS[currentVariant].modelId;
   currentVariant = variant;
   retryNerSlm();
+  void purgeModelCache(previousModelId); // oude weights opruimen — bespaart ruimte
   emit({ modelId: activeModelId() });
   emitDebug("model.ner.status", `NER-variant gewisseld → ${NER_VARIANTS[variant].label}`, {
     modelId: activeModelId(),
