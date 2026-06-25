@@ -1,7 +1,7 @@
 import type { DraftCandidate, Mode, PrivacySignals, PiiSpan, DraftCheckResult } from "./types";
 import { detectPii } from "./detectors";
 import { runRegistry, runRegistrySync } from "./detectorRegistry";
-import type { PipelineProfileId } from "./pipelineProfile";
+import { DEFAULT_DETECTION_SETTINGS, coerceDetectionSettings, type DetectionLayerSettings } from "./detectionSettings";
 
 const GENERALIZATIONS: Record<string, string> = {
   email: "[email]",
@@ -109,7 +109,6 @@ export function draftCheck(draft: DraftCandidate, mode: Mode): DraftCheckResult 
   }
 
   if (issues.length === 0) return { status: "pass", issues: [] };
-  // Residual direct PII = fail hard. Mode-mix = fail. Hallucination = repair.
   const hardFail = issues.some((i) => i.includes("Residuele") || i.includes("mode-mix"));
   const residualCategories = residual.map((r) => r.category as string);
   const halluCount = mode === "pseudonymous" && draft.expectedTokens
@@ -125,21 +124,19 @@ export function draftCheck(draft: DraftCandidate, mode: Mode): DraftCheckResult 
 }
 
 /**
- * Spec derde analyse §4.6 — draftCheck via detectorRegistry zodat de output-
- * controle dezelfde coverage heeft als de input-fase (incl. async NER en
- * special lexicon). De oude `draftCheck()` blijft bestaan voor backwards-
- * compat (sync regex-only), maar alle egress-paden gebruiken deze variant.
+ * DraftCheck via detectorRegistry so output checks use the same layers as input.
  */
 export async function draftCheckWithRegistry(
   draft: DraftCandidate,
   mode: Mode,
-  profileId: PipelineProfileId,
+  detectionSettings: DetectionLayerSettings | string = DEFAULT_DETECTION_SETTINGS,
   options: { async?: boolean } = {},
 ): Promise<DraftCheckResult> {
+  const settings = coerceDetectionSettings(detectionSettings);
   const enableAsync = options.async ?? true;
   const spans = enableAsync
-    ? await runRegistry(draft.text, { profileId, enableAsync: true })
-    : runRegistrySync(draft.text, profileId);
+    ? await runRegistry(draft.text, { detectionSettings: settings, enableAsync: true })
+    : runRegistrySync(draft.text, settings);
   const residual = spans.filter((s) => !s.contextual);
   const issues: string[] = [];
   if (residual.length > 0) {
