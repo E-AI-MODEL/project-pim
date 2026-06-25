@@ -3,6 +3,7 @@
 import type { PimDecision, CertifiedPayload } from "./types";
 import { draftCheckWithRegistry } from "./processing";
 import { runRegistry } from "./detectorRegistry";
+import { DEFAULT_DETECTION_SETTINGS } from "./detectionSettings";
 import type { RiskLevel } from "./types";
 
 const reconsultLog: string[] = [];
@@ -24,7 +25,8 @@ export function getEgressReconsultLog(): string[] {
 
 async function reconsultPayload(payload: CertifiedPayload): Promise<{ ok: true } | { ok: false; reason: string }> {
   const text = payload.text;
-  const spans = await runRegistry(text, { detectionSettings: payload.detectionSettings, enableAsync: true });
+  const detectionSettings = payload.detectionSettings ?? DEFAULT_DETECTION_SETTINGS;
+  const spans = await runRegistry(text, { detectionSettings, enableAsync: true });
   const directPii = spans.filter((s) => !s.contextual);
   const HIGH: ReadonlySet<string> = new Set(["bsn", "iban", "email", "phone", "address", "student_id"]);
   let score = 0;
@@ -43,7 +45,7 @@ async function reconsultPayload(payload: CertifiedPayload): Promise<{ ok: true }
   const check = await draftCheckWithRegistry(
     { mode: "anonymous", text, rawHadPii: false },
     "anonymous",
-    payload.detectionSettings,
+    detectionSettings,
     { async: true },
   );
   if (check.status === "fail") {
@@ -143,8 +145,8 @@ export async function executeAction(
     case "send_external_ai": {
       const reconsult = await reconsultPayload(payload);
       if (!reconsult.ok) { emitReconsult(reconsult.reason); return { executed: false, reason: reconsult.reason }; }
-      emitReconsult(`Egress re-consult PASS (${payload.text.length} chars) — simulatie.`);
-      return { executed: true, reason: "Re-consult PASS. Deze build simuleert de externe stap." };
+      emitReconsult(`Egress re-consult PASS (${payload.text.length} chars) — geen endpoint geconfigureerd, simulatie.`);
+      return { executed: true, reason: "Anonymous payload zou nu naar externe AI gaan (re-consult PASS). Geen endpoint geconfigureerd in deze build — simulatie." };
     }
 
     default:
