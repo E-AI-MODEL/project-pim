@@ -48,7 +48,7 @@ export function WriterShell() {
   const [importError, setImportError] = useState<string | null>(null);
   const [importWarnings, setImportWarnings] = useState<string[]>([]);
   // Profiel + detector-instellingen, gedeeld met de homepage (spoor C).
-  const { profileId, disabledCategories, setCategoryEnabled } = usePimSettings();
+  const { profileId, disabledCategories, setCategoryEnabled, advancedPanelProps } = usePimSettings();
   // Platte tekst van de editor — gedeeld met de NER-hook zodat /schrijven
   // dezelfde SLM-naamherkenning krijgt als de homepage (spoor A/D). De SLM
   // wordt pas geladen na een expliciete klik in het instellingen-paneel.
@@ -297,18 +297,25 @@ export function WriterShell() {
 
       <WriterToolbar
         editor={editor}
-        autoRedact={autoRedact}
-        setAutoRedact={setAutoRedact}
-        disabledCategories={disabledCategories}
-        setCategoryEnabled={setCategoryEnabled}
-        strict={strict}
-        setStrict={setStrict}
-        nerStatus={nerStatus}
-        onStartNer={startNer}
         onImport={onImportClick}
         onExport={onExport}
         onClear={onClear}
         stats={stats}
+      />
+
+      <AdvancedPanel
+        {...advancedPanelProps}
+        ner={{ status: nerStatus, onStart: startNer, available: usesNerSlm }}
+        writer={{
+          autoRedact,
+          onAutoRedactChange: (cat, scrub) => {
+            const next = new Set(autoRedact);
+            if (scrub) next.add(cat); else next.delete(cat);
+            setAutoRedact(next);
+          },
+          strict,
+          onStrictChange: setStrict,
+        }}
       />
 
       {importError && (
