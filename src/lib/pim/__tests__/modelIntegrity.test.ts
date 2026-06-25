@@ -1,7 +1,7 @@
-// §11.3 1.41-1.42 — modelgate gedrag.
 import { beforeEach, describe, expect, it } from "vitest";
 import { modelGateFor } from "../modelGate";
 import { _resetIntegrityRegistry, verifyModel, type ModelIntegrityRecord } from "../modelIntegrity";
+import { DEFAULT_DETECTION_SETTINGS, RULES_ONLY_DETECTION_SETTINGS } from "../detectionSettings";
 
 const rec = (status: ModelIntegrityRecord["status"]): ModelIntegrityRecord => ({
   key: "ner_multilingual", modelId: "x", status,
@@ -14,28 +14,28 @@ beforeEach(() => {
 });
 
 describe("modelGateFor", () => {
-  it("rules-only profiel is altijd verified", () => {
-    expect(modelGateFor("education-nl-rules-only", "send_external_ai", []).verified).toBe(true);
+  it("BERT uit => geen model nodig", () => {
+    expect(modelGateFor("send_external_ai", RULES_ONLY_DETECTION_SETTINGS, []).verified).toBe(true);
   });
 
-  it("full + verified + egress => verified", () => {
-    expect(modelGateFor("education-nl-full", "copy", [rec("verified")]).verified).toBe(true);
+  it("BERT aan + verified + egress => verified", () => {
+    expect(modelGateFor("copy", DEFAULT_DETECTION_SETTINGS, [rec("verified")]).verified).toBe(true);
   });
 
-  it("full + placeholder + egress => false (productieclaim eerlijk)", () => {
-    expect(modelGateFor("education-nl-full", "send_external_ai", [rec("placeholder")]).verified).toBe(false);
+  it("BERT aan + placeholder + egress => false", () => {
+    expect(modelGateFor("send_external_ai", DEFAULT_DETECTION_SETTINGS, [rec("placeholder")]).verified).toBe(false);
   });
 
-  it("full + mismatch + egress => false", () => {
-    expect(modelGateFor("education-nl-full", "copy", [rec("mismatch")]).verified).toBe(false);
+  it("BERT aan + mismatch + egress => false", () => {
+    expect(modelGateFor("copy", DEFAULT_DETECTION_SETTINGS, [rec("mismatch")]).verified).toBe(false);
   });
 
-  it("full + missing + egress => false (1.42)", () => {
-    expect(modelGateFor("education-nl-full", "copy", []).verified).toBe(false);
+  it("BERT aan + missing + egress => false", () => {
+    expect(modelGateFor("copy", DEFAULT_DETECTION_SETTINGS, []).verified).toBe(false);
   });
 
-  it("full + placeholder + lokale actie => true (demo OK)", () => {
-    expect(modelGateFor("education-nl-full", "display", [rec("placeholder")]).verified).toBe(true);
+  it("BERT aan + placeholder + lokale actie => true", () => {
+    expect(modelGateFor("display", DEFAULT_DETECTION_SETTINGS, [rec("placeholder")]).verified).toBe(true);
   });
 });
 
@@ -63,6 +63,6 @@ describe("browser-local model pins", () => {
     });
 
     expect(second.status).toBe("mismatch");
-    expect(modelGateFor("education-nl-full", "copy", [second]).verified).toBe(false);
+    expect(modelGateFor("copy", DEFAULT_DETECTION_SETTINGS, [second]).verified).toBe(false);
   });
 });

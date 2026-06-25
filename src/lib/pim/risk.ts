@@ -1,7 +1,7 @@
 import type { PiiSpan, PiiCategory, PrivacySignals, RiskLevel } from "./types";
 import { runRegistrySync } from "./detectorRegistry";
 import { mergeSpans } from "./mergeSpans";
-import { DEFAULT_PROFILE, type PipelineProfileId } from "./pipelineProfile";
+import { DEFAULT_DETECTION_SETTINGS, coerceDetectionSettings, type DetectionLayerSettings } from "./detectionSettings";
 
 const HIGH_SEVERITY: ReadonlySet<string> = new Set([
   "bsn", "iban", "email", "phone", "address", "student_id",
@@ -11,13 +11,14 @@ const HIGH_SEVERITY: ReadonlySet<string> = new Set([
 export function computeSignals(
   text: string,
   extraSpans: PiiSpan[] = [],
-  profileId: PipelineProfileId = DEFAULT_PROFILE,
+  detectionSettings: DetectionLayerSettings | string = DEFAULT_DETECTION_SETTINGS,
   disabledCategories?: ReadonlySet<PiiCategory>,
 ): PrivacySignals {
-  // Sync registry: regex + special lexicon + heuristic contextSlm (per profiel).
-  const baseSpans = runRegistrySync(text, profileId);
-  // Bron-bewuste merge (spoor A): regex-identifiers autoritair, naam-dekking
-  // van regex + SLM versterkt elkaar i.p.v. te concurreren op confidence.
+  const settings = coerceDetectionSettings(detectionSettings);
+  // Sync registry: Regex + Lexicon + Context. BERT spans are passed as extraSpans.
+  const baseSpans = runRegistrySync(text, settings);
+  // Source-aware merge: hard regex identifiers stay authoritative; BERT can add
+  // coverage and wider name/location spans instead of replacing structured hits.
   const spans = mergeSpans([...baseSpans, ...extraSpans], disabledCategories);
   const direct = spans.filter((s) => !s.contextual);
   const ctx = spans.filter((s) => s.contextual);
@@ -35,43 +36,40 @@ export function computeSignals(
     ruleIds.push(s.ruleId);
   }
 
-  // Combo amplifiers
   const cats = new Set(spans.map((s) => s.category));
-  if (cats.has("name") && cats.has("school")) { score += 0.15; reasons.push("naam + school combinatie"); }
-  if (cats.has("context_care") && cats.has("name")) { score += 0.20; reasons.push("zorgcontext + naam"); }
-  if (cats.has("context_incident")) { score += 0.10; reasons.push("incident-context verhoogt herkenbaarheid"); }
+  if (cats.has("name") && cats.has("school")) { score += 0.15; reasons.push("naam + school"); }
+  if (cats.has("context_care") && cats.has("name")) { score += 0.20; reasons.push("zorg + naam"); }
+  if (cats.has("context_incident")) { score += 0.10; reasons.push("incident-context"); }
   if (cats.has("context_small_group") && (cats.has("name") || cats.has("context_role"))) {
-    score += 0.18; reasons.push("kleine groep met identifier — hoog herleidbaarheidsrisico");
+    score += 0.18; reasons.push("kleine groep + identifier");
   }
-  // Bijzondere persoonsgegevens (GDPR Art 9) — verhoogt drastisch.
   if (cats.has("context_protected_class")) {
-    score += 0.25; reasons.push("bijzondere persoonsgegevens (etniciteit/religie/oriëntatie) — GDPR Art 9");
+    score += 0.25; reasons.push("bijzondere persoonsgegevens");
   }
   if (cats.has("context_health")) {
-    score += 0.20; reasons.push("gezondheidsinformatie — GDPR Art 9");
+    score += 0.20; reasons.push("gezondheidsinformatie");
   }
   if (cats.has("context_legal")) {
-    score += 0.22; reasons.push("justitie-/politiecontext — gevoelig");
+    score += 0.22; reasons.push("justitie-/politiecontext");
   }
   if (cats.has("context_family")) {
-    score += 0.15; reasons.push("familie-/thuiscontext verhoogt herleidbaarheid");
+    score += 0.15; reasons.push("familie-/thuiscontext");
   }
   if (cats.has("context_financial")) {
     score += 0.10; reasons.push("financiële context");
   }
   if (cats.has("context_performance") && cats.has("name")) {
-    score += 0.15; reasons.push("schoolprestatie + naam — direct herleidbaar");
+    score += 0.15; reasons.push("schoolprestatie + naam");
   }
   if (cats.has("context_location_specific") && cats.has("context_small_group")) {
     score += 0.10; reasons.push("specifieke locatie + kleine groep");
   }
-  // Algemene combo: ≥3 contextuele signalen → herleidbaarheid loopt hard op.
   if (ctx.length >= 3) {
-    score += 0.10; reasons.push(`${ctx.length} contextsignalen stapelen — herleidbaarheid stijgt`);
+    score += 0.10; reasons.push(`${ctx.length} contextsignalen`);
   }
 
-  if (direct.length > 0) reasons.push(`${direct.length} directe PII-detectie(s)`);
-  if (ctx.length > 0) reasons.push(`${ctx.length} contextueel signaal(en)`);
+  if (direct.length > 0) reasons.push(`${direct.length} directe detectie(s)`);
+  if (ctx.length > 0) reasons.push(`${ctx.length} contextsignaal/signalen`);
 
   score = Math.min(1, score);
   const riskLevel: RiskLevel =

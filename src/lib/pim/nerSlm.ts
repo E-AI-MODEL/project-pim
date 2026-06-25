@@ -1,7 +1,6 @@
-// Browser-side NER SLM using @huggingface/transformers.
-// Spec hfst 6 / 8 / 13: Wikineural multilingual NER, WebGPU -> WASM fallback.
-// Loads public model files from Hugging Face. User text, drafts and mappings are
-// never sent to Hugging Face; inference stays local in the browser after load.
+// Browser-side BERT/NER using @huggingface/transformers.
+// User text, drafts and mappings are never sent to Hugging Face; inference stays
+// local in the browser after model files are loaded.
 
 import type { PiiSpan } from "./types";
 import { NER_VARIANTS, DEFAULT_NER_VARIANT, type NerVariantKey } from "./modelCatalog";
@@ -30,26 +29,42 @@ let modelVerified = false;
 
 const listeners = new Set<(s: NerStatus) => void>();
 
+export type ModelHealthPhase = "idle" | "download" | "init" | "integrity" | "test" | "ready" | "error";
+
 export interface NerStatus {
   loading: boolean;
   ready: boolean;
   runtime: "webgpu" | "wasm" | null;
   error: string | null;
   modelId: string;
+  variant: NerVariantKey;
   verified: boolean;
+  working: boolean;
+  healthPhase: ModelHealthPhase;
+  healthError: string | null;
+  lastCheckedAt?: string;
   progress?: { file: string; loaded?: number; total?: number; pct?: number };
 }
 
 let currentStatus: NerStatus = {
-  loading: false, ready: false, runtime: null, error: null, modelId: activeModelId(), verified: false,
+  loading: false,
+  ready: false,
+  runtime: null,
+  error: null,
+  modelId: activeModelId(),
+  variant: currentVariant,
+  verified: false,
+  working: false,
+  healthPhase: "idle",
+  healthError: null,
 };
 
 function emit(patch: Partial<NerStatus>) {
-  currentStatus = { ...currentStatus, ...patch };
+  currentStatus = { ...currentStatus, ...patch, modelId: activeModelId(), variant: currentVariant };
   for (const l of listeners) l(currentStatus);
-  if (patch.ready) emitDebug("model.ner.status", `NER-SLM ready (${currentStatus.runtime})`, { modelId: currentStatus.modelId, runtime: currentStatus.runtime, verified: currentStatus.verified });
-  else if (patch.error) emitDebug("model.ner.status", `NER-SLM error`, { error: patch.error });
-  else if (patch.loading && !patch.progress) emitDebug("model.ner.status", `NER-SLM laden gestart`, { modelId: currentStatus.modelId });
+  if (patch.ready) emitDebug("model.ner.status", `BERT werkt (${currentStatus.runtime})`, { modelId: currentStatus.modelId, runtime: currentStatus.runtime, verified: currentStatus.verified });
+  else if (patch.error || patch.healthError) emitDebug("model.ner.status", "BERT error", { error: patch.error ?? patch.healthError });
+  else if (patch.loading && !patch.progress) emitDebug("model.ner.status", "BERT laden gestart", { modelId: currentStatus.modelId });
 }
 
 export function onNerStatus(cb: (s: NerStatus) => void): () => void {
@@ -82,11 +97,12 @@ async function fetchModelConfig(modelId: string, revision: string): Promise<stri
 
 async function runIntegrityCheck(pipe: unknown): Promise<void> {
   const variant = NER_VARIANTS[currentVariant];
+  emit({ healthPhase: "integrity" });
   try {
     const p = pipe as { model?: { config?: { _name_or_path?: string; name_or_path?: string } } };
     const claimed = p?.model?.config?._name_or_path ?? p?.model?.config?.name_or_path;
     if (claimed && !claimed.includes("ner-hrl")) {
-      console.warn("[PIM SLM] loaded model id mismatch:", claimed);
+      console.warn("[PIM BERT] loaded model id mismatch:", claimed);
     }
   } catch { /* swallow */ }
 
@@ -96,6 +112,21 @@ async function runIntegrityCheck(pipe: unknown): Promise<void> {
     expected: variant.expectedConfigSha256,
   });
   modelVerified = rec.status === "verified";
+}
+
+async function runNerSmokeTest(pipe: AnyPipeline): Promise<void> {
+  emit({ healthPhase: "test", healthError: null });
+  try {
+    const out = (await pipe("Jan werkt bij School De Brug in Utrecht.", { aggregation_strategy: "simple" } as Record<string, unknown>)) as NerOutput[];
+    if (!Array.isArray(out)) throw new Error("BERT gaf geen lijst met labels terug.");
+    if (out.length === 0) throw new Error("BERT startte, maar vond niets in de testzin.");
+    emit({ working: true, ready: true, healthPhase: "ready", healthError: null, lastCheckedAt: new Date().toISOString() });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    lastError = msg;
+    emit({ loading: false, ready: false, working: false, error: msg, healthError: msg, healthPhase: "error", lastCheckedAt: new Date().toISOString() });
+    throw e;
+  }
 }
 
 async function detectWebGpu(): Promise<boolean> {
@@ -108,7 +139,7 @@ export async function loadNerSlm(): Promise<AnyPipeline | null> {
   if (pipelinePromise) {
     try { return await pipelinePromise; } catch { return null; }
   }
-  emit({ loading: true, error: null });
+  emit({ loading: true, ready: false, working: false, error: null, healthError: null, healthPhase: "download" });
 
   pipelinePromise = (async () => {
     const tf = await import("@huggingface/transformers");
@@ -120,13 +151,14 @@ export async function loadNerSlm(): Promise<AnyPipeline | null> {
 
     const progress_callback = (p: { status: string; file?: string; loaded?: number; total?: number; progress?: number }) => {
       if (p.status === "progress" && p.file) {
-        emit({ progress: { file: p.file, loaded: p.loaded, total: p.total, pct: typeof p.progress === "number" ? p.progress : undefined } });
+        emit({ healthPhase: "download", progress: { file: p.file, loaded: p.loaded, total: p.total, pct: typeof p.progress === "number" ? p.progress : undefined } });
       }
     };
 
     const variant = NER_VARIANTS[currentVariant];
     const modelId = variant.modelId;
     try {
+      emit({ healthPhase: "init" });
       const pipe = await tf.pipeline("token-classification", modelId, {
         device,
         dtype: device === "webgpu" ? "fp16" : "q8",
@@ -135,26 +167,29 @@ export async function loadNerSlm(): Promise<AnyPipeline | null> {
       } as Record<string, unknown>);
       usedRuntime = device;
       await runIntegrityCheck(pipe);
-      emit({ loading: false, ready: true, runtime: device, verified: modelVerified, progress: undefined });
+      emit({ loading: false, runtime: device, verified: modelVerified, progress: undefined });
+      await runNerSmokeTest(pipe as unknown as AnyPipeline);
       return pipe as unknown as AnyPipeline;
     } catch (e1) {
       if (device === "webgpu") {
         try {
+          emit({ healthPhase: "init" });
           const pipe = await tf.pipeline("token-classification", modelId, {
             device: "wasm", dtype: "q8", revision: variant.revision, progress_callback,
           } as Record<string, unknown>);
           usedRuntime = "wasm";
           await runIntegrityCheck(pipe);
-          emit({ loading: false, ready: true, runtime: "wasm", verified: modelVerified, progress: undefined });
+          emit({ loading: false, runtime: "wasm", verified: modelVerified, progress: undefined });
+          await runNerSmokeTest(pipe as unknown as AnyPipeline);
           return pipe as unknown as AnyPipeline;
         } catch (e2) {
           lastError = `WebGPU faalde (${(e1 as Error).message}); WASM fallback faalde (${(e2 as Error).message})`;
-          emit({ loading: false, ready: false, error: lastError });
+          emit({ loading: false, ready: false, working: false, error: lastError, healthError: lastError, healthPhase: "error" });
           throw e2;
         }
       }
       lastError = (e1 as Error).message;
-      emit({ loading: false, ready: false, error: lastError });
+      emit({ loading: false, ready: false, working: false, error: lastError, healthError: lastError, healthPhase: "error" });
       throw e1;
     }
   })();
@@ -162,40 +197,22 @@ export async function loadNerSlm(): Promise<AnyPipeline | null> {
   try { return await pipelinePromise; } catch { return null; }
 }
 
-/** Reset de gecachte (gefaalde) load zodat de volgende loadNerSlm() opnieuw probeert. */
 export function retryNerSlm(): void {
   pipelinePromise = null;
   modelVerified = false;
   usedRuntime = null;
   lastError = null;
-  emit({ loading: false, ready: false, error: null, runtime: null, verified: false });
+  emit({ loading: false, ready: false, working: false, error: null, healthError: null, runtime: null, verified: false, healthPhase: "idle" });
 }
 
 export function getNerVariant(): NerVariantKey { return currentVariant; }
 
-/** Best-effort: verwijder de gecachte weights van een model uit de transformers-cache. */
-async function purgeModelCache(modelId: string): Promise<void> {
-  try {
-    if (typeof caches === "undefined") return;
-    const cache = await caches.open("transformers-cache");
-    const reqs = await cache.keys();
-    await Promise.all(reqs.map((r) => (r.url.includes(modelId) ? cache.delete(r) : Promise.resolve(false))));
-  } catch { /* cache opruimen is niet kritisch */ }
-}
-
-/**
- * Wissel van NER-variant (compact <-> volledig). Reset de pipeline zodat de
- * volgende loadNerSlm() de gekozen modelgewichten ophaalt. Caller beslist of
- * er meteen opnieuw geladen wordt (bewuste download-actie).
- */
 export function setNerVariant(variant: NerVariantKey): void {
   if (variant === currentVariant) return;
-  const previousModelId = NER_VARIANTS[currentVariant].modelId;
   currentVariant = variant;
   retryNerSlm();
-  void purgeModelCache(previousModelId);
-  emit({ modelId: activeModelId() });
-  emitDebug("model.ner.status", `NER-variant gewisseld -> ${NER_VARIANTS[variant].label}`, {
+  emit({ modelId: activeModelId(), variant, healthPhase: "idle" });
+  emitDebug("model.ner.status", `BERT-variant gewisseld -> ${NER_VARIANTS[variant].label}`, {
     modelId: activeModelId(),
   });
 }
@@ -227,37 +244,24 @@ export async function detectPersonsSlm(text: string): Promise<PiiSpan[]> {
       const isSchoolish = /\b(basisschool|school|gymnasium|havo|vwo|vmbo|college|lyceum|onderwijs)\b/.test(around);
       if (tag.includes("PER")) {
         if (ent.score < 0.3) continue;
-        spans.push({
-          start: ent.start, end: ent.end, text: surface,
-          category: "name", ruleId: "slm.ner.per", confidence: ent.score, contextual: false,
-        });
+        spans.push({ start: ent.start, end: ent.end, text: surface, category: "name", ruleId: "slm.ner.per", confidence: ent.score, contextual: false });
       } else if (tag.includes("ORG")) {
         if (ent.score < 0.35) continue;
-        spans.push({
-          start: ent.start, end: ent.end, text: surface,
-          category: isSchoolish ? "school" : "name",
-          ruleId: isSchoolish ? "slm.ner.org_school" : "slm.ner.org",
-          confidence: ent.score, contextual: false,
-        });
+        spans.push({ start: ent.start, end: ent.end, text: surface, category: isSchoolish ? "school" : "name", ruleId: isSchoolish ? "slm.ner.org_school" : "slm.ner.org", confidence: ent.score, contextual: false });
       } else if (tag.includes("LOC")) {
         if (ent.score < 0.4) continue;
-        spans.push({
-          start: ent.start, end: ent.end, text: surface,
-          category: "address", ruleId: "slm.ner.loc", confidence: ent.score, contextual: false,
-        });
+        spans.push({ start: ent.start, end: ent.end, text: surface, category: "address", ruleId: "slm.ner.loc", confidence: ent.score, contextual: false });
       } else if (tag.includes("MISC")) {
         if (ent.score < 0.45) continue;
-        spans.push({
-          start: ent.start, end: ent.end, text: surface,
-          category: isSchoolish ? "school" : "name",
-          ruleId: isSchoolish ? "slm.ner.misc_school" : "slm.ner.misc_name",
-          confidence: ent.score * 0.9, contextual: false,
-        });
+        spans.push({ start: ent.start, end: ent.end, text: surface, category: isSchoolish ? "school" : "name", ruleId: isSchoolish ? "slm.ner.misc_school" : "slm.ner.misc_name", confidence: ent.score * 0.9, contextual: false });
       }
     }
     return spans;
   } catch (e) {
-    console.warn("[PIM SLM] inference failed:", (e as Error).message);
+    const msg = (e as Error).message;
+    lastError = msg;
+    emit({ ready: false, working: false, error: msg, healthError: msg, healthPhase: "error", lastCheckedAt: new Date().toISOString() });
+    console.warn("[PIM BERT] inference failed:", msg);
     return [];
   }
 }

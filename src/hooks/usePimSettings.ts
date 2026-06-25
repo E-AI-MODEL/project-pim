@@ -1,30 +1,25 @@
-// Gedeelde PiM-instellingen — spoor C.
-// StartGoShell en WriterShell hadden allebei dezelfde ~15 regels state-bedrading
-// voor het AdvancedPanel (profiel, drempels, uitgezette categorieën, integriteit)
-// los gekopieerd. Eén hook → één bron van waarheid, identiek gedrag op beide
-// pagina's, en een kant-en-klaar props-object om in AdvancedPanel te spreaden.
-
 import { useEffect, useMemo, useState } from "react";
 import {
-  DEFAULT_PROFILE, onModelIntegrity,
-  type PipelineProfileId, type Action, type PiiCategory, type ModelIntegrityRecord,
+  DEFAULT_DETECTION_SETTINGS, DEFAULT_PROFILE, onModelIntegrity,
+  type DetectionLayerSettings, type PipelineProfileId, type Action, type PiiCategory, type ModelIntegrityRecord,
 } from "@/lib/pim";
 import type { AdvancedPanelProps } from "@/components/pim/start-go/AdvancedPanel";
 
 export interface PimSettings {
   profileId: PipelineProfileId;
   setProfileId: (id: PipelineProfileId) => void;
+  detectionSettings: DetectionLayerSettings;
+  setDetectionSettings: (settings: DetectionLayerSettings) => void;
   thresholdOverrides: Partial<Record<Action, number>>;
   disabledCategories: ReadonlySet<PiiCategory>;
-  /** Zet één categorie aan/uit voor detectie (gebruikt door de schrijfmodus). */
   setCategoryEnabled: (cat: PiiCategory, enabled: boolean) => void;
   integrity: ModelIntegrityRecord[];
-  /** Klaar om te spreaden: <AdvancedPanel {...settings.advancedPanelProps} /> */
   advancedPanelProps: AdvancedPanelProps;
 }
 
 export function usePimSettings(): PimSettings {
   const [profileId, setProfileId] = useState<PipelineProfileId>(DEFAULT_PROFILE);
+  const [detectionSettings, setDetectionSettings] = useState<DetectionLayerSettings>(DEFAULT_DETECTION_SETTINGS);
   const [thresholdOverrides, setThresholdOverrides] = useState<Partial<Record<Action, number>>>({});
   const [disabledCategories, setDisabledCategories] = useState<ReadonlySet<PiiCategory>>(new Set());
   const [integrity, setIntegrity] = useState<ModelIntegrityRecord[]>([]);
@@ -39,8 +34,8 @@ export function usePimSettings(): PimSettings {
     });
 
   const advancedPanelProps = useMemo<AdvancedPanelProps>(() => ({
-    profileId,
-    onProfileChange: setProfileId,
+    detectionSettings,
+    onDetectionSettingsChange: setDetectionSettings,
     thresholds: thresholdOverrides,
     onThresholdChange: (a, v) => setThresholdOverrides((prev) => ({ ...prev, [a]: v })),
     onResetThresholds: () => setThresholdOverrides({}),
@@ -52,7 +47,7 @@ export function usePimSettings(): PimSettings {
       return next;
     }),
     onResetCategories: () => setDisabledCategories(new Set()),
-  }), [profileId, thresholdOverrides, disabledCategories, integrity]);
+  }), [detectionSettings, thresholdOverrides, disabledCategories, integrity]);
 
-  return { profileId, setProfileId, thresholdOverrides, disabledCategories, setCategoryEnabled, integrity, advancedPanelProps };
+  return { profileId, setProfileId, detectionSettings, setDetectionSettings, thresholdOverrides, disabledCategories, setCategoryEnabled, integrity, advancedPanelProps };
 }

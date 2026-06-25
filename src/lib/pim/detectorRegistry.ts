@@ -1,27 +1,26 @@
-// Detector Registry — spec hfst 8 / 15 / v3-2.
-// Detectors zijn plug-ins. De pipelineProfile bepaalt welke detectors actief
-// zijn. Een detector neemt ruwe tekst + ctx en geeft PiiSpans terug.
-// Doel: nieuwe detectors (special lexicon, contextSlm, abuse) toevoegen
-// zonder processing.ts of try.tsx aan te raken.
+// Detector Registry — profile-free detection layers.
+// Detectors are plug-ins. The runtime uses explicit layers: Regex, Lexicon,
+// Context and the selected BERT model. Profiles are not part of the user-facing
+// or egress decision path anymore.
 
 import type { PiiSpan } from "./types";
 import { detectPii as runRegexDetectors } from "./detectors";
 import { detectPersonsSlm } from "./nerSlm";
 import { mergeSpans } from "./mergeSpans";
-import { PIPELINE_PROFILES, type PipelineProfileId } from "./pipelineProfile";
+import { coerceDetectionSettings, usesBert, type DetectionLayerSettings } from "./detectionSettings";
 
 export type DetectorKind = "rules" | "specialLexicon" | "nerSlm" | "contextSlm";
 
 export interface DetectorContext {
-  profileId: PipelineProfileId;
-  /** Caller may opt-out of slow async detectors (e.g. SLM not loaded yet). */
+  detectionSettings: DetectionLayerSettings;
+  /** Caller may opt-out of slow async detectors, e.g. BERT not loaded yet. */
   enableAsync: boolean;
 }
 
 export interface Detector {
   id: string;
   kind: DetectorKind;
-  /** Whether this detector is async (model-based). */
+  /** Whether this detector is async/model-based. */
   async: boolean;
   /** Returns spans found in `text`. May return [] if not applicable. */
   run(text: string, ctx: DetectorContext): PiiSpan[] | Promise<PiiSpan[]>;
@@ -41,14 +40,14 @@ export function listDetectors(): Detector[] {
   return Array.from(REGISTRY.values());
 }
 
-/** Detectors actief voor een profiel, in vaste volgorde (sync → async). */
-export function activeDetectorsFor(profileId: PipelineProfileId): Detector[] {
-  const profile = PIPELINE_PROFILES[profileId];
+/** Active detectors in fixed order: sync first, async after. */
+export function activeDetectorsFor(settingsInput?: DetectionLayerSettings | string | null): Detector[] {
+  const settings = coerceDetectionSettings(settingsInput);
   return listDetectors().filter((d) => {
-    if (d.kind === "rules") return profile.detectors.rules;
-    if (d.kind === "specialLexicon") return profile.detectors.specialLexicon;
-    if (d.kind === "nerSlm") return profile.detectors.nerSlm;
-    if (d.kind === "contextSlm") return profile.detectors.contextSlm;
+    if (d.kind === "rules") return true; // Regex is always on in normal PiM.
+    if (d.kind === "specialLexicon") return settings.lexicon;
+    if (d.kind === "nerSlm") return usesBert(settings);
+    if (d.kind === "contextSlm") return settings.context;
     return false;
   }).sort((a, b) => Number(a.async) - Number(b.async));
 }
@@ -62,28 +61,15 @@ registerDetector({
   run: (text) => runRegexDetectors(text),
 });
 
-// Special lexicon — schoolnamen / rolwoorden die de regex mist.
-// Klein en NL-onderwijs-specifiek. Spec hfst 15.
+// Special lexicon — school names / education terms the regex layer misses.
 const EDU_LEXICON: { term: RegExp; category: PiiSpan["category"]; ruleId: string; confidence: number; contextual: boolean }[] = [
   { term: /\b(?:cito|iep|route 8)\b/gi, category: "context_role", ruleId: "lex.toets", confidence: 0.5, contextual: true },
   { term: /\b(?:samenwerkingsverband|swv)\b/gi, category: "context_role", ruleId: "lex.swv", confidence: 0.5, contextual: true },
   { term: /\b(?:leerlingvolgsysteem|parnassys|magister|somtoday|esis)\b/gi, category: "school", ruleId: "lex.lvs", confidence: 0.65, contextual: false },
-  // NL onderwijskoepels / -stichtingen — strikt lokaal, geen externe lookup.
-  // Bron: publiek bekende koepelorganisaties primair + voortgezet onderwijs.
   { term: /\b(?:Carmel(?:college)?|Ons Middelbaar Onderwijs|OMO|Stichting Lucas(?: Onderwijs)?|Stichting Carmelcollege|Onderwijsgroep Tilburg|Onderwijsgroep Amersfoort|Onderwijsgroep Galilei|SCOH|SKOzoK|SKPO|SKOFV|INOS|Delta-?onderwijs|Spaarnesant|Stichting Klasse|Stichting Florente|Stichting Conexus|Stichting Trinamiek|Stichting Sirius|Cedergroep|Stichting BOOR|Stichting LVO|LVO Limburg|Dunamare|Atlas Onderwijsgroep|Spinoza20first|Voila|Movare|Innovo|Kindante|Stichting Penta|Stichting Meerwerf)\b/g, category: "school", ruleId: "lex.school_koepel", confidence: 0.85, contextual: false },
-  // Generieke schoolnaam-patronen die regex.school mist (bv. "het Stedelijk Lyceum", "OBS De Regenboog").
   { term: /\b(?:OBS|RKBS|PCBS|CBS|SBO|SO|VSO|ISK)\s+[A-Z][\wà-ÿ]+(?:\s+[A-Z]?[\wà-ÿ]+){0,3}\b/g, category: "school", ruleId: "lex.school_prefix", confidence: 0.8, contextual: false },
   { term: /\b(?:Lyceum|Gymnasium|College|Scholengemeenschap|Praktijkschool|Mavo|Atheneum)\s+[A-Z][\wà-ÿ]+(?:\s+[A-Z]?[\wà-ÿ]+){0,2}\b/g, category: "school", ruleId: "lex.school_suffix", confidence: 0.75, contextual: false },
-  // NL-steden — case-insensitive (`gi`), zodat ook kleine letters ("amsterdam")
-  // worden gevangen; de cased NER-modellen missen dat. Categorie `address`
-  // (zelfde generalisatie als NER-LOC → "[adres]"). Bewust GECUREERD: steden
-  // die óók een gewoon Nederlands woord zijn (Houten=hout, Gouda=kaas, Best,
-  // Bunde, Ee, Hem, …) zijn weggelaten om false positives te vermijden.
   { term: /\b(?:Amsterdam|Rotterdam|Den Haag|'s-Gravenhage|Utrecht|Eindhoven|Groningen|Tilburg|Almere|Breda|Nijmegen|Apeldoorn|Haarlem|Arnhem|Enschede|Amersfoort|Zaanstad|Haarlemmermeer|Den Bosch|'s-Hertogenbosch|Zwolle|Leeuwarden|Maastricht|Dordrecht|Alphen aan den Rijn|Alkmaar|Emmen|Venlo|Deventer|Sittard|Helmond|Amstelveen|Hilversum|Heerlen|Hengelo|Purmerend|Roosendaal|Schiedam|Spijkenisse|Vlaardingen|Bergen op Zoom|Veenendaal|Katwijk|Lelystad|Hardenberg|Middelburg|Zeist|Nieuwegein|Roermond|Doetinchem|Terneuzen|Kerkrade|Barneveld|Woerden|Hoogeveen|Velsen)\b/gi, category: "address", ruleId: "lex.city", confidence: 0.7, contextual: false },
-  // Steden die als kleine-letterwoord óók gewone Nederlandse woorden zijn
-  // ("leiden" = werkwoord, "assen" = assen, "delft" = van delven). Hier dus
-  // HOOFDLETTER vereist (geen `i`-flag) — voorkomt dat "leerlingen leiden onder
-  // stress" als adres wordt geredigeerd. Kleine letters vallen terug op NER.
   { term: /\b(?:Leiden|Assen|Delft)\b/g, category: "address", ruleId: "lex.city", confidence: 0.7, contextual: false },
 ];
 
@@ -112,19 +98,15 @@ registerDetector({
   id: "builtin.nerSlm",
   kind: "nerSlm",
   async: true,
-  run: async (text, ctx) => (ctx.enableAsync ? await detectPersonsSlm(text) : []),
+  run: async (text, ctx) => (ctx.enableAsync && usesBert(ctx.detectionSettings) ? await detectPersonsSlm(text) : []),
 });
 
 registerDetector({
   id: "builtin.contextSlm",
   kind: "contextSlm",
   async: false,
-  // Heuristic context-classifier — zonder model-download.
-  // Markeert familie-relaties ("vader van X") en boost zorg/incident
-  // wanneer dichtbij een naam-achtige token staat. Spec hfst 8.
   run: (text) => {
     const out: PiiSpan[] = [];
-    // 1) Familie-relatie pattern → context_role
     const family = /\b(?:vader|moeder|ouder|verzorger|opa|oma|broer|zus)\s+van\s+([A-Z][a-zà-ÿ]{2,})\b/g;
     let m: RegExpExecArray | null;
     while ((m = family.exec(text)) !== null) {
@@ -134,7 +116,6 @@ registerDetector({
         confidence: 0.7, contextual: true,
       });
     }
-    // 2) Co-occurrence boost: zorg/incident binnen 80 chars van een Hoofdletterwoord (proxy voor naam).
     const careRe = /\b(?:zorgleerling|dyslexie|dyscalculie|adhd|autisme|pleegzorg|jeugdzorg|incident|schorsing|geschorst|misbruik)\b/gi;
     while ((m = careRe.exec(text)) !== null) {
       const around = text.slice(Math.max(0, m.index - 80), Math.min(text.length, m.index + m[0].length + 80));
@@ -151,32 +132,35 @@ registerDetector({
   },
 });
 
-/** Run alle actieve detectors voor een profiel en merge de spans. */
-export async function runRegistry(text: string, ctx: DetectorContext): Promise<PiiSpan[]> {
-  const detectors = activeDetectorsFor(ctx.profileId);
+/** Run all active detectors and merge spans. */
+export async function runRegistry(
+  text: string,
+  ctx: { detectionSettings?: DetectionLayerSettings | string | null; enableAsync: boolean },
+): Promise<PiiSpan[]> {
+  const detectionSettings = coerceDetectionSettings(ctx.detectionSettings);
+  const detectors = activeDetectorsFor(detectionSettings);
   const all: PiiSpan[] = [];
   for (const d of detectors) {
     if (d.async && !ctx.enableAsync) continue;
-    const r = await d.run(text, ctx);
+    const r = await d.run(text, { detectionSettings, enableAsync: ctx.enableAsync });
     all.push(...r);
   }
-  // Bron-bewuste merge (spoor A): zelfde precedentie als computeSignals, zodat
-  // input-fase, draftCheck en egress-re-consult exact dezelfde spans zien.
   return mergeSpans(all);
 }
 
-/** Synchroon pad — voert alleen sync detectors uit (regex + lexicon + heuristic context). */
-export function runRegistrySync(text: string, profileId: PipelineProfileId): PiiSpan[] {
-  const detectors = activeDetectorsFor(profileId).filter((d) => !d.async);
+/** Sync path: Regex + Lexicon + Context, depending on detection settings. */
+export function runRegistrySync(text: string, settingsInput?: DetectionLayerSettings | string | null): PiiSpan[] {
+  const detectionSettings = coerceDetectionSettings(settingsInput);
+  const detectors = activeDetectorsFor(detectionSettings).filter((d) => !d.async);
   const all: PiiSpan[] = [];
   for (const d of detectors) {
-    const r = d.run(text, { profileId, enableAsync: false }) as PiiSpan[];
+    const r = d.run(text, { detectionSettings, enableAsync: false }) as PiiSpan[];
     all.push(...r);
   }
   return mergeSpans(all);
 }
 
-/** UI-helper: korte herkomst-tag op basis van ruleId. */
+/** UI-helper: short source tag by ruleId. */
 export function detectorSourceLabel(ruleId: string): "regex" | "lex" | "slm" | "ctx" {
   if (ruleId.startsWith("slm.")) return "slm";
   if (ruleId.startsWith("lex.")) return "lex";
