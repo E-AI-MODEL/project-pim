@@ -214,6 +214,8 @@ export function AdvancedPanel({
             {profile.label}
             {overriddenCount > 0 && ` · ${overriddenCount} gevoeligheid${overriddenCount === 1 ? "" : "en"} aangepast`}
             {offCount > 0 && ` · ${offCount} uit`}
+            {writer && scrubCount > 0 && ` · ${scrubCount} auto-wis`}
+            {writer?.strict && " · strenge cijfercontrole"}
           </div>
         </div>
         <ChevronDown
