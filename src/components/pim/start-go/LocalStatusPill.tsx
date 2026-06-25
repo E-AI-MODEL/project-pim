@@ -18,7 +18,7 @@ export function LocalStatusPill() {
   const hasModelMismatch = integrity.some((r) => r.status === "mismatch");
 
   let status: Status = "ok";
-  let label = COPY.pillLocalActive;
+  let label: string = COPY.pillLocalActive;
   let title = "Basiscontrole draait lokaal in je browser.";
 
   if (selfTestStatus === "running" || selfTestStatus === "idle") {
