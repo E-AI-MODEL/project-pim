@@ -413,10 +413,42 @@ export function AdvancedPanel({
 
             {/* DETECTOREN */}
             <TabsContent value="detectors" className="p-4 m-0 space-y-3">
+              {writer && (
+                <button
+                  type="button"
+                  onClick={() => writer.onStrictChange(!writer.strict)}
+                  aria-pressed={writer.strict}
+                  className={`w-full flex items-start justify-between gap-2 rounded-md border p-2.5 text-left transition-colors ${
+                    writer.strict
+                      ? "border-amber-400/50 bg-amber-400/10"
+                      : "border-border/60 hover:bg-accent/40"
+                  }`}
+                >
+                  <span className="min-w-0">
+                    <span className="block text-xs font-medium text-foreground">Strenge cijfercontrole</span>
+                    <span className="block text-[11px] text-muted-foreground leading-snug mt-0.5">
+                      Filtert willekeurige cijferreeksen: BSN-elfproef, IBAN mod-97, kenteken-formaat en leerlingnummer-context moeten kloppen.
+                    </span>
+                  </span>
+                  <span className={`shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider border ${
+                    writer.strict ? "bg-amber-400/20 text-amber-200 border-amber-400/50" : "text-muted-foreground border-border/60"
+                  }`}>
+                    {writer.strict ? "Aan" : "Uit"}
+                  </span>
+                </button>
+              )}
               <div className="flex items-start gap-2 rounded-md border border-rose-500/30 bg-rose-500/5 text-rose-200/90 px-2.5 py-1.5 text-[11px] leading-snug">
                 <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
                 <div className="flex-1">
-                  <span className="font-medium">Uit = PiM ziet die categorie niet meer</span> en vervangt niets in die groep. Alleen doen voor demo of false-positive debug.
+                  {writer ? (
+                    <>
+                      <span className="font-medium">Uit</span> = niet detecteren ·{" "}
+                      <span className="font-medium">Markeer</span> = onderstrepen, jij beslist ·{" "}
+                      <span className="font-medium">Wis</span> = meteen vervangen door een label.
+                    </>
+                  ) : (
+                    <><span className="font-medium">Uit = PiM ziet die categorie niet meer</span> en vervangt niets in die groep. Alleen doen voor demo of false-positive debug.</>
+                  )}
                 </div>
                 {offCount > 0 && (
                   <button
@@ -452,11 +484,24 @@ export function AdvancedPanel({
                                 <div className="text-[10px] text-muted-foreground/70 truncate">{example}</div>
                               )}
                             </div>
-                            <Switch
-                              checked={!off}
-                              onCheckedChange={() => onToggleCategory(cat)}
-                              aria-label={CATEGORY_LABELS[cat] ?? cat}
-                            />
+                            {writer ? (
+                              <CategoryTriToggle
+                                mode={off ? "off" : writer.autoRedact.has(cat) ? "scrub" : "mark"}
+                                onChange={(m) => {
+                                  // off ↔ aan via onToggleCategory; mark ↔ scrub via writer.onAutoRedactChange.
+                                  const currentlyOff = off;
+                                  if (m === "off" && !currentlyOff) onToggleCategory(cat);
+                                  else if (m !== "off" && currentlyOff) onToggleCategory(cat);
+                                  writer.onAutoRedactChange(cat, m === "scrub");
+                                }}
+                              />
+                            ) : (
+                              <Switch
+                                checked={!off}
+                                onCheckedChange={() => onToggleCategory(cat)}
+                                aria-label={CATEGORY_LABELS[cat] ?? cat}
+                              />
+                            )}
                           </label>
                         );
                       })}
@@ -466,9 +511,19 @@ export function AdvancedPanel({
               </div>
             </TabsContent>
 
-            {/* MODELLEN — alleen in Expert */}
-            {expert && (
+            {/* MODELLEN */}
             <TabsContent value="models" className="p-4 m-0">
+              {ner && ner.available && (
+                <div className="mb-3 space-y-2">
+                  <NerToggleRow status={ner.status} onStart={ner.onStart} />
+                  <NerVariantPicker
+                    tone="light"
+                    onChange={() => { if (ner.status?.ready || ner.status?.loading) ner.onStart(); }}
+                  />
+                </div>
+              )}
+              {expert && (
+              <>
               <div className="rounded-md border border-amber-400/30 bg-amber-400/5 px-2.5 py-1.5 mb-2 text-[11px] text-amber-200 leading-snug">
                 <span className="font-medium">Naam-pin, geen weight-hash.</span> 'Verified' betekent dat het modelnaam + revisie matcht met onze catalog (configuratie-pin). Een verandering van de gewichten op HuggingFace zelf wordt hierdoor <span className="italic">niet</span> gedetecteerd. 'Failed' = niet gebruiken, herlaad de pagina.
               </div>
@@ -499,11 +554,82 @@ export function AdvancedPanel({
                   })}
                 </ul>
               )}
+              </>
+              )}
+              {!expert && (
+                <p className="text-[11px] text-muted-foreground">
+                  Modelintegriteit en gedetailleerde verificatie zie je in Expert-modus.
+                </p>
+              )}
             </TabsContent>
-            )}
           </Tabs>
         </div>
       )}
     </section>
+  );
+}
+
+/** Segmented control voor de schrijfmodus: Uit / Markeer / Wis. */
+function CategoryTriToggle({
+  mode, onChange,
+}: {
+  mode: "off" | "mark" | "scrub";
+  onChange: (m: "off" | "mark" | "scrub") => void;
+}) {
+  const opts: { v: "off" | "mark" | "scrub"; label: string }[] = [
+    { v: "off",   label: "Uit" },
+    { v: "mark",  label: "Markeer" },
+    { v: "scrub", label: "Wis" },
+  ];
+  const activeTone = {
+    off:   "bg-muted text-foreground",
+    mark:  "bg-accent/60 text-foreground",
+    scrub: "bg-primary/20 text-primary",
+  } as const;
+  return (
+    <div className="shrink-0 inline-flex rounded-md border border-border/60 overflow-hidden">
+      {opts.map((o) => (
+        <button
+          key={o.v}
+          type="button"
+          onClick={(e) => { e.preventDefault(); onChange(o.v); }}
+          aria-pressed={mode === o.v}
+          className={`px-2 py-0.5 text-[11px] transition-colors ${
+            mode === o.v ? activeTone[o.v] : "text-muted-foreground hover:bg-accent/30"
+          }`}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** Compacte NER-status + start-knop voor de Modellen-tab. */
+function NerToggleRow({ status, onStart }: { status: NerStatus | null; onStart: () => void }) {
+  const kind = status?.error ? "error" : status?.ready ? "ready" : status?.loading ? "loading" : "idle";
+  const rawPct = status?.progress?.pct;
+  const pct = typeof rawPct === "number" ? Math.round(rawPct <= 1 ? rawPct * 100 : rawPct) : undefined;
+  const sub =
+    kind === "ready" ? "Actief — vindt ook namen die regels missen"
+    : kind === "loading" ? (typeof pct === "number" ? `Downloaden… ${pct}%` : "Model downloaden…")
+    : kind === "error" ? "Laden mislukt"
+    : "Lokaal naam-model (~100 MB), eenmalige download";
+  const label = kind === "ready" ? "Aan" : kind === "loading" ? "Bezig" : kind === "error" ? "Opnieuw" : "Aanzetten";
+  return (
+    <div className="flex items-start justify-between gap-3 rounded-md border border-border/50 bg-background/30 px-2.5 py-2">
+      <div className="min-w-0">
+        <div className="text-xs font-medium text-foreground">Naamherkenning (SLM)</div>
+        <div className="text-[11px] text-muted-foreground leading-snug">{sub}</div>
+      </div>
+      <button
+        type="button"
+        onClick={onStart}
+        disabled={kind === "ready" || kind === "loading"}
+        className="shrink-0 h-7 px-2 rounded-md border border-border/60 text-[11px] hover:bg-accent/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      >
+        {label}
+      </button>
+    </div>
   );
 }
