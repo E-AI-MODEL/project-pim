@@ -262,7 +262,7 @@ export function AdvancedPanel({
                 { v: "profile",    icon: Layers, label: "Profiel" },
                 { v: "thresholds", icon: Gauge,  label: "Gevoeligheid" },
                 { v: "detectors",  icon: Filter, label: "Detectoren" },
-                ...(expert ? [{ v: "models", icon: Cpu, label: "Modellen" }] : []),
+                { v: "models",     icon: Cpu,    label: "Modellen" },
               ] as Array<{ v: string; icon: typeof Layers; label: string }>).map(({ v, icon: Icon, label }) => (
                 <TabsTrigger
                   key={v}
