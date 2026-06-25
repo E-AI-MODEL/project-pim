@@ -1,6 +1,7 @@
 import type { Action, Mode, PimDecision, PrivacySignals, DraftCheckResult, PayloadType } from "./types";
 import { PIM_FLAGS, type PimFlagCode } from "./flags";
 import { DEFAULT_DETECTION_SETTINGS, type DetectionLayerSettings } from "./detectionSettings";
+import type { PipelineProfileId } from "./pipelineProfile";
 
 export const POLICY_VERSION = "pim.policy/v3-profile-free";
 
@@ -22,15 +23,14 @@ export interface DecideInput {
   draftCheck: DraftCheckResult;
   modelVerified: boolean;
   detectionSettings?: DetectionLayerSettings;
-  /** Type payload waarvoor besluit gevraagd wordt (spec §4.7). */
+  profileId?: PipelineProfileId;
   payloadType: PayloadType;
-  /** Optionele runtime-overrides van de risico-drempels per actie (Techdetails). */
   thresholdOverrides?: Partial<Record<Action, number>>;
 }
 
 function fromFlag(
   code: PimFlagCode,
-  base: Pick<PimDecision, "mode" | "action" | "riskLevel" | "policyVersion" | "timestamp" | "payloadType" | "detectionSettings">,
+  base: Pick<PimDecision, "mode" | "action" | "riskLevel" | "policyVersion" | "timestamp" | "payloadType" | "detectionSettings" | "profileId">,
   reason?: string,
 ): PimDecision {
   const f = PIM_FLAGS[code];
@@ -51,6 +51,7 @@ const EGRESS_ACTIONS: ReadonlySet<Action> = new Set([
 export function decide({
   mode, action, signals, draftCheck, modelVerified,
   detectionSettings = DEFAULT_DETECTION_SETTINGS,
+  profileId,
   payloadType, thresholdOverrides,
 }: DecideInput): PimDecision {
   const base = {
@@ -60,18 +61,17 @@ export function decide({
     action,
     timestamp: new Date().toISOString(),
     detectionSettings,
+    profileId,
     payloadType,
   };
 
   const isEgressAction = EGRESS_ACTIONS.has(action);
 
-  // Payload-gate: alleen certified anonymous drafts mogen de browser uit.
   if (isEgressAction && payloadType !== "draft_anonymous_certified") {
     return fromFlag("PIM_PAYLOAD_TYPE_EGRESS_BLOCK", base,
       `Payload-type '${payloadType}' mag de browser niet verlaten — alleen 'draft_anonymous_certified'.`);
   }
 
-  // Fail-closed gates first.
   if (!modelVerified) return fromFlag("PIM_MODEL_INTEGRITY_BLOCK", base);
   if (draftCheck.status === "fail") {
     const issue = draftCheck.issues[0] ?? "";
@@ -80,7 +80,6 @@ export function decide({
     return fromFlag("PIM_GUARD_FAILURE_BLOCK", base, issue);
   }
 
-  // Pseudonymous stays local.
   if (mode === "pseudonymous") {
     if (action === "send_external_ai") return fromFlag("PIM_PSEUDONYM_EXTERNAL_AI_BLOCK", base);
     const forbidden: Action[] = ["copy", "export_file", "print", "share"];
@@ -90,7 +89,6 @@ export function decide({
     }
   }
 
-  // Anonymous.
   if (mode === "anonymous") {
     if (action === "restore") return fromFlag("PIM_ANONYMOUS_RESTORE_BLOCK", base);
 
