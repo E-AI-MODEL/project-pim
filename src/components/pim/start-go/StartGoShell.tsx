@@ -13,7 +13,6 @@ import { useNerSpans } from "@/hooks/useNerSpans";
 import { usePimSettings } from "@/hooks/usePimSettings";
 import { emitDebug } from "@/lib/pim/debugBus";
 import { InputPanel } from "./InputPanel";
-import { NerVariantPicker } from "./NerVariantPicker";
 import { ModeTargetBar } from "./ModeTargetBar";
 import { ResultPanel } from "./ResultPanel";
 import { AdvancedPanel } from "./AdvancedPanel";
