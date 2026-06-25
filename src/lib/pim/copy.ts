@@ -89,14 +89,14 @@ export const COPY = {
   // Status-pill (§7.1)
   pillLocalActive: "Lokaal actief",
   pillLimited: "Beperkte detectie",
-  pillNotReady: "Nog niet gereed",
+  pillNotReady: "Controle nodig",
   pillTagline: "De privacy-engine draait in je browser",
 
   // Burgermenu (§7.2)
   menuNewTest: "Nieuwe controle",
   menuExamples: "Voorbeelden",
-  menuWriter: "Schrijfmodus",
-  menuExpertLab: "Expert lab",
+  menuWriter: "Schrijven",
+  menuExpertLab: "Tech-expert lab",
   menuTrust: "Vertrouwensdashboard",
   menuPipeline: "Hoe de pipeline werkt",
   menuModes: "Verwerkingsmodi",
