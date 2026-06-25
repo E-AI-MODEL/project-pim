@@ -23,12 +23,18 @@ export interface ModelGateResult {
   detail: string;
 }
 
+function isAction(v: unknown): v is Action {
+  return typeof v === "string" && ["display", "copy", "save_local", "restore", "export_file", "send_external_ai", "print", "share"].includes(v);
+}
+
 export function modelGateFor(
-  action: Action,
-  detectionSettings: DetectionLayerSettings | string,
+  actionOrLegacyProfile: Action | string,
+  settingsOrAction: DetectionLayerSettings | string | Action,
   integrity: ModelIntegrityRecord[],
 ): ModelGateResult {
-  const settings = coerceDetectionSettings(detectionSettings);
+  const action = isAction(actionOrLegacyProfile) ? actionOrLegacyProfile : (settingsOrAction as Action);
+  const settingsInput = isAction(actionOrLegacyProfile) ? settingsOrAction : undefined;
+  const settings = coerceDetectionSettings(settingsInput as DetectionLayerSettings | string | undefined);
   const isLocal = !EGRESS_ACTIONS.has(action);
 
   if (!usesBert(settings)) {
@@ -47,12 +53,8 @@ export function modelGateFor(
       : { verified: false, reason: "bert-required-but-missing", detail: "BERT is gekozen voor deze controle, maar nog niet geladen of geverifieerd." };
   }
 
-  if (ner.status === "verified") {
-    return { verified: true, reason: "bert-required-and-verified", detail: "BERT-integriteit is geverifieerd." };
-  }
-  if (ner.status === "mismatch") {
-    return { verified: false, reason: "bert-required-but-mismatch", detail: "BERT-integriteit klopt niet. Uitgaande acties blijven geblokkeerd." };
-  }
+  if (ner.status === "verified") return { verified: true, reason: "bert-required-and-verified", detail: "BERT-integriteit is geverifieerd." };
+  if (ner.status === "mismatch") return { verified: false, reason: "bert-required-but-mismatch", detail: "BERT-integriteit klopt niet. Uitgaande acties blijven geblokkeerd." };
   if (ner.status === "missing") {
     return isLocal
       ? { verified: true, reason: "local-action-model-not-required", detail: "BERT ontbreekt — lokale actie toegestaan." }
