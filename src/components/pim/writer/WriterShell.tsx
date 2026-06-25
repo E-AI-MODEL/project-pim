@@ -47,11 +47,7 @@ export function WriterShell() {
   const [clicked, setClicked] = useState<ClickedSpan | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const [importWarnings, setImportWarnings] = useState<string[]>([]);
-  // Profiel + detector-instellingen, gedeeld met de homepage (spoor C).
-  const { profileId, disabledCategories, setCategoryEnabled, advancedPanelProps } = usePimSettings();
-  // Platte tekst van de editor — gedeeld met de NER-hook zodat /schrijven
-  // dezelfde SLM-naamherkenning krijgt als de homepage (spoor A/D). De SLM
-  // wordt pas geladen na een expliciete klik in het instellingen-paneel.
+  const { profileId, disabledCategories, advancedPanelProps } = usePimSettings();
   const [plainText, setPlainText] = useState("");
   const usesNerSlm = PIPELINE_PROFILES[profileId].detectors.nerSlm;
   const { nerSpans, nerStatus, startNer } = useNerSpans(plainText, { enabled: usesNerSlm });
@@ -77,7 +73,6 @@ export function WriterShell() {
     },
   });
 
-  // Plugin registreren zodra de editor er is.
   useEffect(() => {
     if (!editor) return;
     const view = editor.view;
@@ -87,17 +82,13 @@ export function WriterShell() {
     view.updateState(newState);
   }, [editor, pimPlugin]);
 
-  // Scan + redact loop.
   const scan = useCallback(() => {
     if (!editor) return;
     const { plain, map } = extractPlain(editor.state.doc);
-    // Deel de platte tekst met de NER-hook; die levert (gedebounced) SLM-spans
-    // terug die we hieronder samen met regex/lexicon door computeSignals halen.
     setPlainText(plain);
     const signals = computeSignals(plain, nerSpans, profileId, disabledCategories);
     let all = [...signals.directPii, ...signals.contextualPii];
 
-    // Aanscherping: identifier-validators verwerpen willekeurige cijferreeksen.
     if (strict) {
       all = all.filter((s) => {
         if (s.category === "bsn") return isValidBsn(s.text);
@@ -108,22 +99,19 @@ export function WriterShell() {
       });
     }
 
-    // Bugfix: nooit redacten terwijl gebruiker er nog in typt.
     const sel = editor.state.selection;
     const cursorFrom = Math.min(sel.from, sel.to);
 
-    // 1) Auto-redact: harde PII direct vervangen, achteraan beginnen.
     const toReplace: { from: number; to: number; label: string }[] = [];
     const toMark: PiiSpan[] = [];
     for (const s of all) {
       const r = spanToRange(s, map);
       if (!r) continue;
       if (autoRedact.has(s.category)) {
-        // 1 char veiligheidsmarge na de span: wacht tot cursor er voorbij is.
         if (r.to + 1 <= cursorFrom) {
           toReplace.push({ ...r, label: GENERALIZATIONS[s.category] ?? "[geredacteerd]" });
         } else {
-          toMark.push(s); // tijdelijk markeren tot de cursor voorbij is
+          toMark.push(s);
         }
       } else {
         const ignKey = `${s.category}:${s.text.toLowerCase()}`;
@@ -140,7 +128,7 @@ export function WriterShell() {
       tr.setMeta("addToHistory", false);
       editor.view.dispatch(tr);
       setStats((p) => ({ scrubbed: p.scrubbed + toReplace.length, marked: p.marked }));
-      return; // volgende update herloopt
+      return;
     }
 
     const decorations = buildDecorations(toMark, map, editor.state.doc);
@@ -164,7 +152,6 @@ export function WriterShell() {
     };
   }, [editor, scan]);
 
-  // Klik op highlight → popover.
   useEffect(() => {
     const root = editorRootRef.current;
     if (!root) return;
@@ -224,9 +211,6 @@ export function WriterShell() {
   };
   const onExport = async () => {
     if (!editor) return;
-    // Lichte egress-gate: scan plain text vóór .docx-export. Bij residuele
-    // PII krijgt de gebruiker een keuze (toch / wis-alles / annuleer) i.p.v.
-    // stilzwijgend exporteren — consistent met de "schrijf veilig" claim.
     const { plain } = (await import("./pimPlugin")).extractPlain(editor.state.doc);
     const sig = computeSignals(plain, nerSpans, profileId, disabledCategories);
     const total = sig.directPii.length + sig.contextualPii.length;
@@ -239,8 +223,6 @@ export function WriterShell() {
       );
       if (!choice) return;
       if (choice.trim().toLowerCase() === "wis") {
-        // Tijdelijk alles auto-redacten: voeg alle gevonden categorieën toe
-        // aan autoRedact en wacht één scan-cycle af voordat we exporteren.
         const allCats = new Set<PiiCategory>([...autoRedact, ...sig.directPii.map((s) => s.category), ...sig.contextualPii.map((s) => s.category)]);
         setAutoRedact(allCats);
         await new Promise((r) => setTimeout(r, 250));
@@ -273,8 +255,7 @@ export function WriterShell() {
             Schrijf veilig — PiM redigeert mee
           </h1>
           <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
-            Type of plak (ook uit Word). Harde PII verdwijnt direct, naam-achtige
-            signalen krijgen een onderstreping — klik om te vervangen of te negeren.
+            Type of plak uit Word. Gevoelige tekst wordt gemarkeerd of direct vervangen, afhankelijk van je schrijfinstellingen.
           </p>
         </div>
         <LiveTechMonitor
@@ -287,71 +268,27 @@ export function WriterShell() {
         />
       </header>
 
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".docx"
-        className="sr-only"
-        onChange={(e) => onFile(e.target.files)}
-      />
+      <input ref={fileInputRef} type="file" accept=".docx" className="sr-only" onChange={(e) => onFile(e.target.files)} />
 
-      <WriterToolbar
-        editor={editor}
-        onImport={onImportClick}
-        onExport={onExport}
-        onClear={onClear}
-      />
-
-      <WriterStatusBar
-        nerAvailable={usesNerSlm}
-        nerStatus={nerStatus}
-        onStartNer={startNer}
-        stats={stats}
-      />
-
-      <AdvancedPanel
-        {...advancedPanelProps}
-        ner={{ status: nerStatus, onStart: startNer, available: usesNerSlm }}
-        writer={{
-          autoRedact,
-          onAutoRedactChange: (cat, scrub) => {
-            const next = new Set(autoRedact);
-            if (scrub) next.add(cat); else next.delete(cat);
-            setAutoRedact(next);
-          },
-          strict,
-          onStrictChange: setStrict,
-        }}
-      />
-
-      {importError && (
-        <div className="text-xs rounded-md border border-rose-500/40 bg-rose-500/10 text-rose-200 px-3 py-2">
-          {importError}
+      <section className="rounded-2xl border border-border/70 bg-card/50 shadow-sm overflow-hidden">
+        <WriterToolbar editor={editor} onImport={onImportClick} onExport={onExport} onClear={onClear} />
+        <WriterStatusBar nerAvailable={usesNerSlm} nerStatus={nerStatus} onStartNer={startNer} stats={stats} />
+        {importError && (
+          <div className="mx-3 mt-3 text-xs rounded-md border border-rose-500/40 bg-rose-500/10 text-rose-200 px-3 py-2">{importError}</div>
+        )}
+        {importWarnings.length > 0 && (
+          <div className="mx-3 mt-3 text-xs rounded-md border border-amber-400/40 bg-amber-400/10 text-amber-200 px-3 py-2 space-y-1">
+            <div className="font-medium">Let op bij import</div>
+            <ul className="list-disc pl-4 space-y-0.5">{importWarnings.map((w, i) => <li key={i}>{w}</li>)}</ul>
+          </div>
+        )}
+        <div ref={editorRootRef} className="relative border-t border-border/50 bg-card/30">
+          <EditorContent editor={editor} />
         </div>
-      )}
-      {importWarnings.length > 0 && (
-        <div className="text-xs rounded-md border border-amber-400/40 bg-amber-400/10 text-amber-200 px-3 py-2 space-y-1">
-          <div className="font-medium">Let op bij import</div>
-          <ul className="list-disc pl-4 space-y-0.5">
-            {importWarnings.map((w, i) => <li key={i}>{w}</li>)}
-          </ul>
-        </div>
-      )}
-
-      <div
-        ref={editorRootRef}
-        className="relative rounded-2xl border border-border/60 bg-card/40 shadow-sm overflow-hidden"
-      >
-        <EditorContent editor={editor} />
-      </div>
+      </section>
 
       {clicked && (
-        <ClickedPopover
-          clicked={clicked}
-          onReplace={replaceClicked}
-          onIgnore={ignoreClicked}
-          onClose={() => setClicked(null)}
-        />
+        <ClickedPopover clicked={clicked} onReplace={replaceClicked} onIgnore={ignoreClicked} onClose={() => setClicked(null)} />
       )}
 
       {ignored.size > 0 && (
@@ -360,19 +297,30 @@ export function WriterShell() {
           {Array.from(ignored).map((k) => {
             const [, text] = k.split(":");
             return (
-              <button
-                key={k}
-                type="button"
-                onClick={() => setIgnored((prev) => { const n = new Set(prev); n.delete(k); return n; })}
-                className="inline-flex items-center gap-1 rounded-full border border-border/60 px-2 py-0.5 hover:bg-accent/30"
-                title="Klik om de markering weer te tonen"
-              >
+              <button key={k} type="button" onClick={() => setIgnored((prev) => { const n = new Set(prev); n.delete(k); return n; })} className="inline-flex items-center gap-1 rounded-full border border-border/60 px-2 py-0.5 hover:bg-accent/30" title="Klik om de markering weer te tonen">
                 {text} <X className="h-2.5 w-2.5" />
               </button>
             );
           })}
         </div>
       )}
+
+      <div className="pt-2 border-t border-border/40">
+        <AdvancedPanel
+          {...advancedPanelProps}
+          ner={{ status: nerStatus, onStart: startNer, available: usesNerSlm }}
+          writer={{
+            autoRedact,
+            onAutoRedactChange: (cat, scrub) => {
+              const next = new Set(autoRedact);
+              if (scrub) next.add(cat); else next.delete(cat);
+              setAutoRedact(next);
+            },
+            strict,
+            onStrictChange: setStrict,
+          }}
+        />
+      </div>
     </div>
   );
 }
@@ -388,7 +336,7 @@ function WriterToolbar({
   const btn = "inline-flex items-center justify-center h-8 w-8 rounded-md text-foreground/70 hover:text-foreground hover:bg-accent/40 transition-colors";
   const btnActive = "bg-accent/60 text-foreground";
   return (
-    <div className="flex flex-wrap items-center gap-1 rounded-xl border border-border/60 bg-card/40 px-2 py-1.5">
+    <div className="flex flex-wrap items-center gap-1 px-2 py-1.5 border-b border-border/50 bg-card/70">
       <button className={`${btn} ${editor.isActive("bold") ? btnActive : ""}`} onClick={() => editor.chain().focus().toggleBold().run()} title="Vet"><Bold className="h-4 w-4" /></button>
       <button className={`${btn} ${editor.isActive("italic") ? btnActive : ""}`} onClick={() => editor.chain().focus().toggleItalic().run()} title="Cursief"><Italic className="h-4 w-4" /></button>
       <span className="h-5 w-px bg-border/60 mx-1" />
@@ -409,11 +357,6 @@ function WriterToolbar({
   );
 }
 
-/**
- * Zichtbare statusbalk onder de werkbalk: links de naamherkenning-schakelaar
- * (de grootste detectie-booster — vangt namen die de regels missen), rechts
- * een altijd-zichtbare teller "X gewist · Y gemarkeerd".
- */
 function WriterStatusBar({
   nerAvailable, nerStatus, onStartNer, stats,
 }: {
@@ -427,25 +370,19 @@ function WriterStatusBar({
   const pct = typeof rawPct === "number" ? Math.round(rawPct <= 1 ? rawPct * 100 : rawPct) : undefined;
   const Icon = kind === "loading" ? Loader2 : kind === "error" ? AlertTriangle : kind === "ready" ? ShieldCheck : Cpu;
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border/60 bg-card/40 px-3 py-2 text-[12px]">
+    <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-[12px] border-b border-border/50 bg-background/30">
       <div className="flex items-center gap-2 min-w-0">
         <Icon className={`h-4 w-4 shrink-0 ${kind === "loading" ? "animate-spin" : ""} ${kind === "ready" ? "text-emerald-400" : "text-muted-foreground"}`} />
         {!nerAvailable ? (
           <span className="text-muted-foreground">Naamherkenning uit in dit profiel</span>
         ) : kind === "ready" ? (
-          <span className="text-emerald-300 font-medium">Naam-AI aan — vangt ook namen die de regels missen</span>
+          <span className="text-emerald-300 font-medium">Naam-AI aan</span>
         ) : kind === "loading" ? (
           <span className="text-amber-300">Naam-model downloaden… {typeof pct === "number" ? `${pct}%` : ""}</span>
         ) : (
           <div className="flex items-center gap-2 min-w-0">
-            <span className="text-muted-foreground truncate">
-              {kind === "error" ? "Naam-model laden mislukt." : "Naam-AI staat uit — zonder dit worden veel namen gemist."}
-            </span>
-            <button
-              type="button"
-              onClick={onStartNer}
-              className="shrink-0 rounded-md bg-primary px-2.5 py-1 text-[11px] font-semibold text-primary-foreground hover:bg-primary/90"
-            >
+            <span className="text-muted-foreground truncate">{kind === "error" ? "Naam-model laden mislukt." : "Naam-AI uit"}</span>
+            <button type="button" onClick={onStartNer} className="shrink-0 rounded-md bg-primary px-2.5 py-1 text-[11px] font-semibold text-primary-foreground hover:bg-primary/90">
               {kind === "error" ? "Opnieuw" : "Zet aan"}
             </button>
           </div>
@@ -471,37 +408,11 @@ function ClickedPopover({
 }) {
   const label = GENERALIZATIONS[clicked.cat] ?? "[geredacteerd]";
   return (
-    <div
-      role="dialog"
-      style={{ position: "absolute", left: clicked.x, top: clicked.y + 4, zIndex: 60 }}
-      className="rounded-lg border border-border/70 bg-popover shadow-lg p-2 flex items-center gap-1 text-xs"
-      onClick={(e) => e.stopPropagation()}
-    >
-      <span className="px-2 text-muted-foreground">
-        <span className="font-medium text-foreground">{CATEGORY_LABELS[clicked.cat]}</span>
-      </span>
-      <button
-        type="button"
-        onClick={onReplace}
-        className="inline-flex items-center gap-1 rounded-md bg-primary text-primary-foreground px-2.5 py-1 hover:bg-primary/90 font-medium"
-      >
-        Vervang met {label}
-      </button>
-      <button
-        type="button"
-        onClick={onIgnore}
-        className="inline-flex items-center gap-1 rounded-md border border-border/60 px-2.5 py-1 hover:bg-accent/40"
-      >
-        Negeer
-      </button>
-      <button
-        type="button"
-        onClick={onClose}
-        aria-label="Sluiten"
-        className="h-6 w-6 inline-flex items-center justify-center rounded-md hover:bg-accent/40"
-      >
-        <X className="h-3 w-3" />
-      </button>
+    <div role="dialog" style={{ position: "absolute", left: clicked.x, top: clicked.y + 4, zIndex: 60 }} className="rounded-lg border border-border/70 bg-popover shadow-lg p-2 flex items-center gap-1 text-xs" onClick={(e) => e.stopPropagation()}>
+      <span className="px-2 text-muted-foreground"><span className="font-medium text-foreground">{CATEGORY_LABELS[clicked.cat]}</span></span>
+      <button type="button" onClick={onReplace} className="inline-flex items-center gap-1 rounded-md bg-primary text-primary-foreground px-2.5 py-1 hover:bg-primary/90 font-medium">Vervang met {label}</button>
+      <button type="button" onClick={onIgnore} className="inline-flex items-center gap-1 rounded-md border border-border/60 px-2.5 py-1 hover:bg-accent/40">Negeer</button>
+      <button type="button" onClick={onClose} aria-label="Sluiten" className="h-6 w-6 inline-flex items-center justify-center rounded-md hover:bg-accent/40"><X className="h-3 w-3" /></button>
     </div>
   );
 }
