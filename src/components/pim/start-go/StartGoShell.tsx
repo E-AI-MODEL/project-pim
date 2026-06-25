@@ -1,4 +1,3 @@
-// §8.1 — alleen state + PIM-koppeling. GEEN uitleg.
 import { useMemo, useState, useEffect, useRef } from "react";
 import { AlertTriangle, Check, Cpu, Loader2, Sparkles } from "lucide-react";
 import {
@@ -8,6 +7,7 @@ import {
   type NerStatus, type RewriteStatus,
   type CertifiedPayload, type PayloadType,
   type Mode, type Action, type PiiSpan,
+  type DraftCandidate, type EgressResult, type PimDecision, type PrivacySignals,
 } from "@/lib/pim";
 import { useNerSpans } from "@/hooks/useNerSpans";
 import { usePimSettings } from "@/hooks/usePimSettings";
@@ -19,10 +19,10 @@ import { AdvancedPanel } from "./AdvancedPanel";
 import type { Example } from "./ExamplePicker";
 
 interface ResultState {
-  decision: ReturnType<typeof decide>;
+  decision: PimDecision;
   safeText: string;
   originalText: string;
-  signals: ReturnType<typeof computeSignals>;
+  signals: PrivacySignals;
   mapping: Map<string, string>;
 }
 
@@ -30,7 +30,6 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
   const [text, setText] = useState("");
   const [mode, setMode] = useState<Mode>("anonymous");
   const [action, setAction] = useState<Action>("send_external_ai");
-  // Gedeelde instellingen (spoor C): profiel/drempels/categorieën/integriteit.
   const { profileId, thresholdOverrides, disabledCategories, integrity, advancedPanelProps } = usePimSettings();
   const [nerEnabled, setNerEnabled] = useState(false);
   const [llmStatus, setLlmStatus] = useState<RewriteStatus | null>(null);
@@ -42,14 +41,12 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
   const usesNerSlm = profile.detectors.nerSlm;
   const llmDevice = useLlmDeviceGuard();
 
-  // Gedeelde NER-hook (spoor A): identiek SLM-pad als /schrijven.
   const { nerSpans, nerStatus, startNer: startNerLoad } = useNerSpans(text, {
     enabled: usesNerSlm && nerEnabled,
   });
 
   useEffect(() => onRewriteStatus(setLlmStatus), []);
 
-  // Globaal reset-event (uit burgermenu "Nieuwe controle").
   useEffect(() => {
     const onReset = () => {
       setText("");
@@ -70,18 +67,13 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
     if (usesNerSlm && nerStatus?.ready) setNerEnabled(true);
   }, [usesNerSlm, nerStatus?.ready]);
 
-  // De hook gate't al op enabled+ready; modelSpans is hier puur de SLM-output.
   const modelSpans = nerSpans;
 
-  // Live preview-signals (zonder PiM uit te voeren).
   const previewSignals = useMemo(
     () => computeSignals(text, modelSpans, profileId, disabledCategories),
     [text, modelSpans, profileId, disabledCategories],
   );
 
-  // Live oordeel: debounced auto-run zodra de tekst stabiel is.
-  // Gebruiker krijgt instant feedback; expliciete knop blijft de
-  // formele bevestiging (zelfde codepad) en voert de actie pas uit.
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -98,7 +90,6 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
   };
 
   const startLlm = () => {
-    if (llmDevice.blocked && !llmStatus?.ready) return;
     setLlmMsg(null);
     void loadRewriteLlm().catch(() => {});
   };
@@ -109,7 +100,7 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
     const t0 = performance.now();
     try {
       const signals = computeSignals(text, modelSpans, profileId, disabledCategories);
-      let draft;
+      let draft: DraftCandidate;
       let mapping = new Map<string, string>();
       if (mode === "anonymous") {
         draft = anonymize(text, signals);
@@ -125,7 +116,7 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
         mode === "pseudonymous" ? "draft_pseudonymous_local" :
         "unknown";
       const decisionSignals = computeSignals(draft.text, [], profileId, disabledCategories);
-      const decision = decide({
+      const decision: PimDecision = decide({
         mode, action, signals: decisionSignals, draftCheck: guard,
         modelVerified: gate.verified, profileId, payloadType, thresholdOverrides,
       });
@@ -169,7 +160,7 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
       const gate = modelGateFor(profileId, action, integrity);
       const payloadType: PayloadType = guard.status === "pass" ? "draft_anonymous_certified" : "unknown";
       const decisionSignals = computeSignals(rewrite.text, [], profileId, disabledCategories);
-      const decision = decide({
+      const decision: PimDecision = decide({
         mode: "anonymous", action, signals: decisionSignals, draftCheck: guard,
         modelVerified: gate.verified, profileId, payloadType, thresholdOverrides,
       });
@@ -188,9 +179,6 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
 
   const buildCertified = (editedText: string): CertifiedPayload => {
     if (!result) throw new Error("no result");
-    // Bij elke bewerking is de payload niet langer "certified" als anoniem
-    // veilig: laat draftCheck herbeoordelen via guardStatus="repair" pad zodat
-    // executeAction de re-consult doet.
     const guardStatus =
       result.decision.payloadType === "draft_anonymous_certified" && editedText === result.safeText
         ? ("pass" as const)
@@ -207,7 +195,6 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
   const onPrimary = async (editedText: string) => {
     if (!result) return;
     if (result.decision.verdict === "BLOCK") {
-      // Reset → trigger nieuwe ronde; gebruiker past tekst aan.
       setResult(null);
       setEgressMsg(null);
       return;
@@ -225,14 +212,10 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
     }
   };
 
-  // Egress-gated quick-actions vanuit ResultActions. We bouwen een nep-decision
-  // met de juiste action (copy/export_file) en hergebruiken alle drempels.
-  const runQuickAction = async (editedText: string, quickAction: Action) => {
+  const runQuickAction = async (editedText: string, quickAction: Action): Promise<EgressResult> => {
     if (!result) return { executed: false, reason: "no result" };
     const certified = buildCertified(editedText);
-    // Hergebruik dezelfde verdict-evaluatie maar laat executeAction zelf
-    // bepalen op basis van payload + decision.action.
-    const quickDecision = { ...result.decision, action: quickAction };
+    const quickDecision: PimDecision = { ...result.decision, action: quickAction };
     const r = await executeAction(quickDecision, certified);
     emitDebug("pipeline.execute", r.executed ? "quick egress toegestaan" : "quick egress geblokt", {
       executed: r.executed, reason: r.reason, action: quickAction,
@@ -277,8 +260,7 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
         nerSpans={nerSpans}
         onStartNer={startNer}
         llmStatus={llmStatus}
-        llmBlocked={llmDevice.blocked && !llmStatus?.ready}
-        llmBlockReason={llmDevice.reason}
+        llmDeviceHint={llmDevice.reason}
         mode={mode}
         hasResult={!!result}
         onStartLlm={startLlm}
@@ -323,7 +305,7 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
 
 function LocalModelStrip({
   compact, nerAvailable, nerEnabled, nerStatus, nerSpans, onStartNer,
-  llmStatus, llmBlocked, llmBlockReason, mode, hasResult, onStartLlm, onRewrite, llmMsg, busy,
+  llmStatus, llmDeviceHint, mode, hasResult, onStartLlm, onRewrite, llmMsg, busy,
 }: {
   compact: boolean;
   nerAvailable: boolean;
@@ -332,8 +314,7 @@ function LocalModelStrip({
   nerSpans: PiiSpan[];
   onStartNer: () => void;
   llmStatus: RewriteStatus | null;
-  llmBlocked: boolean;
-  llmBlockReason: string | null;
+  llmDeviceHint: string | null;
   mode: Mode;
   hasResult: boolean;
   onStartLlm: () => void;
@@ -348,54 +329,54 @@ function LocalModelStrip({
   const qwenReady = llmKind === "ready";
   const canRewrite = qwenReady && mode === "anonymous" && hasResult && !busy;
   const qwenButton = !qwenReady
-    ? (llmKind === "error" ? "Opnieuw" : "Download Qwen")
+    ? (llmKind === "error" ? "Opnieuw" : llmKind === "loading" ? "Download bezig" : "Download Qwen")
     : mode !== "anonymous"
       ? "Alleen anoniem"
       : hasResult
         ? "Herschrijf"
-        : "Controleer eerst";
+        : "Qwen klaar";
 
   return (
     <div className="space-y-2">
       <div className={`grid gap-2 ${compact ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1 md:grid-cols-2"}`}>
-      <ModelCard
-        icon="ner"
-        title="NER-SLM"
-        kind={!nerAvailable ? "idle" : nerKind}
-        pct={nerPct}
-        sub={!nerAvailable
-          ? "Uit in dit profiel"
-          : nerKind === "ready"
-            ? `${nerStatus?.runtime?.toUpperCase() ?? "MODEL"} · ${nerEnabled ? "actief" : "gereed"} · ${nerSpans.length} extra hits`
-            : nerKind === "loading"
-              ? (nerStatus?.progress?.file ?? "Modeldownload bezig")
-              : nerKind === "error"
-                ? "Laden mislukt"
-                : "Start lokale naamherkenning"}
-        detail={nerStatus?.error ?? null}
-        buttonLabel={nerKind === "ready" ? "Actief" : nerKind === "loading" ? "Download bezig" : nerKind === "error" ? "Opnieuw" : "Start NER"}
-        onClick={onStartNer}
-        disabled={!nerAvailable || nerKind === "ready" || nerKind === "loading"}
-      />
-      <ModelCard
-        icon="llm"
-        title="Qwen rewrite"
-        kind={llmBlocked ? "idle" : llmKind}
-        pct={llmPct}
-        sub={llmBlocked
-          ? (llmBlockReason ?? "Niet beschikbaar op dit apparaat")
-          : qwenReady
-            ? "Klaar voor lokale herschrijving"
+        <ModelCard
+          icon="ner"
+          title="Naamherkenning"
+          kind={!nerAvailable ? "idle" : nerKind}
+          pct={nerPct}
+          sub={!nerAvailable
+            ? "Uit in dit profiel"
+            : nerKind === "ready"
+              ? `${nerStatus?.runtime?.toUpperCase() ?? "MODEL"} · ${nerEnabled ? "actief" : "gereed"} · ${nerSpans.length} extra hits`
+              : nerKind === "loading"
+                ? (nerStatus?.progress?.file ?? "Modeldownload bezig")
+                : nerKind === "error"
+                  ? "Laden mislukt"
+                  : "Optioneel: betere naamdetectie"}
+          detail={nerStatus?.error ?? null}
+          buttonLabel={nerKind === "ready" ? "Actief" : nerKind === "loading" ? "Download bezig" : nerKind === "error" ? "Opnieuw" : "Zet aan"}
+          onClick={onStartNer}
+          disabled={!nerAvailable || nerKind === "ready" || nerKind === "loading"}
+        />
+        <ModelCard
+          icon="llm"
+          title="Herschrijf-Qwen"
+          kind={llmKind}
+          pct={llmPct}
+          sub={qwenReady
+            ? "Lokaal model klaar voor herschrijven"
             : llmKind === "loading"
               ? (llmStatus?.progress?.text ?? "Modeldownload bezig")
               : llmKind === "error"
-                ? "Laden mislukt"
-                : "Download lokaal rewrite-model"}
-        detail={llmStatus?.error ?? llmMsg}
-        buttonLabel={qwenButton}
-        onClick={qwenReady ? onRewrite : onStartLlm}
-        disabled={busy || llmBlocked || llmKind === "loading" || (qwenReady && !canRewrite)}
-      />
+                ? "Laden mislukt — probeer opnieuw"
+                : llmDeviceHint
+                  ? `Beschikbaar, maar mogelijk zwaar: ${llmDeviceHint}`
+                  : "Altijd zichtbaar: download lokaal wanneer nodig"}
+          detail={llmStatus?.error ?? llmMsg}
+          buttonLabel={qwenButton}
+          onClick={qwenReady ? onRewrite : onStartLlm}
+          disabled={busy || llmKind === "loading" || (qwenReady && !canRewrite)}
+        />
       </div>
     </div>
   );
@@ -422,6 +403,13 @@ function ModelCard({
       : kind === "error"
         ? "border-rose-400/45 bg-rose-400/5 text-rose-200"
         : "border-[#3b6fa0]/30 bg-[#0f1b3d]/45 text-[#e8edf3]/75";
+  const led = kind === "ready"
+    ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]"
+    : kind === "loading"
+      ? "bg-amber-300 shadow-[0_0_8px_rgba(252,211,77,0.9)] animate-pulse"
+      : kind === "error"
+        ? "bg-rose-400 shadow-[0_0_8px_rgba(251,113,133,0.9)]"
+        : "bg-[#3b6fa0]/70";
   return (
     <div className={`rounded-xl border p-3 min-w-0 ${tone}`}>
       <div className="flex items-start justify-between gap-3">
@@ -430,7 +418,10 @@ function ModelCard({
             <Icon className={`h-3.5 w-3.5 ${kind === "loading" ? "animate-spin" : ""}`} />
           </span>
           <div className="min-w-0">
-            <div className="font-serif-display text-sm text-[#e8edf3] truncate">{title}</div>
+            <div className="flex items-center gap-1.5 font-serif-display text-sm text-[#e8edf3] truncate">
+              <span className={`h-2 w-2 rounded-full ${led}`} aria-hidden />
+              <span className="truncate">{title}</span>
+            </div>
             <div className="text-[11px] text-[#e8edf3]/62 leading-snug break-words">{sub}</div>
           </div>
         </div>
@@ -477,7 +468,7 @@ function useLlmDeviceGuard(): { blocked: boolean; reason: string | null } {
     const lowMem = typeof mem === "number" && mem < 4;
     const hasWebGpu = !!(navigator as Navigator & { gpu?: unknown }).gpu;
     const reason = !hasWebGpu ? "WebGPU nodig" : mobile ? "Desktop aanbevolen" : lowMem ? "Minimaal 4 GB RAM" : null;
-    setState({ blocked: !hasWebGpu || mobile || lowMem, reason });
+    setState({ blocked: !!reason, reason });
   }, []);
   return state;
 }
