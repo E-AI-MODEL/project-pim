@@ -13,7 +13,6 @@ import { useNerSpans } from "@/hooks/useNerSpans";
 import { usePimSettings } from "@/hooks/usePimSettings";
 import { emitDebug } from "@/lib/pim/debugBus";
 import { InputPanel } from "./InputPanel";
-import { NerVariantPicker } from "./NerVariantPicker";
 import { ModeTargetBar } from "./ModeTargetBar";
 import { ResultPanel } from "./ResultPanel";
 import { AdvancedPanel } from "./AdvancedPanel";
@@ -288,7 +287,10 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
         busy={busy}
       />
 
-      <AdvancedPanel {...advancedPanelProps} />
+      <AdvancedPanel
+        {...advancedPanelProps}
+        ner={{ status: nerStatus, onStart: startNer, available: usesNerSlm }}
+      />
 
       {!result && text.trim().length > 0 && (
         <div className={`text-xs border-l-2 pl-3 animate-pulse ${compact ? "text-[#e8edf3]/60 border-[#3b6fa0]/50" : "text-muted-foreground border-primary/40"}`}>
@@ -355,12 +357,6 @@ function LocalModelStrip({
 
   return (
     <div className="space-y-2">
-      {nerAvailable && (
-        <NerVariantPicker
-          tone="dark"
-          onChange={() => { if (nerEnabled) onStartNer(); }}
-        />
-      )}
       <div className={`grid gap-2 ${compact ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1 md:grid-cols-2"}`}>
       <ModelCard
         icon="ner"

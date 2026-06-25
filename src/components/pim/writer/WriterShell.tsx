@@ -9,17 +9,16 @@ import StarterKit from "@tiptap/starter-kit";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import {
   Bold, Italic, Heading1, Heading2, List, ListOrdered, Quote, Undo2, Redo2,
-  Upload, Download, Settings2, Shield, Trash2, X, Cpu, Loader2, AlertTriangle,
+  Upload, Download, Shield, Trash2, X,
 } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   computeSignals, PIPELINE_PROFILES,
-  type PiiCategory, type PiiSpan, type NerStatus,
+  type PiiCategory, type PiiSpan,
 } from "@/lib/pim";
 import { useNerSpans } from "@/hooks/useNerSpans";
 import { usePimSettings } from "@/hooks/usePimSettings";
 import { LiveTechMonitor } from "@/components/pim/start-go/LiveTechMonitor";
-import { NerVariantPicker } from "@/components/pim/start-go/NerVariantPicker";
+import { AdvancedPanel } from "@/components/pim/start-go/AdvancedPanel";
 import { GENERALIZATIONS, DEFAULT_AUTO_REDACT, CATEGORY_LABELS } from "./pimGeneralizations";
 import {
   createPimPlugin, pimPluginKey, extractPlain, spanToRange, buildDecorations,
@@ -49,7 +48,7 @@ export function WriterShell() {
   const [importError, setImportError] = useState<string | null>(null);
   const [importWarnings, setImportWarnings] = useState<string[]>([]);
   // Profiel + detector-instellingen, gedeeld met de homepage (spoor C).
-  const { profileId, disabledCategories, setCategoryEnabled } = usePimSettings();
+  const { profileId, disabledCategories, setCategoryEnabled, advancedPanelProps } = usePimSettings();
   // Platte tekst van de editor — gedeeld met de NER-hook zodat /schrijven
   // dezelfde SLM-naamherkenning krijgt als de homepage (spoor A/D). De SLM
   // wordt pas geladen na een expliciete klik in het instellingen-paneel.
@@ -298,18 +297,25 @@ export function WriterShell() {
 
       <WriterToolbar
         editor={editor}
-        autoRedact={autoRedact}
-        setAutoRedact={setAutoRedact}
-        disabledCategories={disabledCategories}
-        setCategoryEnabled={setCategoryEnabled}
-        strict={strict}
-        setStrict={setStrict}
-        nerStatus={nerStatus}
-        onStartNer={startNer}
         onImport={onImportClick}
         onExport={onExport}
         onClear={onClear}
         stats={stats}
+      />
+
+      <AdvancedPanel
+        {...advancedPanelProps}
+        ner={{ status: nerStatus, onStart: startNer, available: usesNerSlm }}
+        writer={{
+          autoRedact,
+          onAutoRedactChange: (cat, scrub) => {
+            const next = new Set(autoRedact);
+            if (scrub) next.add(cat); else next.delete(cat);
+            setAutoRedact(next);
+          },
+          strict,
+          onStrictChange: setStrict,
+        }}
       />
 
       {importError && (
@@ -365,36 +371,15 @@ export function WriterShell() {
   );
 }
 
-/** Eén categorie heeft drie standen die de twee oude systemen verenigen. */
-type CategoryMode = "off" | "mark" | "scrub";
-
 function WriterToolbar({
-  editor, autoRedact, setAutoRedact, disabledCategories, setCategoryEnabled,
-  strict, setStrict, nerStatus, onStartNer, onImport, onExport, onClear, stats,
+  editor, onImport, onExport, onClear, stats,
 }: {
   editor: Editor;
-  autoRedact: Set<PiiCategory>;
-  setAutoRedact: (s: Set<PiiCategory>) => void;
-  disabledCategories: ReadonlySet<PiiCategory>;
-  setCategoryEnabled: (cat: PiiCategory, enabled: boolean) => void;
-  strict: boolean;
-  setStrict: (v: boolean) => void;
-  nerStatus: NerStatus | null;
-  onStartNer: () => void;
   onImport: () => void;
   onExport: () => void;
   onClear: () => void;
   stats: { scrubbed: number; marked: number };
 }) {
-  // Leid de stand af uit de twee onderliggende bronnen, en zet ze samen.
-  const modeOf = (cat: PiiCategory): CategoryMode =>
-    disabledCategories.has(cat) ? "off" : autoRedact.has(cat) ? "scrub" : "mark";
-  const setMode = (cat: PiiCategory, mode: CategoryMode) => {
-    setCategoryEnabled(cat, mode !== "off");
-    const next = new Set(autoRedact);
-    if (mode === "scrub") next.add(cat); else next.delete(cat);
-    setAutoRedact(next);
-  };
   const btn = "inline-flex items-center justify-center h-8 w-8 rounded-md text-foreground/70 hover:text-foreground hover:bg-accent/40 transition-colors";
   const btnActive = "bg-accent/60 text-foreground";
   return (
@@ -414,130 +399,10 @@ function WriterToolbar({
       <button className={btn} onClick={onImport} title="Importeer .docx"><Upload className="h-4 w-4" /></button>
       <button className={btn} onClick={onExport} title="Exporteer .docx"><Download className="h-4 w-4" /></button>
       <button className={btn} onClick={onClear} title="Leegmaken"><Trash2 className="h-4 w-4" /></button>
-      <span className="h-5 w-px bg-border/60 mx-1" />
-      <Popover>
-        <PopoverTrigger asChild>
-          <button className={btn} title="PiM-instellingen per categorie"><Settings2 className="h-4 w-4" /></button>
-        </PopoverTrigger>
-        <PopoverContent align="end" className="w-80 p-3 space-y-3 max-h-[70vh] overflow-y-auto">
-          <NerToggleRow nerStatus={nerStatus} onStartNer={onStartNer} />
-          <NerVariantPicker
-            tone="light"
-            onChange={() => { if (nerStatus?.ready || nerStatus?.loading) onStartNer(); }}
-          />
-
-          <div className="h-px bg-border/40" />
-
-          <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Controle</div>
-          <button
-            type="button"
-            onClick={() => setStrict(!strict)}
-            aria-pressed={strict}
-            className={`w-full flex items-start justify-between gap-2 rounded-md border p-2.5 text-left transition-colors ${
-              strict
-                ? "border-amber-400/50 bg-amber-400/10"
-                : "border-border/60 hover:bg-accent/40"
-            }`}
-          >
-            <span className="min-w-0">
-              <span className="block text-xs font-medium text-foreground">Strenge cijfercontrole</span>
-              <span className="block text-[11px] text-muted-foreground leading-snug mt-0.5">
-                Filtert willekeurige cijferreeksen: BSN-elfproef, IBAN mod-97, kenteken-formaat en leerlingnummer-context moeten kloppen.
-              </span>
-            </span>
-            <span className={`shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider border ${
-              strict ? "bg-amber-400/20 text-amber-200 border-amber-400/50" : "text-muted-foreground border-border/60"
-            }`}>
-              {strict ? "Aan" : "Uit"}
-            </span>
-          </button>
-
-          <div className="h-px bg-border/40" />
-
-          <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Per categorie</div>
-          <p className="text-[11px] text-muted-foreground leading-snug">
-            <span className="font-medium text-foreground">Uit</span> = niet detecteren ·{" "}
-            <span className="font-medium text-foreground">Markeer</span> = onderstrepen, jij beslist ·{" "}
-            <span className="font-medium text-foreground">Wis</span> = meteen vervangen door een label.
-          </p>
-          <ul className="space-y-1">
-            {(Object.keys(CATEGORY_LABELS) as PiiCategory[]).map((cat) => (
-              <li key={cat} className="flex items-center justify-between gap-2 text-sm">
-                <span className="truncate">{CATEGORY_LABELS[cat]}</span>
-                <CategoryModeToggle mode={modeOf(cat)} onChange={(m) => setMode(cat, m)} />
-              </li>
-            ))}
-          </ul>
-        </PopoverContent>
-      </Popover>
       <span className="flex-1" />
       <span className="text-[11px] text-muted-foreground px-2">
         {stats.scrubbed > 0 && <>{stats.scrubbed} gewist · </>}{stats.marked} gemarkeerd
       </span>
-    </div>
-  );
-}
-
-/** Segmented control: Uit / Markeer / Wis — één heldere keuze per categorie. */
-function CategoryModeToggle({ mode, onChange }: { mode: CategoryMode; onChange: (m: CategoryMode) => void }) {
-  const opts: { v: CategoryMode; label: string }[] = [
-    { v: "off", label: "Uit" },
-    { v: "mark", label: "Markeer" },
-    { v: "scrub", label: "Wis" },
-  ];
-  const activeTone: Record<CategoryMode, string> = {
-    off: "bg-muted text-foreground",
-    mark: "bg-accent/60 text-foreground",
-    scrub: "bg-primary/20 text-primary",
-  };
-  return (
-    <div className="shrink-0 inline-flex rounded-md border border-border/60 overflow-hidden">
-      {opts.map((o) => (
-        <button
-          key={o.v}
-          type="button"
-          onClick={() => onChange(o.v)}
-          aria-pressed={mode === o.v}
-          className={`px-2 py-0.5 text-[11px] transition-colors ${
-            mode === o.v ? activeTone[o.v] : "text-muted-foreground hover:bg-accent/30"
-          }`}
-        >
-          {o.label}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-/** Compacte naamherkenning-schakelaar — laadt de SLM ook vanuit /schrijven. */
-function NerToggleRow({ nerStatus, onStartNer }: { nerStatus: NerStatus | null; onStartNer: () => void }) {
-  const kind = nerStatus?.error ? "error" : nerStatus?.ready ? "ready" : nerStatus?.loading ? "loading" : "idle";
-  const rawPct = nerStatus?.progress?.pct;
-  const pct = typeof rawPct === "number" ? Math.round(rawPct <= 1 ? rawPct * 100 : rawPct) : undefined;
-  const Icon = kind === "loading" ? Loader2 : kind === "error" ? AlertTriangle : Cpu;
-  const sub =
-    kind === "ready" ? "Actief — vindt ook namen die regels missen"
-    : kind === "loading" ? (typeof pct === "number" ? `Downloaden… ${pct}%` : "Model downloaden…")
-    : kind === "error" ? "Laden mislukt"
-    : "Lokaal model (~100 MB), eenmalige download";
-  const label = kind === "ready" ? "Aan" : kind === "loading" ? "Bezig" : kind === "error" ? "Opnieuw" : "Aanzetten";
-  return (
-    <div className="flex items-start justify-between gap-3">
-      <div className="flex items-start gap-2 min-w-0">
-        <Icon className={`h-4 w-4 mt-0.5 shrink-0 ${kind === "loading" ? "animate-spin" : ""} ${kind === "ready" ? "text-emerald-400" : "text-muted-foreground"}`} />
-        <div className="min-w-0">
-          <div className="text-xs font-medium text-foreground">Naamherkenning (SLM)</div>
-          <div className="text-[11px] text-muted-foreground leading-snug">{sub}</div>
-        </div>
-      </div>
-      <button
-        type="button"
-        onClick={onStartNer}
-        disabled={kind === "ready" || kind === "loading"}
-        className="shrink-0 h-7 px-2 rounded-md border border-border/60 text-[11px] hover:bg-accent/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-      >
-        {label}
-      </button>
     </div>
   );
 }
