@@ -44,16 +44,7 @@ export function ResultPanel({
     const disabled = disabledCategories ?? new Set<PiiCategory>();
     const sig = computeSignals(editedSafe, [], detectionSettings, disabled);
     const guard = draftCheck({ text: editedSafe, mode: decision.mode, rawHadPii: signals.directPii.length > 0 }, decision.mode);
-    const d = decide({
-      mode: decision.mode,
-      action: decision.action,
-      signals: sig,
-      draftCheck: guard,
-      modelVerified: true,
-      detectionSettings,
-      payloadType: decision.payloadType ?? "unknown",
-      thresholdOverrides: thresholdOverrides ?? {},
-    });
+    const d = decide({ mode: decision.mode, action: decision.action, signals: sig, draftCheck: guard, modelVerified: true, detectionSettings, payloadType: decision.payloadType ?? "unknown", thresholdOverrides: thresholdOverrides ?? {} });
     return d.verdict;
   }, [editedSafe, isEdited, detectionSettings, disabledCategories, thresholdOverrides, decision, signals.directPii.length]);
 
@@ -91,7 +82,15 @@ export function ResultPanel({
           <textarea value={editedSafe} onChange={(e) => setEditedSafe(e.target.value)} className="w-full min-h-[160px] rounded-xl border border-border/50 bg-background/60 p-3 text-sm outline-none focus:ring-2 focus:ring-primary/30" />
         )}
       </div>
-      <ResultActions decision={decision} safeText={editedSafe} onPrimary={onPrimary} onCopy={onCopy} onDownload={onDownload} busy={busy} />
+      <ResultActions
+        verdict={decision.verdict}
+        liveVerdict={liveSafeVerdict}
+        safeText={editedSafe}
+        onPrimary={() => onPrimary(editedSafe)}
+        onCopy={onCopy ? () => onCopy(editedSafe) : undefined}
+        onDownload={onDownload ? () => onDownload(editedSafe) : undefined}
+        busy={busy}
+      />
       {egressMsg && <div className="rounded-lg border border-border/50 bg-card/45 px-3 py-2 text-xs text-muted-foreground">{egressMsg}</div>}
       {mapping.size > 0 && <MappingViewer mapping={mapping} />}
       <DetailsDrawer decision={decision} signals={signals} integrity={integrity} />
