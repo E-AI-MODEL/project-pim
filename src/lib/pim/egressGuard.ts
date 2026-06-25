@@ -1,13 +1,10 @@
 // Production Egress Guard — handhaaft PIM-besluit op echte browser-egress.
-// Spec hfst 28. Geen actie mag voorbij PIM zonder ALLOW.
 
 import type { PimDecision, CertifiedPayload } from "./types";
 import { draftCheckWithRegistry } from "./processing";
 import { runRegistry } from "./detectorRegistry";
-import { DEFAULT_PROFILE } from "./pipelineProfile";
 import type { RiskLevel } from "./types";
 
-/** Logger so the trust dashboard / console can show re-consult outcomes. */
 const reconsultLog: string[] = [];
 const reconsultListeners = new Set<(v: string[]) => void>();
 function emitReconsult(msg: string) {
@@ -25,18 +22,9 @@ export function getEgressReconsultLog(): string[] {
   return [...reconsultLog];
 }
 
-/**
- * Re-consult PIM on the actual payload right before egress.
- * Spec hfst 28: een eerder ALLOW-besluit op de input geldt niet automatisch
- * voor de output die naar buiten gaat. Daarom hier nogmaals detectie +
- * draftCheck op de exacte string die over de lijn zou gaan.
- */
 async function reconsultPayload(payload: CertifiedPayload): Promise<{ ok: true } | { ok: false; reason: string }> {
   const text = payload.text;
-  // Spec hfst 28 + verificatie-laag: forceer async NER zodat second-pass
-  // dezelfde detector-coverage heeft als de input-fase. Een sync-only
-  // re-consult zou namen die alleen door de SLM gevonden worden missen.
-  const spans = await runRegistry(text, { profileId: payload.profileId ?? DEFAULT_PROFILE, enableAsync: true });
+  const spans = await runRegistry(text, { detectionSettings: payload.detectionSettings, enableAsync: true });
   const directPii = spans.filter((s) => !s.contextual);
   const HIGH: ReadonlySet<string> = new Set(["bsn", "iban", "email", "phone", "address", "student_id"]);
   let score = 0;
@@ -47,13 +35,7 @@ async function reconsultPayload(payload: CertifiedPayload): Promise<{ ok: true }
     score >= 0.65 ? "critical" : score >= 0.40 ? "high" : score >= 0.18 ? "medium" : "low";
 
   if (directPii.length > 0) {
-    return {
-      ok: false,
-      reason: `Egress re-consult BLOCK: ${directPii.length} directe PII in payload (${directPii
-        .map((s) => s.category)
-        .slice(0, 3)
-        .join(", ")})`,
-    };
+    return { ok: false, reason: `Egress re-consult BLOCK: ${directPii.length} directe PII in payload` };
   }
   if (riskLevel === "high" || riskLevel === "critical") {
     return { ok: false, reason: `Egress re-consult BLOCK: risk=${riskLevel}` };
@@ -61,7 +43,7 @@ async function reconsultPayload(payload: CertifiedPayload): Promise<{ ok: true }
   const check = await draftCheckWithRegistry(
     { mode: "anonymous", text, rawHadPii: false },
     "anonymous",
-    payload.profileId ?? DEFAULT_PROFILE,
+    payload.detectionSettings,
     { async: true },
   );
   if (check.status === "fail") {
@@ -75,12 +57,6 @@ export interface EgressResult {
   reason: string;
 }
 
-/**
- * Spec derde analyse §4.7 — alle egress-acties accepteren UITSLUITEND
- * een `CertifiedPayload`. Ongetypeerde tekst wordt fail-closed afgewezen.
- * Copy/export/print/share doen nu DEZELFDE async payload-re-consult als
- * send_external_ai (eerder alleen daar).
- */
 export async function executeAction(
   decision: PimDecision,
   payload: CertifiedPayload,
@@ -89,9 +65,6 @@ export async function executeAction(
     return { executed: false, reason: `Geblokkeerd door PIM: ${decision.reasonCode}` };
   }
 
-  // Belt + braces: ongeacht het besluit blokkeren we hier nogmaals elke
-  // niet-gecertificeerde payload op alle uitgaande paden. Lokale acties
-  // (display/save_local/restore) mogen wel met andere payloadtypes werken.
   const egressActions: PimDecision["action"][] = ["copy", "export_file", "print", "share", "send_external_ai"];
   if (egressActions.includes(decision.action) && payload.payloadType !== "draft_anonymous_certified") {
     emitReconsult(`Egress guard BLOCK: payloadType='${payload.payloadType}' niet toegestaan voor '${decision.action}'.`);
@@ -102,7 +75,6 @@ export async function executeAction(
     case "display":
     case "save_local":
     case "restore":
-      // Lokaal — UI handelt het af; egress guard markeert "uitgevoerd".
       return { executed: true, reason: "Lokale actie uitgevoerd binnen browser." };
 
     case "copy": {
@@ -122,7 +94,6 @@ export async function executeAction(
       const reconsult = await reconsultPayload(payload);
       if (!reconsult.ok) { emitReconsult(reconsult.reason); return { executed: false, reason: reconsult.reason }; }
       emitReconsult(`Egress print re-consult PASS (${payload.text.length} chars).`);
-      // Open een sandboxed print-frame met alleen de geaccepteerde tekst.
       const w = window.open("", "_blank", "width=600,height=600");
       if (!w) return { executed: false, reason: "Popup geblokkeerd door browser." };
       w.document.write(`<pre style="font-family:ui-monospace,monospace;white-space:pre-wrap;padding:24px">${escapeHtml(payload.text)}</pre>`);
@@ -138,7 +109,6 @@ export async function executeAction(
       emitReconsult(`Egress share re-consult PASS (${payload.text.length} chars).`);
       const navAny = navigator as Navigator & { share?: (d: { text?: string }) => Promise<void> };
       if (!navAny.share) {
-        // Fallback: clipboard
         try {
           await navigator.clipboard.writeText(payload.text);
           return { executed: true, reason: "Web Share niet beschikbaar — gekopieerd naar klembord als fallback." };
@@ -171,22 +141,10 @@ export async function executeAction(
     }
 
     case "send_external_ai": {
-      // Spec hfst 28: per egress-call OPNIEUW PIM consulteren op de
-      // werkelijke payload. Een eerder ALLOW op de input is niet genoeg —
-      // de string die over de lijn gaat moet zelfstandig schoon zijn.
       const reconsult = await reconsultPayload(payload);
-      if (!reconsult.ok) {
-        emitReconsult(reconsult.reason);
-        return { executed: false, reason: reconsult.reason };
-      }
-      emitReconsult(`Egress re-consult PASS (async NER incl.) (${payload.text.length} chars) — geen externe endpoint geconfigureerd, simulatie.`);
-      // In productie wordt hier een fetch gedaan naar de geconfigureerde
-      // externe AI. De runtimeHardening fetch-wrapper logt + filtert dat
-      // verkeer al; deze re-consult is de tweede sluis.
-      return {
-        executed: true,
-        reason: "Anonymous payload zou nu naar externe AI gaan (re-consult PASS). Geen endpoint geconfigureerd in deze build — simulatie.",
-      };
+      if (!reconsult.ok) { emitReconsult(reconsult.reason); return { executed: false, reason: reconsult.reason }; }
+      emitReconsult(`Egress re-consult PASS (${payload.text.length} chars) — simulatie.`);
+      return { executed: true, reason: "Re-consult PASS. Deze build simuleert de externe stap." };
     }
 
     default:
