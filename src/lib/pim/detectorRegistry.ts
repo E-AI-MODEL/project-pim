@@ -79,7 +79,12 @@ const EDU_LEXICON: { term: RegExp; category: PiiSpan["category"]; ruleId: string
   // (zelfde generalisatie als NER-LOC → "[adres]"). Bewust GECUREERD: steden
   // die óók een gewoon Nederlands woord zijn (Houten=hout, Gouda=kaas, Best,
   // Bunde, Ee, Hem, …) zijn weggelaten om false positives te vermijden.
-  { term: /\b(?:Amsterdam|Rotterdam|Den Haag|'s-Gravenhage|Utrecht|Eindhoven|Groningen|Tilburg|Almere|Breda|Nijmegen|Apeldoorn|Haarlem|Arnhem|Enschede|Amersfoort|Zaanstad|Haarlemmermeer|Den Bosch|'s-Hertogenbosch|Zwolle|Leiden|Leeuwarden|Maastricht|Dordrecht|Alphen aan den Rijn|Alkmaar|Emmen|Delft|Venlo|Deventer|Sittard|Helmond|Amstelveen|Hilversum|Heerlen|Hengelo|Purmerend|Roosendaal|Schiedam|Spijkenisse|Vlaardingen|Assen|Bergen op Zoom|Veenendaal|Katwijk|Lelystad|Hardenberg|Middelburg|Zeist|Nieuwegein|Roermond|Doetinchem|Terneuzen|Kerkrade|Barneveld|Woerden|Hoogeveen|Velsen)\b/gi, category: "address", ruleId: "lex.city", confidence: 0.7, contextual: false },
+  { term: /\b(?:Amsterdam|Rotterdam|Den Haag|'s-Gravenhage|Utrecht|Eindhoven|Groningen|Tilburg|Almere|Breda|Nijmegen|Apeldoorn|Haarlem|Arnhem|Enschede|Amersfoort|Zaanstad|Haarlemmermeer|Den Bosch|'s-Hertogenbosch|Zwolle|Leeuwarden|Maastricht|Dordrecht|Alphen aan den Rijn|Alkmaar|Emmen|Venlo|Deventer|Sittard|Helmond|Amstelveen|Hilversum|Heerlen|Hengelo|Purmerend|Roosendaal|Schiedam|Spijkenisse|Vlaardingen|Bergen op Zoom|Veenendaal|Katwijk|Lelystad|Hardenberg|Middelburg|Zeist|Nieuwegein|Roermond|Doetinchem|Terneuzen|Kerkrade|Barneveld|Woerden|Hoogeveen|Velsen)\b/gi, category: "address", ruleId: "lex.city", confidence: 0.7, contextual: false },
+  // Steden die als kleine-letterwoord óók gewone Nederlandse woorden zijn
+  // ("leiden" = werkwoord, "assen" = assen, "delft" = van delven). Hier dus
+  // HOOFDLETTER vereist (geen `i`-flag) — voorkomt dat "leerlingen leiden onder
+  // stress" als adres wordt geredigeerd. Kleine letters vallen terug op NER.
+  { term: /\b(?:Leiden|Assen|Delft)\b/g, category: "address", ruleId: "lex.city", confidence: 0.7, contextual: false },
 ];
 
 registerDetector({

@@ -20,7 +20,7 @@ const RULES: RuleDef[] = [
   // Identiteitsdocument (paspoort/ID-kaart/rijbewijs). Alleen ná een trefwoord
   // gematcht (variabele lookbehind) zodat we niet elk 7–10-teken codewoord
   // oppikken. Het trefwoord zelf blijft staan; alleen het nummer wordt PII.
-  { id: "rule.id_document", category: "id_document", regex: /(?<=\b(?:paspoort(?:nummer)?|identiteitsbewijs|identiteitskaart|id-?kaart|rijbewijs(?:nummer)?|documentnummer)\b[\s:#.]{0,4})[A-Z0-9]{7,10}\b/gi, confidence: 0.8 },
+  { id: "rule.id_document", category: "id_document", regex: /(?<=\b(?:paspoort(?:[-\s]?nummer)?|identiteitsbewijs|identiteits[-\s]?kaart|id[-\s]?kaart|rijbewijs(?:[-\s]?nummer)?|document[-\s]?nummer)\b[\s:#.]{0,4})[A-Z0-9]{7,10}\b/gi, confidence: 0.8 },
   { id: "rule.postcode", category: "postcode", regex: /\b\d{4}\s?[A-Z]{2}\b/g, confidence: 0.9 },
   { id: "rule.date", category: "date", regex: /\b\d{1,2}[-/]\d{1,2}[-/]\d{2,4}\b/g, confidence: 0.7 },
   // ISO-datum (jaar-maand-dag): 2025-03-12. Apart van rule.date, die alleen

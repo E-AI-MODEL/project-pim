@@ -107,8 +107,17 @@ export async function clearAllLocalData(options: ClearOptions = {}): Promise<Cle
               try {
                 const req = window.indexedDB.deleteDatabase(name);
                 req.onsuccess = () => { result.indexedDb += 1; resolve(); };
-                req.onerror = () => resolve();
-                req.onblocked = () => resolve();
+                req.onerror = () => {
+                  result.errors.push(`indexedDB "${name}": verwijderen mislukt`);
+                  resolve();
+                };
+                // onblocked: een open verbinding (bv. een nog-geladen model)
+                // houdt de DB vast. De delete blijft pending; we tellen 'm NIET
+                // als gewist en melden het, zodat de UI geen valse "klaar" geeft.
+                req.onblocked = () => {
+                  result.errors.push(`indexedDB "${name}": geblokkeerd door open verbinding — sluit tabbladen/herlaad`);
+                  resolve();
+                };
               } catch {
                 resolve();
               }
