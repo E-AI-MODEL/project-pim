@@ -354,12 +354,6 @@ function LocalModelStrip({
 
   return (
     <div className="space-y-2">
-      {nerAvailable && (
-        <NerVariantPicker
-          tone="dark"
-          onChange={() => { if (nerEnabled) onStartNer(); }}
-        />
-      )}
       <div className={`grid gap-2 ${compact ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1 md:grid-cols-2"}`}>
       <ModelCard
         icon="ner"
