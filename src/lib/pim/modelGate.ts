@@ -9,7 +9,7 @@
 
 import type { Action } from "./types";
 import { PIPELINE_PROFILES, type PipelineProfileId } from "./pipelineProfile";
-import type { ModelIntegrityRecord } from "./modelCatalog";
+import type { ModelIntegrityRecord } from "./modelIntegrity";
 
 const EGRESS_ACTIONS: ReadonlySet<Action> = new Set([
   "copy", "export_file", "print", "share", "send_external_ai",

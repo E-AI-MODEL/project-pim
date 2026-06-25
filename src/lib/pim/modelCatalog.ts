@@ -1,27 +1,19 @@
-// Model Catalog + Integrity Gate — spec hfst 9 / 14 / v3-2.
-// In de browser kunnen we de remote-weights niet vooraf hashen zonder de
-// download zelf te doen. Daarom pinnen we hier:
-//   1. modelId (canoniek, slug op HuggingFace)
-//   2. revision (commit SHA op HF — onveranderbaar)
-//   3. expectedConfigSha256 — hash over de config.json zoals door
-//      @huggingface/transformers gefetched. Deze hash wordt na load
-//      door de gate gecontroleerd. Mismatch = verified=false = block.
+// Model Catalog — spec hfst 9 / 14 / v3-2.
 //
-// Een placeholderhash ("PLACEHOLDER:*") zet de modelStatus op
-// `placeholder` en blokkeert productie-egress, maar staat dev/demo wel toe.
-// Deze keuze sluit aan op spec hfst 14: "Productie vereist concrete hashes".
+// Dit bestand bevat catalogusdata en types. Runtime-integriteit,
+// browser-local pins en registry-state staan in modelIntegrity.ts.
 
 export type ModelTask = "token-classification" | "text-classification" | "text-generation";
 export type ModelDevice = "webgpu" | "wasm";
 
 export interface CatalogEntry {
-  id: string;                    // canonical key
-  modelId: string;               // HF repo
-  revision: string;              // pinned commit / branch
+  id: string;
+  modelId: string;
+  revision: string;
   task: ModelTask;
   preferredDevice: ModelDevice;
   fallbackDevice: ModelDevice | null;
-  expectedConfigSha256: string;  // PLACEHOLDER:* until real hash measured
+  expectedConfigSha256: string;
   releaseStatus: "release-1" | "design-only";
   notes: string;
 }
@@ -29,20 +21,14 @@ export interface CatalogEntry {
 export const MODEL_CATALOG = {
   ner_multilingual: {
     id: "ner_multilingual",
-    // Upgrade dec-2026: DistilBERT-variant van Davlan/NER-HRL.
-    // Zelfde 10 talen (incl. NL) en zelfde PER/ORG/LOC head, maar ~2× kleiner
-    // en sneller dan de mBERT-base. Quantized ONNX ≈ 90–100 MB i.p.v. ~178 MB.
-    // Volledig Transformers.js v3-compatibel via dezelfde token-classification
-    // pipeline. De zwaardere mBERT-variant blijft beschikbaar als advanced opt-in.
     modelId: "Xenova/distilbert-base-multilingual-cased-ner-hrl",
     revision: "main",
     task: "token-classification",
     preferredDevice: "webgpu",
     fallbackDevice: "wasm",
-    // Trust-on-first-pin: SHA-256 over canonieke descriptor "<modelId>@<revision>".
-    expectedConfigSha256: "899e4c2201df87eab7dff5f11db301dbde86bbe027d39d2d45c51686977284c8",
+    expectedConfigSha256: "LOCAL_PIN:Xenova/distilbert-base-multilingual-cased-ner-hrl@main/config.json",
     releaseStatus: "release-1",
-    notes: "Multilingual DistilBERT NER (PER/ORG/LOC). Browser-ready ONNX, ~100 MB.",
+    notes: "Multilingual DistilBERT NER (PER/ORG/LOC). Browser-local config pin, ~100 MB.",
   },
   context_education: {
     id: "context_education",
@@ -70,10 +56,6 @@ export const MODEL_CATALOG = {
 
 export type CatalogKey = keyof typeof MODEL_CATALOG;
 
-// NER-modelvarianten — beide delen catalog-key "ner_multilingual", zodat de
-// model-gate (die op die key zoekt) ongewijzigd blijft. Elke variant heeft een
-// eigen, ECHT gemeten descriptor-hash (sha256("<modelId>@<revision>")), dus
-// bij omschakelen blijft de integriteitsstatus "verified" i.p.v. mismatch.
 export type NerVariantKey = "small" | "large";
 
 export interface NerVariant {
@@ -91,7 +73,7 @@ export const NER_VARIANTS: Record<NerVariantKey, NerVariant> = {
     key: "small",
     modelId: "Xenova/distilbert-base-multilingual-cased-ner-hrl",
     revision: "main",
-    expectedConfigSha256: "899e4c2201df87eab7dff5f11db301dbde86bbe027d39d2d45c51686977284c8",
+    expectedConfigSha256: "LOCAL_PIN:Xenova/distilbert-base-multilingual-cased-ner-hrl@main/config.json",
     label: "Compact (DistilBERT)",
     sizeLabel: "~100 MB",
     notes: "Lichter en sneller; iets lagere recall. Standaard.",
@@ -100,122 +82,22 @@ export const NER_VARIANTS: Record<NerVariantKey, NerVariant> = {
     key: "large",
     modelId: "Xenova/bert-base-multilingual-cased-ner-hrl",
     revision: "main",
-    expectedConfigSha256: "ce1483d11624f3813ca4df3d12e3abe28b21587c72d627f447edc08f0f4d2d6e",
+    expectedConfigSha256: "LOCAL_PIN:Xenova/bert-base-multilingual-cased-ner-hrl@main/config.json",
     label: "Volledig (mBERT)",
     sizeLabel: "~180 MB",
-    notes: "Zwaarder maar hogere recall — vindt meer namen/organisaties.",
+    notes: "Zwaarder maar hogere recall; vindt meer namen/organisaties.",
   },
 };
 
 export const DEFAULT_NER_VARIANT: NerVariantKey = "small";
 
-export type ModelIntegrityStatus = "unverified" | "placeholder" | "verified" | "mismatch" | "missing";
-
-export interface ModelIntegrityRecord {
-  key: CatalogKey;
-  modelId: string;
-  status: ModelIntegrityStatus;
-  expected: string;
-  actual: string | null;
-  message: string;
-  timestamp: string;
-}
-
-const REGISTRY = new Map<CatalogKey, ModelIntegrityRecord>();
-const listeners = new Set<(snapshot: ModelIntegrityRecord[]) => void>();
-
-function snapshot(): ModelIntegrityRecord[] {
-  return Array.from(REGISTRY.values());
-}
-
-function emit() {
-  const snap = snapshot();
-  for (const l of listeners) l(snap);
-}
-
-export function onModelIntegrity(cb: (s: ModelIntegrityRecord[]) => void): () => void {
-  listeners.add(cb);
-  cb(snapshot());
-  return () => listeners.delete(cb);
-}
-
-export function getModelIntegrity(): ModelIntegrityRecord[] {
-  return snapshot();
-}
-
-function isPlaceholder(hash: string): boolean {
-  return hash.startsWith("PLACEHOLDER:");
-}
-
-/** Compute SHA-256 of a string and return hex. */
-export async function sha256Hex(input: string): Promise<string> {
-  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input));
-  return Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, "0")).join("");
-}
-
-/**
- * Verify a model after load. The caller passes the actually-fetched
- * config.json string (or any deterministic descriptor). For PLACEHOLDER
- * entries we record `placeholder` — production gate treats this as block.
- */
-export async function verifyModel(
-  key: CatalogKey,
-  configText: string | null,
-  opts?: { modelId?: string; expected?: string },
-): Promise<ModelIntegrityRecord> {
-  const entry = MODEL_CATALOG[key];
-  // Override-pad voor varianten (bv. de grotere mBERT-NER onder dezelfde key).
-  const modelId = opts?.modelId ?? entry.modelId;
-  const expectedHash = opts?.expected ?? entry.expectedConfigSha256;
-  const ts = new Date().toISOString();
-  let rec: ModelIntegrityRecord;
-
-  if (configText === null) {
-    rec = {
-      key, modelId, status: "missing",
-      expected: expectedHash, actual: null,
-      message: "Geen config beschikbaar — model niet geladen.", timestamp: ts,
-    };
-  } else {
-    const actual = await sha256Hex(configText);
-    if (isPlaceholder(expectedHash)) {
-      rec = {
-        key, modelId, status: "placeholder",
-        expected: expectedHash, actual,
-        message: `Hash gemeten (${actual.slice(0, 12)}…). Catalog bevat placeholder — productie BLOCK.`,
-        timestamp: ts,
-      };
-    } else if (actual === expectedHash) {
-      rec = {
-        key, modelId, status: "verified",
-        expected: expectedHash, actual,
-        message: "SHA-256 match — model integer.", timestamp: ts,
-      };
-    } else {
-      rec = {
-        key, modelId, status: "mismatch",
-        expected: expectedHash, actual,
-        message: "SHA-256 mismatch — model AFGEWEZEN. Egress geblokkeerd.", timestamp: ts,
-      };
-    }
-  }
-
-  REGISTRY.set(key, rec);
-  emit();
-  return rec;
-}
-
-/** Production gate: only verified is acceptable for full egress. */
-export function isProductionVerified(key: CatalogKey): boolean {
-  const rec = REGISTRY.get(key);
-  return rec?.status === "verified";
-}
-
-/** Demo gate: placeholder + verified are both acceptable (mismatch never). */
-export function isDemoAcceptable(key: CatalogKey): boolean {
-  const rec = REGISTRY.get(key);
-  return rec?.status === "verified" || rec?.status === "placeholder";
-}
-
-/** Reset (for tests). */
-export function _resetIntegrityRegistry() { REGISTRY.clear(); emit(); }
+export {
+  _resetIntegrityRegistry,
+  getModelIntegrity,
+  isDemoAcceptable,
+  isProductionVerified,
+  onModelIntegrity,
+  sha256Hex,
+  verifyModel,
+} from "./modelIntegrity";
+export type { ModelIntegrityRecord, ModelIntegrityStatus } from "./modelIntegrity";

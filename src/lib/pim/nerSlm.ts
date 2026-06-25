@@ -1,9 +1,11 @@
 // Browser-side NER SLM using @huggingface/transformers.
-// Spec hfst 6 / 8 / 13: Wikineural multilingual NER, WebGPU → WASM fallback.
-// Loads model from HuggingFace CDN (jsDelivr-style). Stays local after first load.
+// Spec hfst 6 / 8 / 13: Wikineural multilingual NER, WebGPU -> WASM fallback.
+// Loads public model files from Hugging Face. User text, drafts and mappings are
+// never sent to Hugging Face; inference stays local in the browser after load.
 
 import type { PiiSpan } from "./types";
-import { verifyModel, NER_VARIANTS, DEFAULT_NER_VARIANT, type NerVariantKey } from "./modelCatalog";
+import { NER_VARIANTS, DEFAULT_NER_VARIANT, type NerVariantKey } from "./modelCatalog";
+import { verifyModel } from "./modelIntegrity";
 import { emitDebug } from "./debugBus";
 
 type AnyPipeline = (text: string, opts?: Record<string, unknown>) => Promise<unknown>;
@@ -18,13 +20,8 @@ interface NerOutput {
 }
 
 const CATALOG_KEY = "ner_multilingual" as const;
-// Actieve variant (compact/volledig). Beide vallen onder dezelfde catalog-key,
-// dus de model-gate verandert niet. De grotere variant is een bewuste opt-in
-// in het Expert lab voor hogere recall.
 let currentVariant: NerVariantKey = DEFAULT_NER_VARIANT;
 const activeModelId = () => NER_VARIANTS[currentVariant].modelId;
-// Catalog-driven: revision + expected SHA256 live in modelCatalog.ts.
-// Spec hfst 9: model is een sensor; integriteit wordt geverifieerd na load.
 
 let pipelinePromise: Promise<AnyPipeline> | null = null;
 let lastError: string | null = null;
@@ -64,20 +61,27 @@ export function onNerStatus(cb: (s: NerStatus) => void): () => void {
 export function getNerStatus(): NerStatus { return currentStatus; }
 export function isNerVerified(): boolean { return modelVerified; }
 
+function hfConfigUrl(modelId: string, revision: string): string {
+  return `https://huggingface.co/${modelId}/resolve/${encodeURIComponent(revision)}/config.json`;
+}
+
+async function fetchModelConfig(modelId: string, revision: string): Promise<string | null> {
+  try {
+    const res = await fetch(hfConfigUrl(modelId, revision), {
+      method: "GET",
+      cache: "force-cache",
+      credentials: "omit",
+      referrerPolicy: "no-referrer",
+    });
+    if (!res.ok) return null;
+    return await res.text();
+  } catch {
+    return null;
+  }
+}
+
 async function runIntegrityCheck(pipe: unknown): Promise<void> {
-  // ⚠️ Beperkte garantie: dit is een NAAM-PIN, geen weight-hash.
-  //
-  // We hashen een canonieke descriptor (modelId@revision) uit de catalog.
-  // Wijzigt iemand de catalog of probeert een ander modelId hier te landen,
-  // dan breekt de hash en blokt de gate. Dat is een afdwingbare configuratie-
-  // pin, géén supply-chain-bewijs: een verandering van de ONNX-weights bij
-  // HuggingFace zelf wordt hierdoor NIET gedetecteerd.
-  //
-  // TODO: vervang door echte content-hash van de gedownloade .onnx-bestanden
-  // zodra de transformers.js API de byte-stream eenduidig blootlegt.
   const variant = NER_VARIANTS[currentVariant];
-  const descriptor = `${variant.modelId}@${variant.revision}`;
-  // Sanity: confirm that the loaded pipeline actually claims this model.
   try {
     const p = pipe as { model?: { config?: { _name_or_path?: string; name_or_path?: string } } };
     const claimed = p?.model?.config?._name_or_path ?? p?.model?.config?.name_or_path;
@@ -85,13 +89,13 @@ async function runIntegrityCheck(pipe: unknown): Promise<void> {
       console.warn("[PIM SLM] loaded model id mismatch:", claimed);
     }
   } catch { /* swallow */ }
-  // Variant-specifieke hash meegeven, zodat ook de grotere mBERT als "verified"
-  // geldt en de egress-gate niet onterecht blokkeert.
-  const rec = await verifyModel(CATALOG_KEY, descriptor, {
+
+  const configText = await fetchModelConfig(variant.modelId, variant.revision);
+  const rec = await verifyModel(CATALOG_KEY, configText, {
     modelId: variant.modelId,
     expected: variant.expectedConfigSha256,
   });
-  modelVerified = rec.status === "verified" || rec.status === "placeholder";
+  modelVerified = rec.status === "verified";
 }
 
 async function detectWebGpu(): Promise<boolean> {
@@ -101,11 +105,6 @@ async function detectWebGpu(): Promise<boolean> {
 }
 
 export async function loadNerSlm(): Promise<AnyPipeline | null> {
-  // Guard ook het early-return-pad: bij een eerder GEFAALDE load is
-  // pipelinePromise een afgewezen promise. Die hier rechtstreeks teruggeven
-  // zou elke volgende await laten THROWEN i.p.v. veilig null op te leveren —
-  // waardoor detectPersonsSlm de hele detectie liet klappen. Nu funnelt elke
-  // caller door dezelfde catch (→ null) en valt de pipeline terug op regex.
   if (pipelinePromise) {
     try { return await pipelinePromise; } catch { return null; }
   }
@@ -113,11 +112,8 @@ export async function loadNerSlm(): Promise<AnyPipeline | null> {
 
   pipelinePromise = (async () => {
     const tf = await import("@huggingface/transformers");
-    // Allow remote model loading from HF CDN; disable local-only.
     tf.env.allowLocalModels = false;
     tf.env.allowRemoteModels = true;
-    // Use jsDelivr/HF CDN
-    // tf.env.remoteHost defaults to https://huggingface.co/ — keep it.
 
     const wantGpu = await detectWebGpu();
     const device: "webgpu" | "wasm" = wantGpu ? "webgpu" : "wasm";
@@ -128,11 +124,13 @@ export async function loadNerSlm(): Promise<AnyPipeline | null> {
       }
     };
 
-    const modelId = activeModelId();
+    const variant = NER_VARIANTS[currentVariant];
+    const modelId = variant.modelId;
     try {
       const pipe = await tf.pipeline("token-classification", modelId, {
         device,
         dtype: device === "webgpu" ? "fp16" : "q8",
+        revision: variant.revision,
         progress_callback,
       } as Record<string, unknown>);
       usedRuntime = device;
@@ -140,11 +138,10 @@ export async function loadNerSlm(): Promise<AnyPipeline | null> {
       emit({ loading: false, ready: true, runtime: device, verified: modelVerified, progress: undefined });
       return pipe as unknown as AnyPipeline;
     } catch (e1) {
-      // Fallback to WASM if WebGPU failed
       if (device === "webgpu") {
         try {
           const pipe = await tf.pipeline("token-classification", modelId, {
-            device: "wasm", dtype: "q8", progress_callback,
+            device: "wasm", dtype: "q8", revision: variant.revision, progress_callback,
           } as Record<string, unknown>);
           usedRuntime = "wasm";
           await runIntegrityCheck(pipe);
@@ -162,9 +159,6 @@ export async function loadNerSlm(): Promise<AnyPipeline | null> {
     }
   })();
 
-  // BELANGRIJK: pipelinePromise NIET nul-zetten op fail. Bij gelijktijdige
-  // callers (try.tsx + PipelineStepsBar) zou anders elke waiter een nieuwe
-  // download triggeren. Wie wil retryen roept retryNerSlm() expliciet aan.
   try { return await pipelinePromise; } catch { return null; }
 }
 
@@ -179,7 +173,7 @@ export function retryNerSlm(): void {
 
 export function getNerVariant(): NerVariantKey { return currentVariant; }
 
-/** Best-effort: verwijder de gecachte weights van één model uit de transformers-cache. */
+/** Best-effort: verwijder de gecachte weights van een model uit de transformers-cache. */
 async function purgeModelCache(modelId: string): Promise<void> {
   try {
     if (typeof caches === "undefined") return;
@@ -190,7 +184,7 @@ async function purgeModelCache(modelId: string): Promise<void> {
 }
 
 /**
- * Wissel van NER-variant (compact ↔ volledig). Reset de pipeline zodat de
+ * Wissel van NER-variant (compact <-> volledig). Reset de pipeline zodat de
  * volgende loadNerSlm() de gekozen modelgewichten ophaalt. Caller beslist of
  * er meteen opnieuw geladen wordt (bewuste download-actie).
  */
@@ -199,9 +193,9 @@ export function setNerVariant(variant: NerVariantKey): void {
   const previousModelId = NER_VARIANTS[currentVariant].modelId;
   currentVariant = variant;
   retryNerSlm();
-  void purgeModelCache(previousModelId); // oude weights opruimen — bespaart ruimte
+  void purgeModelCache(previousModelId);
   emit({ modelId: activeModelId() });
-  emitDebug("model.ner.status", `NER-variant gewisseld → ${NER_VARIANTS[variant].label}`, {
+  emitDebug("model.ner.status", `NER-variant gewisseld -> ${NER_VARIANTS[variant].label}`, {
     modelId: activeModelId(),
   });
 }
@@ -213,7 +207,6 @@ export async function detectPersonsSlm(text: string): Promise<PiiSpan[]> {
   if (!pipe) return [];
   try {
     const out = (await pipe(text, { aggregation_strategy: "simple" } as Record<string, unknown>)) as NerOutput[];
-    // Stap 1: defensieve sub-word merge — opeenvolgende spans van zelfde tag aaneenplakken.
     const aggregated: NerOutput[] = [];
     for (const ent of out) {
       const last = aggregated[aggregated.length - 1];
@@ -233,11 +226,6 @@ export async function detectPersonsSlm(text: string): Promise<PiiSpan[]> {
       const around = text.slice(Math.max(0, ent.start - 60), Math.min(text.length, ent.end + 20)).toLowerCase();
       const isSchoolish = /\b(basisschool|school|gymnasium|havo|vwo|vmbo|college|lyceum|onderwijs)\b/.test(around);
       if (tag.includes("PER")) {
-        // Drempels bewust laag: dit is een privacy-tool, dus recall (een naam
-        // missen) weegt zwaarder dan precisie (een woord teveel labelen). De
-        // kleinere DistilBERT-NER scoort gemiddeld lager dan de mBERT-base;
-        // met 0.45 als ondergrens viel een deel van de namen weg. Verlaagd naar
-        // 0.30 zodat het lichtere model meer namen oppikt.
         if (ent.score < 0.3) continue;
         spans.push({
           start: ent.start, end: ent.end, text: surface,
