@@ -48,9 +48,9 @@ export const MODEL_CATALOG = {
     task: "text-generation",
     preferredDevice: "webgpu",
     fallbackDevice: null,
-    expectedConfigSha256: "PLACEHOLDER:qwen2-5-0-5b-instruct-q4f16",
-    releaseStatus: "design-only",
-    notes: "Browser-LLM rewrite via @mlc-ai/web-llm (~400MB, on-demand).",
+    expectedConfigSha256: "LOCAL_PIN:Qwen2.5-0.5B-Instruct-q4f16_1-MLC@main/web-llm-manifest",
+    releaseStatus: "release-1",
+    notes: "Browser-local Qwen rewrite via @mlc-ai/web-llm (~400MB, on-demand).",
   },
 } as const satisfies Record<string, CatalogEntry>;
 
