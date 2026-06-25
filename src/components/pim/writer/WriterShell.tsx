@@ -19,6 +19,7 @@ import {
 import { useNerSpans } from "@/hooks/useNerSpans";
 import { usePimSettings } from "@/hooks/usePimSettings";
 import { LiveTechMonitor } from "@/components/pim/start-go/LiveTechMonitor";
+import { NerVariantPicker } from "@/components/pim/start-go/NerVariantPicker";
 import { GENERALIZATIONS, DEFAULT_AUTO_REDACT, CATEGORY_LABELS } from "./pimGeneralizations";
 import {
   createPimPlugin, pimPluginKey, extractPlain, spanToRange, buildDecorations,
@@ -420,6 +421,10 @@ function WriterToolbar({
         </PopoverTrigger>
         <PopoverContent align="end" className="w-80 p-3 space-y-3 max-h-[70vh] overflow-y-auto">
           <NerToggleRow nerStatus={nerStatus} onStartNer={onStartNer} />
+          <NerVariantPicker
+            tone="light"
+            onChange={() => { if (nerStatus?.ready || nerStatus?.loading) onStartNer(); }}
+          />
 
           <div className="h-px bg-border/40" />
 

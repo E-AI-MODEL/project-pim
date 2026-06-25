@@ -13,6 +13,7 @@ import { useNerSpans } from "@/hooks/useNerSpans";
 import { usePimSettings } from "@/hooks/usePimSettings";
 import { emitDebug } from "@/lib/pim/debugBus";
 import { InputPanel } from "./InputPanel";
+import { NerVariantPicker } from "./NerVariantPicker";
 import { ModeTargetBar } from "./ModeTargetBar";
 import { ResultPanel } from "./ResultPanel";
 import { AdvancedPanel } from "./AdvancedPanel";
@@ -353,7 +354,14 @@ function LocalModelStrip({
         : "Controleer eerst";
 
   return (
-    <div className={`grid gap-2 ${compact ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1 md:grid-cols-2"}`}>
+    <div className="space-y-2">
+      {nerAvailable && (
+        <NerVariantPicker
+          tone="dark"
+          onChange={() => { if (nerEnabled) onStartNer(); }}
+        />
+      )}
+      <div className={`grid gap-2 ${compact ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1 md:grid-cols-2"}`}>
       <ModelCard
         icon="ner"
         title="NER-SLM"
@@ -392,6 +400,7 @@ function LocalModelStrip({
         onClick={qwenReady ? onRewrite : onStartLlm}
         disabled={busy || llmBlocked || llmKind === "loading" || (qwenReady && !canRewrite)}
       />
+      </div>
     </div>
   );
 }
