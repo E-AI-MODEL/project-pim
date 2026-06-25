@@ -70,6 +70,45 @@ export const MODEL_CATALOG = {
 
 export type CatalogKey = keyof typeof MODEL_CATALOG;
 
+// NER-modelvarianten — beide delen catalog-key "ner_multilingual", zodat de
+// model-gate (die op die key zoekt) ongewijzigd blijft. Elke variant heeft een
+// eigen, ECHT gemeten descriptor-hash (sha256("<modelId>@<revision>")), dus
+// bij omschakelen blijft de integriteitsstatus "verified" i.p.v. mismatch.
+export type NerVariantKey = "small" | "large";
+
+export interface NerVariant {
+  key: NerVariantKey;
+  modelId: string;
+  revision: string;
+  expectedConfigSha256: string;
+  label: string;
+  sizeLabel: string;
+  notes: string;
+}
+
+export const NER_VARIANTS: Record<NerVariantKey, NerVariant> = {
+  small: {
+    key: "small",
+    modelId: "Xenova/distilbert-base-multilingual-cased-ner-hrl",
+    revision: "main",
+    expectedConfigSha256: "899e4c2201df87eab7dff5f11db301dbde86bbe027d39d2d45c51686977284c8",
+    label: "Compact (DistilBERT)",
+    sizeLabel: "~100 MB",
+    notes: "Lichter en sneller; iets lagere recall. Standaard.",
+  },
+  large: {
+    key: "large",
+    modelId: "Xenova/bert-base-multilingual-cased-ner-hrl",
+    revision: "main",
+    expectedConfigSha256: "ce1483d11624f3813ca4df3d12e3abe28b21587c72d627f447edc08f0f4d2d6e",
+    label: "Volledig (mBERT)",
+    sizeLabel: "~180 MB",
+    notes: "Zwaarder maar hogere recall — vindt meer namen/organisaties.",
+  },
+};
+
+export const DEFAULT_NER_VARIANT: NerVariantKey = "small";
+
 export type ModelIntegrityStatus = "unverified" | "placeholder" | "verified" | "mismatch" | "missing";
 
 export interface ModelIntegrityRecord {
@@ -119,36 +158,43 @@ export async function sha256Hex(input: string): Promise<string> {
  * config.json string (or any deterministic descriptor). For PLACEHOLDER
  * entries we record `placeholder` — production gate treats this as block.
  */
-export async function verifyModel(key: CatalogKey, configText: string | null): Promise<ModelIntegrityRecord> {
+export async function verifyModel(
+  key: CatalogKey,
+  configText: string | null,
+  opts?: { modelId?: string; expected?: string },
+): Promise<ModelIntegrityRecord> {
   const entry = MODEL_CATALOG[key];
+  // Override-pad voor varianten (bv. de grotere mBERT-NER onder dezelfde key).
+  const modelId = opts?.modelId ?? entry.modelId;
+  const expectedHash = opts?.expected ?? entry.expectedConfigSha256;
   const ts = new Date().toISOString();
   let rec: ModelIntegrityRecord;
 
   if (configText === null) {
     rec = {
-      key, modelId: entry.modelId, status: "missing",
-      expected: entry.expectedConfigSha256, actual: null,
+      key, modelId, status: "missing",
+      expected: expectedHash, actual: null,
       message: "Geen config beschikbaar — model niet geladen.", timestamp: ts,
     };
   } else {
     const actual = await sha256Hex(configText);
-    if (isPlaceholder(entry.expectedConfigSha256)) {
+    if (isPlaceholder(expectedHash)) {
       rec = {
-        key, modelId: entry.modelId, status: "placeholder",
-        expected: entry.expectedConfigSha256, actual,
+        key, modelId, status: "placeholder",
+        expected: expectedHash, actual,
         message: `Hash gemeten (${actual.slice(0, 12)}…). Catalog bevat placeholder — productie BLOCK.`,
         timestamp: ts,
       };
-    } else if (actual === entry.expectedConfigSha256) {
+    } else if (actual === expectedHash) {
       rec = {
-        key, modelId: entry.modelId, status: "verified",
-        expected: entry.expectedConfigSha256, actual,
+        key, modelId, status: "verified",
+        expected: expectedHash, actual,
         message: "SHA-256 match — model integer.", timestamp: ts,
       };
     } else {
       rec = {
-        key, modelId: entry.modelId, status: "mismatch",
-        expected: entry.expectedConfigSha256, actual,
+        key, modelId, status: "mismatch",
+        expected: expectedHash, actual,
         message: "SHA-256 mismatch — model AFGEWEZEN. Egress geblokkeerd.", timestamp: ts,
       };
     }

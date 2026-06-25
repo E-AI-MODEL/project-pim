@@ -47,6 +47,11 @@ const RULES: RuleDef[] = [
   // Naam na introductie-patroon: "ik heet Klaas", "mijn naam is Sanne", "noem mij Jan".
   // Variable-length lookbehind wordt door moderne V8/Safari ondersteund.
   { id: "rule.name_intro", category: "name", regex: /(?<=\b(?:ik heet|mijn naam is|noem (?:mij|me)|ik ben)\s+)[A-Z][a-zà-ÿ]+(?:\s+(?:van|de|der|den|ten|ter)\s+[A-Z][a-zà-ÿ]+|\s+[A-Z][a-zà-ÿ]+)?/g, confidence: 0.8 },
+  // Kleine-letter-namen na een STERKE introductie-cue ("ik heet jan jansen").
+  // Bewust zonder "ik ben" (dat geeft "ik ben ziek/moe" als false positive).
+  // `i`-flag laat de naam in willekeurige casing toe; merge ontdubbelt overlap
+  // met rule.name_intro. Iets lagere confidence dan de hoofdletter-variant.
+  { id: "rule.name_intro_ci", category: "name", regex: /(?<=\b(?:ik heet|mijn naam is|noem (?:mij|me))\s+)[a-zà-ÿ]{2,}(?:\s+(?:van|de|der|den|ten|ter)\s+[a-zà-ÿ]+|\s+[a-zà-ÿ]{2,})?/gi, confidence: 0.7 },
   // Social handle (@user).
   { id: "rule.social_handle", category: "social_handle", regex: /(?<![A-Za-z0-9])@[A-Za-z0-9_]{3,}/g, confidence: 0.75 },
   // Geboortedatum/datum in tekst: "12 januari 1985" — NL maanden.

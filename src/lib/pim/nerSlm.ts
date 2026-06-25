@@ -3,7 +3,7 @@
 // Loads model from HuggingFace CDN (jsDelivr-style). Stays local after first load.
 
 import type { PiiSpan } from "./types";
-import { verifyModel, MODEL_CATALOG } from "./modelCatalog";
+import { verifyModel, NER_VARIANTS, DEFAULT_NER_VARIANT, type NerVariantKey } from "./modelCatalog";
 import { emitDebug } from "./debugBus";
 
 type AnyPipeline = (text: string, opts?: Record<string, unknown>) => Promise<unknown>;
@@ -18,7 +18,11 @@ interface NerOutput {
 }
 
 const CATALOG_KEY = "ner_multilingual" as const;
-const MODEL_ID = MODEL_CATALOG[CATALOG_KEY].modelId;
+// Actieve variant (compact/volledig). Beide vallen onder dezelfde catalog-key,
+// dus de model-gate verandert niet. De grotere variant is een bewuste opt-in
+// in het Expert lab voor hogere recall.
+let currentVariant: NerVariantKey = DEFAULT_NER_VARIANT;
+const activeModelId = () => NER_VARIANTS[currentVariant].modelId;
 // Catalog-driven: revision + expected SHA256 live in modelCatalog.ts.
 // Spec hfst 9: model is een sensor; integriteit wordt geverifieerd na load.
 
@@ -40,7 +44,7 @@ export interface NerStatus {
 }
 
 let currentStatus: NerStatus = {
-  loading: false, ready: false, runtime: null, error: null, modelId: MODEL_ID, verified: false,
+  loading: false, ready: false, runtime: null, error: null, modelId: activeModelId(), verified: false,
 };
 
 function emit(patch: Partial<NerStatus>) {
@@ -71,8 +75,8 @@ async function runIntegrityCheck(pipe: unknown): Promise<void> {
   //
   // TODO: vervang door echte content-hash van de gedownloade .onnx-bestanden
   // zodra de transformers.js API de byte-stream eenduidig blootlegt.
-  const revision = (MODEL_CATALOG as Record<string, { revision: string }>)[CATALOG_KEY].revision;
-  const descriptor = `${MODEL_ID}@${revision}`;
+  const variant = NER_VARIANTS[currentVariant];
+  const descriptor = `${variant.modelId}@${variant.revision}`;
   // Sanity: confirm that the loaded pipeline actually claims this model.
   try {
     const p = pipe as { model?: { config?: { _name_or_path?: string; name_or_path?: string } } };
@@ -81,7 +85,12 @@ async function runIntegrityCheck(pipe: unknown): Promise<void> {
       console.warn("[PIM SLM] loaded model id mismatch:", claimed);
     }
   } catch { /* swallow */ }
-  const rec = await verifyModel(CATALOG_KEY, descriptor);
+  // Variant-specifieke hash meegeven, zodat ook de grotere mBERT als "verified"
+  // geldt en de egress-gate niet onterecht blokkeert.
+  const rec = await verifyModel(CATALOG_KEY, descriptor, {
+    modelId: variant.modelId,
+    expected: variant.expectedConfigSha256,
+  });
   modelVerified = rec.status === "verified" || rec.status === "placeholder";
 }
 
@@ -119,8 +128,9 @@ export async function loadNerSlm(): Promise<AnyPipeline | null> {
       }
     };
 
+    const modelId = activeModelId();
     try {
-      const pipe = await tf.pipeline("token-classification", MODEL_ID, {
+      const pipe = await tf.pipeline("token-classification", modelId, {
         device,
         dtype: device === "webgpu" ? "fp16" : "q8",
         progress_callback,
@@ -133,7 +143,7 @@ export async function loadNerSlm(): Promise<AnyPipeline | null> {
       // Fallback to WASM if WebGPU failed
       if (device === "webgpu") {
         try {
-          const pipe = await tf.pipeline("token-classification", MODEL_ID, {
+          const pipe = await tf.pipeline("token-classification", modelId, {
             device: "wasm", dtype: "q8", progress_callback,
           } as Record<string, unknown>);
           usedRuntime = "wasm";
@@ -165,6 +175,23 @@ export function retryNerSlm(): void {
   usedRuntime = null;
   lastError = null;
   emit({ loading: false, ready: false, error: null, runtime: null, verified: false });
+}
+
+export function getNerVariant(): NerVariantKey { return currentVariant; }
+
+/**
+ * Wissel van NER-variant (compact ↔ volledig). Reset de pipeline zodat de
+ * volgende loadNerSlm() de gekozen modelgewichten ophaalt. Caller beslist of
+ * er meteen opnieuw geladen wordt (bewuste download-actie).
+ */
+export function setNerVariant(variant: NerVariantKey): void {
+  if (variant === currentVariant) return;
+  currentVariant = variant;
+  retryNerSlm();
+  emit({ modelId: activeModelId() });
+  emitDebug("model.ner.status", `NER-variant gewisseld → ${NER_VARIANTS[variant].label}`, {
+    modelId: activeModelId(),
+  });
 }
 
 export function getNerLastError(): string | null { return lastError; }

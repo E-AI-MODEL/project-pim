@@ -74,6 +74,12 @@ const EDU_LEXICON: { term: RegExp; category: PiiSpan["category"]; ruleId: string
   // Generieke schoolnaam-patronen die regex.school mist (bv. "het Stedelijk Lyceum", "OBS De Regenboog").
   { term: /\b(?:OBS|RKBS|PCBS|CBS|SBO|SO|VSO|ISK)\s+[A-Z][\wà-ÿ]+(?:\s+[A-Z]?[\wà-ÿ]+){0,3}\b/g, category: "school", ruleId: "lex.school_prefix", confidence: 0.8, contextual: false },
   { term: /\b(?:Lyceum|Gymnasium|College|Scholengemeenschap|Praktijkschool|Mavo|Atheneum)\s+[A-Z][\wà-ÿ]+(?:\s+[A-Z]?[\wà-ÿ]+){0,2}\b/g, category: "school", ruleId: "lex.school_suffix", confidence: 0.75, contextual: false },
+  // NL-steden — case-insensitive (`gi`), zodat ook kleine letters ("amsterdam")
+  // worden gevangen; de cased NER-modellen missen dat. Categorie `address`
+  // (zelfde generalisatie als NER-LOC → "[adres]"). Bewust GECUREERD: steden
+  // die óók een gewoon Nederlands woord zijn (Houten=hout, Gouda=kaas, Best,
+  // Bunde, Ee, Hem, …) zijn weggelaten om false positives te vermijden.
+  { term: /\b(?:Amsterdam|Rotterdam|Den Haag|'s-Gravenhage|Utrecht|Eindhoven|Groningen|Tilburg|Almere|Breda|Nijmegen|Apeldoorn|Haarlem|Arnhem|Enschede|Amersfoort|Zaanstad|Haarlemmermeer|Den Bosch|'s-Hertogenbosch|Zwolle|Leiden|Leeuwarden|Maastricht|Dordrecht|Alphen aan den Rijn|Alkmaar|Emmen|Delft|Venlo|Deventer|Sittard|Helmond|Amstelveen|Hilversum|Heerlen|Hengelo|Purmerend|Roosendaal|Schiedam|Spijkenisse|Vlaardingen|Assen|Bergen op Zoom|Veenendaal|Katwijk|Lelystad|Hardenberg|Middelburg|Zeist|Nieuwegein|Roermond|Doetinchem|Terneuzen|Kerkrade|Barneveld|Woerden|Hoogeveen|Velsen)\b/gi, category: "address", ruleId: "lex.city", confidence: 0.7, contextual: false },
 ];
 
 registerDetector({
