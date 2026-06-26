@@ -1,48 +1,31 @@
-## Wat er nu dubbel staat
+# Plan — PiM UI/UX refactor (8 fases)
 
-**Homepage (`/` → `StartGoShell`)**
-- `AdvancedPanel` (uitklap): Profiel, Gevoeligheid, Detectoren per categorie, Modellen (Expert).
-- `LocalModelStrip` met daarboven een **NerVariantPicker** → variantkeuze leeft ook al in AdvancedPanel → Modellen.
-- Burgermenu → "Geavanceerde instellingen" opent dezelfde `AdvancedPanel`.
+Bron: `docs/pim-refactor/00-overzicht.md`. Backend is gezond, UI/UX is gefragmenteerd. We consolideren naar één design-systeem, één dashboard, vereenvoudigde homepage en schrijfmodus, en een lock-principe i.p.v. silent blocks.
 
-**Schrijfpagina (`/schrijven` → `WriterShell`)**
-- `AdvancedPanel` (recent toegevoegd): Profiel, Gevoeligheid, Detectoren, Modellen.
-- `WriterToolbar` heeft een **Settings2-popover** met:
-  - NER aan/uit + NER-variant kiezen (zit ook in AdvancedPanel → Modellen)
-  - Per-categorie Uit / Markeer / Wis (Uit zit al in AdvancedPanel → Detectoren)
-  - Strenge cijfercontrole (writer-only)
+## Fases
 
-Resultaat: profielen, detectoren en NER-keuzes kun je nu op 2 plekken anders zetten, met kans op tegenstrijdige state.
+| # | Fase | Doel | Status |
+|---|------|------|--------|
+| 1 | Backend + lock | `PIM_RULES_ONLY_*` checks, `strictMode`, `ALLOW_WITH_WARNING` voor BERT-uit, `profileId` weg, `enhanceContextWithBert`, Qwen-verbeteringen | 🟡 in uitvoering — slice 1/4 (lock-principe in `decide()`) |
+| 2 | Design tokens | Eén token-systeem, glow/gradients weg, fonts terug naar Inter + IBM Plex Mono | ⬜ |
+| 3 | Model-status consolidatie | 9 plekken → ModelBar + mini-indicator | ⬜ |
+| 4 | Homepage strippen | `MonitorShell`-window weg, `AdvancedPanel` weg | ⬜ |
+| 5 | Schrijfmodus strippen | `LiveTechMonitor`/`AdvancedPanel` weg, mini-indicator | ⬜ |
+| 6 | Dashboard bouwen | `/dashboard` met 5 tabs + ModelBar + SettingsPanel + audit-log | ⬜ |
+| 7 | Navigatie | `/try`, `/trust`, `/pipeline` weg; BurgerMenu reorganiseren | ⬜ |
+| 8 | Cleanup | `pipelineProfile.ts` weg, `coerceDetectionSettings` shim weg, `modelGateFor` shim weg, tests updaten | ⬜ |
 
-## Doel
+## Fase 1 — sub-slices
 
-Per pagina precies **één** instellingenmenu: `AdvancedPanel`. Alle pagina-specifieke opties leven binnen dezelfde uitklap (extra props), zodat de gebruiker niet hoeft te zoeken.
+1. **Lock-principe in `decide()`** — nieuwe `strictMode` + `bertEnabled` velden op `DecideInput`. Activeert `PIM_RULES_ONLY_EXTERNAL_AI_BLOCK` en `PIM_RULES_ONLY_EXPORT_BLOCK` (al gedefinieerd in `flags.ts` maar nergens aangeroepen). Nieuwe flag `PIM_BERT_OFF_EGRESS_WARN` voor niet-strikt + BERT-uit. **Status: ✅ deze PR.**
+2. **`enhanceContextWithBert`** — nieuwe pure functie in `src/lib/pim/contextualGeneralization.ts` (of nieuw bestand) die BERT-name-spans gebruikt om context-detecties te versterken. Confidence ×0.7, span op contextwoord, niet op naam.
+3. **`profileId` deprecaten** — uit `usePimSettings`, `types.ts`, `DetailsDrawer`. Optional houden in `PimDecision` t/m fase 8 (modelGateFor-shim).
+4. **Qwen-overhaul** — sampling, `dedupeSentences`, fallback-discriminatie, streaming/non-streaming unificeren. Vereist doc 05 §1.
 
-## Aanpak
+## Acceptatie (per docs/00 §8)
+- `decide()` retourneert `PIM_RULES_ONLY_*` in strikte modus met BERT uit
+- `decide()` retourneert `ALLOW_WITH_WARNING` in niet-strikt met BERT uit bij externe AI / export
+- Alle bestaande tests blijven groen
 
-### 1. Homepage (`/`)
-- Verwijder `NerVariantPicker` uit `LocalModelStrip`. `LocalModelStrip` blijft puur "operationeel" (model downloaden, Qwen herschrijven, status zien) — geen configuratie.
-- Variantkeuze blijft enkel in `AdvancedPanel` → tab **Modellen** (al aanwezig in Expert). Promoveer dit blok ook naar de Basis-modus zodat hij vindbaar is zonder Expert-toggle.
-
-### 2. Schrijfpagina (`/schrijven`)
-- Verwijder de Settings2-popover uit `WriterToolbar` volledig. Toolbar houdt alleen formatteer-, import/export- en wis-knoppen.
-- Breid `AdvancedPanel` uit met optionele writer-secties via nieuwe props (alleen renderen als props gezet zijn):
-  - **Per-categorie modus** (`Uit / Markeer / Wis`) — vervangt zowel de "Detectoren-Uit"-rij als het writer-popover-blok. Op `/` bestaat alleen `Uit / Aan`; op `/schrijven` voegen we de derde stand `Wis` toe. Eén enkele lijst, één bron van waarheid.
-  - **Strenge cijfercontrole** (BSN-elfproef, IBAN mod-97, kenteken, student-ID context) — alleen op `/schrijven`.
-- NER aanzetten / variant kiezen verloopt op beide pagina's via de Modellen-tab van `AdvancedPanel`. `WriterShell` koppelt z'n `startNer` aan dezelfde knop.
-
-### 3. Gedeelde gedragingen
-- `pim:open-advanced` event uit het burgermenu blijft hetzelfde — opent en scrollt naar `AdvancedPanel` op de huidige pagina.
-- Labeltekst van de uitklap toont per pagina hoeveel overrides actief zijn (al aanwezig); breid uit met aantal "Wis"-categorieën op `/schrijven`.
-
-## Bestanden die wijzigen
-
-- `src/components/pim/start-go/AdvancedPanel.tsx` — extra optionele props (`categoryMode`, `onCategoryModeChange`, `strict`, `onStrictChange`), Modellen-blok ook in Basis tonen.
-- `src/components/pim/start-go/StartGoShell.tsx` — `NerVariantPicker` weghalen uit `LocalModelStrip`, panel-props ongewijzigd.
-- `src/components/pim/writer/WriterShell.tsx` — Settings2-popover en bijbehorende helpers (`CategoryModeToggle`, `NerToggleRow`, NER-imports in toolbar) verwijderen, `AdvancedPanel` aanroepen met de writer-specifieke props.
-
-## Niet in scope
-
-- Geen wijziging aan beslislogica in `src/lib/pim/*` of aan `usePimSettings`.
-- Geen UI-restyle van `AdvancedPanel` zelf — alleen inhoud uitbreiden.
-- Pagina's `/try`, `/pipeline`, etc. blijven ongemoeid.
+## Volgende stap
+Slice 1 oplevereren, dan wachten op docs 03-05 voor slices 2-4.

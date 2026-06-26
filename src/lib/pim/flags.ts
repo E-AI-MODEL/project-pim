@@ -40,6 +40,7 @@ export const PIM_FLAGS = {
   PIM_RULES_ONLY_EXPORT_BLOCK:        { ruleId: "pim.rules.only.export",          reasonCode: "RULES_ONLY_NO_EXPORT",    severity: "block", verdict: "BLOCK",              description: "Rules-only profiel mag geen bestanden exporteren — beperkte detectie." },
   PIM_PROFILE_DESIGN_ONLY_BLOCK:      { ruleId: "pim.profile.design.only",        reasonCode: "PROFILE_DESIGN_ONLY",     severity: "block", verdict: "BLOCK",              description: "Profiel is ontwerpvoorbereiding — geen egress toegestaan." },
   PIM_PAYLOAD_TYPE_EGRESS_BLOCK:      { ruleId: "pim.payload.type.egress",        reasonCode: "PAYLOAD_TYPE_FORBIDDEN",  severity: "block", verdict: "BLOCK",              description: "Alleen `draft_anonymous_certified` mag de browser verlaten." },
+  PIM_BERT_OFF_EGRESS_WARN:           { ruleId: "pim.bert.off.egress.warn",       reasonCode: "BERT_OFF_EGRESS",         severity: "warn",  verdict: "ALLOW_WITH_WARNING", description: "BERT staat uit — detectie is mogelijk niet volledig. Zet strikte modus aan om dit te blokkeren." },
 } as const satisfies Record<string, Omit<PimFlag, "flag">>;
 
 export type PimFlagCode = keyof typeof PIM_FLAGS;

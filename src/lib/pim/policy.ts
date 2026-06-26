@@ -26,6 +26,17 @@ export interface DecideInput {
   profileId?: PipelineProfileId;
   payloadType: PayloadType;
   thresholdOverrides?: Partial<Record<Action, number>>;
+  /**
+   * Of BERT (NER) actief is voor deze run. Default true (backwards compat).
+   * Bij `false` worden externe-AI en export in strikte modus geblokkeerd,
+   * en in niet-strikt voorzien van `ALLOW_WITH_WARNING`.
+   */
+  bertEnabled?: boolean;
+  /**
+   * Strikte modus: gebruiker heeft het slot dichtgedaan. Bij BERT-uit worden
+   * externe AI en export geblokkeerd i.p.v. een waarschuwing.
+   */
+  strictMode?: boolean;
 }
 
 function fromFlag(
@@ -53,6 +64,8 @@ export function decide({
   detectionSettings = DEFAULT_DETECTION_SETTINGS,
   profileId,
   payloadType, thresholdOverrides,
+  bertEnabled = true,
+  strictMode = false,
 }: DecideInput): PimDecision {
   const base = {
     policyVersion: POLICY_VERSION,
@@ -78,6 +91,19 @@ export function decide({
     if (issue.toLowerCase().includes("residuele")) return fromFlag("PIM_RAW_PII_BLOCK", base, issue);
     if (issue.toLowerCase().includes("mode-mix")) return fromFlag("PIM_MODE_STATUS_MISMATCH", base, issue);
     return fromFlag("PIM_GUARD_FAILURE_BLOCK", base, issue);
+  }
+
+  // Lock-principe: BERT uit + egress.
+  //  - Strikt: externe AI en export worden geblokkeerd (`PIM_RULES_ONLY_*`).
+  //  - Niet-strikt: ALLOW_WITH_WARNING (`PIM_BERT_OFF_EGRESS_WARN`).
+  //  - copy / print / share blijven altijd toegestaan (verdere risk-check verderop).
+  if (!bertEnabled && isEgressAction) {
+    if (strictMode) {
+      if (action === "send_external_ai") return fromFlag("PIM_RULES_ONLY_EXTERNAL_AI_BLOCK", base);
+      if (action === "export_file") return fromFlag("PIM_RULES_ONLY_EXPORT_BLOCK", base);
+    } else if (action === "send_external_ai" || action === "export_file") {
+      return fromFlag("PIM_BERT_OFF_EGRESS_WARN", base);
+    }
   }
 
   if (mode === "pseudonymous") {
