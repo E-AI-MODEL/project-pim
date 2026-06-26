@@ -1,7 +1,6 @@
 import type { Action, Mode, PimDecision, PrivacySignals, DraftCheckResult, PayloadType } from "./types";
 import { PIM_FLAGS, type PimFlagCode } from "./flags";
-import { DEFAULT_DETECTION_SETTINGS, type DetectionLayerSettings } from "./detectionSettings";
-import type { PipelineProfileId } from "./pipelineProfile";
+import { DEFAULT_DETECTION_SETTINGS, usesBert, type DetectionLayerSettings } from "./detectionSettings";
 
 export const POLICY_VERSION = "pim.policy/v3-profile-free";
 
@@ -23,14 +22,14 @@ export interface DecideInput {
   draftCheck: DraftCheckResult;
   modelVerified: boolean;
   detectionSettings?: DetectionLayerSettings;
-  profileId?: PipelineProfileId;
   payloadType: PayloadType;
   thresholdOverrides?: Partial<Record<Action, number>>;
+  strictMode?: boolean;
 }
 
 function fromFlag(
   code: PimFlagCode,
-  base: Pick<PimDecision, "mode" | "action" | "riskLevel" | "policyVersion" | "timestamp" | "payloadType" | "detectionSettings" | "profileId">,
+  base: Pick<PimDecision, "mode" | "action" | "riskLevel" | "policyVersion" | "timestamp" | "payloadType" | "detectionSettings">,
   reason?: string,
 ): PimDecision {
   const f = PIM_FLAGS[code];
@@ -51,8 +50,7 @@ const EGRESS_ACTIONS: ReadonlySet<Action> = new Set([
 export function decide({
   mode, action, signals, draftCheck, modelVerified,
   detectionSettings = DEFAULT_DETECTION_SETTINGS,
-  profileId,
-  payloadType, thresholdOverrides,
+  payloadType, thresholdOverrides, strictMode = false,
 }: DecideInput): PimDecision {
   const base = {
     policyVersion: POLICY_VERSION,
@@ -61,15 +59,15 @@ export function decide({
     action,
     timestamp: new Date().toISOString(),
     detectionSettings,
-    profileId,
     payloadType,
   };
 
   const isEgressAction = EGRESS_ACTIONS.has(action);
+  const bertActive = usesBert(detectionSettings);
 
   if (isEgressAction && payloadType !== "draft_anonymous_certified") {
     return fromFlag("PIM_PAYLOAD_TYPE_EGRESS_BLOCK", base,
-      `Payload-type '${payloadType}' mag de browser niet verlaten — alleen 'draft_anonymous_certified'.`);
+      `Payload-type '${payloadType}' mag de browser niet verlaten, alleen 'draft_anonymous_certified'.`);
   }
 
   if (!modelVerified) return fromFlag("PIM_MODEL_INTEGRITY_BLOCK", base);
@@ -91,6 +89,24 @@ export function decide({
 
   if (mode === "anonymous") {
     if (action === "restore") return fromFlag("PIM_ANONYMOUS_RESTORE_BLOCK", base);
+
+    if (!bertActive && action === "send_external_ai") {
+      if (strictMode) {
+        return fromFlag("PIM_RULES_ONLY_EXTERNAL_AI_BLOCK", base,
+          "Strikte modus staat aan: naamherkenning is vereist voor externe AI. Zet naamherkenning aan of zet strikte modus uit.");
+      }
+      return fromFlag("PIM_RISK_NEAR_THRESHOLD_WARN", base,
+        "Naamherkenning staat uit: mogelijk niet alle gegevens gedetecteerd. Zet naamherkenning aan voor volledige controle.");
+    }
+
+    if (!bertActive && action === "export_file") {
+      if (strictMode) {
+        return fromFlag("PIM_RULES_ONLY_EXPORT_BLOCK", base,
+          "Strikte modus staat aan: naamherkenning is vereist voor export. Zet naamherkenning aan of zet strikte modus uit.");
+      }
+      return fromFlag("PIM_RISK_NEAR_THRESHOLD_WARN", base,
+        "Naamherkenning staat uit: mogelijk niet alle gegevens gedetecteerd. Zet naamherkenning aan voor volledige controle.");
+    }
 
     const cats = new Set([...signals.directPii, ...signals.contextualPii].map((s) => s.category));
     const specialCombo = cats.has("context_small_group") && (cats.has("context_care") || cats.has("context_incident"));
