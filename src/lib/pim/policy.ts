@@ -1,4 +1,4 @@
-import type { Action, Mode, PimDecision, PrivacySignals, DraftCheckResult, PayloadType } from "./types";
+import type { Action, Mode, PimDecision, PrivacySignals, DraftCheckResult, PayloadType, LegacyProfileId } from "./types";
 import { PIM_FLAGS, type PimFlagCode } from "./flags";
 import { DEFAULT_DETECTION_SETTINGS, usesBert, type DetectionLayerSettings } from "./detectionSettings";
 
@@ -22,6 +22,7 @@ export interface DecideInput {
   draftCheck: DraftCheckResult;
   modelVerified: boolean;
   detectionSettings?: DetectionLayerSettings;
+  profileId?: LegacyProfileId;
   payloadType: PayloadType;
   thresholdOverrides?: Partial<Record<Action, number>>;
   strictMode?: boolean;
