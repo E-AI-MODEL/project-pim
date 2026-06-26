@@ -12,6 +12,8 @@ export interface PimSettings {
   disabledCategories: ReadonlySet<PiiCategory>;
   setCategoryEnabled: (cat: PiiCategory, enabled: boolean) => void;
   integrity: ModelIntegrityRecord[];
+  strictMode: boolean;
+  setStrictMode: (value: boolean) => void;
   advancedPanelProps: AdvancedPanelProps;
 }
 
@@ -20,6 +22,7 @@ export function usePimSettings(): PimSettings {
   const [thresholdOverrides, setThresholdOverrides] = useState<Partial<Record<Action, number>>>({});
   const [disabledCategories, setDisabledCategories] = useState<ReadonlySet<PiiCategory>>(new Set());
   const [integrity, setIntegrity] = useState<ModelIntegrityRecord[]>([]);
+  const [strictMode, setStrictMode] = useState(false);
 
   useEffect(() => onModelIntegrity(setIntegrity), []);
 
@@ -46,5 +49,5 @@ export function usePimSettings(): PimSettings {
     onResetCategories: () => setDisabledCategories(new Set()),
   }), [detectionSettings, thresholdOverrides, disabledCategories, integrity]);
 
-  return { detectionSettings, setDetectionSettings, thresholdOverrides, disabledCategories, setCategoryEnabled, integrity, advancedPanelProps };
+  return { detectionSettings, setDetectionSettings, thresholdOverrides, disabledCategories, setCategoryEnabled, integrity, strictMode, setStrictMode, advancedPanelProps };
 }
