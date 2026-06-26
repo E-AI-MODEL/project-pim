@@ -1,4 +1,4 @@
-// Project PIM — core types
+// Project PIM core types
 export type Mode = "anonymous" | "pseudonymous";
 export type Action =
   | "display"
@@ -49,14 +49,14 @@ export interface PiiSpan {
   text: string;
   category: PiiCategory;
   ruleId: string;
-  confidence: number; // 0..1
+  confidence: number;
   contextual: boolean;
 }
 
 export interface PrivacySignals {
   directPii: PiiSpan[];
   contextualPii: PiiSpan[];
-  riskScore: number; // 0..1
+  riskScore: number;
   riskLevel: RiskLevel;
   reasons: string[];
   ruleIds: string[];
@@ -65,7 +65,7 @@ export interface PrivacySignals {
 export interface DraftCandidate {
   mode: Mode;
   text: string;
-  expectedTokens?: string[]; // for pseudonymous
+  expectedTokens?: string[];
   rawHadPii: boolean;
 }
 
@@ -92,7 +92,6 @@ export interface CertifiedPayload {
   mode: Mode;
   payloadType: PayloadType;
   detectionSettings?: import("./detectionSettings").DetectionLayerSettings;
-  profileId?: import("./pipelineProfile").PipelineProfileId;
   guardStatus: DraftCheckResult["status"];
 }
 
@@ -108,7 +107,6 @@ export interface PimDecision {
   timestamp: string;
   flag?: string;
   detectionSettings?: import("./detectionSettings").DetectionLayerSettings;
-  profileId?: import("./pipelineProfile").PipelineProfileId;
   payloadType?: PayloadType;
 }
 
