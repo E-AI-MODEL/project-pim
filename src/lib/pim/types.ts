@@ -87,11 +87,14 @@ export type PayloadType =
   | "restored"
   | "unknown";
 
+export type LegacyProfileId = import("./pipelineProfile").PipelineProfileId;
+
 export interface CertifiedPayload {
   text: string;
   mode: Mode;
   payloadType: PayloadType;
   detectionSettings?: import("./detectionSettings").DetectionLayerSettings;
+  profileId?: LegacyProfileId;
   guardStatus: DraftCheckResult["status"];
 }
 
@@ -107,6 +110,7 @@ export interface PimDecision {
   timestamp: string;
   flag?: string;
   detectionSettings?: import("./detectionSettings").DetectionLayerSettings;
+  profileId?: LegacyProfileId;
   payloadType?: PayloadType;
 }
 
