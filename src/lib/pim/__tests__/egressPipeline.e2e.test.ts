@@ -12,7 +12,6 @@ const allowDecision = (action: PimDecision["action"]): PimDecision => ({
   mode: "anonymous",
   action,
   timestamp: new Date().toISOString(),
-  profileId: "education-nl-full",
   payloadType: "draft_anonymous_certified",
 });
 
@@ -20,7 +19,6 @@ const certified = (text = "Clean anonymous text without direct identifiers."): C
   text,
   mode: "anonymous",
   payloadType: "draft_anonymous_certified",
-  profileId: "education-nl-rules-only",
   guardStatus: "pass",
 });
 
