@@ -11,4 +11,4 @@ The primary product flow is:
 3. create and review a safe version;
 4. allow only authorized output actions.
 
-## Non-negoti
+## Non-negotiable
