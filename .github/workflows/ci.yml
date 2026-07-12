@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   check:
-    name: Typecheck, advisory lint, test and build
+    name: Typecheck, lint, test, build and audit
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -42,8 +42,8 @@ jobs:
       - name: Typecheck
         run: bun run typecheck
 
-      - name: Advisory lint
-        run: bun run format && bun run lint || echo "Lint advisory failed; typecheck, tests and build remain blocking."
+      - name: Lint
+        run: bun run lint
 
       - name: Test
         run: bun run test
@@ -51,5 +51,5 @@ jobs:
       - name: Build
         run: bun run build
 
-      - name: Advisory dependency audit
-        run: bun audit || echo "Dependency audit advisory failed; review audit output before release."
+      - name: Dependency audit
+        run: bun audit
