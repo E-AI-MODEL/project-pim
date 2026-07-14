@@ -172,6 +172,13 @@ export function LiveTechMonitor({ trigger }: { trigger: React.ReactNode }) {
   useEffect(() => onModelIntegrity(setIntegrity), []);
   useEffect(() => subscribeDebug(setEvents), []);
 
+  // Slice C.1 — laat het BurgerMenu-item "Diagnostiek" dit paneel openen.
+  useEffect(() => {
+    const onOpen = () => setOpen(true);
+    window.addEventListener("pim:open-diagnostics", onOpen);
+    return () => window.removeEventListener("pim:open-diagnostics", onOpen);
+  }, []);
+
   // Lichte re-render zolang het paneel open is, voor "x ms geleden"-tellertjes.
   useEffect(() => {
     if (!open) return;
