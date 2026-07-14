@@ -622,14 +622,7 @@ function TryPage() {
     const d = previewDecision(action);
     queueMicrotask(() => tick("decide", performance.now() - t0));
     return d;
-  }, [
-    previewDecision,
-    action,
-    tick,
-    mode,
-    engineState.phase,
-    engineState.guard,
-  ]);
+  }, [previewDecision, action, tick, mode, engineState.phase, engineState.guard]);
 
   const onAct = async () => {
     setEgress(null);
