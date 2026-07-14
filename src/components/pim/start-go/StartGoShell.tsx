@@ -172,7 +172,15 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
       draftCheck: engine.state.guard?.status,
       payloadType: engine.state.payloadType,
     });
-  }, [result, mode, action, detectionSettings, modelSpans.length, engine.state.guard?.status, engine.state.payloadType]);
+  }, [
+    result,
+    mode,
+    action,
+    detectionSettings,
+    modelSpans.length,
+    engine.state.guard?.status,
+    engine.state.payloadType,
+  ]);
 
   const startNer = () => {
     if (!usesNerSlm) return;
@@ -232,12 +240,16 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
   const runQuickAction = async (editedText: string, quickAction: Action): Promise<EgressResult> => {
     if (!result) return { executed: false, reason: "no result" };
     const outcome = await engine.requestAction({ action: quickAction, payloadText: editedText });
-    emitDebug("pipeline.execute", outcome.executed ? "quick egress toegestaan" : "quick egress geblokt", {
-      executed: outcome.executed,
-      reason: outcome.reason,
-      action: quickAction,
-      quick: true,
-    });
+    emitDebug(
+      "pipeline.execute",
+      outcome.executed ? "quick egress toegestaan" : "quick egress geblokt",
+      {
+        executed: outcome.executed,
+        reason: outcome.reason,
+        action: quickAction,
+        quick: true,
+      },
+    );
     return { executed: outcome.executed, reason: outcome.reason };
   };
   const onExample = (e: Example) => {
