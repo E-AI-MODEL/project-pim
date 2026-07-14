@@ -1,5 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Action, Mode, PiiCategory } from "@/lib/pim";
+import { usesBert, detectionSettingsToNerVariant, setNerVariant } from "@/lib/pim";
+import { useNerSpans } from "@/hooks/useNerSpans";
 import { usePimSettings } from "@/hooks/usePimSettings";
 import { usePimEngine } from "@/hooks/usePimEngine";
 import { AppHeader } from "./AppHeader";
@@ -27,6 +29,38 @@ export function ProductShell({ mode }: { mode: ProductMode }) {
     () => new Set(DEFAULT_AUTO_REDACT),
   );
   const [writerStrict, setWriterStrict] = useState(false);
+  const [nerEnabled, setNerEnabled] = useState(false);
+  const [nerSourceText, setNerSourceText] = useState("");
+  const usesNerSlm = usesBert(settings.detectionSettings);
+
+  useEffect(() => {
+    const variant = detectionSettingsToNerVariant(settings.detectionSettings);
+    if (variant) setNerVariant(variant);
+  }, [settings.detectionSettings]);
+
+  // Modus-bewuste bron: schrijfmodus gebruikt de editor-tekst,
+  // quick/start gebruiken de shell-`text`. Zo valt een lege writer
+  // niet terug op oude Quick-tekst.
+  const activeNerText = mode === "write" ? nerSourceText : text;
+  const {
+    nerSpans,
+    nerStatus,
+    startNer: startNerLoad,
+  } = useNerSpans(activeNerText, { enabled: usesNerSlm && nerEnabled });
+
+  useEffect(() => {
+    if (!usesNerSlm) setNerEnabled(false);
+  }, [usesNerSlm]);
+
+  useEffect(() => {
+    if (usesNerSlm && nerStatus?.working) setNerEnabled(true);
+  }, [usesNerSlm, nerStatus?.working]);
+
+  const startNer = useCallback(() => {
+    if (!usesNerSlm) return;
+    setNerEnabled(true);
+    startNerLoad();
+  }, [startNerLoad, usesNerSlm]);
 
   const engineConfig = useMemo(
     () => ({
@@ -54,6 +88,8 @@ export function ProductShell({ mode }: { mode: ProductMode }) {
   useEffect(() => {
     const onReset = () => {
       setText("");
+      setNerSourceText("");
+      setNerEnabled(false);
       setWriterContent(null);
       setWriterAutoRedact(new Set(DEFAULT_AUTO_REDACT));
       setWriterStrict(false);
@@ -93,6 +129,13 @@ export function ProductShell({ mode }: { mode: ProductMode }) {
       setWriterAutoRedact,
       writerStrict,
       setWriterStrict,
+      usesNerSlm,
+      nerEnabled,
+      nerSpans,
+      nerStatus,
+      startNer,
+      nerSourceText,
+      setNerSourceText,
     }),
     [
       engineState,
@@ -107,6 +150,12 @@ export function ProductShell({ mode }: { mode: ProductMode }) {
       writerContent,
       writerAutoRedact,
       writerStrict,
+      usesNerSlm,
+      nerEnabled,
+      nerSpans,
+      nerStatus,
+      startNer,
+      nerSourceText,
     ],
   );
 
