@@ -12,7 +12,10 @@ export function LocalStatusPill() {
   useEffect(() => {
     const off1 = onSelfTest((r) => setSelfTestStatus(r.status));
     const off2 = onModelIntegrity(setIntegrity);
-    return () => { off1(); off2(); };
+    return () => {
+      off1();
+      off2();
+    };
   }, []);
 
   const hasModelMismatch = integrity.some((r) => r.status === "mismatch");
@@ -28,7 +31,8 @@ export function LocalStatusPill() {
   } else if (selfTestStatus === "fail") {
     status = "attention";
     label = "Controle nodig";
-    title = "De lokale basiscontrole draait, maar de self-test vraagt aandacht. Bekijk Trust voor details.";
+    title =
+      "De lokale basiscontrole draait, maar de self-test vraagt aandacht. Bekijk Trust voor details.";
   } else if (hasModelMismatch) {
     status = "attention";
     label = "Modelcheck nodig";
@@ -36,14 +40,14 @@ export function LocalStatusPill() {
   }
 
   const color =
-    status === "ok" ? "bg-green-500/15 text-green-400 border-green-500/30" :
-    status === "checking" ? "bg-sky-500/15 text-sky-300 border-sky-500/30" :
-    "bg-orange-500/15 text-orange-300 border-orange-500/30";
+    status === "ok"
+      ? "bg-green-500/15 text-green-400 border-green-500/30"
+      : status === "checking"
+        ? "bg-sky-500/15 text-sky-300 border-sky-500/30"
+        : "bg-orange-500/15 text-orange-300 border-orange-500/30";
 
   const dot =
-    status === "ok" ? "bg-green-400" :
-    status === "checking" ? "bg-sky-300" :
-    "bg-orange-300";
+    status === "ok" ? "bg-green-400" : status === "checking" ? "bg-sky-300" : "bg-orange-300";
 
   return (
     <span

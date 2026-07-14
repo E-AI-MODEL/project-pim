@@ -42,21 +42,30 @@ export function installRuntimeHardening() {
   installed = true;
 
   const sameOrigin = (url: string) => {
-    try { return new URL(url, location.href).origin === location.origin; }
-    catch { return true; }
+    try {
+      return new URL(url, location.href).origin === location.origin;
+    } catch {
+      return true;
+    }
   };
   const isModelHost = (url: string) => {
-    try { return MODEL_HOSTS.has(new URL(url, location.href).host); }
-    catch { return false; }
+    try {
+      return MODEL_HOSTS.has(new URL(url, location.href).host);
+    } catch {
+      return false;
+    }
   };
 
   // 1. fetch wrapper
   const origFetch = window.fetch.bind(window);
   window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
-    const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+    const url =
+      typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
     if (!sameOrigin(url) && !isModelHost(url)) {
       const msg = `[PIM hardening] external fetch detected → ${new URL(url).origin}`;
-      violations.push(msg); notify(); console.warn(msg);
+      violations.push(msg);
+      notify();
+      console.warn(msg);
     }
     return origFetch(input as RequestInfo, init);
   };
@@ -68,7 +77,9 @@ export function installRuntimeHardening() {
       const u = typeof url === "string" ? url : url.toString();
       if (!sameOrigin(u) && !isModelHost(u)) {
         const msg = `[PIM hardening] sendBeacon to external origin BLOCKED → ${new URL(u).origin}`;
-        violations.push(msg); notify(); console.warn(msg);
+        violations.push(msg);
+        notify();
+        console.warn(msg);
         return false;
       }
       return origBeacon(u, data);
@@ -81,7 +92,9 @@ export function installRuntimeHardening() {
     const u = typeof url === "string" ? url : url.toString();
     if (!sameOrigin(u) && !isModelHost(u)) {
       const msg = `[PIM hardening] XHR to external origin → ${new URL(u).origin}`;
-      violations.push(msg); notify(); console.warn(msg);
+      violations.push(msg);
+      notify();
+      console.warn(msg);
     }
     // @ts-expect-error pass-through
     return OrigOpen.call(this, method, url, ...rest);
@@ -96,9 +109,13 @@ export function installRuntimeHardening() {
         const origin = new URL(u).host;
         if (origin !== location.host) {
           const msg = `[PIM hardening] WebSocket external → ${origin}`;
-          violations.push(msg); notify(); console.warn(msg);
+          violations.push(msg);
+          notify();
+          console.warn(msg);
         }
-      } catch {}
+      } catch {
+        /* ignore URL parse errors */
+      }
       return new target(...args);
     },
   });

@@ -33,7 +33,9 @@ export function emitDebug(kind: DebugEventKind, msg: string, data?: Record<strin
 export function subscribeDebug(cb: (events: DebugEvent[]) => void): () => void {
   listeners.add(cb);
   cb(buffer.slice());
-  return () => { listeners.delete(cb); };
+  return () => {
+    listeners.delete(cb);
+  };
 }
 
 export function clearDebug(): void {

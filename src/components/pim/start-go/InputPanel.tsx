@@ -1,10 +1,29 @@
 // §8.2 — textarea + voorbeeldknop + Start PiM + korte privacyregel.
 import { COPY } from "@/lib/pim/copy";
 import { EXAMPLES, ExamplePicker, type Example } from "./ExamplePicker";
-import { Play, Cpu, Radio, Plus, SlidersHorizontal, ArrowUp, Check, FileUp, FileText, X, AlertCircle, Eraser } from "lucide-react";
+import {
+  Play,
+  Cpu,
+  Radio,
+  Plus,
+  SlidersHorizontal,
+  ArrowUp,
+  Check,
+  FileUp,
+  FileText,
+  X,
+  AlertCircle,
+  Eraser,
+} from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { Mode, Action } from "@/lib/pim/types";
-import { extractDocument, formatBytes, rejectionReason, MAX_DOC_BYTES, type ExtractedDoc } from "@/lib/pim/documentReader";
+import {
+  extractDocument,
+  formatBytes,
+  rejectionReason,
+  MAX_DOC_BYTES,
+  type ExtractedDoc,
+} from "@/lib/pim/documentReader";
 import { useEffect, useRef, useState } from "react";
 import { computeSignals, anonymize, DEFAULT_PROFILE } from "@/lib/pim";
 
@@ -32,12 +51,32 @@ const TARGETS: { id: Action; label: string }[] = [
   { id: "display", label: COPY.targetDisplay },
 ];
 
-export function InputPanel({ text, onTextChange, onStart, onExample, busy, compact, mode, onModeChange, action, onActionChange }: Props) {
+export function InputPanel({
+  text,
+  onTextChange,
+  onStart,
+  onExample,
+  busy,
+  compact,
+  mode,
+  onModeChange,
+  action,
+  onActionChange,
+}: Props) {
   if (compact) {
-    return <CompactComposer
-      text={text} onTextChange={onTextChange} onStart={onStart} onExample={onExample}
-      busy={busy} mode={mode} onModeChange={onModeChange} action={action} onActionChange={onActionChange}
-    />;
+    return (
+      <CompactComposer
+        text={text}
+        onTextChange={onTextChange}
+        onStart={onStart}
+        onExample={onExample}
+        busy={busy}
+        mode={mode}
+        onModeChange={onModeChange}
+        action={action}
+        onActionChange={onActionChange}
+      />
+    );
   }
   return (
     <section className="space-y-5">
@@ -98,8 +137,15 @@ export function InputPanel({ text, onTextChange, onStart, onExample, busy, compa
  * onder met [+] voorbeelden, [⚙] modus & bestemming, status, en [↑] verstuur.
  * ------------------------------------------------------------------------- */
 function CompactComposer({
-  text, onTextChange, onStart, onExample, busy,
-  mode, onModeChange, action, onActionChange,
+  text,
+  onTextChange,
+  onStart,
+  onExample,
+  busy,
+  mode,
+  onModeChange,
+  action,
+  onActionChange,
 }: Omit<Props, "compact">) {
   const canSend = text.trim().length > 0 && !busy;
   const activeTarget = TARGETS.find((t) => t.id === action)?.label ?? "";
@@ -143,7 +189,9 @@ function CompactComposer({
         if (t) t.setSelectionRange(newCursor, newCursor);
       });
     }, 350);
-    return () => { if (scrubRef.current) clearTimeout(scrubRef.current); };
+    return () => {
+      if (scrubRef.current) clearTimeout(scrubRef.current);
+    };
   }, [text, liveScrub, onTextChange]);
 
   useEffect(() => {
@@ -160,7 +208,10 @@ function CompactComposer({
     if (!files || files.length === 0) return;
     const file = files[0];
     const reason = rejectionReason(file);
-    if (reason) { setDocError(reason); return; }
+    if (reason) {
+      setDocError(reason);
+      return;
+    }
     setDocBusy(true);
     try {
       const doc = await extractDocument(file);
@@ -187,11 +238,13 @@ function CompactComposer({
   return (
     <section ref={composerRef} className="space-y-3 scroll-mt-20">
       {/* Composer-kaart */}
-      <div className={`rounded-2xl border bg-[#0f1b3d]/70 transition-all overflow-hidden ${
-        flash
-          ? "border-rose-500/80 shadow-[0_0_0_3px_rgba(244,63,94,0.35)]"
-          : "border-[#3b6fa0]/30 focus-within:border-[#3b6fa0]/70 focus-within:shadow-[0_0_0_3px_rgba(59,111,160,0.15)]"
-      }`}>
+      <div
+        className={`rounded-2xl border bg-[#0f1b3d]/70 transition-all overflow-hidden ${
+          flash
+            ? "border-rose-500/80 shadow-[0_0_0_3px_rgba(244,63,94,0.35)]"
+            : "border-[#3b6fa0]/30 focus-within:border-[#3b6fa0]/70 focus-within:shadow-[0_0_0_3px_rgba(59,111,160,0.15)]"
+        }`}
+      >
         {/* Verborgen file-input voor upload */}
         <input
           ref={fileInputRef}
@@ -206,9 +259,12 @@ function CompactComposer({
           <div className="flex items-center gap-2 px-3 py-2 border-b border-[#3b6fa0]/15 bg-[#3b6fa0]/10">
             <FileText className="h-3.5 w-3.5 text-[#3b6fa0]" />
             <div className="flex-1 min-w-0">
-              <div className="text-[12px] text-[#e8edf3] truncate font-plex-mono">{loadedDoc.filename}</div>
+              <div className="text-[12px] text-[#e8edf3] truncate font-plex-mono">
+                {loadedDoc.filename}
+              </div>
               <div className="text-[10px] text-[#e8edf3]/55 font-plex-mono">
-                {formatBytes(loadedDoc.bytes)} · {loadedDoc.text.length.toLocaleString("nl-NL")} tekens
+                {formatBytes(loadedDoc.bytes)} · {loadedDoc.text.length.toLocaleString("nl-NL")}{" "}
+                tekens
                 {loadedDoc.truncated && " · ingekort"} · lokaal verwerkt
               </div>
             </div>
@@ -254,34 +310,51 @@ function CompactComposer({
                 )}
               </IconBtn>
             </PopoverTrigger>
-            <PopoverContent align="start" className="w-80 bg-[#0f1b3d] border-[#3b6fa0]/40 text-[#e8edf3] p-2">
+            <PopoverContent
+              align="start"
+              className="w-80 bg-[#0f1b3d] border-[#3b6fa0]/40 text-[#e8edf3] p-2"
+            >
               {/* Upload-actie */}
-              <div className="px-2 py-1 text-[10px] uppercase tracking-wider text-[#e8edf3]/50 font-plex-mono">Document controleren</div>
+              <div className="px-2 py-1 text-[10px] uppercase tracking-wider text-[#e8edf3]/50 font-plex-mono">
+                Document controleren
+              </div>
               <button
                 type="button"
-                onClick={() => { setAddOpen(false); fileInputRef.current?.click(); }}
+                onClick={() => {
+                  setAddOpen(false);
+                  fileInputRef.current?.click();
+                }}
                 className="w-full text-left px-2 py-2 rounded-md hover:bg-[#3b6fa0]/20 transition-colors flex items-start gap-2.5"
               >
                 <FileUp className="h-4 w-4 mt-0.5 text-[#3b6fa0] shrink-0" />
                 <div className="min-w-0">
                   <div className="text-sm text-[#e8edf3]">Bestand uploaden</div>
                   <div className="text-[11px] text-[#e8edf3]/55 leading-snug mt-0.5">
-                    .txt · .md · .csv · .json · .html · .docx — tot {formatBytes(MAX_DOC_BYTES)}. Lokaal verwerkt.
+                    .txt · .md · .csv · .json · .html · .docx — tot {formatBytes(MAX_DOC_BYTES)}.
+                    Lokaal verwerkt.
                   </div>
                 </div>
               </button>
               <div className="my-1 border-t border-[#3b6fa0]/20" />
-              <div className="px-2 py-1 text-[10px] uppercase tracking-wider text-[#e8edf3]/50 font-plex-mono">Voorbeelden</div>
+              <div className="px-2 py-1 text-[10px] uppercase tracking-wider text-[#e8edf3]/50 font-plex-mono">
+                Voorbeelden
+              </div>
               <div className="flex flex-col">
                 {EXAMPLES.map((e) => (
                   <button
                     key={e.id}
                     type="button"
-                    onClick={() => { setLoadedDoc(null); onExample(e); setAddOpen(false); }}
+                    onClick={() => {
+                      setLoadedDoc(null);
+                      onExample(e);
+                      setAddOpen(false);
+                    }}
                     className="text-left px-2 py-2 rounded-md hover:bg-[#3b6fa0]/20 transition-colors"
                   >
                     <div className="text-sm text-[#e8edf3]">{e.label}</div>
-                    <div className="text-[11px] text-[#e8edf3]/55 leading-snug mt-0.5">{e.hint}</div>
+                    <div className="text-[11px] text-[#e8edf3]/55 leading-snug mt-0.5">
+                      {e.hint}
+                    </div>
                   </button>
                 ))}
               </div>
@@ -299,9 +372,14 @@ function CompactComposer({
                   </span>
                 </IconBtn>
               </PopoverTrigger>
-              <PopoverContent align="start" className="w-80 bg-[#0f1b3d] border-[#3b6fa0]/40 text-[#e8edf3] p-4 space-y-4">
+              <PopoverContent
+                align="start"
+                className="w-80 bg-[#0f1b3d] border-[#3b6fa0]/40 text-[#e8edf3] p-4 space-y-4"
+              >
                 <div className="space-y-2">
-                  <div className="text-[10px] uppercase tracking-wider text-[#e8edf3]/50 font-plex-mono">Hoe verwerken</div>
+                  <div className="text-[10px] uppercase tracking-wider text-[#e8edf3]/50 font-plex-mono">
+                    Hoe verwerken
+                  </div>
                   <div className="grid grid-cols-1 gap-1.5">
                     <ModeOption
                       active={mode === "anonymous"}
@@ -318,14 +396,18 @@ function CompactComposer({
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <div className="text-[10px] uppercase tracking-wider text-[#e8edf3]/50 font-plex-mono">{COPY.targetLabel}</div>
+                  <div className="text-[10px] uppercase tracking-wider text-[#e8edf3]/50 font-plex-mono">
+                    {COPY.targetLabel}
+                  </div>
                   <select
                     value={action}
                     onChange={(e) => onActionChange(e.target.value as Action)}
                     className="w-full rounded-md border border-[#3b6fa0]/40 bg-[#0a142e] px-2.5 py-2 text-sm text-[#e8edf3] focus:outline-none focus:border-[#3b6fa0]"
                   >
                     {TARGETS.map((t) => (
-                      <option key={t.id} value={t.id}>{t.label}</option>
+                      <option key={t.id} value={t.id}>
+                        {t.label}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -348,16 +430,20 @@ function CompactComposer({
                 });
               }}
               aria-pressed={liveScrub}
-              title={liveScrub
-                ? "Live wissen staat aan — BSN, e-mail, telefoon en IBAN worden direct vervangen door een label"
-                : "Live wissen aanzetten — harde PII (BSN, e-mail, telefoon, IBAN) wordt meteen vervangen door een label"}
+              title={
+                liveScrub
+                  ? "Live wissen staat aan — BSN, e-mail, telefoon en IBAN worden direct vervangen door een label"
+                  : "Live wissen aanzetten — harde PII (BSN, e-mail, telefoon, IBAN) wordt meteen vervangen door een label"
+              }
               className={`inline-flex items-center gap-1.5 h-8 px-2 rounded-md text-[11px] font-plex-mono border transition-colors ${
                 liveScrub
                   ? "bg-rose-500/15 border-rose-400/50 text-rose-200"
                   : "bg-transparent border-[#3b6fa0]/30 text-[#e8edf3]/55 hover:text-[#e8edf3] hover:border-[#3b6fa0]/60"
               }`}
             >
-              {liveScrub && <span className="h-1.5 w-1.5 rounded-full bg-rose-400 animate-pulse" aria-hidden />}
+              {liveScrub && (
+                <span className="h-1.5 w-1.5 rounded-full bg-rose-400 animate-pulse" aria-hidden />
+              )}
               <Eraser className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Live wissen</span>
             </button>
@@ -408,7 +494,9 @@ function CompactComposer({
         <div className="flex items-start gap-2 px-3 py-2 rounded-lg border border-rose-400/40 bg-rose-500/10 text-rose-200 text-[11px] leading-relaxed">
           <Eraser className="h-3.5 w-3.5 mt-0.5 shrink-0" />
           <div className="flex-1">
-            <span className="font-medium">Live wissen actief.</span> BSN, e-mail, telefoon en IBAN worden direct vervangen door een label (bv. <code>[bsn]</code>). Namen en context blijven staan totdat je verstuurt.
+            <span className="font-medium">Live wissen actief.</span> BSN, e-mail, telefoon en IBAN
+            worden direct vervangen door een label (bv. <code>[bsn]</code>). Namen en context
+            blijven staan totdat je verstuurt.
           </div>
         </div>
       )}
@@ -416,7 +504,8 @@ function CompactComposer({
       {/* Hint onder de composer */}
       {text.trim().length === 0 ? (
         <p className="text-[11px] text-[#e8edf3]/50 leading-relaxed px-1">
-          {COPY.monitorEmptyHint} Gebruik <span className="text-[#e8edf3]/75">+</span> voor een voorbeeld of document.
+          {COPY.monitorEmptyHint} Gebruik <span className="text-[#e8edf3]/75">+</span> voor een
+          voorbeeld of document.
         </p>
       ) : (
         <p className="text-[11px] text-[#e8edf3]/45 leading-relaxed px-1 font-plex-mono truncate">
@@ -427,7 +516,11 @@ function CompactComposer({
   );
 }
 
-function IconBtn({ children, label, ...rest }: React.ButtonHTMLAttributes<HTMLButtonElement> & { label: string }) {
+function IconBtn({
+  children,
+  label,
+  ...rest
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & { label: string }) {
   return (
     <button
       type="button"
@@ -441,7 +534,17 @@ function IconBtn({ children, label, ...rest }: React.ButtonHTMLAttributes<HTMLBu
   );
 }
 
-function ModeOption({ active, onClick, title, hint }: { active: boolean; onClick: () => void; title: string; hint: string }) {
+function ModeOption({
+  active,
+  onClick,
+  title,
+  hint,
+}: {
+  active: boolean;
+  onClick: () => void;
+  title: string;
+  hint: string;
+}) {
   return (
     <button
       type="button"
@@ -463,12 +566,19 @@ function ModeOption({ active, onClick, title, hint }: { active: boolean; onClick
 
 function shortTarget(a: Action): string {
   switch (a) {
-    case "send_external_ai": return "Externe AI";
-    case "copy": return "Klembord";
-    case "export_file": return "Bestand";
-    case "print": return "Printer";
-    case "share": return "Link";
-    case "display": return "Scherm";
-    default: return "";
+    case "send_external_ai":
+      return "Externe AI";
+    case "copy":
+      return "Klembord";
+    case "export_file":
+      return "Bestand";
+    case "print":
+      return "Printer";
+    case "share":
+      return "Link";
+    case "display":
+      return "Scherm";
+    default:
+      return "";
   }
 }

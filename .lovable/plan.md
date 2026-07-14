@@ -792,6 +792,7 @@ tsx
 import { useEffect, useState } from "react";
 const dotClass = status === "ready" ? "bg-ok" : status === "loading" ? "bg-warn animate-pulse" : status === "error" ? "bg-danger" : "bg-fg-muted";
 return (
+
 <div className="card p-4">
 <div className="flex items-start justify-between gap-3">
 <div className="flex items-start gap-2 min-w-0">
@@ -901,6 +902,7 @@ status === "checking" ? "bg-accent animate-pulse" :
 "bg-warn";
 
 return (
+
 <Link to="/dashboard" className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium ${colorClass}`}>
 <span className={`h-1.5 w-1.5 rounded-full ${dotClass}`} />
 {label}
@@ -964,6 +966,7 @@ import { StartGoShell } from "./StartGoShell";
 
 export function MonitorShell() {
 return (
+
 <div className="card p-6">
 <StartGoShell compact />
 </div>
@@ -1013,6 +1016,7 @@ detectionSettings: DetectionLayerSettings;
 }) {
 if (detectionSettings.bert === "off") {
 return (
+
 <div className="mt-1 flex items-center gap-2 text-[11px] text-fg-muted">
 <span className="h-2 w-2 rounded-full bg-fg-muted" />
 <span>Naamherkenning uit — alleen patroonherkenning</span>
@@ -1090,6 +1094,7 @@ component: DashboardPage,
 function DashboardPage() {
 const [tab, setTab] = useState("testen");
 return (
+
 <div className="mx-auto max-w-[1440px] px-6 py-8 space-y-6">
 <header className="space-y-1">
 <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>

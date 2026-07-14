@@ -18,10 +18,7 @@ describe("PIM smoke — round-trip detect + anonymize + draftCheck", () => {
     expect(signals.directPii.map((s) => s.category)).toContain("email");
     const draft = anonymize(text, signals);
     expect(draft.text).not.toContain("@voorbeeldschool.nl");
-    const guard = draftCheck(
-      { text: draft.text, mode: "anonymous", rawHadPii: true },
-      "anonymous",
-    );
+    const guard = draftCheck({ text: draft.text, mode: "anonymous", rawHadPii: true }, "anonymous");
     expect(guard.status).toBe("pass");
   });
 

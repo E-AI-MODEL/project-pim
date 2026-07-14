@@ -7,12 +7,12 @@ gaat. Alle verwerking is client-side; er is geen server.
 
 ## Termen (consistent door UI, code en PVA)
 
-| Term | Betekenis |
-|---|---|
-| **Project PiM** | Productnaam (UI / branding). |
-| **Privacy Integrity Monitor** | Volledige naam van het product. |
-| **PIM** | De deterministische beslislaag (`policy.ts` + `egressGuard.ts`). |
-| **Privacy Intelligence Module** | Oud, niet meer gebruiken. Vervangen door bovenstaande. |
+| Term                            | Betekenis                                                        |
+| ------------------------------- | ---------------------------------------------------------------- |
+| **Project PiM**                 | Productnaam (UI / branding).                                     |
+| **Privacy Integrity Monitor**   | Volledige naam van het product.                                  |
+| **PIM**                         | De deterministische beslislaag (`policy.ts` + `egressGuard.ts`). |
+| **Privacy Intelligence Module** | Oud, niet meer gebruiken. Vervangen door bovenstaande.           |
 
 Live: https://project-pim.lovable.app
 
@@ -50,21 +50,21 @@ Catalog-entries met `PLACEHOLDER:*` blijven productie-egress blokkeren. Modeldow
 
 ## Mapping spec v3-2 naar code
 
-| Spec hoofdstuk | Module | Bestand |
-|---|---|---|
-| 3, Modi (anoniem / pseudoniem) | `Mode` types + `anonymize` / `pseudonymize` | `src/lib/pim/types.ts`, `src/lib/pim/processing.ts` |
-| 8, Detectie | Regex-detectoren + special lexicon | `src/lib/pim/detectors.ts`, `src/lib/pim/detectorRegistry.ts` |
-| 9 / 14, Modelintegriteit | Catalog + SHA-256 gate (`verifyModel`) | `src/lib/pim/modelCatalog.ts` |
-| 11, Risk scoring | `computeSignals` | `src/lib/pim/risk.ts` |
-| 12, Egress beleid | `decide` + `executeAction` + `egressGuard` | `src/lib/pim/policy.ts`, `src/lib/pim/egressGuard.ts` |
-| 13, Secure mapping | AES-GCM container | `src/lib/pim/secureMapping.ts` |
-| 15, Pipeline profielen | `PipelineProfile` (education-nl-full / rules-only) | `src/lib/pim/pipelineProfile.ts` |
-| 17, Runtime hardening | Patcht `fetch`, `XHR`, `sendBeacon` etc. | `src/lib/pim/runtimeHardening.ts` |
-| 18 / 31, Review queue & repair | `repairAnonymousDraft`, `reviewQueue` | `src/lib/pim/contextualGeneralization.ts`, `src/lib/pim/reviewQueue.ts` |
-| 22, NER SLM (browser) | Multilingual NER via `@huggingface/transformers` | `src/lib/pim/nerSlm.ts` |
-| 29, Contextuele generalisatie | Generaliseert kleine-groep / locatie / tijd | `src/lib/pim/contextualGeneralization.ts` |
-| 32, Beslissen op de draft | `computeSignals` op `finalDraft` in Try-it | `src/routes/try.tsx` |
-| 35, Productiegate | Live checklist | `src/routes/compliance.tsx` |
+| Spec hoofdstuk                 | Module                                             | Bestand                                                                 |
+| ------------------------------ | -------------------------------------------------- | ----------------------------------------------------------------------- |
+| 3, Modi (anoniem / pseudoniem) | `Mode` types + `anonymize` / `pseudonymize`        | `src/lib/pim/types.ts`, `src/lib/pim/processing.ts`                     |
+| 8, Detectie                    | Regex-detectoren + special lexicon                 | `src/lib/pim/detectors.ts`, `src/lib/pim/detectorRegistry.ts`           |
+| 9 / 14, Modelintegriteit       | Catalog + SHA-256 gate (`verifyModel`)             | `src/lib/pim/modelCatalog.ts`                                           |
+| 11, Risk scoring               | `computeSignals`                                   | `src/lib/pim/risk.ts`                                                   |
+| 12, Egress beleid              | `decide` + `executeAction` + `egressGuard`         | `src/lib/pim/policy.ts`, `src/lib/pim/egressGuard.ts`                   |
+| 13, Secure mapping             | AES-GCM container                                  | `src/lib/pim/secureMapping.ts`                                          |
+| 15, Pipeline profielen         | `PipelineProfile` (education-nl-full / rules-only) | `src/lib/pim/pipelineProfile.ts`                                        |
+| 17, Runtime hardening          | Patcht `fetch`, `XHR`, `sendBeacon` etc.           | `src/lib/pim/runtimeHardening.ts`                                       |
+| 18 / 31, Review queue & repair | `repairAnonymousDraft`, `reviewQueue`              | `src/lib/pim/contextualGeneralization.ts`, `src/lib/pim/reviewQueue.ts` |
+| 22, NER SLM (browser)          | Multilingual NER via `@huggingface/transformers`   | `src/lib/pim/nerSlm.ts`                                                 |
+| 29, Contextuele generalisatie  | Generaliseert kleine-groep / locatie / tijd        | `src/lib/pim/contextualGeneralization.ts`                               |
+| 32, Beslissen op de draft      | `computeSignals` op `finalDraft` in Try-it         | `src/routes/try.tsx`                                                    |
+| 35, Productiegate              | Live checklist                                     | `src/routes/compliance.tsx`                                             |
 
 ## Invarianten
 

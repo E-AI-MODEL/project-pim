@@ -1,8 +1,28 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
-  Shield, BookOpen, Brain, Database, MessageSquare, FileText, Bot, GraduationCap,
-  Users, Stethoscope, AlertTriangle, Lock, ArrowRight, Sparkles, Network, Layers,
-  ClipboardList, Workflow, Server, Cpu, Eye, FlaskConical, Quote,
+  Shield,
+  BookOpen,
+  Brain,
+  Database,
+  MessageSquare,
+  FileText,
+  Bot,
+  GraduationCap,
+  Users,
+  Stethoscope,
+  AlertTriangle,
+  Lock,
+  ArrowRight,
+  Sparkles,
+  Network,
+  Layers,
+  ClipboardList,
+  Workflow,
+  Server,
+  Cpu,
+  Eye,
+  FlaskConical,
+  Quote,
 } from "lucide-react";
 import type { ComponentType, SVGProps } from "react";
 
@@ -10,9 +30,17 @@ export const Route = createFileRoute("/scenarios")({
   head: () => ({
     meta: [
       { title: "Scenarios — Waar PiM in de onderwijspipeline past" },
-      { name: "description", content: "Concrete toepassings­scenarios van Project PiM: welke plek in welke AI/LLM/EdTech-orchestratie de privacy-engine bezet, met onderwijskundige en wetenschappelijke onderbouwing." },
+      {
+        name: "description",
+        content:
+          "Concrete toepassings­scenarios van Project PiM: welke plek in welke AI/LLM/EdTech-orchestratie de privacy-engine bezet, met onderwijskundige en wetenschappelijke onderbouwing.",
+      },
       { property: "og:title", content: "Scenarios — Waar PiM in de onderwijspipeline past" },
-      { property: "og:description", content: "Concrete toepassings­scenarios van Project PiM in onderwijs-AI-pipelines, met technische en wetenschappelijke onderbouwing." },
+      {
+        property: "og:description",
+        content:
+          "Concrete toepassings­scenarios van Project PiM in onderwijs-AI-pipelines, met technische en wetenschappelijke onderbouwing.",
+      },
     ],
   }),
   component: ScenariosPage,
@@ -42,7 +70,7 @@ const SCENARIOS: Scenario[] = [
     icon: Bot,
     bar: "cyan",
     problem:
-      "Leerlingen plakken hun eigen zorg- of gedragsdossier in een tutorprompt (\"Ik heb ADHD en ben uit groep 6A van meester Jansen geschorst, leg me uit…\"). Zonder filter belandt direct identificeerbare data bij een Amerikaanse LLM-provider — AVG art. 44 + DPIA-blokker.",
+      'Leerlingen plakken hun eigen zorg- of gedragsdossier in een tutorprompt ("Ik heb ADHD en ben uit groep 6A van meester Jansen geschorst, leg me uit…"). Zonder filter belandt direct identificeerbare data bij een Amerikaanse LLM-provider — AVG art. 44 + DPIA-blokker.',
     pimSpot:
       "PiM zit tussen het tutor-frontend (browser) en de fetch-call naar de externe LLM. De prompt wordt eerst lokaal door detectoren + draft-check gehaald; alleen de geanonimiseerde variant gaat over de lijn. De egress-guard her-consulteert PiM vlak voor de fetch.",
     pipeline: [
@@ -56,8 +84,16 @@ const SCENARIOS: Scenario[] = [
     benefit:
       "Geen DPA per leerling nodig met de LLM-leverancier zolang er aantoonbaar geen persoonsgegevens vertrekken. Onderwijs houdt de leveranciersrelatie technisch i.p.v. juridisch.",
     evidence: [
-      { author: "Kerssens & Van Dijck (2021)", claim: "Platformisering van onderwijs leidt tot ongecontroleerde dataflows; technische tussenlagen zijn nodig om autonomie te herstellen." },
-      { author: "AP-richtlijn generatieve AI (2024)", claim: "Verwerking van leerling-prompts in externe LLM's vereist een rechtsgrond én minimalisatie aan de bron." },
+      {
+        author: "Kerssens & Van Dijck (2021)",
+        claim:
+          "Platformisering van onderwijs leidt tot ongecontroleerde dataflows; technische tussenlagen zijn nodig om autonomie te herstellen.",
+      },
+      {
+        author: "AP-richtlijn generatieve AI (2024)",
+        claim:
+          "Verwerking van leerling-prompts in externe LLM's vereist een rechtsgrond én minimalisatie aan de bron.",
+      },
     ],
   },
   {
@@ -67,7 +103,7 @@ const SCENARIOS: Scenario[] = [
     icon: Database,
     bar: "purple",
     problem:
-      "Een schoolbestuur bouwt een Retrieval-Augmented-Generation-systeem dat IB'ers laat vragen \"Welke aanpak hadden we vorig jaar bij leerlingen met faalangst in 2-havo?\". De vector-store bevat zorgnotities mét namen en BSN — elke retrieval lekt deze door in de prompt-context.",
+      'Een schoolbestuur bouwt een Retrieval-Augmented-Generation-systeem dat IB\'ers laat vragen "Welke aanpak hadden we vorig jaar bij leerlingen met faalangst in 2-havo?". De vector-store bevat zorgnotities mét namen en BSN — elke retrieval lekt deze door in de prompt-context.',
     pimSpot:
       "PiM draait twee keer: (1) bij de ingest-pipeline pseudonymiseert het documenten vóórdat embeddings worden berekend, mapping blijft in de versleutelde container; (2) bij de query-fase her-anonymiseert PiM de top-k chunks vóór ze in de LLM-context worden gegoten.",
     pipeline: [
@@ -81,8 +117,16 @@ const SCENARIOS: Scenario[] = [
     benefit:
       "Vector-databases worden statistisch onbruikbaar als breach-doel: ze bevatten alleen [PERSOON_042]-tokens. De koppeltabel ligt AES-GCM versleuteld in browsergeheugen van de bevoegde gebruiker.",
     evidence: [
-      { author: "Carlini et al. (2021)", claim: "LLM's memoriseren trainingsdata; ingest-pseudonymisatie verbreekt de PII-recall-keten." },
-      { author: "Sweeney (2002), k-anonymity", claim: "Quasi-identifiers (klas + school + jaar) zijn vaak genoeg om iemand te herleiden — daarom contextueel anonymiseren, niet alleen direct." },
+      {
+        author: "Carlini et al. (2021)",
+        claim:
+          "LLM's memoriseren trainingsdata; ingest-pseudonymisatie verbreekt de PII-recall-keten.",
+      },
+      {
+        author: "Sweeney (2002), k-anonymity",
+        claim:
+          "Quasi-identifiers (klas + school + jaar) zijn vaak genoeg om iemand te herleiden — daarom contextueel anonymiseren, niet alleen direct.",
+      },
     ],
   },
   {
@@ -92,7 +136,7 @@ const SCENARIOS: Scenario[] = [
     icon: FileText,
     bar: "green",
     problem:
-      "Een tool laat leraren een essay uploaden voor AI-feedback. Het essay opent met \"Mijn naam is Yusuf el-Amrani, klas 4H2, en mijn vader…\". De leverancier traint stilletjes mee.",
+      'Een tool laat leraren een essay uploaden voor AI-feedback. Het essay opent met "Mijn naam is Yusuf el-Amrani, klas 4H2, en mijn vader…". De leverancier traint stilletjes mee.',
     pimSpot:
       "PiM zit als pre-processor in de upload-handler. Tekst gaat door anonymisatie + contextuele generalisatie (kleine groep + naam → 'een leerling'). De feedback komt terug op de geanonimiseerde versie; PiM restore lokaal koppelt namen alléén in de UI van de leraar terug.",
     pipeline: [
@@ -105,8 +149,16 @@ const SCENARIOS: Scenario[] = [
     benefit:
       "De leverancier ziet nooit een leerlingnaam, maar de leraar wel — feedback blijft persoonlijk zonder dat de identiteit het schoolnetwerk verlaat.",
     evidence: [
-      { author: "Black & Wiliam (1998)", claim: "Formatieve feedback werkt vooral als ze persoonlijk is — restore-laag is dus didactisch noodzakelijk, niet optioneel." },
-      { author: "Hattie (2009), Visible Learning", claim: "Feedback-effect (d≈0.79) vraagt context; PiM behoudt context zonder identiteit prijs te geven." },
+      {
+        author: "Black & Wiliam (1998)",
+        claim:
+          "Formatieve feedback werkt vooral als ze persoonlijk is — restore-laag is dus didactisch noodzakelijk, niet optioneel.",
+      },
+      {
+        author: "Hattie (2009), Visible Learning",
+        claim:
+          "Feedback-effect (d≈0.79) vraagt context; PiM behoudt context zonder identiteit prijs te geven.",
+      },
     ],
   },
   {
@@ -130,8 +182,15 @@ const SCENARIOS: Scenario[] = [
     benefit:
       "Voorkomt geautomatiseerde besluitvorming op identificeerbare leerlingen (art. 22), terwijl het signaal-mechanisme blijft werken.",
     evidence: [
-      { author: "Selwyn (2019), Should Robots Replace Teachers?", claim: "Predictive analytics in onderwijs reproduceert bias als ze op ruwe identiteit traint — pseudonymisatie + audit-laag is mitigatie." },
-      { author: "Onderwijsraad (2023)", claim: "Datagedreven werken vereist proportionaliteits-check vóór externe verwerking." },
+      {
+        author: "Selwyn (2019), Should Robots Replace Teachers?",
+        claim:
+          "Predictive analytics in onderwijs reproduceert bias als ze op ruwe identiteit traint — pseudonymisatie + audit-laag is mitigatie.",
+      },
+      {
+        author: "Onderwijsraad (2023)",
+        claim: "Datagedreven werken vereist proportionaliteits-check vóór externe verwerking.",
+      },
     ],
   },
   {
@@ -141,7 +200,7 @@ const SCENARIOS: Scenario[] = [
     icon: MessageSquare,
     bar: "cyan",
     problem:
-      "Ouder stelt vraag \"Hoe gaat het met Sophie in groep 3 bij juf Wim?\" via een schoolwebsite-chatbot. Bot stuurt prompt + sessie-context naar OpenAI; ouder denkt met de school te chatten.",
+      'Ouder stelt vraag "Hoe gaat het met Sophie in groep 3 bij juf Wim?" via een schoolwebsite-chatbot. Bot stuurt prompt + sessie-context naar OpenAI; ouder denkt met de school te chatten.',
     pimSpot:
       "PiM zit als middleware in de chat-endpoint. Élke inkomende boodschap wordt lokaal in de browser (PWA) of in een edge-worker (CSP-gepind) geanonimiseerd voordat de prompt de LLM bereikt. Mode-isolation voorkomt dat eerdere ouder-context lekt.",
     pipeline: [
@@ -155,7 +214,11 @@ const SCENARIOS: Scenario[] = [
     benefit:
       "Ouders houden hun vertrouwde communicatie­kanaal, school houdt aantoonbare verwerkings­controle. Eén DPIA i.p.v. per ouder.",
     evidence: [
-      { author: "WP29 Opinion 05/2014", claim: "Anonimisering moet bestand zijn tegen singling-out, linkability en inference — PiM's contextuele detectoren mikken precies op die drie." },
+      {
+        author: "WP29 Opinion 05/2014",
+        claim:
+          "Anonimisering moet bestand zijn tegen singling-out, linkability en inference — PiM's contextuele detectoren mikken precies op die drie.",
+      },
     ],
   },
   {
@@ -179,7 +242,11 @@ const SCENARIOS: Scenario[] = [
     benefit:
       "Geen netwerkverkeer voor zorgverslagen. Audit-trail kan via Trust dashboard worden geëxporteerd zonder dat het verslag zelf wordt opgeslagen.",
     evidence: [
-      { author: "Nissenbaum (2010), Contextual Integrity", claim: "Informatie hoort bij een context; rapport-herschrijving moet identifiers strippen die buiten de oorspronkelijke gespreks­context vallen." },
+      {
+        author: "Nissenbaum (2010), Contextual Integrity",
+        claim:
+          "Informatie hoort bij een context; rapport-herschrijving moet identifiers strippen die buiten de oorspronkelijke gespreks­context vallen.",
+      },
     ],
   },
   {
@@ -202,8 +269,16 @@ const SCENARIOS: Scenario[] = [
     benefit:
       "Reproduceerbare, controleerbare anonimisatie — wat de FAIR-principes (Findable/Accessible/Interoperable/Reusable) onderscheidt van ad-hoc redaction.",
     evidence: [
-      { author: "Wilkinson et al. (2016), FAIR Guiding Principles", claim: "Datasets moeten her-deelbaar zijn — alleen mogelijk als anonimisatie deterministisch en geversioneerd is." },
-      { author: "El Emam (2013), HIPAA de-identification", claim: "Risk-based de-identification (k-anon + l-diversity) is reproduceerbaar; ad-hoc redaction niet." },
+      {
+        author: "Wilkinson et al. (2016), FAIR Guiding Principles",
+        claim:
+          "Datasets moeten her-deelbaar zijn — alleen mogelijk als anonimisatie deterministisch en geversioneerd is.",
+      },
+      {
+        author: "El Emam (2013), HIPAA de-identification",
+        claim:
+          "Risk-based de-identification (k-anon + l-diversity) is reproduceerbaar; ad-hoc redaction niet.",
+      },
     ],
   },
   {
@@ -228,7 +303,11 @@ const SCENARIOS: Scenario[] = [
     benefit:
       "Voorkomt 'context-bleed' tussen agents — het bekendste lek-patroon in productie-agentsystemen. Elke hop is afzonderlijk auditbaar.",
     evidence: [
-      { author: "Greshake et al. (2023)", claim: "Indirect prompt-injection door tool-output is een primair agent-risico; tussenliggende guards zijn de aanbevolen mitigatie." },
+      {
+        author: "Greshake et al. (2023)",
+        claim:
+          "Indirect prompt-injection door tool-output is een primair agent-risico; tussenliggende guards zijn de aanbevolen mitigatie.",
+      },
     ],
   },
   {
@@ -238,7 +317,7 @@ const SCENARIOS: Scenario[] = [
     icon: GraduationCap,
     bar: "green",
     problem:
-      "Docenten gebruiken AI om toetsvragen te genereren op basis van klasprestaties. Prompt bevat \"Mijn klas 5V scoorde slecht op leerdoel 3, en met name Lisa en Tariq…\". De itembank lekt klas-prestatiepatronen.",
+      'Docenten gebruiken AI om toetsvragen te genereren op basis van klasprestaties. Prompt bevat "Mijn klas 5V scoorde slecht op leerdoel 3, en met name Lisa en Tariq…". De itembank lekt klas-prestatiepatronen.',
     pimSpot:
       "PiM zit op de prompt-builder. Klas-aggregaten (n>5) mogen door; sub-groepen of namen worden gegeneraliseerd tot leer-doelstellings­niveau. De gegenereerde items blijven inhoudelijk relevant zonder klasspecifieke 'fingerprint'.",
     pipeline: [
@@ -251,7 +330,11 @@ const SCENARIOS: Scenario[] = [
     benefit:
       "Itembanken worden generaliseerbaar over scholen i.p.v. herkenbaar voor één klas — meer didactisch hergebruik, minder privacy-risico.",
     evidence: [
-      { author: "Wiliam (2011), Embedded Formative Assessment", claim: "Itemkwaliteit hangt af van leerdoel-validiteit, niet van leerlingspecificiteit — generaliseren is didactisch eerder voordeel dan verlies." },
+      {
+        author: "Wiliam (2011), Embedded Formative Assessment",
+        claim:
+          "Itemkwaliteit hangt af van leerdoel-validiteit, niet van leerlingspecificiteit — generaliseren is didactisch eerder voordeel dan verlies.",
+      },
     ],
   },
   {
@@ -275,7 +358,11 @@ const SCENARIOS: Scenario[] = [
     benefit:
       "Voldoet aan de bijzondere-categorieën-eis (AVG art. 9): gezondheidsgegevens verlaten het apparaat niet zonder expliciete, gelogde override.",
     evidence: [
-      { author: "AVG art. 9 lid 2 sub h", claim: "Verwerking van gezondheidsgegevens vereist passende waarborgen — fail-closed met handmatige override is een gangbare interpretatie." },
+      {
+        author: "AVG art. 9 lid 2 sub h",
+        claim:
+          "Verwerking van gezondheidsgegevens vereist passende waarborgen — fail-closed met handmatige override is een gangbare interpretatie.",
+      },
     ],
   },
   {
@@ -298,7 +385,11 @@ const SCENARIOS: Scenario[] = [
     benefit:
       "Eén audit-rapport per release i.p.v. per klant. DPA's verschuiven van 'verwerker' naar 'sub-processor zonder PII-toegang'.",
     evidence: [
-      { author: "SIVON modelinkoopvoorwaarden (2024)", claim: "Sectorale inkoop verlangt aantoonbare technische maatregelen; SDK-aanpak is bewijsbaar en herhaalbaar." },
+      {
+        author: "SIVON modelinkoopvoorwaarden (2024)",
+        claim:
+          "Sectorale inkoop verlangt aantoonbare technische maatregelen; SDK-aanpak is bewijsbaar en herhaalbaar.",
+      },
     ],
   },
   {
@@ -321,7 +412,11 @@ const SCENARIOS: Scenario[] = [
     benefit:
       "Ouders krijgen relevante info zonder dat andere kinderen geïdentificeerd worden — voldoet aan AVG-doelbinding op contextueel niveau.",
     evidence: [
-      { author: "Nissenbaum (2010), Contextual Integrity", claim: "Doorgifte van persoonsinfo is alleen passend binnen de oorspronkelijke informatie­norm; portalen schenden dat snel zonder gerichte filter." },
+      {
+        author: "Nissenbaum (2010), Contextual Integrity",
+        claim:
+          "Doorgifte van persoonsinfo is alleen passend binnen de oorspronkelijke informatie­norm; portalen schenden dat snel zonder gerichte filter.",
+      },
     ],
   },
 ];
@@ -352,9 +447,10 @@ function Hero() {
         Waar past PiM in een <span className="text-primary">onderwijs-AI-pipeline</span>?
       </h1>
       <p className="mt-6 text-lg text-muted-foreground max-w-3xl leading-relaxed">
-        PiM is geen product op zichzelf — het is een <strong className="text-foreground">beslislaag</strong> die je
-        op precies dat ene punt in je orchestratie zet waar ruwe leerling­data anders een netwerk- of model­grens
-        passeert. Hieronder twaalf concrete plekken, per type pipeline, met de didactische én juridische
+        PiM is geen product op zichzelf — het is een{" "}
+        <strong className="text-foreground">beslislaag</strong> die je op precies dat ene punt in je
+        orchestratie zet waar ruwe leerling­data anders een netwerk- of model­grens passeert.
+        Hieronder twaalf concrete plekken, per type pipeline, met de didactische én juridische
         onderbouwing waarom die plek de juiste is.
       </p>
     </section>
@@ -389,17 +485,33 @@ function PipelineMap() {
   const layers = [
     { name: "Bron", desc: "LVS, leerling-input, dictaat, document-upload", color: "line" },
     { name: "Pre-filter", desc: "PiM detect + anonymize/pseudonymize", color: "cyan", pim: true },
-    { name: "Draft-check", desc: "Output­controle, residuele PII = fail", color: "purple", pim: true },
+    {
+      name: "Draft-check",
+      desc: "Output­controle, residuele PII = fail",
+      color: "purple",
+      pim: true,
+    },
     { name: "Orchestratie", desc: "LLM, RAG, agents, classifier", color: "orange" },
-    { name: "Egress re-consult", desc: "Tweede sluis vlak vóór netwerkcall", color: "red", pim: true },
-    { name: "Render / Restore", desc: "Lokale terugkoppeling met handle", color: "green", pim: true },
+    {
+      name: "Egress re-consult",
+      desc: "Tweede sluis vlak vóór netwerkcall",
+      color: "red",
+      pim: true,
+    },
+    {
+      name: "Render / Restore",
+      desc: "Lokale terugkoppeling met handle",
+      color: "green",
+      pim: true,
+    },
   ];
   return (
     <section className="mb-20">
       <h2 className="font-display text-2xl md:text-3xl font-bold mb-2">De universele inbouwplek</h2>
       <p className="text-muted-foreground mb-8 max-w-3xl">
-        Iedere pipeline hieronder is een variant op dezelfde zes-laagse keten. PiM beslaat de laagjes die de
-        vertrouwens­grens kruisen — alles wat tussen "browser-veilig" en "elders" zit.
+        Iedere pipeline hieronder is een variant op dezelfde zes-laagse keten. PiM beslaat de
+        laagjes die de vertrouwens­grens kruisen — alles wat tussen "browser-veilig" en "elders"
+        zit.
       </p>
       <div className="panel p-6 md:p-8 overflow-x-auto">
         <div className="flex items-stretch gap-3 min-w-[760px]">
@@ -432,10 +544,12 @@ function PipelineMap() {
 function ScenarioGrid() {
   return (
     <section className="mb-20">
-      <h2 className="font-display text-2xl md:text-3xl font-bold mb-2">Twaalf concrete scenarios</h2>
+      <h2 className="font-display text-2xl md:text-3xl font-bold mb-2">
+        Twaalf concrete scenarios
+      </h2>
       <p className="text-muted-foreground mb-8 max-w-3xl">
-        Elk scenario beschrijft: het didactische probleem, de exacte inbouwplek, de pipeline-flow, de gekozen
-        modus en de wetenschappelijke onderbouwing waarop de keuze rust.
+        Elk scenario beschrijft: het didactische probleem, de exacte inbouwplek, de pipeline-flow,
+        de gekozen modus en de wetenschappelijke onderbouwing waarop de keuze rust.
       </p>
       <div className="grid gap-6 lg:grid-cols-2">
         {SCENARIOS.map((s) => (
@@ -449,14 +563,29 @@ function ScenarioGrid() {
 function ScenarioCard({ s }: { s: Scenario }) {
   const ModeBadge = () => {
     const color =
-      s.mode === "anonymous" ? "text-green border-green/40 bg-green/10" :
-      s.mode === "pseudonymous" ? "text-purple border-purple/40 bg-purple/10" :
-      "text-cyan border-cyan/40 bg-cyan/10";
+      s.mode === "anonymous"
+        ? "text-green border-green/40 bg-green/10"
+        : s.mode === "pseudonymous"
+          ? "text-purple border-purple/40 bg-purple/10"
+          : "text-cyan border-cyan/40 bg-cyan/10";
     return (
-      <span className={`text-[10px] uppercase tracking-wider font-mono border rounded px-2 py-0.5 ${color}`} style={{
-        color: s.mode === "anonymous" ? "var(--green)" : s.mode === "pseudonymous" ? "var(--purple)" : "var(--cyan)",
-        borderColor: s.mode === "anonymous" ? "var(--green)" : s.mode === "pseudonymous" ? "var(--purple)" : "var(--cyan)",
-      }}>
+      <span
+        className={`text-[10px] uppercase tracking-wider font-mono border rounded px-2 py-0.5 ${color}`}
+        style={{
+          color:
+            s.mode === "anonymous"
+              ? "var(--green)"
+              : s.mode === "pseudonymous"
+                ? "var(--purple)"
+                : "var(--cyan)",
+          borderColor:
+            s.mode === "anonymous"
+              ? "var(--green)"
+              : s.mode === "pseudonymous"
+                ? "var(--purple)"
+                : "var(--cyan)",
+        }}
+      >
         {s.mode}
       </span>
     );
@@ -470,7 +599,9 @@ function ScenarioCard({ s }: { s: Scenario }) {
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap mb-1">
-            <span className="text-[10px] uppercase tracking-wider font-mono text-muted-foreground">{s.domain}</span>
+            <span className="text-[10px] uppercase tracking-wider font-mono text-muted-foreground">
+              {s.domain}
+            </span>
             <ModeBadge />
           </div>
           <h3 className="font-display text-lg font-bold leading-tight">{s.title}</h3>
@@ -501,7 +632,9 @@ function ScenarioCard({ s }: { s: Scenario }) {
               <span className="font-mono text-muted-foreground mt-0.5 w-5 shrink-0">{i + 1}.</span>
               <span
                 className={`flex-1 px-2 py-1 rounded ${
-                  step.pim ? "border border-primary/40 bg-primary/10 text-foreground" : "text-muted-foreground"
+                  step.pim
+                    ? "border border-primary/40 bg-primary/10 text-foreground"
+                    : "text-muted-foreground"
                 }`}
               >
                 {step.pim && <Shield className="inline h-3 w-3 mr-1 text-primary" />}
@@ -514,7 +647,10 @@ function ScenarioCard({ s }: { s: Scenario }) {
       </div>
 
       <div className="rounded-md border border-green/30 bg-green/5 p-3">
-        <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider font-mono text-green mb-1" style={{ color: "var(--green)" }}>
+        <div
+          className="flex items-center gap-2 text-[11px] uppercase tracking-wider font-mono text-green mb-1"
+          style={{ color: "var(--green)" }}
+        >
           <Sparkles className="h-3 w-3" /> Toegevoegde waarde
         </div>
         <p className="text-xs leading-relaxed text-foreground/90">{s.benefit}</p>
@@ -526,7 +662,10 @@ function ScenarioCard({ s }: { s: Scenario }) {
         </div>
         <ul className="space-y-2">
           {s.evidence.map((e) => (
-            <li key={e.author} className="text-xs leading-relaxed border-l-2 border-primary/30 pl-3">
+            <li
+              key={e.author}
+              className="text-xs leading-relaxed border-l-2 border-primary/30 pl-3"
+            >
               <span className="font-semibold text-foreground">{e.author}</span>
               <span className="text-muted-foreground"> — {e.claim}</span>
             </li>
@@ -572,17 +711,22 @@ function ScientificFoundation() {
   ];
   return (
     <section className="mb-20">
-      <h2 className="font-display text-2xl md:text-3xl font-bold mb-2">Wetenschappelijke fundamenten</h2>
+      <h2 className="font-display text-2xl md:text-3xl font-bold mb-2">
+        Wetenschappelijke fundamenten
+      </h2>
       <p className="text-muted-foreground mb-8 max-w-3xl">
-        De scenarios hierboven zijn geen ontwerp­voorkeur — ze rusten op zes pijlers uit privacy-engineering,
-        onderwijskunde en AI-veiligheid. Samen vormen ze de reden waarom PiM precies daar zit waar ze zit.
+        De scenarios hierboven zijn geen ontwerp­voorkeur — ze rusten op zes pijlers uit
+        privacy-engineering, onderwijskunde en AI-veiligheid. Samen vormen ze de reden waarom PiM
+        precies daar zit waar ze zit.
       </p>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {pillars.map((p) => (
           <div key={p.title} className="panel p-5">
             <div className="flex items-center gap-2 mb-2">
               <Quote className="h-4 w-4 text-primary" />
-              <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">{p.author}</span>
+              <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+                {p.author}
+              </span>
             </div>
             <h3 className="font-display font-bold text-base mb-2">{p.title}</h3>
             <p className="text-xs leading-relaxed text-muted-foreground">{p.body}</p>
@@ -595,13 +739,33 @@ function ScientificFoundation() {
 
 function DecisionMatrix() {
   const rows = [
-    { when: "Externe LLM-call met user-input", mode: "anonymous", action: "pre-filter + egress re-consult" },
-    { when: "RAG over interne docs met PII", mode: "pseudonymous", action: "ingest pseudonymize, query re-anon" },
+    {
+      when: "Externe LLM-call met user-input",
+      mode: "anonymous",
+      action: "pre-filter + egress re-consult",
+    },
+    {
+      when: "RAG over interne docs met PII",
+      mode: "pseudonymous",
+      action: "ingest pseudonymize, query re-anon",
+    },
     { when: "Lokale rewrite (Qwen browser)", mode: "anonymous", action: "draft-check op output" },
     { when: "Multi-agent hand-offs", mode: "pseudonymous", action: "PiM-gate per transitie" },
-    { when: "Zorg/MDO-transcript", mode: "anonymous", action: "special-context BLOCK + review-queue" },
-    { when: "Dataset-publicatie voor onderzoek", mode: "anonymous", action: "batch + audit-log per regel" },
-    { when: "Vendor-SaaS in school-tenant", mode: "pseudonymous", action: "SDK in de SPA, vendor ziet tokens" },
+    {
+      when: "Zorg/MDO-transcript",
+      mode: "anonymous",
+      action: "special-context BLOCK + review-queue",
+    },
+    {
+      when: "Dataset-publicatie voor onderzoek",
+      mode: "anonymous",
+      action: "batch + audit-log per regel",
+    },
+    {
+      when: "Vendor-SaaS in school-tenant",
+      mode: "pseudonymous",
+      action: "SDK in de SPA, vendor ziet tokens",
+    },
   ];
   return (
     <section className="mb-20">
@@ -624,10 +788,13 @@ function DecisionMatrix() {
                 <tr key={r.when} className="border-b border-border/30 last:border-0">
                   <td className="px-5 py-3.5">{r.when}</td>
                   <td className="px-5 py-3.5">
-                    <span className="font-mono text-xs px-2 py-0.5 rounded border" style={{
-                      color: r.mode === "anonymous" ? "var(--green)" : "var(--purple)",
-                      borderColor: r.mode === "anonymous" ? "var(--green)" : "var(--purple)",
-                    }}>
+                    <span
+                      className="font-mono text-xs px-2 py-0.5 rounded border"
+                      style={{
+                        color: r.mode === "anonymous" ? "var(--green)" : "var(--purple)",
+                        borderColor: r.mode === "anonymous" ? "var(--green)" : "var(--purple)",
+                      }}
+                    >
                       {r.mode}
                     </span>
                   </td>
@@ -649,8 +816,8 @@ function CTA() {
         Zie het in actie op je eigen tekst
       </h2>
       <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-        Plak een fictief leerling-fragment in de demo. Bekijk live welke detectoren triggeren, welke modus PiM
-        kiest en hoe de draft-check residuele PII vangt voordat iets de browser verlaat.
+        Plak een fictief leerling-fragment in de demo. Bekijk live welke detectoren triggeren, welke
+        modus PiM kiest en hoe de draft-check residuele PII vangt voordat iets de browser verlaat.
       </p>
       <div className="flex flex-wrap justify-center gap-3">
         <Link

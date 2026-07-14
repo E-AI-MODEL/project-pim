@@ -25,9 +25,21 @@
 @custom-variant dark (&:is(.dark *));
 
 @layer base {
-  html { font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif; }
-  .font-display { font-family: 'Space Grotesk', 'Inter', sans-serif; letter-spacing: -0.01em; }
-  .font-mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+  html {
+    font-family:
+      "Inter",
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      sans-serif;
+  }
+  .font-display {
+    font-family: "Space Grotesk", "Inter", sans-serif;
+    letter-spacing: -0.01em;
+  }
+  .font-mono {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+  }
 }
 
 /*
@@ -128,19 +140,19 @@
   --red: oklch(0.68 0.24 18);
 
   --gradient-bg:
-    radial-gradient(circle at 10% 10%, oklch(0.5 0.18 240 / 0.20), transparent 35%),
+    radial-gradient(circle at 10% 10%, oklch(0.5 0.18 240 / 0.2), transparent 35%),
     radial-gradient(circle at 90% 15%, oklch(0.7 0.16 195 / 0.14), transparent 28%),
-    radial-gradient(circle at 50% 90%, oklch(0.55 0.20 305 / 0.10), transparent 40%),
-    linear-gradient(135deg, oklch(0.13 0.04 250), oklch(0.16 0.05 252) 55%, oklch(0.10 0.03 250));
+    radial-gradient(circle at 50% 90%, oklch(0.55 0.2 305 / 0.1), transparent 40%),
+    linear-gradient(135deg, oklch(0.13 0.04 250), oklch(0.16 0.05 252) 55%, oklch(0.1 0.03 250));
   --gradient-cyan: linear-gradient(135deg, oklch(0.78 0.16 230), oklch(0.85 0.16 195));
   --gradient-orange: linear-gradient(135deg, oklch(0.78 0.18 60), oklch(0.72 0.18 35));
-  --gradient-purple: linear-gradient(135deg, oklch(0.72 0.18 305), oklch(0.68 0.20 270));
+  --gradient-purple: linear-gradient(135deg, oklch(0.72 0.18 305), oklch(0.68 0.2 270));
   --shadow-glow: 0 0 32px oklch(0.78 0.16 230 / 0.25);
-  --shadow-glow-cyan: 0 0 32px oklch(0.85 0.16 195 / 0.30);
-  --shadow-glow-orange: 0 0 32px oklch(0.78 0.18 60 / 0.30);
+  --shadow-glow-cyan: 0 0 32px oklch(0.85 0.16 195 / 0.3);
+  --shadow-glow-orange: 0 0 32px oklch(0.78 0.18 60 / 0.3);
   --shadow-glow-red: 0 0 32px oklch(0.68 0.24 18 / 0.35);
-  --shadow-glow-green: 0 0 32px oklch(0.82 0.22 145 / 0.30);
-  --shadow-panel: 0 0 24px oklch(0.50 0.16 240 / 0.10);
+  --shadow-glow-green: 0 0 32px oklch(0.82 0.22 145 / 0.3);
+  --shadow-panel: 0 0 24px oklch(0.5 0.16 240 / 0.1);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -221,20 +233,44 @@
     background: linear-gradient(180deg, oklch(0.24 0.05 252 / 0.92), oklch(0.13 0.04 250 / 0.92));
     border: 1px solid oklch(0.55 0.12 230 / 0.45);
     border-radius: 1rem;
-    box-shadow: 0 0 24px oklch(0.50 0.16 240 / 0.08);
+    box-shadow: 0 0 24px oklch(0.5 0.16 240 / 0.08);
   }
 
-  .stage-bar { height: 3px; border-radius: 3px 3px 0 0; }
-  .stage-bar.bar-line { background: var(--line); }
-  .stage-bar.bar-cyan { background: var(--cyan); }
-  .stage-bar.bar-orange { background: var(--orange); }
-  .stage-bar.bar-purple { background: var(--purple); }
-  .stage-bar.bar-green { background: var(--green); }
-  .stage-bar.bar-red { background: var(--red); }
+  .stage-bar {
+    height: 3px;
+    border-radius: 3px 3px 0 0;
+  }
+  .stage-bar.bar-line {
+    background: var(--line);
+  }
+  .stage-bar.bar-cyan {
+    background: var(--cyan);
+  }
+  .stage-bar.bar-orange {
+    background: var(--orange);
+  }
+  .stage-bar.bar-purple {
+    background: var(--purple);
+  }
+  .stage-bar.bar-green {
+    background: var(--green);
+  }
+  .stage-bar.bar-red {
+    background: var(--red);
+  }
 
-  .verdict-allow { color: var(--green); text-shadow: 0 0 24px oklch(0.82 0.22 145 / 0.5); }
-  .verdict-warn { color: var(--orange); text-shadow: 0 0 24px oklch(0.78 0.18 60 / 0.5); }
-  .verdict-block { color: var(--red); text-shadow: 0 0 24px oklch(0.68 0.24 18 / 0.6); }
+  .verdict-allow {
+    color: var(--green);
+    text-shadow: 0 0 24px oklch(0.82 0.22 145 / 0.5);
+  }
+  .verdict-warn {
+    color: var(--orange);
+    text-shadow: 0 0 24px oklch(0.78 0.18 60 / 0.5);
+  }
+  .verdict-block {
+    color: var(--red);
+    text-shadow: 0 0 24px oklch(0.68 0.24 18 / 0.6);
+  }
 
   .grid-bg {
     background-image:
@@ -262,7 +298,7 @@
   font-family: "IBM Plex Mono", ui-monospace, monospace;
 }
 .pim-landing .hairline {
-  border-color: rgb(232 237 243 / 0.10);
+  border-color: rgb(232 237 243 / 0.1);
 }
 
 /* === Schrijfmodus — PiM highlights in de editor ================ */
@@ -277,27 +313,58 @@
 }
 .pim-pii-hard {
   text-decoration-color: oklch(0.65 0.22 25);
-  background-color: oklch(0.65 0.22 25 / 0.10);
+  background-color: oklch(0.65 0.22 25 / 0.1);
 }
 .pim-pii-ctx {
   text-decoration-color: oklch(0.78 0.16 80);
   background-color: oklch(0.78 0.16 80 / 0.08);
 }
 .pim-pii:hover {
-  background-color: oklch(0.65 0.22 25 / 0.20);
+  background-color: oklch(0.65 0.22 25 / 0.2);
 }
 .pim-pii-ctx:hover {
   background-color: oklch(0.78 0.16 80 / 0.18);
 }
 /* Tiptap focus reset zodat onze prose-styling zichtbaar blijft. */
-.ProseMirror { outline: none; }
-.ProseMirror h1 { font-size: 1.875rem; line-height: 1.2; font-weight: 700; margin-bottom: 0.6em; }
-.ProseMirror h2 { font-size: 1.5rem; line-height: 1.25; font-weight: 600; margin: 1.2em 0 0.4em; }
-.ProseMirror h3 { font-size: 1.25rem; line-height: 1.3; font-weight: 600; margin: 1em 0 0.4em; }
-.ProseMirror p { margin: 0.5em 0; }
-.ProseMirror ul { list-style: disc; padding-left: 1.5em; }
-.ProseMirror ol { list-style: decimal; padding-left: 1.5em; }
-.ProseMirror blockquote { border-left: 3px solid oklch(0.55 0.12 230 / 0.5); padding-left: 1em; color: var(--muted-foreground, currentColor); margin: 1em 0; opacity: 0.85; }
+.ProseMirror {
+  outline: none;
+}
+.ProseMirror h1 {
+  font-size: 1.875rem;
+  line-height: 1.2;
+  font-weight: 700;
+  margin-bottom: 0.6em;
+}
+.ProseMirror h2 {
+  font-size: 1.5rem;
+  line-height: 1.25;
+  font-weight: 600;
+  margin: 1.2em 0 0.4em;
+}
+.ProseMirror h3 {
+  font-size: 1.25rem;
+  line-height: 1.3;
+  font-weight: 600;
+  margin: 1em 0 0.4em;
+}
+.ProseMirror p {
+  margin: 0.5em 0;
+}
+.ProseMirror ul {
+  list-style: disc;
+  padding-left: 1.5em;
+}
+.ProseMirror ol {
+  list-style: decimal;
+  padding-left: 1.5em;
+}
+.ProseMirror blockquote {
+  border-left: 3px solid oklch(0.55 0.12 230 / 0.5);
+  padding-left: 1em;
+  color: var(--muted-foreground, currentColor);
+  margin: 1em 0;
+  opacity: 0.85;
+}
 .ProseMirror p.is-editor-empty:first-child::before {
   color: oklch(0.55 0.04 250);
   content: attr(data-placeholder);

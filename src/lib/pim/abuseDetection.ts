@@ -9,12 +9,12 @@ export type AbuseLevel = "ok" | "watch" | "throttle" | "block";
 
 export interface AbuseSignal {
   level: AbuseLevel;
-  score: number;        // 0..1
+  score: number; // 0..1
   reasons: string[];
   metrics: {
     submissionsPerMinute: number;
     duplicateRatio: number;
-    piiDensity: number;   // PII-spans per 100 tokens
+    piiDensity: number; // PII-spans per 100 tokens
     inputLengthChars: number;
   };
 }
@@ -58,26 +58,40 @@ export function recordSubmission(text: string, signals: PrivacySignals): AbuseSi
   const reasons: string[] = [];
   let score = 0;
 
-  if (submissionsPerMinute > 30) { score += 0.5; reasons.push(`Hoge submission-rate: ${submissionsPerMinute}/min`); }
-  else if (submissionsPerMinute > 15) { score += 0.25; reasons.push(`Verhoogde submission-rate: ${submissionsPerMinute}/min`); }
-
-  if (duplicateRatio > 0.6 && recent.length > 5) {
-    score += 0.3; reasons.push(`Hoge herhaling: ${(duplicateRatio * 100).toFixed(0)}% identieke inputs`);
+  if (submissionsPerMinute > 30) {
+    score += 0.5;
+    reasons.push(`Hoge submission-rate: ${submissionsPerMinute}/min`);
+  } else if (submissionsPerMinute > 15) {
+    score += 0.25;
+    reasons.push(`Verhoogde submission-rate: ${submissionsPerMinute}/min`);
   }
 
-  if (piiDensity > 25) { score += 0.3; reasons.push(`Zeer hoge PII-dichtheid: ${piiDensity.toFixed(0)} per 100 tokens`); }
-  else if (piiDensity > 12) { score += 0.15; reasons.push(`Verhoogde PII-dichtheid: ${piiDensity.toFixed(0)} per 100 tokens`); }
+  if (duplicateRatio > 0.6 && recent.length > 5) {
+    score += 0.3;
+    reasons.push(`Hoge herhaling: ${(duplicateRatio * 100).toFixed(0)}% identieke inputs`);
+  }
 
-  if (text.length > 8000) { score += 0.15; reasons.push(`Zeer lange input (${text.length.toLocaleString("nl-NL")} chars)`); }
+  if (piiDensity > 25) {
+    score += 0.3;
+    reasons.push(`Zeer hoge PII-dichtheid: ${piiDensity.toFixed(0)} per 100 tokens`);
+  } else if (piiDensity > 12) {
+    score += 0.15;
+    reasons.push(`Verhoogde PII-dichtheid: ${piiDensity.toFixed(0)} per 100 tokens`);
+  }
+
+  if (text.length > 8000) {
+    score += 0.15;
+    reasons.push(`Zeer lange input (${text.length.toLocaleString("nl-NL")} chars)`);
+  }
 
   const clamped = Math.min(1, score);
   const level: AbuseLevel =
-    clamped >= 0.75 ? "block" :
-    clamped >= 0.5  ? "throttle" :
-    clamped >= 0.25 ? "watch" : "ok";
+    clamped >= 0.75 ? "block" : clamped >= 0.5 ? "throttle" : clamped >= 0.25 ? "watch" : "ok";
 
   return {
-    level, score: clamped, reasons,
+    level,
+    score: clamped,
+    reasons,
     metrics: { submissionsPerMinute, duplicateRatio, piiDensity, inputLengthChars: text.length },
   };
 }

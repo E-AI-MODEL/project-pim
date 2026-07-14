@@ -5,22 +5,37 @@ import { ShieldCheck, ShieldAlert, ShieldX, GraduationCap, Building2, Code2 } fr
 export function SafetyVerdictCard({ verdict, reason }: { verdict: Verdict; reason: string }) {
   const map = {
     ALLOW: {
-      head: COPY.resultHeadGreen,  body: COPY.statusGreen,
-      teacher: COPY.layerTeacherAllow, leader: COPY.layerLeaderAllow, tech: COPY.layerTechAllow,
+      head: COPY.resultHeadGreen,
+      body: COPY.statusGreen,
+      teacher: COPY.layerTeacherAllow,
+      leader: COPY.layerLeaderAllow,
+      tech: COPY.layerTechAllow,
       cls: "border-green-500/40 bg-green-500/[0.07]",
-      Icon: ShieldCheck, color: "text-green-400", glow: "shadow-[0_0_32px_oklch(0.82_0.22_145/0.25)]",
+      Icon: ShieldCheck,
+      color: "text-green-400",
+      glow: "shadow-[0_0_32px_oklch(0.82_0.22_145/0.25)]",
     },
     ALLOW_WITH_WARNING: {
-      head: COPY.resultHeadOrange, body: COPY.statusOrange,
-      teacher: COPY.layerTeacherWarn, leader: COPY.layerLeaderWarn, tech: COPY.layerTechWarn,
+      head: COPY.resultHeadOrange,
+      body: COPY.statusOrange,
+      teacher: COPY.layerTeacherWarn,
+      leader: COPY.layerLeaderWarn,
+      tech: COPY.layerTechWarn,
       cls: "border-orange-500/40 bg-orange-500/[0.07]",
-      Icon: ShieldAlert, color: "text-orange-400", glow: "shadow-[0_0_32px_oklch(0.78_0.18_60/0.25)]",
+      Icon: ShieldAlert,
+      color: "text-orange-400",
+      glow: "shadow-[0_0_32px_oklch(0.78_0.18_60/0.25)]",
     },
     BLOCK: {
-      head: COPY.resultHeadRed, body: COPY.statusRed,
-      teacher: COPY.layerTeacherBlock, leader: COPY.layerLeaderBlock, tech: COPY.layerTechBlock,
+      head: COPY.resultHeadRed,
+      body: COPY.statusRed,
+      teacher: COPY.layerTeacherBlock,
+      leader: COPY.layerLeaderBlock,
+      tech: COPY.layerTechBlock,
       cls: "border-red-500/40 bg-red-500/[0.07]",
-      Icon: ShieldX, color: "text-red-400", glow: "shadow-[0_0_32px_oklch(0.68_0.24_18/0.3)]",
+      Icon: ShieldX,
+      color: "text-red-400",
+      glow: "shadow-[0_0_32px_oklch(0.68_0.24_18/0.3)]",
     },
   }[verdict];
   const { Icon } = map;
@@ -52,7 +67,9 @@ function Layer({ Icon, label, text }: { Icon: typeof GraduationCap; label: strin
     <div className="flex items-start gap-2.5">
       <Icon className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
       <div className="text-xs leading-relaxed">
-        <span className="text-muted-foreground uppercase tracking-wider text-[10px] mr-1.5">{label}</span>
+        <span className="text-muted-foreground uppercase tracking-wider text-[10px] mr-1.5">
+          {label}
+        </span>
         <span className="text-foreground/85">{text}</span>
       </div>
     </div>

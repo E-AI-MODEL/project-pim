@@ -97,7 +97,12 @@ export async function clearAllLocalData(options: ClearOptions = {}): Promise<Cle
         for (const d of dbs) if (d.name) names.push(d.name);
       }
       // web-llm/transformers fallback-namen voor het geval enumeratie ontbreekt.
-      for (const fallback of ["webllm/model", "webllm/wasm", "webllm/config", "transformers-cache"]) {
+      for (const fallback of [
+        "webllm/model",
+        "webllm/wasm",
+        "webllm/config",
+        "transformers-cache",
+      ]) {
         if (!names.includes(fallback)) names.push(fallback);
       }
       await Promise.all(
@@ -106,7 +111,10 @@ export async function clearAllLocalData(options: ClearOptions = {}): Promise<Cle
             new Promise<void>((resolve) => {
               try {
                 const req = window.indexedDB.deleteDatabase(name);
-                req.onsuccess = () => { result.indexedDb += 1; resolve(); };
+                req.onsuccess = () => {
+                  result.indexedDb += 1;
+                  resolve();
+                };
                 req.onerror = () => {
                   result.errors.push(`indexedDB "${name}": verwijderen mislukt`);
                   resolve();
@@ -115,7 +123,9 @@ export async function clearAllLocalData(options: ClearOptions = {}): Promise<Cle
                 // houdt de DB vast. De delete blijft pending; we tellen 'm NIET
                 // als gewist en melden het, zodat de UI geen valse "klaar" geeft.
                 req.onblocked = () => {
-                  result.errors.push(`indexedDB "${name}": geblokkeerd door open verbinding — sluit tabbladen/herlaad`);
+                  result.errors.push(
+                    `indexedDB "${name}": geblokkeerd door open verbinding — sluit tabbladen/herlaad`,
+                  );
                   resolve();
                 };
               } catch {

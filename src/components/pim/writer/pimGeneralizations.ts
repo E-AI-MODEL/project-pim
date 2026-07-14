@@ -34,8 +34,17 @@ export const GENERALIZATIONS: Record<PiiCategory, string> = {
 
 /** Standaard: harde, ondubbelzinnige identificatoren worden direct gewist. */
 export const DEFAULT_AUTO_REDACT: ReadonlySet<PiiCategory> = new Set<PiiCategory>([
-  "email", "phone", "bsn", "iban", "credit_card", "postcode",
-  "address", "birthdate_text", "student_id", "ip_address", "id_document",
+  "email",
+  "phone",
+  "bsn",
+  "iban",
+  "credit_card",
+  "postcode",
+  "address",
+  "birthdate_text",
+  "student_id",
+  "ip_address",
+  "id_document",
 ]);
 
 export const CATEGORY_LABELS: Record<PiiCategory, string> = {

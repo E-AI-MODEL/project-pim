@@ -38,7 +38,9 @@ export const DESIGN_ONLY_DETECTION_SETTINGS: DetectionLayerSettings = {
   bert: "off",
 };
 
-export function detectionSettingsToNerVariant(settings: DetectionLayerSettings): NerVariantKey | null {
+export function detectionSettingsToNerVariant(
+  settings: DetectionLayerSettings,
+): NerVariantKey | null {
   if (settings.bert === "100mb") return "small";
   if (settings.bert === "180mb") return "large";
   return null;
@@ -54,7 +56,8 @@ export function usesBert(settings: DetectionLayerSettings): boolean {
 
 function profileStringToDetectionSettings(profileId: string): DetectionLayerSettings {
   if (profileId === "education-nl-rules-only") return RULES_ONLY_DETECTION_SETTINGS;
-  if (profileId === "healthcare-nl" || profileId.includes("design")) return DESIGN_ONLY_DETECTION_SETTINGS;
+  if (profileId === "healthcare-nl" || profileId.includes("design"))
+    return DESIGN_ONLY_DETECTION_SETTINGS;
   return DEFAULT_DETECTION_SETTINGS;
 }
 
@@ -62,7 +65,9 @@ function profileStringToDetectionSettings(profileId: string): DetectionLayerSett
  * Compatibility shim for older call sites/tests that may still pass a profile id.
  * Strings are mapped explicitly instead of silently defaulting.
  */
-export function coerceDetectionSettings(input?: DetectionLayerSettings | string | null): DetectionLayerSettings {
+export function coerceDetectionSettings(
+  input?: DetectionLayerSettings | string | null,
+): DetectionLayerSettings {
   if (!input) return DEFAULT_DETECTION_SETTINGS;
   if (typeof input === "string") return profileStringToDetectionSettings(input);
   return { ...DEFAULT_DETECTION_SETTINGS, ...input, regex: true };

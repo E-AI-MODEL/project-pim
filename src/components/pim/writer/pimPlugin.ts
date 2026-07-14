@@ -57,10 +57,7 @@ export function extractPlain(doc: PmNode): { plain: string; map: number[] } {
 }
 
 /** Veilig: span naar PM-range. Geeft null als de span een blokgrens kruist. */
-export function spanToRange(
-  span: PiiSpan,
-  map: number[],
-): { from: number; to: number } | null {
+export function spanToRange(span: PiiSpan, map: number[]): { from: number; to: number } | null {
   if (span.start < 0 || span.end > map.length || span.end <= span.start) return null;
   const fromIdx = map[span.start];
   const lastIdx = map[span.end - 1];
@@ -72,11 +69,7 @@ export function spanToRange(
   return { from: fromIdx, to: lastIdx + 1 };
 }
 
-export function buildDecorations(
-  spans: PiiSpan[],
-  map: number[],
-  doc: PmNode,
-): DecorationSet {
+export function buildDecorations(spans: PiiSpan[], map: number[], doc: PmNode): DecorationSet {
   const decos: Decoration[] = [];
   for (const s of spans) {
     const r = spanToRange(s, map);

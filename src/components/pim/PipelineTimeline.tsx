@@ -5,11 +5,11 @@ export type PipelineStepStatus = "idle" | "ok" | "found" | "warn" | "block" | "s
 export interface PipelineStepView {
   id: string;
   index: number;
-  title: string;       // Human Dutch title, e.g. "Patroon-detectie"
-  subtitle: string;    // 3-6 words — what it does
-  detail: string;      // Semantic explanation based on current state
+  title: string; // Human Dutch title, e.g. "Patroon-detectie"
+  subtitle: string; // 3-6 words — what it does
+  detail: string; // Semantic explanation based on current state
   status: PipelineStepStatus;
-  badge?: string;      // small chip e.g. "3 matches"
+  badge?: string; // small chip e.g. "3 matches"
   lastTickMs: number;
   durationMs: number;
 }
@@ -57,14 +57,18 @@ export function PipelineTimeline({ steps, heartbeats }: Props) {
         const hot = age < 600;
         return (
           <li key={s.id}>
-            <details className={`group rounded-lg border ${STATUS_RING[s.status]} transition-colors`}>
+            <details
+              className={`group rounded-lg border ${STATUS_RING[s.status]} transition-colors`}
+            >
               <summary className="cursor-pointer list-none flex items-start gap-2.5 p-2.5 hover:bg-background/40">
                 <div className="flex flex-col items-center pt-0.5 flex-shrink-0">
                   <span className="font-mono text-[9px] text-muted-foreground tabular-nums">
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   <div className="relative h-3 w-3 mt-0.5 flex items-center justify-center">
-                    {hot && <span className="absolute inset-0 rounded-full bg-cyan/50 animate-ping" />}
+                    {hot && (
+                      <span className="absolute inset-0 rounded-full bg-cyan/50 animate-ping" />
+                    )}
                     <span className={`relative h-2.5 w-2.5 rounded-full ${STATUS_DOT[s.status]}`} />
                   </div>
                 </div>
@@ -79,13 +83,21 @@ export function PipelineTimeline({ steps, heartbeats }: Props) {
                           {s.badge}
                         </span>
                       )}
-                      <span className={`font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${
-                        s.status === "block" ? "text-red" :
-                        s.status === "warn" ? "text-orange" :
-                        s.status === "ok" ? "text-green" :
-                        s.status === "found" ? "text-cyan" :
-                        "text-muted-foreground/70"
-                      }`}>{STATUS_LABEL[s.status]}</span>
+                      <span
+                        className={`font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${
+                          s.status === "block"
+                            ? "text-red"
+                            : s.status === "warn"
+                              ? "text-orange"
+                              : s.status === "ok"
+                                ? "text-green"
+                                : s.status === "found"
+                                  ? "text-cyan"
+                                  : "text-muted-foreground/70"
+                        }`}
+                      >
+                        {STATUS_LABEL[s.status]}
+                      </span>
                     </div>
                   </div>
                   <div className="text-[11px] text-muted-foreground leading-tight mt-0.5 truncate">
@@ -96,7 +108,10 @@ export function PipelineTimeline({ steps, heartbeats }: Props) {
               <div className="px-2.5 pb-2.5 pt-0 pl-9">
                 <p className="text-[11px] text-foreground/85 leading-relaxed">{s.detail}</p>
                 <div className="mt-1.5 font-mono text-[9px] text-muted-foreground/70 tabular-nums">
-                  step #{s.index} · {hb && hb.lastTickMs > 0 ? `${hb.durationMs.toFixed(0)}ms` : "nog niet uitgevoerd"}
+                  step #{s.index} ·{" "}
+                  {hb && hb.lastTickMs > 0
+                    ? `${hb.durationMs.toFixed(0)}ms`
+                    : "nog niet uitgevoerd"}
                 </div>
               </div>
             </details>

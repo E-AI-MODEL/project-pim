@@ -1,7 +1,11 @@
 import type { DraftCandidate, Mode, PrivacySignals, PiiSpan, DraftCheckResult } from "./types";
 import { detectPii } from "./detectors";
 import { runRegistry, runRegistrySync } from "./detectorRegistry";
-import { DEFAULT_DETECTION_SETTINGS, coerceDetectionSettings, type DetectionLayerSettings } from "./detectionSettings";
+import {
+  DEFAULT_DETECTION_SETTINGS,
+  coerceDetectionSettings,
+  type DetectionLayerSettings,
+} from "./detectionSettings";
 
 const GENERALIZATIONS: Record<string, string> = {
   email: "[email]",
@@ -35,7 +39,11 @@ const GENERALIZATIONS: Record<string, string> = {
   context_location_specific: "[locatie]",
 };
 
-function applySpans(text: string, spans: PiiSpan[], replace: (s: PiiSpan, i: number) => string): string {
+function applySpans(
+  text: string,
+  spans: PiiSpan[],
+  replace: (s: PiiSpan, i: number) => string,
+): string {
   const sorted = [...spans].sort((a, b) => a.start - b.start);
   let out = "";
   let cursor = 0;
@@ -91,7 +99,9 @@ export function draftCheck(draft: DraftCandidate, mode: Mode): DraftCheckResult 
   const residual = detectPii(draft.text).filter((s) => !s.contextual);
 
   if (residual.length > 0) {
-    issues.push(`Residuele directe PII gedetecteerd in output: ${residual.map((r) => r.category).join(", ")}`);
+    issues.push(
+      `Residuele directe PII gedetecteerd in output: ${residual.map((r) => r.category).join(", ")}`,
+    );
   }
 
   const tokenLikePattern = /\[[A-Z_]+_\d{3}\]/g;
@@ -104,16 +114,19 @@ export function draftCheck(draft: DraftCandidate, mode: Mode): DraftCheckResult 
     const expectedSet = new Set(draft.expectedTokens);
     const hallucinated = tokens.filter((t) => !expectedSet.has(t));
     if (hallucinated.length > 0) {
-      issues.push(`Hallucinerende tokens (niet uit mapping): ${hallucinated.slice(0, 3).join(", ")}`);
+      issues.push(
+        `Hallucinerende tokens (niet uit mapping): ${hallucinated.slice(0, 3).join(", ")}`,
+      );
     }
   }
 
   if (issues.length === 0) return { status: "pass", issues: [] };
   const hardFail = issues.some((i) => i.includes("Residuele") || i.includes("mode-mix"));
   const residualCategories = residual.map((r) => r.category as string);
-  const halluCount = mode === "pseudonymous" && draft.expectedTokens
-    ? tokens.filter((t) => !new Set(draft.expectedTokens!).has(t)).length
-    : 0;
+  const halluCount =
+    mode === "pseudonymous" && draft.expectedTokens
+      ? tokens.filter((t) => !new Set(draft.expectedTokens!).has(t)).length
+      : 0;
   return {
     status: hardFail ? "fail" : "repair",
     issues,
@@ -140,7 +153,9 @@ export async function draftCheckWithRegistry(
   const residual = spans.filter((s) => !s.contextual);
   const issues: string[] = [];
   if (residual.length > 0) {
-    issues.push(`Residuele directe PII gedetecteerd in output: ${residual.map((r) => r.category).join(", ")}`);
+    issues.push(
+      `Residuele directe PII gedetecteerd in output: ${residual.map((r) => r.category).join(", ")}`,
+    );
   }
   const tokenLikePattern = /\[[A-Z_]+_\d{3}\]/g;
   const tokens = draft.text.match(tokenLikePattern) ?? [];

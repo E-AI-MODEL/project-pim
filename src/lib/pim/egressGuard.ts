@@ -23,21 +23,33 @@ export function getEgressReconsultLog(): string[] {
   return [...reconsultLog];
 }
 
-async function reconsultPayload(payload: CertifiedPayload): Promise<{ ok: true } | { ok: false; reason: string }> {
+async function reconsultPayload(
+  payload: CertifiedPayload,
+): Promise<{ ok: true } | { ok: false; reason: string }> {
   const text = payload.text;
   const detectionSettings = payload.detectionSettings ?? DEFAULT_DETECTION_SETTINGS;
   const spans = await runRegistry(text, { detectionSettings, enableAsync: true });
   const directPii = spans.filter((s) => !s.contextual);
-  const HIGH: ReadonlySet<string> = new Set(["bsn", "iban", "email", "phone", "address", "student_id"]);
+  const HIGH: ReadonlySet<string> = new Set([
+    "bsn",
+    "iban",
+    "email",
+    "phone",
+    "address",
+    "student_id",
+  ]);
   let score = 0;
-  for (const s of directPii) score += HIGH.has(s.category) ? 0.18 : 0.10;
+  for (const s of directPii) score += HIGH.has(s.category) ? 0.18 : 0.1;
   for (const s of spans.filter((s) => s.contextual)) score += s.confidence * 0.12;
   score = Math.min(1, score);
   const riskLevel: RiskLevel =
-    score >= 0.65 ? "critical" : score >= 0.40 ? "high" : score >= 0.18 ? "medium" : "low";
+    score >= 0.65 ? "critical" : score >= 0.4 ? "high" : score >= 0.18 ? "medium" : "low";
 
   if (directPii.length > 0) {
-    return { ok: false, reason: `Egress re-consult BLOCK: ${directPii.length} directe PII in payload` };
+    return {
+      ok: false,
+      reason: `Egress re-consult BLOCK: ${directPii.length} directe PII in payload`,
+    };
   }
   if (riskLevel === "high" || riskLevel === "critical") {
     return { ok: false, reason: `Egress re-consult BLOCK: risk=${riskLevel}` };
@@ -49,7 +61,10 @@ async function reconsultPayload(payload: CertifiedPayload): Promise<{ ok: true }
     { async: true },
   );
   if (check.status === "fail") {
-    return { ok: false, reason: `Egress re-consult BLOCK: draftCheck fail (${check.issues.join("; ")})` };
+    return {
+      ok: false,
+      reason: `Egress re-consult BLOCK: draftCheck fail (${check.issues.join("; ")})`,
+    };
   }
   return { ok: true };
 }
@@ -67,10 +82,24 @@ export async function executeAction(
     return { executed: false, reason: `Geblokkeerd door PIM: ${decision.reasonCode}` };
   }
 
-  const egressActions: PimDecision["action"][] = ["copy", "export_file", "print", "share", "send_external_ai"];
-  if (egressActions.includes(decision.action) && payload.payloadType !== "draft_anonymous_certified") {
-    emitReconsult(`Egress guard BLOCK: payloadType='${payload.payloadType}' niet toegestaan voor '${decision.action}'.`);
-    return { executed: false, reason: `Egress guard BLOCK: payload-type '${payload.payloadType}' mag niet naar buiten.` };
+  const egressActions: PimDecision["action"][] = [
+    "copy",
+    "export_file",
+    "print",
+    "share",
+    "send_external_ai",
+  ];
+  if (
+    egressActions.includes(decision.action) &&
+    payload.payloadType !== "draft_anonymous_certified"
+  ) {
+    emitReconsult(
+      `Egress guard BLOCK: payloadType='${payload.payloadType}' niet toegestaan voor '${decision.action}'.`,
+    );
+    return {
+      executed: false,
+      reason: `Egress guard BLOCK: payload-type '${payload.payloadType}' mag niet naar buiten.`,
+    };
   }
 
   switch (decision.action) {
@@ -81,9 +110,13 @@ export async function executeAction(
 
     case "copy": {
       try {
-        if (!navigator.clipboard) return { executed: false, reason: "Clipboard API niet beschikbaar." };
+        if (!navigator.clipboard)
+          return { executed: false, reason: "Clipboard API niet beschikbaar." };
         const reconsult = await reconsultPayload(payload);
-        if (!reconsult.ok) { emitReconsult(reconsult.reason); return { executed: false, reason: reconsult.reason }; }
+        if (!reconsult.ok) {
+          emitReconsult(reconsult.reason);
+          return { executed: false, reason: reconsult.reason };
+        }
         emitReconsult(`Egress copy re-consult PASS (${payload.text.length} chars).`);
         await navigator.clipboard.writeText(payload.text);
         return { executed: true, reason: "Anonymous tekst gekopieerd naar klembord." };
@@ -94,11 +127,16 @@ export async function executeAction(
 
     case "print": {
       const reconsult = await reconsultPayload(payload);
-      if (!reconsult.ok) { emitReconsult(reconsult.reason); return { executed: false, reason: reconsult.reason }; }
+      if (!reconsult.ok) {
+        emitReconsult(reconsult.reason);
+        return { executed: false, reason: reconsult.reason };
+      }
       emitReconsult(`Egress print re-consult PASS (${payload.text.length} chars).`);
       const w = window.open("", "_blank", "width=600,height=600");
       if (!w) return { executed: false, reason: "Popup geblokkeerd door browser." };
-      w.document.write(`<pre style="font-family:ui-monospace,monospace;white-space:pre-wrap;padding:24px">${escapeHtml(payload.text)}</pre>`);
+      w.document.write(
+        `<pre style="font-family:ui-monospace,monospace;white-space:pre-wrap;padding:24px">${escapeHtml(payload.text)}</pre>`,
+      );
       w.document.close();
       w.focus();
       w.print();
@@ -107,15 +145,24 @@ export async function executeAction(
 
     case "share": {
       const reconsult = await reconsultPayload(payload);
-      if (!reconsult.ok) { emitReconsult(reconsult.reason); return { executed: false, reason: reconsult.reason }; }
+      if (!reconsult.ok) {
+        emitReconsult(reconsult.reason);
+        return { executed: false, reason: reconsult.reason };
+      }
       emitReconsult(`Egress share re-consult PASS (${payload.text.length} chars).`);
       const navAny = navigator as Navigator & { share?: (d: { text?: string }) => Promise<void> };
       if (!navAny.share) {
         try {
           await navigator.clipboard.writeText(payload.text);
-          return { executed: true, reason: "Web Share niet beschikbaar — gekopieerd naar klembord als fallback." };
+          return {
+            executed: true,
+            reason: "Web Share niet beschikbaar — gekopieerd naar klembord als fallback.",
+          };
         } catch {
-          return { executed: false, reason: "Web Share niet beschikbaar en clipboard fallback faalde." };
+          return {
+            executed: false,
+            reason: "Web Share niet beschikbaar en clipboard fallback faalde.",
+          };
         }
       }
       try {
@@ -128,7 +175,10 @@ export async function executeAction(
 
     case "export_file": {
       const reconsult = await reconsultPayload(payload);
-      if (!reconsult.ok) { emitReconsult(reconsult.reason); return { executed: false, reason: reconsult.reason }; }
+      if (!reconsult.ok) {
+        emitReconsult(reconsult.reason);
+        return { executed: false, reason: reconsult.reason };
+      }
       emitReconsult(`Egress export re-consult PASS (${payload.text.length} chars).`);
       const blob = new Blob([payload.text], { type: "text/plain;charset=utf-8" });
       const url = URL.createObjectURL(blob);
@@ -144,9 +194,18 @@ export async function executeAction(
 
     case "send_external_ai": {
       const reconsult = await reconsultPayload(payload);
-      if (!reconsult.ok) { emitReconsult(reconsult.reason); return { executed: false, reason: reconsult.reason }; }
-      emitReconsult(`Egress re-consult PASS (${payload.text.length} chars) — geen endpoint geconfigureerd, simulatie.`);
-      return { executed: true, reason: "Anonymous payload zou nu naar externe AI gaan (re-consult PASS). Geen endpoint geconfigureerd in deze build — simulatie." };
+      if (!reconsult.ok) {
+        emitReconsult(reconsult.reason);
+        return { executed: false, reason: reconsult.reason };
+      }
+      emitReconsult(
+        `Egress re-consult PASS (${payload.text.length} chars) — geen endpoint geconfigureerd, simulatie.`,
+      );
+      return {
+        executed: true,
+        reason:
+          "Anonymous payload zou nu naar externe AI gaan (re-consult PASS). Geen endpoint geconfigureerd in deze build — simulatie.",
+      };
     }
 
     default:
@@ -155,7 +214,8 @@ export async function executeAction(
 }
 
 function escapeHtml(s: string): string {
-  return s.replace(/[&<>"']/g, (c) =>
-    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string),
+  return s.replace(
+    /[&<>"']/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] as string,
   );
 }

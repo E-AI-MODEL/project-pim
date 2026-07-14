@@ -36,18 +36,62 @@ export interface SelfTestReport {
 // Synthetische corpus — bevat opzettelijk patronen die de detectors moeten
 // vangen. Geen echte personen.
 const GOLDEN: GoldenCase[] = [
-  { id: "g.email", text: "Mail het rapport naar test.docent@voorbeeldschool.nl voor vrijdag.", expectCategories: ["email"] },
-  { id: "g.phone", text: "Bel ouders op 06-12345678 voor het gesprek.", expectCategories: ["phone"] },
-  { id: "g.bsn", text: "BSN 123456782 staat in het dossier — niet delen.", expectCategories: ["bsn"] },
-  { id: "g.iban", text: "Betaal de bijdrage op NL91ABNA0417164300 a.u.b.", expectCategories: ["iban"] },
-  { id: "g.postcode", text: "Het adres is in postcode 1011 AB Amsterdam.", expectCategories: ["postcode"] },
-  { id: "g.address", text: "Bezoek de school aan de Kerkstraat 12.", expectCategories: ["address"] },
-  { id: "g.name_school", text: "Jan de Vries zit op basisschool De Regenboog.", expectCategories: ["name", "school"] },
+  {
+    id: "g.email",
+    text: "Mail het rapport naar test.docent@voorbeeldschool.nl voor vrijdag.",
+    expectCategories: ["email"],
+  },
+  {
+    id: "g.phone",
+    text: "Bel ouders op 06-12345678 voor het gesprek.",
+    expectCategories: ["phone"],
+  },
+  {
+    id: "g.bsn",
+    text: "BSN 123456782 staat in het dossier — niet delen.",
+    expectCategories: ["bsn"],
+  },
+  {
+    id: "g.iban",
+    text: "Betaal de bijdrage op NL91ABNA0417164300 a.u.b.",
+    expectCategories: ["iban"],
+  },
+  {
+    id: "g.postcode",
+    text: "Het adres is in postcode 1011 AB Amsterdam.",
+    expectCategories: ["postcode"],
+  },
+  {
+    id: "g.address",
+    text: "Bezoek de school aan de Kerkstraat 12.",
+    expectCategories: ["address"],
+  },
+  {
+    id: "g.name_school",
+    text: "Jan de Vries zit op basisschool De Regenboog.",
+    expectCategories: ["name", "school"],
+  },
   { id: "g.class_code", text: "De klas 4H1 gaat op excursie.", expectCategories: ["class_code"] },
-  { id: "g.care", text: "De leerling heeft dyslexie en valt onder jeugdzorg.", expectCategories: ["context_care"] },
-  { id: "g.incident", text: "Er was een schorsing na het incident vorige week.", expectCategories: ["context_incident"] },
-  { id: "g.small_group", text: "Voor groep 3 geldt een aangepast rooster.", expectCategories: ["context_small_group"] },
-  { id: "g.lex_lvs", text: "De cijfers staan in Magister en Parnassys.", expectCategories: ["school"] },
+  {
+    id: "g.care",
+    text: "De leerling heeft dyslexie en valt onder jeugdzorg.",
+    expectCategories: ["context_care"],
+  },
+  {
+    id: "g.incident",
+    text: "Er was een schorsing na het incident vorige week.",
+    expectCategories: ["context_incident"],
+  },
+  {
+    id: "g.small_group",
+    text: "Voor groep 3 geldt een aangepast rooster.",
+    expectCategories: ["context_small_group"],
+  },
+  {
+    id: "g.lex_lvs",
+    text: "De cijfers staan in Magister en Parnassys.",
+    expectCategories: ["school"],
+  },
 ];
 
 let cached: SelfTestReport | null = null;
@@ -63,7 +107,11 @@ export function getSelfTest(): SelfTestReport | null {
   return cached;
 }
 
-async function probeHardening(): Promise<{ fetchWrapped: boolean; probeLogged: boolean; note: string }> {
+async function probeHardening(): Promise<{
+  fetchWrapped: boolean;
+  probeLogged: boolean;
+  note: string;
+}> {
   // Gedragstest zonder echte DNS: een loopback-poort 0 wordt direct geweigerd
   // (connection refused), terwijl de hardening-wrapper synchroon mag loggen
   // vóór de error. Eerder gebruikten we een ".invalid"-host, maar dat
@@ -77,7 +125,11 @@ async function probeHardening(): Promise<{ fetchWrapped: boolean; probeLogged: b
     /* expected — geen TCP-verbinding */
   }
   const after = getViolations().length;
-  const logged = after > before && getViolations().slice(before).some((v) => v.includes("pim-selftest-probe"));
+  const logged =
+    after > before &&
+    getViolations()
+      .slice(before)
+      .some((v) => v.includes("pim-selftest-probe"));
   return {
     fetchWrapped: typeof window !== "undefined" && window.fetch.length >= 0,
     probeLogged: logged,
@@ -117,9 +169,10 @@ export async function runSelfTest(): Promise<SelfTestReport> {
     rulesetHash,
     golden,
     hardening,
-    summary: status === "pass"
-      ? `Self-test PASS · ${golden.length}/${golden.length} golden-cases · hardening probe gelogd`
-      : `Self-test FAIL · ${failed.length} golden-cases missend (${failed.join(", ") || "—"}) · hardening probeLogged=${hardening.probeLogged}`,
+    summary:
+      status === "pass"
+        ? `Self-test PASS · ${golden.length}/${golden.length} golden-cases · hardening probe gelogd`
+        : `Self-test FAIL · ${failed.length} golden-cases missend (${failed.join(", ") || "—"}) · hardening probeLogged=${hardening.probeLogged}`,
   };
 
   cached = report;
