@@ -5,8 +5,10 @@
 
 import { computeSignals } from "../risk";
 import { anonymize, draftCheck, pseudonymize } from "../processing";
+import { repairAnonymousDraft } from "../contextualGeneralization";
 import { decide } from "../policy";
 import { executeAction } from "../egressGuard";
+import { modelGateFor } from "../modelGate";
 import type { CertifiedPayload, PayloadType } from "../types";
 import {
   EMPTY_ENGINE_STATE,
@@ -36,6 +38,16 @@ function computePayloadType(
   return "draft_pseudonymous_local";
 }
 
+function resolveModelVerified(
+  config: EngineConfig,
+  action: Parameters<typeof modelGateFor>[0],
+): boolean {
+  if (config.integrity) {
+    return modelGateFor(action, config.detectionSettings, config.integrity).verified;
+  }
+  return config.modelVerified ?? true;
+}
+
 export function createEngine(initial: EngineConfig): PimEngine {
   let config: EngineConfig = {
     bertEnabled: true,
@@ -57,25 +69,53 @@ export function createEngine(initial: EngineConfig): PimEngine {
       config.disabledCategories,
     );
 
-    let draft;
+    let initialDraft;
     let pseudoMapping: Map<string, string> | null = null;
     if (input.mode === "anonymous") {
-      draft = anonymize(input.text, signals);
+      initialDraft = anonymize(input.text, signals);
     } else {
       const r = pseudonymize(input.text, signals);
-      draft = r.draft;
+      initialDraft = r.draft;
       pseudoMapping = r.mapping;
     }
 
-    const guard = draftCheck(draft, input.mode);
+    // Effective draft: anonymize/pseudonymize → optional repair → optional LLM override.
+    let effectiveDraft = initialDraft;
+    let repairApplied = false;
+    let llmApplied = false;
+
+    if (input.mode === "anonymous") {
+      if (input.llmDraftText != null) {
+        effectiveDraft = { ...initialDraft, text: input.llmDraftText };
+        llmApplied = true;
+      } else if (input.autoRepair) {
+        const initialGuard = draftCheck(initialDraft, input.mode);
+        if (initialGuard.status !== "pass") {
+          const repairedText = repairAnonymousDraft(initialDraft.text, signals);
+          if (repairedText !== initialDraft.text) {
+            effectiveDraft = { ...initialDraft, text: repairedText };
+            repairApplied = true;
+          }
+        }
+      }
+    }
+
+    const guard = draftCheck(effectiveDraft, input.mode);
     const payloadType = computePayloadType(input.mode, guard.status);
+
+    // Decision signals: for anonymous we re-score on the effective draft text
+    // so the policy decision reflects what would actually leave the browser.
+    const decisionSignals =
+      input.mode === "anonymous"
+        ? computeSignals(effectiveDraft.text, [], config.detectionSettings, config.disabledCategories)
+        : signals;
 
     const displayDecision = decide({
       mode: input.mode,
       action: "display",
-      signals,
+      signals: decisionSignals,
       draftCheck: guard,
-      modelVerified: config.modelVerified ?? true,
+      modelVerified: resolveModelVerified(config, "display"),
       detectionSettings: config.detectionSettings,
       profileId: config.profileId,
       payloadType,
@@ -88,7 +128,11 @@ export function createEngine(initial: EngineConfig): PimEngine {
       phase: "ready",
       input,
       signals,
-      draft,
+      draft: effectiveDraft,
+      initialDraft,
+      repairApplied,
+      llmApplied,
+      decisionSignals,
       pseudoMapping,
       guard,
       payloadType,
@@ -105,9 +149,9 @@ export function createEngine(initial: EngineConfig): PimEngine {
     const decision = decide({
       mode: state.input.mode,
       action: req.action,
-      signals: state.signals!,
+      signals: state.decisionSignals ?? state.signals!,
       draftCheck: state.guard,
-      modelVerified: config.modelVerified ?? true,
+      modelVerified: resolveModelVerified(config, req.action),
       detectionSettings: config.detectionSettings,
       profileId: config.profileId,
       payloadType: state.payloadType,
@@ -119,7 +163,7 @@ export function createEngine(initial: EngineConfig): PimEngine {
     const certified: CertifiedPayload = {
       text: req.payloadText ?? state.draft.text,
       mode: state.input.mode,
-      payloadType: state.payloadType,
+      payloadType: req.payloadType ?? state.payloadType,
       detectionSettings: config.detectionSettings,
       profileId: config.profileId,
       guardStatus: state.guard.status,
