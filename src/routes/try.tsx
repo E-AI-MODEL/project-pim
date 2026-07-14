@@ -473,10 +473,7 @@ function TryPage() {
     [profileId, integrity],
   );
   const engine = usePimEngine(engineConfig);
-  const extraSpans = useMemo(
-    () => (slmEnabled ? slmSpans : []),
-    [slmEnabled, slmSpans],
-  );
+  const extraSpans = useMemo(() => (slmEnabled ? slmSpans : []), [slmEnabled, slmSpans]);
   // Synchroon in render — engine.evaluate is idempotent en engine bewaakt
   // zijn eigen state. useMemo garandeert dat `decision` op eerste render bestaat.
   useMemo(() => {
@@ -499,20 +496,16 @@ function TryPage() {
   }, [engine, text, mode, extraSpans, llmDraft, tick]);
 
   // Voor UI-weergave vóór de eerste evaluate: veilige defaults.
-  const signals =
-    engine.state.signals ??
-    ({
-      directPii: [],
-      contextualPii: [],
-      riskScore: 0,
-      riskLevel: "low" as const,
-      reasons: [],
-      ruleIds: [],
-    });
+  const signals = engine.state.signals ?? {
+    directPii: [],
+    contextualPii: [],
+    riskScore: 0,
+    riskLevel: "low" as const,
+    reasons: [],
+    ruleIds: [],
+  };
   const decisionSignals = engine.state.decisionSignals ?? signals;
-  const guard =
-    engine.state.guard ??
-    ({ status: "pass" as const, issues: [], mode });
+  const guard = engine.state.guard ?? { status: "pass" as const, issues: [], mode };
   const effectiveDraft = engine.state.draft ?? { text, mode, rawHadPii: false };
   const repaired = engine.state.repairApplied;
   const finalDraftText =

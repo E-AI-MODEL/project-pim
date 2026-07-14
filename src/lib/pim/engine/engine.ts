@@ -112,7 +112,12 @@ export function createEngine(initial: EngineConfig): PimEngine {
     // so the policy decision reflects what would actually leave the browser.
     const decisionSignals =
       input.mode === "anonymous"
-        ? computeSignals(effectiveDraft.text, [], config.detectionSettings, config.disabledCategories)
+        ? computeSignals(
+            effectiveDraft.text,
+            [],
+            config.detectionSettings,
+            config.disabledCategories,
+          )
         : signals;
 
     const displayDecision = decide({
