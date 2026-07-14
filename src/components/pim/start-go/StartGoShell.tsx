@@ -100,8 +100,12 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
     }),
     [detectionSettings, thresholdOverrides, disabledCategories, integrity],
   );
-  const { state: engineState, evaluate, previewDecision, requestAction } =
-    usePimEngine(engineConfig);
+  const {
+    state: engineState,
+    evaluate,
+    previewDecision,
+    requestAction,
+  } = usePimEngine(engineConfig);
 
   // Live evaluatie op elke relevante input-mutatie — als effect, niet in
   // useMemo: engine.evaluate() muteert engine-state (side effect).
