@@ -1,15 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ProductShell } from "@/components/pim/product/ProductShell";
-import { isProductMode, type ProductMode } from "@/components/pim/product/types";
-
-/**
- * Lokale, dependencyvrije validator voor de ?mode= search param.
- * Accepteert uitsluitend "quick" | "start" | "write"; fallback = "quick".
- */
-export function validateAppSearch(input: Record<string, unknown>): { mode: ProductMode } {
-  const raw = input?.mode;
-  return { mode: isProductMode(raw) ? raw : "quick" };
-}
+import type { ProductMode } from "@/components/pim/product/types";
+import { validateAppSearch } from "./app.search";
 
 const HEAD_BY_MODE: Record<ProductMode, { title: string; description: string }> = {
   quick: {
