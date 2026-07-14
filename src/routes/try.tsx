@@ -601,7 +601,8 @@ function TryPage() {
     const d = engine.previewDecision(action);
     queueMicrotask(() => tick("decide", performance.now() - t0));
     return d;
-  }, [engine, action, engine.state, tick]);
+    // engine.state is the trigger; engine itself is stable.
+  }, [engine, action, engine.state, tick]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const onAct = async () => {
     setEgress(null);
