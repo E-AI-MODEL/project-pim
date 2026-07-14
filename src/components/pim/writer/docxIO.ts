@@ -1,4 +1,4 @@
-// .docx import (via mammoth) en export (via docx) — 100% in de browser.
+// .docx import (via mammoth) en export (via docx), 100% in de browser.
 
 import type { Editor } from "@tiptap/react";
 import type { Node as PmNode } from "@tiptap/pm/model";

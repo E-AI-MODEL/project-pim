@@ -13,7 +13,7 @@ import { executeAction } from "../../egressGuard";
 import type { Action, Mode, PayloadType } from "../../types";
 
 const CLEAN = "De methode werkt beter. Leerlingen scoren gemiddeld hoger op de weektoets.";
-const CONTEXT = "Kort mentorverslag over Tom de Vries (4H2) — planning aanscherpen.";
+const CONTEXT = "Kort mentorverslag over Tom de Vries (4H2), planning aanscherpen.";
 const HEAVY = "Sarah Jansen, groep 6, De Wilg te Utrecht. BSN 123456782, mail jansen@voorbeeld.nl.";
 
 function baselineStartGo(text: string, mode: Mode, action: Action) {
@@ -51,7 +51,7 @@ describe.each([
   ["repair-flow anonymous", CONTEXT, "anonymous" as Mode, "copy" as Action],
   ["pseudonymous local", CONTEXT, "pseudonymous" as Mode, "save_local" as Action],
   ["blocked egress", HEAVY, "anonymous" as Mode, "send_external_ai" as Action],
-])("StartGoShell parity — %s", (_label, text, mode, action) => {
+])("StartGoShell parity, %s", (_label, text, mode, action) => {
   it("engine matches direct pipeline", () => {
     const b = baselineStartGo(text, mode, action);
     const e = engineRun(text, mode, action);
@@ -63,7 +63,7 @@ describe.each([
   });
 });
 
-describe("StartGoShell parity — extras", () => {
+describe("StartGoShell parity, extras", () => {
   it("model-integriteitsblokkade blokkeert egress", async () => {
     const engine = createEngine({
       detectionSettings: DEFAULT_DETECTION_SETTINGS,

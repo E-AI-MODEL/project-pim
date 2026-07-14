@@ -16,7 +16,7 @@ export function RiskBanner({ level, reasons }: { level: RiskLevel; reasons: stri
       <Icon className="h-5 w-5 shrink-0 mt-0.5" />
       <div className="flex-1 min-w-0">
         <div className="font-display font-bold text-sm uppercase tracking-wider">
-          {isCrit ? "Kritiek risico" : "Verhoogd risico"} — {level}
+          {isCrit ? "Kritiek risico" : "Verhoogd risico"}, {level}
         </div>
         {reasons.length > 0 && (
           <ul className="mt-1 text-xs leading-relaxed text-foreground/85 list-disc pl-5">

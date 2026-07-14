@@ -1,4 +1,4 @@
-// ProductShell — slice A.1 gedragstests.
+// ProductShell, slice A.1 gedragstests.
 // We mocken zware sub-modules (AppHeader/StatusFooter/modes) zodat we
 // puur het gedeelde state/engine-gedrag van de shell kunnen verifiëren.
 
@@ -30,7 +30,7 @@ vi.mock("@/components/pim/product/modes/WriteMode", () => ({ WriteMode: () => <P
 
 import { ProductShell } from "@/components/pim/product/ProductShell";
 
-describe("ProductShell — slice A.1", () => {
+describe("ProductShell, slice A.1", () => {
   it("pim:reset wist tekst en zet engine op idle", async () => {
     render(<ProductShell mode="quick" />);
     await act(async () => {

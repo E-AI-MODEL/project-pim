@@ -11,7 +11,7 @@ import { DEFAULT_DETECTION_SETTINGS } from "../../detectionSettings";
 import type { PiiCategory, PiiSpan } from "../../types";
 
 const CLEAN = "De methode werkt beter. Leerlingen scoren gemiddeld hoger op de weektoets.";
-const CONTEXT = "Kort mentorverslag over Tom de Vries (4H2) — planning aanscherpen.";
+const CONTEXT = "Kort mentorverslag over Tom de Vries (4H2), planning aanscherpen.";
 const HEAVY = "Sarah Jansen, groep 6, De Wilg te Utrecht. BSN 123456782, mail jansen@voorbeeld.nl.";
 
 function baseline(text: string, extraSpans: PiiSpan[] = [], disabled?: Set<PiiCategory>) {
@@ -26,7 +26,7 @@ function engineSignals(text: string, extraSpans: PiiSpan[] = [], disabled?: Set<
   return s.signals!;
 }
 
-describe("WriterShell parity — engine signals equal direct computeSignals", () => {
+describe("WriterShell parity, engine signals equal direct computeSignals", () => {
   it.each([
     ["clean", CLEAN],
     ["context", CONTEXT],

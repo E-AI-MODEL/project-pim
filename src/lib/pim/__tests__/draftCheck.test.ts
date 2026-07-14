@@ -1,9 +1,9 @@
-// §11.3 — 1.45–1.48: draft check + audit-cleanliness.
+// §11.3, 1.45–1.48: draft check + audit-cleanliness.
 import { describe, expect, it } from "vitest";
 import { draftCheck, draftCheckWithRegistry } from "../processing";
 import type { DraftCandidate } from "../types";
 
-describe("draftCheck (sync) — residual PII vinden (1.48)", () => {
+describe("draftCheck (sync), residual PII vinden (1.48)", () => {
   it("vindt e-mail, telefoon, BSN, IBAN als residueel", async () => {
     const cases: Array<[string, string]> = [
       ["test@voorbeeld.nl", "email"],
@@ -33,7 +33,7 @@ describe("draftCheck (sync) — residual PII vinden (1.48)", () => {
   });
 });
 
-describe("draftCheckWithRegistry (async) — §4.6 dezelfde coverage als input", () => {
+describe("draftCheckWithRegistry (async), §4.6 dezelfde coverage als input", () => {
   it("schone tekst => pass", async () => {
     const r = await draftCheckWithRegistry(
       {

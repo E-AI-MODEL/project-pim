@@ -1,4 +1,4 @@
-// Project PIM — core types
+// Project PIM, core types
 export type Mode = "anonymous" | "pseudonymous";
 export type Action =
   | "display"

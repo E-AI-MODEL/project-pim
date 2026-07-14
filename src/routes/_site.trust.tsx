@@ -29,13 +29,13 @@ import {
 export const Route = createFileRoute("/_site/trust")({
   head: () => ({
     meta: [
-      { title: "Vertrouwensdashboard — Project PiM" },
+      { title: "Vertrouwensdashboard, Project PiM" },
       {
         name: "description",
         content:
           "Live status van de privacy-waarborgen: pipeline, runtime-hardening, modelintegriteit, egress-pogingen en reviewrij.",
       },
-      { property: "og:title", content: "Vertrouwensdashboard — Project PiM" },
+      { property: "og:title", content: "Vertrouwensdashboard, Project PiM" },
       {
         property: "og:description",
         content: "Live inzicht in wat Project PiM in je browser doet en niet doet.",
@@ -94,17 +94,17 @@ function TrustPage() {
 
         <Card title="Runtime hardening" icon={ShieldCheck} accent={hardeningOk ? "green" : "red"}>
           <Row label="Status">
-            {hardeningOk ? "Actief — fetch/XHR/sendBeacon/WebSocket gewrapt" : "Niet geladen"}
+            {hardeningOk ? "Actief, fetch/XHR/sendBeacon/WebSocket gewrapt" : "Niet geladen"}
           </Row>
           <Row label="Egress-pogingen">{violations.length}</Row>
           <Row label="Laatste poging">
-            <span className="break-all text-[11px]">{lastViolation ?? "—"}</span>
+            <span className="break-all text-[11px]">{lastViolation ?? "-"}</span>
           </Row>
         </Card>
 
         <Card title="Modelintegriteit" icon={Cpu} accent="cyan">
           <div className="text-[11px] text-muted-foreground mb-2">
-            Catalog vs. runtime — alleen modellen die in deze sessie geladen zijn hebben een actuele
+            Catalog vs. runtime, alleen modellen die in deze sessie geladen zijn hebben een actuele
             hash.
           </div>
           <ul className="space-y-1.5">
@@ -141,7 +141,7 @@ function TrustPage() {
                   </div>
                   <div className="flex justify-between gap-2 font-mono text-[10px]">
                     <span className="text-muted-foreground">actual</span>
-                    <span className="truncate">{rec?.actual ? shortHash(rec.actual) : "—"}</span>
+                    <span className="truncate">{rec?.actual ? shortHash(rec.actual) : "-"}</span>
                   </div>
                 </li>
               );
@@ -185,16 +185,16 @@ function TrustPage() {
           <Row label="Golden cases">
             {selfTest
               ? `${selfTest.golden.filter((g) => g.ok).length}/${selfTest.golden.length}`
-              : "—"}
+              : "-"}
           </Row>
           <Row label="Ruleset hash">
             <span className="font-mono text-[10px]">
-              {selfTest ? shortHash(selfTest.rulesetHash) : "—"}
+              {selfTest ? shortHash(selfTest.rulesetHash) : "-"}
             </span>
           </Row>
           <Row label="Hardening probe">
             <span className={selfTest?.hardening.probeLogged ? "text-green" : "text-red"}>
-              {selfTest ? (selfTest.hardening.probeLogged ? "gelogd" : "NIET gelogd") : "—"}
+              {selfTest ? (selfTest.hardening.probeLogged ? "gelogd" : "NIET gelogd") : "-"}
             </span>
           </Row>
           {selfTest && selfTest.golden.some((g) => !g.ok) && (
@@ -283,11 +283,11 @@ function TrustPage() {
           </span>
         </div>
         <ul className="text-xs text-foreground/80 space-y-1 list-disc pl-5">
-          <li>Lokale verwerking — alle detectie en mapping blijft in de browser.</li>
-          <li>Fail-closed — bij twijfel BLOCK in plaats van doorlaten.</li>
-          <li>AES-GCM mapping — pseudonieme tokens leven alleen versleuteld in geheugen.</li>
-          <li>Audit zonder inhoud — alleen meta (mode, verdict, ruleId, timestamp).</li>
-          <li>Egress wrapper — externe fetches worden gelogd; alleen modelhosts whitelisted.</li>
+          <li>Lokale verwerking, alle detectie en mapping blijft in de browser.</li>
+          <li>Fail-closed, bij twijfel BLOCK in plaats van doorlaten.</li>
+          <li>AES-GCM mapping, pseudonieme tokens leven alleen versleuteld in geheugen.</li>
+          <li>Audit zonder inhoud, alleen meta (mode, verdict, ruleId, timestamp).</li>
+          <li>Egress wrapper, externe fetches worden gelogd; alleen modelhosts whitelisted.</li>
         </ul>
       </div>
     </div>

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { computeSignals, anonymize, draftCheck, DEFAULT_PROFILE } from "@/lib/pim";
 
-describe("PIM smoke — round-trip detect + anonymize + draftCheck", () => {
+describe("PIM smoke, round-trip detect + anonymize + draftCheck", () => {
   it("detecteert BSN en vervangt door label", () => {
     const text = "Het BSN 123456782 staat in het dossier.";
     const signals = computeSignals(text, [], DEFAULT_PROFILE, new Set());

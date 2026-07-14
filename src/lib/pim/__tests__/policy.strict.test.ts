@@ -20,7 +20,7 @@ const baseInput = {
   payloadType: "draft_anonymous_certified" as const,
 };
 
-describe("policy.decide — lock-principe (BERT uit)", () => {
+describe("policy.decide, lock-principe (BERT uit)", () => {
   describe("strikte modus", () => {
     it("BLOCK externe AI met PIM_RULES_ONLY_EXTERNAL_AI_BLOCK", () => {
       const d = decide({
@@ -72,7 +72,7 @@ describe("policy.decide — lock-principe (BERT uit)", () => {
   });
 
   describe("BERT aan (default)", () => {
-    it("strictMode heeft geen effect — gewone risk-check geldt", () => {
+    it("strictMode heeft geen effect, gewone risk-check geldt", () => {
       const d = decide({ ...baseInput, action: "send_external_ai", strictMode: true });
       expect(d.verdict).toBe("ALLOW");
     });

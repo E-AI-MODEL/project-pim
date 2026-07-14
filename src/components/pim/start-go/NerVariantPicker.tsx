@@ -9,7 +9,7 @@ export function NerVariantPicker({
   onChange,
   tone = "light",
 }: {
-  /** Aangeroepen ná het wisselen — caller kan opnieuw laden indien NER actief was. */
+  /** Aangeroepen ná het wisselen, caller kan opnieuw laden indien NER actief was. */
   onChange?: (v: NerVariantKey) => void;
   tone?: "light" | "dark";
 }) {

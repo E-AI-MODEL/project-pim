@@ -1,4 +1,4 @@
-// Slice B — /try en /schrijven zijn opgegaan in /app. We toetsen dat de
+// Slice B, /try en /schrijven zijn opgegaan in /app. We toetsen dat de
 // route-modules een router-native redirect naar de juiste modus gooien
 // (geen window.location, geen loops).
 
@@ -17,7 +17,7 @@ function invokeBeforeLoad(route: { options: Record<string, unknown> }): unknown 
   throw new Error("beforeLoad did not throw a redirect");
 }
 
-describe("Slice B — redirects", () => {
+describe("Slice B, redirects", () => {
   it("/try → /app?mode=quick", () => {
     const r = invokeBeforeLoad(TryRoute as unknown as { options: Record<string, unknown> }) as {
       options: { to?: string; search?: { mode?: string }; replace?: boolean };

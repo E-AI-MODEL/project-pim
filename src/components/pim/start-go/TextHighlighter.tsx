@@ -46,7 +46,7 @@ export function TextHighlighter({ text, spans, className }: Props) {
     );
   }
 
-  // Sort + dedupe overlapping spans (highest confidence wins) — same logic als detectors.
+  // Sort + dedupe overlapping spans (highest confidence wins), same logic als detectors.
   const sorted = [...spans].sort((a, b) => a.start - b.start || b.confidence - a.confidence);
   const merged: PiiSpan[] = [];
   for (const s of sorted) {

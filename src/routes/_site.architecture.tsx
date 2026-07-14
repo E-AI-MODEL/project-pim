@@ -14,13 +14,13 @@ import {
 export const Route = createFileRoute("/_site/architecture")({
   head: () => ({
     meta: [
-      { title: "Architectuur — Project PiM" },
+      { title: "Architectuur, Project PiM" },
       {
         name: "description",
         content:
           "Hoe Project PiM de rollen scheidt: code-detectoren, taalmodellen, guards, beslislaag, egress en audit.",
       },
-      { property: "og:title", content: "Architectuur — Project PiM" },
+      { property: "og:title", content: "Architectuur, Project PiM" },
       {
         property: "og:description",
         content: "De strikte rolverdeling tussen detectie, beslissing en handhaving.",
@@ -41,14 +41,14 @@ const ROLES = [
   {
     icon: Brain,
     name: "Browser SLM",
-    role: "Herkennen contextueel risico — kleine groepen, zorgcontext, incidenten.",
+    role: "Herkennen contextueel risico, kleine groepen, zorgcontext, incidenten.",
     decides: false,
     color: "cyan",
   },
   {
     icon: Wand2,
     name: "Browser LLM",
-    role: "Herschrijft en repareert geschoonde tekst — alleen lokaal.",
+    role: "Herschrijft en repareert geschoonde tekst, alleen lokaal.",
     decides: false,
     color: "purple",
   },
@@ -76,7 +76,7 @@ const ROLES = [
   {
     icon: FileCheck,
     name: "Minimal Audit",
-    role: "Legt alleen besluitmetadata vast — nooit inhoud.",
+    role: "Legt alleen besluitmetadata vast, nooit inhoud.",
     decides: false,
     color: "green",
   },
@@ -209,7 +209,7 @@ function ArchitecturePage() {
               "Pseudonieme tokens in anonieme output",
               "Pseudonieme output naar externe AI",
               "Risicoscore boven actiedrempel",
-              "Bij twijfel — altijd",
+              "Bij twijfel, altijd",
             ].map((rule) => (
               <div key={rule} className="flex items-start gap-2.5 text-sm">
                 <ArrowRight className="h-4 w-4 text-red mt-0.5 flex-shrink-0" />

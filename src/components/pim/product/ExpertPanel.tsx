@@ -12,7 +12,7 @@ import type { ProductMode } from "./types";
 import type { PiiCategory } from "@/lib/pim";
 
 /**
- * Slice C — één gedeeld expertpaneel voor detectielagen, drempels,
+ * Slice C, één gedeeld expertpaneel voor detectielagen, drempels,
  * categorie-instellingen, strict mode en integriteitsdetails. Vervangt
  * de per-modus AdvancedPanels. Opent via de "Expertinstellingen"-knop in
  * de StatusFooter of via het `pim:open-advanced`-event (BurgerMenu).
@@ -64,7 +64,7 @@ export function ExpertPanel({ mode }: { mode: ProductMode }) {
         <SheetHeader>
           <SheetTitle className="font-serif-display text-[#e8edf3]">Expertinstellingen</SheetTitle>
           <SheetDescription className="text-[#e8edf3]/60 text-xs">
-            Detectielagen, model, drempels en categorieën — geldt voor alle modi.
+            Detectielagen, model, drempels en categorieën, geldt voor alle modi.
           </SheetDescription>
         </SheetHeader>
         <div className="mt-4">

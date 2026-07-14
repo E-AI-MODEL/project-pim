@@ -12,7 +12,7 @@
 @import "@fontsource/jetbrains-mono/400.css";
 @import "@fontsource/jetbrains-mono/500.css";
 
-/* Landing — Navy Trust + Libre Baskerville + IBM Plex */
+/* Landing, Navy Trust + Libre Baskerville + IBM Plex */
 @import "@fontsource/libre-baskerville/400.css";
 @import "@fontsource/libre-baskerville/700.css";
 @import "@fontsource/ibm-plex-sans/300.css";
@@ -280,7 +280,7 @@
   }
 }
 
-/* === Landing "Console" theme — Navy Trust ===================== */
+/* === Landing "Console" theme, Navy Trust ===================== */
 .pim-landing {
   --navy-bg: #0f1b3d;
   --navy-surface: #1e3a5f;
@@ -290,18 +290,18 @@
   color: var(--navy-fg);
   font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
 }
-.pim-landing .font-serif-display {
+.font-serif-display {
   font-family: "Libre Baskerville", Georgia, serif;
   letter-spacing: -0.005em;
 }
-.pim-landing .font-plex-mono {
+.font-plex-mono {
   font-family: "IBM Plex Mono", ui-monospace, monospace;
 }
 .pim-landing .hairline {
   border-color: rgb(232 237 243 / 0.1);
 }
 
-/* === Schrijfmodus — PiM highlights in de editor ================ */
+/* === Schrijfmodus, PiM highlights in de editor ================ */
 .pim-pii {
   text-decoration: underline wavy;
   text-decoration-skip-ink: none;

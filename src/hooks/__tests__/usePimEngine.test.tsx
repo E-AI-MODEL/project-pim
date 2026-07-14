@@ -46,7 +46,7 @@ function Harness({
   return <div data-testid="phase">{state.phase}</div>;
 }
 
-describe("usePimEngine — React integration (slice 3.5)", () => {
+describe("usePimEngine, React integration (slice 3.5)", () => {
   it("stabiliseert commandofuncties over re-renders", async () => {
     const states: EngineState[] = [];
     const stableFlags: boolean[] = [];
@@ -104,7 +104,7 @@ describe("usePimEngine — React integration (slice 3.5)", () => {
       await Promise.resolve();
     });
     const withCtx = states.at(-1)!;
-    // Rerender met rules-only (context uit) — contextuele hits horen 0 te zijn
+    // Rerender met rules-only (context uit), contextuele hits horen 0 te zijn
     // omdat de context-laag uit staat.
     rerender(
       <Harness

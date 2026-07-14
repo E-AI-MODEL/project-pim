@@ -1,4 +1,4 @@
-// Slice B — WriteMode toont de echte editor, geen placeholder, en voegt
+// Slice B, WriteMode toont de echte editor, geen placeholder, en voegt
 // géén tweede globale chrome (header/footer/monitor) toe binnen de
 // ProductShell. Redirect- en engine-parity worden elders getest.
 
@@ -33,7 +33,7 @@ vi.mock("@/components/pim/product/modes/StartMode", () => ({
 
 import { ProductShell } from "@/components/pim/product/ProductShell";
 
-describe("Slice B — WriteMode in ProductShell", () => {
+describe("Slice B, WriteMode in ProductShell", () => {
   it("toont de echte WriterWorkspace, geen placeholder-tekst", () => {
     render(<ProductShell mode="write" />);
     expect(screen.getByTestId("writer-workspace-real")).toBeTruthy();

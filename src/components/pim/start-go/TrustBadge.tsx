@@ -103,7 +103,7 @@ export function TrustBadge() {
             )}
             <p className="text-[10px] text-[#e8edf3]/45 leading-snug border-t border-[#3b6fa0]/20 pt-2">
               De self-test draait een golden-corpus door de detectoren en probeert egress te lokken
-              — alles lokaal.
+             , alles lokaal.
             </p>
           </>
         ) : (

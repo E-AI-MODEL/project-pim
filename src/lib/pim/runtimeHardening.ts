@@ -1,4 +1,4 @@
-// Runtime hardening — spec hfst 12.3.
+// Runtime hardening, spec hfst 12.3.
 // Detecteert (niet "blokkeert volledig", omdat dat in user-land niet kan):
 //  - fetch/XHR/sendBeacon naar externe origins die PII-payload dragen
 //  - localStorage writes met inhoud-achtige keys

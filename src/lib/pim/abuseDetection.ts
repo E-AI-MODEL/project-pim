@@ -1,4 +1,4 @@
-// Abuse Detection — spec hfst 19 / v3-2.
+// Abuse Detection, spec hfst 19 / v3-2.
 // Doel: voorkomen dat de sandbox als anonimiseer-machine wordt gebruikt voor
 // massa-PII of repetitieve scrape-achtige inputs. Heuristisch, lokaal, geen
 // netwerkcalls. Resultaat is een score + reden die de UI/policy kan tonen.

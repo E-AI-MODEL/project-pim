@@ -1,12 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Link } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { UspGrid } from "@/components/pim/start-go/UspGrid";
-import { ArrowRight, PenLine, ShieldCheck } from "lucide-react";
 
 export const Route = createFileRoute("/_site/")({
   head: () => ({
     meta: [
-      { title: "Project PiM — Controleer je tekst op privacy voordat je hem deelt" },
+      { title: "Project PiM, Controleer je tekst op privacy voordat je hem deelt" },
       {
         name: "description",
         content:
@@ -14,7 +12,7 @@ export const Route = createFileRoute("/_site/")({
       },
       {
         property: "og:title",
-        content: "Project PiM — Controleer je tekst op privacy voordat je hem deelt",
+        content: "Project PiM, Controleer je tekst op privacy voordat je hem deelt",
       },
       {
         property: "og:description",
@@ -29,42 +27,59 @@ export const Route = createFileRoute("/_site/")({
 function HomePage() {
   return (
     <div className="bg-[#f6f7fb] text-[#0f172a]">
-      <section className="mx-auto max-w-5xl px-5 sm:px-8 py-14 sm:py-20">
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-[#e5e7ef] bg-white px-3 py-1 text-[11px] font-medium text-[#475569]">
-          <ShieldCheck className="h-3.5 w-3.5 text-[#6d4aff]" />
-          Draait volledig in je browser
-        </span>
-        <h1 className="mt-5 text-3xl sm:text-5xl font-semibold tracking-tight leading-[1.1] max-w-3xl">
-          Weet zeker dat je tekst geen privé­gegevens bevat,
-          <span className="text-[#6d4aff]"> voordat je hem deelt.</span>
-        </h1>
-        <p className="mt-4 text-base sm:text-lg text-[#475569] max-w-2xl leading-relaxed">
-          Plak een stuk tekst of schrijf een verslag. PiM streept namen,
-          adressen en andere persoonsgegevens direct aan — zonder iets te
-          versturen.
+      <article className="mx-auto max-w-2xl px-6 sm:px-8 py-16 sm:py-24">
+        <p className="text-[11px] font-medium tracking-[0.18em] uppercase text-[#94a3b8]">
+          Project PiM &middot; Privacy Integrity Monitor
         </p>
-        <div className="mt-7 flex flex-wrap gap-2.5">
+
+        <h1 className="mt-6 font-serif-display text-[2rem] sm:text-[2.75rem] leading-[1.15] text-[#0f172a]">
+          Een tekst delen begint met weten wat erin staat.
+        </h1>
+
+        <div className="mt-8 space-y-5 text-[16px] leading-[1.75] text-[#334155]">
+          <p>
+            PiM leest mee terwijl jij typt of een stuk tekst plakt. Namen,
+            adressen, BSN, telefoonnummers en andere persoonsgegevens worden
+            zichtbaar gemaakt, zodat je bewust kunt kiezen wat je wél en niet
+            deelt.
+          </p>
+          <p>
+            De controle draait volledig in je browser. Geen server, geen upload,
+            geen log. Wat je typt blijft van jou.
+          </p>
+        </div>
+
+        <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 text-[14px]">
           <Link
             to="/app"
             search={{ mode: "quick" }}
-            className="inline-flex items-center gap-2 rounded-lg bg-[#6d4aff] hover:bg-[#5b3dea] px-4 py-2.5 text-sm font-semibold text-white shadow-sm"
+            className="text-[#6d4aff] font-medium hover:underline underline-offset-4"
           >
-            Snel controleren
-            <ArrowRight className="h-4 w-4" />
+            Snel een tekst controleren &rarr;
           </Link>
           <Link
             to="/app"
             search={{ mode: "write" }}
-            className="inline-flex items-center gap-2 rounded-lg border border-[#e5e7ef] bg-white hover:bg-[#eef0f5] px-4 py-2.5 text-sm font-semibold text-[#334155]"
+            className="text-[#334155] hover:text-[#0f172a] hover:underline underline-offset-4"
           >
-            <PenLine className="h-4 w-4" />
             Schrijven met PiM
           </Link>
+          <Link
+            to="/over"
+            className="text-[#64748b] hover:text-[#0f172a] hover:underline underline-offset-4"
+          >
+            Over het project
+          </Link>
         </div>
-      </section>
+      </article>
 
-      <section className="mx-auto max-w-5xl px-5 sm:px-8 pb-20">
-        <UspGrid />
+      <section className="mx-auto max-w-2xl px-6 sm:px-8 pb-24">
+        <div className="border-t border-[#e5e7ef] pt-10">
+          <h2 className="font-serif-display text-[1.35rem] text-[#0f172a] mb-6">
+            Vier principes
+          </h2>
+          <UspGrid />
+        </div>
       </section>
     </div>
   );

@@ -65,7 +65,7 @@ export function modelGateFor(
     return {
       verified: true,
       reason: "no-model-needed",
-      detail: "BERT staat uit — Regex, Lexicon en Context blijven werken.",
+      detail: "BERT staat uit, Regex, Lexicon en Context blijven werken.",
     };
   }
 
@@ -76,7 +76,7 @@ export function modelGateFor(
       ? {
           verified: true,
           reason: "local-action-model-not-required",
-          detail: "BERT is nog niet geverifieerd — lokale actie toegestaan.",
+          detail: "BERT is nog niet geverifieerd, lokale actie toegestaan.",
         }
       : {
           verified: false,
@@ -102,12 +102,12 @@ export function modelGateFor(
       ? {
           verified: true,
           reason: "local-action-model-not-required",
-          detail: "BERT ontbreekt — lokale actie toegestaan.",
+          detail: "BERT ontbreekt, lokale actie toegestaan.",
         }
       : {
           verified: false,
           reason: "bert-required-but-missing",
-          detail: "BERT ontbreekt — uitgaande actie geblokkeerd.",
+          detail: "BERT ontbreekt, uitgaande actie geblokkeerd.",
         };
   }
   if (ner.status === "placeholder") {
@@ -115,7 +115,7 @@ export function modelGateFor(
       ? {
           verified: true,
           reason: "local-action-model-not-required",
-          detail: "BERT heeft alleen lokale pin/config — lokale actie toegestaan.",
+          detail: "BERT heeft alleen lokale pin/config, lokale actie toegestaan.",
         }
       : {
           verified: false,
@@ -127,11 +127,11 @@ export function modelGateFor(
     ? {
         verified: true,
         reason: "local-action-model-not-required",
-        detail: "BERT nog niet geverifieerd — lokale actie toegestaan.",
+        detail: "BERT nog niet geverifieerd, lokale actie toegestaan.",
       }
     : {
         verified: false,
         reason: "bert-required-but-unverified",
-        detail: "BERT nog niet geverifieerd — uitgaande actie geblokkeerd.",
+        detail: "BERT nog niet geverifieerd, uitgaande actie geblokkeerd.",
       };
 }

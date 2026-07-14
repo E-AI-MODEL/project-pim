@@ -1,4 +1,4 @@
-// Secure Mapping Container — AES-GCM via WebCrypto.
+// Secure Mapping Container, AES-GCM via WebCrypto.
 // Spec hfst 20: mapping mag NOOIT in gewone state. UI krijgt alleen een handle.
 
 const KEY_USAGES: KeyUsage[] = ["encrypt", "decrypt"];
@@ -15,7 +15,7 @@ interface InternalContainer {
   entries: Map<string, { iv: Uint8Array<ArrayBuffer>; ct: ArrayBuffer }>;
 }
 
-// Module-private register — niet exporteerbaar, niet in React state.
+// Module-private register, niet exporteerbaar, niet in React state.
 const REGISTER = new Map<string, InternalContainer>();
 
 function randomId(): string {
@@ -47,7 +47,7 @@ export async function createMappingContainer(plain: Map<string, string>): Promis
 /** Restore is alleen lokaal en alleen via de handle. */
 export async function restoreFromContainer(handle: MappingHandle, draft: string): Promise<string> {
   const c = REGISTER.get(handle.id);
-  if (!c) throw new Error("[PIM] Container not found — restore blocked.");
+  if (!c) throw new Error("[PIM] Container not found, restore blocked.");
   let out = draft;
   // Decrypt every token referenced in draft
   for (const [token, { iv, ct }] of c.entries) {

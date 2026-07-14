@@ -34,7 +34,7 @@ export function createPimPlugin() {
 
 /**
  * Loop het doc door, bouw één string + per-char mapping naar PM-posities.
- * Tussen verschillende block-parents voegen we '\n' toe — met synthetische -1
+ * Tussen verschillende block-parents voegen we '\n' toe, met synthetische -1
  * in de map, zodat detectors als 'rule.name' niet over block-grenzen matchen.
  */
 export function extractPlain(doc: PmNode): { plain: string; map: number[] } {

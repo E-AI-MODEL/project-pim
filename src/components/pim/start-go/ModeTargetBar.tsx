@@ -1,4 +1,4 @@
-// §8.3 — Anoniem | Pseudoniem-lokaal + doel-keuze.
+// §8.3, Anoniem | Pseudoniem-lokaal + doel-keuze.
 import type { Mode, Action } from "@/lib/pim/types";
 import { COPY } from "@/lib/pim/copy";
 

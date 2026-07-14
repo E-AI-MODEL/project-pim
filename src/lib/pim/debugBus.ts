@@ -1,5 +1,5 @@
 // Lichtgewicht debug-emitter voor de Live Tech Monitor.
-// Privacy: events bevatten ALLEEN lengtes, telcijfers, IDs en statussen —
+// Privacy: events bevatten ALLEEN lengtes, telcijfers, IDs en statussen -
 // NOOIT ruwe input of mapping-waardes. UI-laag, geen netwerk.
 
 export type DebugEventKind =

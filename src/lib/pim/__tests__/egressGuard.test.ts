@@ -1,4 +1,4 @@
-// §11.3 — 1.37–1.40, 1.49 op het egressGuard-pad.
+// §11.3, 1.37–1.40, 1.49 op het egressGuard-pad.
 import { describe, expect, it } from "vitest";
 import { executeAction } from "../egressGuard";
 import type { CertifiedPayload, PimDecision, PayloadType } from "../types";
@@ -25,7 +25,7 @@ const cert = (type: PayloadType): CertifiedPayload => ({
   guardStatus: "pass",
 });
 
-describe("executeAction — payload-type gate", () => {
+describe("executeAction, payload-type gate", () => {
   for (const bad of [
     "raw_input",
     "mapping",

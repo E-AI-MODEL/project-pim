@@ -13,7 +13,7 @@ import type { ProductMode } from "./types";
 import { DEFAULT_AUTO_REDACT } from "@/components/pim/writer/pimGeneralizations";
 
 /**
- * ProductShell — één gedeelde chrome (header, footer) en één engine-instance
+ * ProductShell, één gedeelde chrome (header, footer) en één engine-instance
  * voor alle drie de modi. De modi zijn inhoudsvlakken; ze renderen geen
  * eigen header, footer, monitor of trust-badge.
  */
@@ -63,7 +63,7 @@ export function ProductShell({ mode }: { mode: ProductMode }) {
     return () => window.removeEventListener("pim:reset", onReset);
   }, [reset]);
 
-  // Slice C.1 — BurgerMenu leest deze flag om te weten of "Nieuwe tekst"
+  // Slice C.1, BurgerMenu leest deze flag om te weten of "Nieuwe tekst"
   // een bevestiging moet vragen. Alleen writer-inhoud is duurbaar; quick/start
   // is een tekstveld en verdient geen extra vraag.
   useEffect(() => {

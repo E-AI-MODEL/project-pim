@@ -1,4 +1,4 @@
-// Spoor B — kleine LLM's herhalen zinnen; dedupeSentences ruimt dat op.
+// Spoor B, kleine LLM's herhalen zinnen; dedupeSentences ruimt dat op.
 import { describe, expect, it } from "vitest";
 import { dedupeSentences } from "../rewriteLlm";
 

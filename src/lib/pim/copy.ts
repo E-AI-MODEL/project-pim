@@ -1,33 +1,33 @@
-// Centrale UI-copy voor Start & Go — spec derde analyse §15.
+// Centrale UI-copy voor Start & Go, spec derde analyse §15.
 // Eén bron van waarheid; UI-componenten importeren hieruit.
 
 export const COPY = {
-  // Hero — werkt voor docent, bestuurder én tech-reviewer
+  // Hero, werkt voor docent, bestuurder én tech-reviewer
   eyebrow: "Privacy Integrity Monitor",
   title: "Controleer je tekst op privacy,",
   titleLine2: "voordat je hem deelt.",
   subtitle:
-    "PiM leest mee in je browser, herkent gevoelige gegevens en zegt of je veilig kunt delen — alles gebeurt lokaal, zonder ingewikkelde technische stappen.",
-  placeholder: "Plak of typ je tekst — of kies hieronder een voorbeeld.",
+    "PiM leest mee in je browser, herkent gevoelige gegevens en zegt of je veilig kunt delen, alles gebeurt lokaal, zonder ingewikkelde technische stappen.",
+  placeholder: "Plak of typ je tekst, of kies hieronder een voorbeeld.",
   startButton: "Controleer deze tekst",
   startButtonShort: "Controleer",
   privacyHint: "Verwerking blijft in je browser. Geen upload, geen tracking.",
   detailsLink: "Toon technische details (modelstatus, regels, audit)",
   liveBadge: "Leest mee",
 
-  // USP-grid op de landing — 2×2
+  // USP-grid op de landing, 2×2
   uspLocalTitle: "Niets verlaat je apparaat",
   uspLocalBody:
     "De controle gebeurt in je browser. Geen upload, geen server, geen log van je tekst.",
   uspDualTitle: "Anoniem of pseudoniem",
   uspDualBody:
-    "Anoniem maakt namen definitief onleesbaar. Pseudoniem vervangt ze door codes — de sleutel blijft op dit apparaat.",
+    "Anoniem maakt namen definitief onleesbaar. Pseudoniem vervangt ze door codes, de sleutel blijft op dit apparaat.",
   uspExplainTitle: "Uitleg per rol",
   uspExplainBody:
     "Eén verdict, drie lezingen: wat het voor jou betekent, voor je organisatie en voor je tech-collega.",
   uspEgressTitle: "Egress Guard",
   uspEgressBody:
-    "De uitgang zit op slot. PiM verstuurt niets — pas nadat jij de actie goedkeurt, gaat de veilige versie eruit.",
+    "De uitgang zit op slot. PiM verstuurt niets, pas nadat jij de actie goedkeurt, gaat de veilige versie eruit.",
 
   // Mini-strip onderaan
   anonVsPseudo:
@@ -36,9 +36,9 @@ export const COPY = {
   // Monitor frame
   monitorLabel: "Live monitor",
   monitorStatus: "Local Guard actief",
-  monitorEmptyHint: "Kies een voorbeeld of typ je eigen tekst — PiM geeft direct een verdict.",
+  monitorEmptyHint: "Kies een voorbeeld of typ je eigen tekst, PiM geeft direct een verdict.",
 
-  // Verdict-zin — voor de docent, in mens-taal
+  // Verdict-zin, voor de docent, in mens-taal
   statusGreen: "Deze versie is veilig genoeg voor de actie die je koos.",
   statusOrange:
     "Bruikbaar, maar de context blijft herkenbaar. Lees de gemarkeerde stukken nog één keer rustig na.",
@@ -47,12 +47,12 @@ export const COPY = {
 
   // Headlines op de verdict-kaart
   resultHeadGreen: "Klaar om te delen",
-  resultHeadOrange: "Bijna klaar — nog even nalezen",
+  resultHeadOrange: "Bijna klaar, nog even nalezen",
   resultHeadRed: "Geblokkeerd",
 
   // Verdict → primaire actie
   buttonAllow: "Voer de gekozen actie uit",
-  buttonAllowWarning: "Ik heb het nagelezen — ga door",
+  buttonAllowWarning: "Ik heb het nagelezen, ga door",
   buttonBlock: "Tekst aanpassen en opnieuw proberen",
 
   // Drie-lagen uitleg per verdict (docent · bestuurder · tech)
@@ -102,7 +102,7 @@ export const COPY = {
   menuClearStorage: "Lokale opslag wissen",
   menuAbout: "Over Project PiM",
 
-  // Tech-laag — voor de tech-collega / reviewer
+  // Tech-laag, voor de tech-collega / reviewer
   layerTechAllow:
     "Verdict ALLOW · draftCheck=pass · payloadType=draft_anonymous_certified. Egress-reconsult draait opnieuw async NER op de exacte payload.",
   layerTechWarn:

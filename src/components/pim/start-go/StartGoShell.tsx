@@ -107,7 +107,7 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
     requestAction,
   } = usePimEngine(engineConfig);
 
-  // Live evaluatie op elke relevante input-mutatie — als effect, niet in
+  // Live evaluatie op elke relevante input-mutatie, als effect, niet in
   // useMemo: engine.evaluate() muteert engine-state (side effect).
   useEffect(() => {
     if (!text.trim()) return;
@@ -125,7 +125,7 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
     setLlmDraftText(null);
   }, [text, mode]);
 
-  // Debounced commit — bepaalt wanneer het ResultPanel verschijnt.
+  // Debounced commit, bepaalt wanneer het ResultPanel verschijnt.
   useEffect(() => {
     setCommitted(false);
     setEgressMsg(null);
@@ -175,7 +175,7 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
     engineState.pseudoMapping,
   ]);
 
-  // Debug bus — één regel per commit-run, net als de oude run().
+  // Debug bus, één regel per commit-run, net als de oude run().
   useEffect(() => {
     if (!result) return;
     emitDebug("pipeline.run", `run: ${result.decision.verdict}`, {

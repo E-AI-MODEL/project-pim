@@ -1,4 +1,4 @@
-// Spec §8.5 — risk / categorieën / detectoren / modelstatus / policyregel / audit / pipeline.
+// Spec §8.5, risk / categorieën / detectoren / modelstatus / policyregel / audit / pipeline.
 import { useState } from "react";
 import type { PimDecision, PrivacySignals } from "@/lib/pim/types";
 import type { ModelIntegrityRecord } from "@/lib/pim/modelCatalog";
@@ -27,8 +27,8 @@ export function DetailsDrawer({ decision, signals, integrity }: Props) {
       {open && (
         <div className="px-4 pb-4 space-y-3 text-xs">
           <Row k="Verdict" v={`${decision.verdict} · ${decision.flag ?? decision.reasonCode}`} />
-          <Row k="Profiel" v={decision.profileId ?? "—"} />
-          <Row k="Payload-type" v={decision.payloadType ?? "—"} />
+          <Row k="Profiel" v={decision.profileId ?? "-"} />
+          <Row k="Payload-type" v={decision.payloadType ?? "-"} />
           <Row
             k="Risk score"
             v={`${(signals.riskScore * 100).toFixed(0)}% · ${signals.riskLevel}`}
@@ -40,7 +40,7 @@ export function DetailsDrawer({ decision, signals, integrity }: Props) {
               "geen"
             }
           />
-          <Row k="Detectoren (rule IDs)" v={signals.ruleIds.join(", ") || "—"} />
+          <Row k="Detectoren (rule IDs)" v={signals.ruleIds.join(", ") || "-"} />
           <Row k="Policyregel" v={`${decision.ruleId} (${decision.policyVersion})`} />
           <Row
             k="Modelintegriteit"

@@ -1,4 +1,4 @@
-// Spec §11.3 — 20 privacy-invarianten (de hoofdmoot).
+// Spec §11.3, 20 privacy-invarianten (de hoofdmoot).
 import { describe, expect, it } from "vitest";
 import { decide } from "../policy";
 import type { DraftCheckResult, PrivacySignals, Action, PayloadType } from "../types";
@@ -26,7 +26,7 @@ function call(action: Action, opts: Partial<Parameters<typeof decide>[0]> = {}) 
   });
 }
 
-describe("§11.3 — privacy-invarianten", () => {
+describe("§11.3, privacy-invarianten", () => {
   // 1.30 pseudonymous + send_external_ai => BLOCK
   it("1.30 pseudonymous + send_external_ai BLOCK", () => {
     expect(
@@ -71,7 +71,7 @@ describe("§11.3 — privacy-invarianten", () => {
     expect(call("send_external_ai", { modelVerified: false }).verdict).toBe("BLOCK");
   });
   // 1.42 missing model dekkend door modelVerified=false test hierboven.
-  // 1.43, 1.44 — in profiles.test.ts
+  // 1.43, 1.44, in profiles.test.ts
   // 1.49 alleen `draft_anonymous_certified` mag naar buiten
   it("1.49 alleen certified anonymous mag egress", () => {
     expect(call("copy", { payloadType: "draft_anonymous_certified" }).verdict).toBe("ALLOW");

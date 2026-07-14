@@ -1,4 +1,4 @@
-// Gedeelde NER-SLM hook — spoor A.
+// Gedeelde NER-SLM hook, spoor A.
 // Vóór deze hook draaide de SLM-integratie alleen inline in StartGoShell, en
 // gebruikte /schrijven het model helemaal niet (computeSignals(plain, [], …)).
 // Eén hook → identiek gedrag op beide pagina's; het model is een globale
@@ -19,13 +19,13 @@ interface UseNerSpansResult {
   nerSpans: PiiSpan[];
   nerStatus: NerStatus | null;
   ready: boolean;
-  /** Start (of herstart) de modeldownload — expliciete user-actie. */
+  /** Start (of herstart) de modeldownload, expliciete user-actie. */
   startNer: () => void;
 }
 
 /**
  * Detecteert personen/locaties via de NER-SLM, gedebounced op tekstwijziging.
- * Laadt het model NIET vanzelf — `startNer()` is een bewuste actie. Zolang het
+ * Laadt het model NIET vanzelf, `startNer()` is een bewuste actie. Zolang het
  * model niet gereed is, blijft `nerSpans` leeg en valt de pipeline terug op
  * regex + lexicon.
  */

@@ -1,4 +1,4 @@
-// Project PIM — gestandaardiseerde flag table (spec hfst 37)
+// Project PIM, gestandaardiseerde flag table (spec hfst 37)
 // Elke flag = ruleId, reasonCode, severity, default verdict.
 // Geen flag bevat ooit inhoud.
 
@@ -97,7 +97,7 @@ export const PIM_FLAGS = {
     reasonCode: "ANON_NO_MAPPING",
     severity: "block",
     verdict: "BLOCK",
-    description: "Anonymous mode heeft geen mapping — restore is per ontwerp onmogelijk.",
+    description: "Anonymous mode heeft geen mapping, restore is per ontwerp onmogelijk.",
   },
   PIM_EXTERNAL_AI_RISK_BLOCK: {
     ruleId: "pim.external.ai.risk.block",
@@ -132,28 +132,28 @@ export const PIM_FLAGS = {
     reasonCode: "DEFAULT_BLOCK",
     severity: "block",
     verdict: "BLOCK",
-    description: "Bij twijfel — fail-closed default.",
+    description: "Bij twijfel, fail-closed default.",
   },
   PIM_RISK_NEAR_THRESHOLD_WARN: {
     ruleId: "pim.risk.near.threshold",
     reasonCode: "RISK_NEAR_THRESHOLD",
     severity: "warn",
     verdict: "ALLOW_WITH_WARNING",
-    description: "Risk dicht bij drempel — handmatige review aanbevolen.",
+    description: "Risk dicht bij drempel, handmatige review aanbevolen.",
   },
   PIM_PSEUDO_LOCAL_ONLY_WARN: {
     ruleId: "pim.pseudo.local.only",
     reasonCode: "PSEUDO_LOCAL_ONLY",
     severity: "warn",
     verdict: "ALLOW_WITH_WARNING",
-    description: "Pseudonieme verwerking — alleen lokaal toegestaan.",
+    description: "Pseudonieme verwerking, alleen lokaal toegestaan.",
   },
   PIM_DRAFT_REPAIR_WARN: {
     ruleId: "pim.draft.repair",
     reasonCode: "DRAFT_REPAIR",
     severity: "warn",
     verdict: "ALLOW_WITH_WARNING",
-    description: "Draft kan verbeterd worden — repair loop voorgesteld.",
+    description: "Draft kan verbeterd worden, repair loop voorgesteld.",
   },
   PIM_OK: {
     ruleId: "pim.ok",
@@ -167,21 +167,21 @@ export const PIM_FLAGS = {
     reasonCode: "RULES_ONLY_NO_EXTERNAL",
     severity: "block",
     verdict: "BLOCK",
-    description: "Rules-only profiel mag geen externe AI gebruiken — modelcoverage te beperkt.",
+    description: "Rules-only profiel mag geen externe AI gebruiken, modelcoverage te beperkt.",
   },
   PIM_RULES_ONLY_EXPORT_BLOCK: {
     ruleId: "pim.rules.only.export",
     reasonCode: "RULES_ONLY_NO_EXPORT",
     severity: "block",
     verdict: "BLOCK",
-    description: "Rules-only profiel mag geen bestanden exporteren — beperkte detectie.",
+    description: "Rules-only profiel mag geen bestanden exporteren, beperkte detectie.",
   },
   PIM_PROFILE_DESIGN_ONLY_BLOCK: {
     ruleId: "pim.profile.design.only",
     reasonCode: "PROFILE_DESIGN_ONLY",
     severity: "block",
     verdict: "BLOCK",
-    description: "Profiel is ontwerpvoorbereiding — geen egress toegestaan.",
+    description: "Profiel is ontwerpvoorbereiding, geen egress toegestaan.",
   },
   PIM_PAYLOAD_TYPE_EGRESS_BLOCK: {
     ruleId: "pim.payload.type.egress",
@@ -196,7 +196,7 @@ export const PIM_FLAGS = {
     severity: "warn",
     verdict: "ALLOW_WITH_WARNING",
     description:
-      "BERT staat uit — detectie is mogelijk niet volledig. Zet strikte modus aan om dit te blokkeren.",
+      "BERT staat uit, detectie is mogelijk niet volledig. Zet strikte modus aan om dit te blokkeren.",
   },
 } as const satisfies Record<string, Omit<PimFlag, "flag">>;
 

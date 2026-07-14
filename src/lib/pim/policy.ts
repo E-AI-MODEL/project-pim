@@ -110,7 +110,7 @@ export function decide({
     return fromFlag(
       "PIM_PAYLOAD_TYPE_EGRESS_BLOCK",
       base,
-      `Payload-type '${payloadType}' mag de browser niet verlaten — alleen 'draft_anonymous_certified'.`,
+      `Payload-type '${payloadType}' mag de browser niet verlaten, alleen 'draft_anonymous_certified'.`,
     );
   }
 

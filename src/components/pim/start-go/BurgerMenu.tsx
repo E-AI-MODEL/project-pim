@@ -1,5 +1,5 @@
-// Spec §7.2 — menu-items in vaste volgorde.
-// Slice C.1 — primaire taken los van technische items. Secundaire
+// Spec §7.2, menu-items in vaste volgorde.
+// Slice C.1, primaire taken los van technische items. Secundaire
 // (expert/diagnostiek) staan onder "Meer", standaard ingeklapt.
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import {
