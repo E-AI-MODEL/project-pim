@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validateAppSearch } from "@/routes/app";
+import { validateAppSearch } from "@/routes/app.search";
 
 describe("validateAppSearch", () => {
   it("ontbrekende mode → quick", () => {
