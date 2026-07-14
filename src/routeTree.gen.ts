@@ -9,9 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TryRouteImport } from './routes/try'
 import { Route as TrustRouteImport } from './routes/trust'
-import { Route as SchrijvenRouteImport } from './routes/schrijven'
 import { Route as ScenariosRouteImport } from './routes/scenarios'
 import { Route as PipelineRouteImport } from './routes/pipeline'
 import { Route as OverRouteImport } from './routes/over'
@@ -22,19 +20,9 @@ import { Route as ArchitectureRouteImport } from './routes/architecture'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
 
-const TryRoute = TryRouteImport.update({
-  id: '/try',
-  path: '/try',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const TrustRoute = TrustRouteImport.update({
   id: '/trust',
   path: '/trust',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SchrijvenRoute = SchrijvenRouteImport.update({
-  id: '/schrijven',
-  path: '/schrijven',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ScenariosRoute = ScenariosRouteImport.update({
@@ -93,9 +81,7 @@ export interface FileRoutesByFullPath {
   '/over': typeof OverRoute
   '/pipeline': typeof PipelineRoute
   '/scenarios': typeof ScenariosRoute
-  '/schrijven': typeof SchrijvenRoute
   '/trust': typeof TrustRoute
-  '/try': typeof TryRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -107,9 +93,7 @@ export interface FileRoutesByTo {
   '/over': typeof OverRoute
   '/pipeline': typeof PipelineRoute
   '/scenarios': typeof ScenariosRoute
-  '/schrijven': typeof SchrijvenRoute
   '/trust': typeof TrustRoute
-  '/try': typeof TryRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -122,9 +106,7 @@ export interface FileRoutesById {
   '/over': typeof OverRoute
   '/pipeline': typeof PipelineRoute
   '/scenarios': typeof ScenariosRoute
-  '/schrijven': typeof SchrijvenRoute
   '/trust': typeof TrustRoute
-  '/try': typeof TryRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -138,9 +120,7 @@ export interface FileRouteTypes {
     | '/over'
     | '/pipeline'
     | '/scenarios'
-    | '/schrijven'
     | '/trust'
-    | '/try'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -152,9 +132,7 @@ export interface FileRouteTypes {
     | '/over'
     | '/pipeline'
     | '/scenarios'
-    | '/schrijven'
     | '/trust'
-    | '/try'
   id:
     | '__root__'
     | '/'
@@ -166,9 +144,7 @@ export interface FileRouteTypes {
     | '/over'
     | '/pipeline'
     | '/scenarios'
-    | '/schrijven'
     | '/trust'
-    | '/try'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -181,32 +157,16 @@ export interface RootRouteChildren {
   OverRoute: typeof OverRoute
   PipelineRoute: typeof PipelineRoute
   ScenariosRoute: typeof ScenariosRoute
-  SchrijvenRoute: typeof SchrijvenRoute
   TrustRoute: typeof TrustRoute
-  TryRoute: typeof TryRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/try': {
-      id: '/try'
-      path: '/try'
-      fullPath: '/try'
-      preLoaderRoute: typeof TryRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/trust': {
       id: '/trust'
       path: '/trust'
       fullPath: '/trust'
       preLoaderRoute: typeof TrustRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/schrijven': {
-      id: '/schrijven'
-      path: '/schrijven'
-      fullPath: '/schrijven'
-      preLoaderRoute: typeof SchrijvenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/scenarios': {
@@ -285,9 +245,7 @@ const rootRouteChildren: RootRouteChildren = {
   OverRoute: OverRoute,
   PipelineRoute: PipelineRoute,
   ScenariosRoute: ScenariosRoute,
-  SchrijvenRoute: SchrijvenRoute,
   TrustRoute: TrustRoute,
-  TryRoute: TryRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
