@@ -5,14 +5,6 @@ import { SafetyVerdictCard } from "@/components/pim/start-go/SafetyVerdictCard";
 import { FindingChips } from "@/components/pim/start-go/FindingChips";
 import type { Example } from "@/components/pim/start-go/ExamplePicker";
 
-interface Step {
-  id: string;
-  title: string;
-  subtitle: string;
-  done: boolean;
-  detail: string;
-}
-
 /**
  * Start & Go: begeleid overzicht van de zes engine-stappen op basis van de
  * gedeelde engine-state. Geen eigen engine, geen dubbele header/monitor.
@@ -40,58 +32,13 @@ export function StartMode() {
     [previewDecision, action, state.signals],
   );
 
-  const hits = (state.signals?.directPii.length ?? 0) + (state.signals?.contextualPii.length ?? 0);
-
-  const steps: Step[] = [
-    {
-      id: "input",
-      title: "1 · Tekst",
-      subtitle: "Wat je wilt controleren",
-      done: text.trim().length > 0,
-      detail: text.trim() ? `${text.length} tekens ingevoerd` : "Plak of typ tekst hierboven.",
-    },
-    {
-      id: "detect",
-      title: "2 · Detectie",
-      subtitle: "Regex, lexicon en context",
-      done: !!state.signals,
-      detail: state.signals
-        ? `${hits} signalen, risico ${state.signals.riskLevel}`
-        : "Wacht op tekst.",
-    },
-    {
-      id: "anonymize",
-      title: "3 · Anonimiseer",
-      subtitle: "Vervang of vertoken",
-      done: !!state.draft,
-      detail: state.draft
-        ? `${state.draft.text.length} tekens veilig, ${state.repairApplied ? "auto-repair toegepast" : "direct veilig"}`
-        : "Volgt na detectie.",
-    },
-    {
-      id: "guard",
-      title: "4 · Draft-check",
-      subtitle: "Zit er nog PII in?",
-      done: !!state.guard,
-      detail: state.guard ? `Status: ${state.guard.status}` : "Wacht op anonimisatie.",
-    },
-    {
-      id: "decide",
-      title: "5 · Beslissing",
-      subtitle: `Voor doel · ${action}`,
-      done: !!previewedDecision,
-      detail: previewedDecision ? `Verdict: ${previewedDecision.verdict}` : "Wacht op draft-check.",
-    },
-    {
-      id: "egress",
-      title: "6 · Egress",
-      subtitle: "Alleen als jij goedkeurt",
-      done: false,
-      detail:
-        previewedDecision?.verdict === "ALLOW"
-          ? "Klaar om te versturen."
-          : "Niets verlaat je apparaat.",
-    },
+  const steps = [
+    { label: "Tekst", done: text.trim().length > 0 },
+    { label: "Detectie", done: !!state.signals },
+    { label: "Anonimiseer", done: !!state.draft },
+    { label: "Draft-check", done: !!state.guard },
+    { label: "Beslissing", done: !!previewedDecision },
+    { label: "Egress", done: previewedDecision?.verdict === "ALLOW" },
   ];
 
   return (
@@ -107,19 +54,22 @@ export function StartMode() {
         action={action}
         onActionChange={setAction}
       />
-      <ol className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {steps.map((s) => (
-          <li
-            key={s.id}
-            className={`rounded-md border p-3 ${
-              s.done ? "border-green-400/40 bg-green-400/5" : "border-[#e5e7ef] bg-[#f6f7fb]"
-            }`}
-          >
-            <div className="font-plex-mono text-[10px] uppercase tracking-wider text-[#64748b]">
-              {s.title}
-            </div>
-            <div className="mt-1 text-sm text-[#0f172a]">{s.subtitle}</div>
-            <div className="mt-2 text-xs text-[#0f172a]/70">{s.detail}</div>
+      <ol className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-[11px] text-[#64748b]">
+        {steps.map((s, i) => (
+          <li key={s.label} className="inline-flex items-center gap-2">
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 ${
+                s.done
+                  ? "bg-emerald-50 text-emerald-700"
+                  : "bg-[#f1f2f7] text-[#94a3b8]"
+              }`}
+            >
+              <span
+                className={`h-1.5 w-1.5 rounded-full ${s.done ? "bg-emerald-500" : "bg-[#cbd5e1]"}`}
+              />
+              {s.label}
+            </span>
+            {i < steps.length - 1 && <span className="text-[#cbd5e1]">›</span>}
           </li>
         ))}
       </ol>
