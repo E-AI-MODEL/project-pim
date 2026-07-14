@@ -82,17 +82,20 @@ describe("WriterWorkspace publiceert NER-bron via ProductShell", () => {
     }
   });
 
-  it("wist de NER-bron wanneer de writer unmount", async () => {
+  it("wist de NER-bron wanneer de writer unmount (mode-wissel write → quick)", async () => {
     nerInputs.length = 0;
-    let unmount: () => void = () => {};
+    let rerender!: (ui: React.ReactElement) => void;
     await act(async () => {
       const r = render(<ProductShell mode="write" />);
-      unmount = r.unmount;
+      rerender = r.rerender;
     });
+    expect(nerInputs).toContain("John mailt vandaag.");
     await act(async () => {
-      unmount();
+      rerender(<ProductShell mode="quick" />);
     });
-    // De laatste bron-waarde die de shell nog doorgaf, moet leeg zijn.
+    // Na de mode-wissel is de writer unmount, setNerSourceText("") is
+    // aangeroepen en Quick-mode leest weer uit `text` (leeg in deze test),
+    // dus de laatst geobserveerde NER-input mag geen writer-tekst zijn.
     expect(nerInputs[nerInputs.length - 1]).toBe("");
   });
 });
