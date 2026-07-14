@@ -1,4 +1,4 @@
-// Boot-time self-test layer — spec hfst 12 / verificatie van componenten.
+// Boot-time self-test layer, spec hfst 12 / verificatie van componenten.
 //
 // Doel: bij de eerste app-render verifiëren dat (a) de detector-rulesets
 // nog steeds een bekende corpus correct herkennen ("golden-set"), en
@@ -7,7 +7,7 @@
 // wordt dit zichtbaar op /trust zodat egress-actie kan worden uitgeschakeld.
 //
 // Belangrijk: dit is een verificatie-laag, geen content-filter. De golden
-// corpus bevat geen echte persoonsgegevens — alleen synthetische teksten
+// corpus bevat geen echte persoonsgegevens, alleen synthetische teksten
 // die de regex/lexicon-patronen MOETEN raken.
 
 import { computeSignals } from "./risk";
@@ -33,7 +33,7 @@ export interface SelfTestReport {
   summary: string;
 }
 
-// Synthetische corpus — bevat opzettelijk patronen die de detectors moeten
+// Synthetische corpus, bevat opzettelijk patronen die de detectors moeten
 // vangen. Geen echte personen.
 const GOLDEN: GoldenCase[] = [
   {
@@ -48,7 +48,7 @@ const GOLDEN: GoldenCase[] = [
   },
   {
     id: "g.bsn",
-    text: "BSN 123456782 staat in het dossier — niet delen.",
+    text: "BSN 123456782 staat in het dossier, niet delen.",
     expectCategories: ["bsn"],
   },
   {
@@ -115,14 +115,14 @@ async function probeHardening(): Promise<{
   // Gedragstest zonder echte DNS: een loopback-poort 0 wordt direct geweigerd
   // (connection refused), terwijl de hardening-wrapper synchroon mag loggen
   // vóór de error. Eerder gebruikten we een ".invalid"-host, maar dat
-  // veroorzaakte een echte DNS-lookup vanaf elke gebruiker bij boot — wat
+  // veroorzaakte een echte DNS-lookup vanaf elke gebruiker bij boot, wat
   // tegenstrijdig leek met "niets verlaat je apparaat".
   const before = getViolations().length;
   const PROBE = "http://127.0.0.1:0/pim-selftest-probe";
   try {
     await fetch(PROBE, { method: "GET", mode: "no-cors" });
   } catch {
-    /* expected — geen TCP-verbinding */
+    /* expected, geen TCP-verbinding */
   }
   const after = getViolations().length;
   const logged =
@@ -135,7 +135,7 @@ async function probeHardening(): Promise<{
     probeLogged: logged,
     note: logged
       ? "Lokale probe (127.0.0.1:0) werd door wrapper gelogd zonder netwerkverkeer."
-      : "Wrapper heeft probe NIET gelogd — fetch-interceptor mogelijk omzeild.",
+      : "Wrapper heeft probe NIET gelogd, fetch-interceptor mogelijk omzeild.",
   };
 }
 
@@ -172,7 +172,7 @@ export async function runSelfTest(): Promise<SelfTestReport> {
     summary:
       status === "pass"
         ? `Self-test PASS · ${golden.length}/${golden.length} golden-cases · hardening probe gelogd`
-        : `Self-test FAIL · ${failed.length} golden-cases missend (${failed.join(", ") || "—"}) · hardening probeLogged=${hardening.probeLogged}`,
+        : `Self-test FAIL · ${failed.length} golden-cases missend (${failed.join(", ") || "-"}) · hardening probeLogged=${hardening.probeLogged}`,
   };
 
   cached = report;

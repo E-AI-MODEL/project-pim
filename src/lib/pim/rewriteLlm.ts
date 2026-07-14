@@ -1,10 +1,10 @@
-// Rewrite LLM (Qwen) via @mlc-ai/web-llm — spec hfst 25 / v3-2.
+// Rewrite LLM (Qwen) via @mlc-ai/web-llm, spec hfst 25 / v3-2.
 // Doel: bij Draft Check "repair" een LLM-rewrite proberen die residuele
 // herkenbaarheid generaliseert ZONDER tokens of categoriewoorden te raken.
 //
 // Hard rules:
 //   - Alleen anonieme drafts. Pseudonieme tokens mogen we nooit aan een LLM
-//     geven (zelfs niet lokaal — bewaakt via ALLOW-list aan de UI-kant).
+//     geven (zelfs niet lokaal, bewaakt via ALLOW-list aan de UI-kant).
 //   - On-demand load achter expliciete user-actie (~400MB download).
 //   - Output gaat door dezelfde Draft Check Guard. Bij twijfel = origineel.
 //   - Catalog-status `placeholder` blijft staan: productie-egress geblokt.
@@ -93,7 +93,7 @@ export function dedupeSentences(text: string): string {
     const kept: string[] = [];
     for (const sentence of line.split(/(?<=[.!?])\s+/)) {
       const norm = normalize(sentence);
-      // Korte fragmenten (<8 tekens) ongemoeid laten — te risicovol voor dedup.
+      // Korte fragmenten (<8 tekens) ongemoeid laten, te risicovol voor dedup.
       if (norm.length >= 8) {
         if (seen.has(norm)) continue;
         seen.add(norm);

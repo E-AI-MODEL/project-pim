@@ -146,7 +146,7 @@ export function PipelineStepsBar() {
           <StepPill
             num={1}
             title="Regex & regels"
-            sub="Lokale patroon-detectie — altijd aan, geen download."
+            sub="Lokale patroon-detectie, altijd aan, geen download."
             status="ready"
           />
           <StepPill

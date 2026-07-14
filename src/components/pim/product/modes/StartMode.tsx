@@ -65,7 +65,7 @@ export function StartMode() {
       subtitle: "Vervang of vertoken",
       done: !!state.draft,
       detail: state.draft
-        ? `${state.draft.text.length} tekens veilig — ${state.repairApplied ? "auto-repair toegepast" : "direct veilig"}`
+        ? `${state.draft.text.length} tekens veilig, ${state.repairApplied ? "auto-repair toegepast" : "direct veilig"}`
         : "Volgt na detectie.",
     },
     {

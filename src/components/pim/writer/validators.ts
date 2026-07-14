@@ -1,4 +1,4 @@
-// Strict-mode validators — verlagen false positives op identifier-detectors.
+// Strict-mode validators, verlagen false positives op identifier-detectors.
 
 /** BSN-elfproef (NL). 9 cijfers; sum(d[i]*w[i]) mod 11 == 0 met w = [9..2,-1]. */
 export function isValidBsn(raw: string): boolean {

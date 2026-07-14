@@ -1,4 +1,4 @@
-// Production Egress Guard — handhaaft PIM-besluit op echte browser-egress.
+// Production Egress Guard, handhaaft PIM-besluit op echte browser-egress.
 
 import type { PimDecision, CertifiedPayload } from "./types";
 import { draftCheckWithRegistry } from "./processing";
@@ -156,7 +156,7 @@ export async function executeAction(
           await navigator.clipboard.writeText(payload.text);
           return {
             executed: true,
-            reason: "Web Share niet beschikbaar — gekopieerd naar klembord als fallback.",
+            reason: "Web Share niet beschikbaar, gekopieerd naar klembord als fallback.",
           };
         } catch {
           return {
@@ -199,12 +199,12 @@ export async function executeAction(
         return { executed: false, reason: reconsult.reason };
       }
       emitReconsult(
-        `Egress re-consult PASS (${payload.text.length} chars) — geen endpoint geconfigureerd, simulatie.`,
+        `Egress re-consult PASS (${payload.text.length} chars), geen endpoint geconfigureerd, simulatie.`,
       );
       return {
         executed: true,
         reason:
-          "Anonymous payload zou nu naar externe AI gaan (re-consult PASS). Geen endpoint geconfigureerd in deze build — simulatie.",
+          "Anonymous payload zou nu naar externe AI gaan (re-consult PASS). Geen endpoint geconfigureerd in deze build, simulatie.",
       };
     }
 

@@ -14,7 +14,7 @@ import { DEFAULT_DETECTION_SETTINGS } from "../../detectionSettings";
 import type { Action } from "../../types";
 
 const CLEAN = "De methode werkt beter. Leerlingen scoren gemiddeld hoger op de weektoets.";
-const REPAIR = "Kort mentorverslag over Tom de Vries (4H2) — planning aanscherpen.";
+const REPAIR = "Kort mentorverslag over Tom de Vries (4H2), planning aanscherpen.";
 const BLOCK = "Sarah Jansen, groep 6, De Wilg te Utrecht. BSN 123456782, mail jansen@voorbeeld.nl.";
 
 function baseline(text: string, action: Action) {
@@ -55,7 +55,7 @@ describe.each([
   ["clean", CLEAN, "display" as Action],
   ["repair", REPAIR, "copy" as Action],
   ["block", BLOCK, "send_external_ai" as Action],
-])("try.tsx parity — %s", (_label, text, action) => {
+])("try.tsx parity, %s", (_label, text, action) => {
   it("engine matches direct pipeline", () => {
     const b = baseline(text, action);
     const e = engineRun(text, action);
@@ -74,7 +74,7 @@ describe.each([
   });
 });
 
-describe("try.tsx parity — extras", () => {
+describe("try.tsx parity, extras", () => {
   it("llmDraftText replaces the anonymize draft and re-guards", () => {
     const engine = createEngine({ detectionSettings: DEFAULT_DETECTION_SETTINGS });
     engine.evaluate({

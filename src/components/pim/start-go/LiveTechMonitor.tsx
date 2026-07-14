@@ -172,7 +172,7 @@ export function LiveTechMonitor({ trigger }: { trigger: React.ReactNode }) {
   useEffect(() => onModelIntegrity(setIntegrity), []);
   useEffect(() => subscribeDebug(setEvents), []);
 
-  // Slice C.1 — laat het BurgerMenu-item "Diagnostiek" dit paneel openen.
+  // Slice C.1, laat het BurgerMenu-item "Diagnostiek" dit paneel openen.
   useEffect(() => {
     const onOpen = () => setOpen(true);
     window.addEventListener("pim:open-diagnostics", onOpen);
@@ -230,7 +230,7 @@ export function LiveTechMonitor({ trigger }: { trigger: React.ReactNode }) {
         <SheetHeader>
           <SheetTitle className="font-serif-display text-[#e8edf3]">Live techniek</SheetTitle>
           <SheetDescription className="text-[#e8edf3]/60 text-xs">
-            Realtime kijkje in de pipeline. <strong>Op mobiel is niet alles mogelijk</strong> — de
+            Realtime kijkje in de pipeline. <strong>Op mobiel is niet alles mogelijk</strong>, de
             generalisatie-LLM (~400 MB) blijft daar uit; NER-SLM werkt wel maar de eerste download
             duurt langer.
           </SheetDescription>
@@ -267,7 +267,7 @@ export function LiveTechMonitor({ trigger }: { trigger: React.ReactNode }) {
                     ? ageMs < 1000
                       ? `${Math.round(ageMs)} ms geleden`
                       : `${Math.round(ageMs / 1000)} s geleden`
-                    : "—"}
+                    : "-"}
                 </span>
               </div>
               <div className="text-[11px] text-[#e8edf3]/70 font-plex-mono break-all">
@@ -285,16 +285,16 @@ export function LiveTechMonitor({ trigger }: { trigger: React.ReactNode }) {
                   <div className="flex items-center gap-1.5">
                     <StatusDot tone={verdictTone(String(live.lastRun.data?.verdict ?? ""))} />
                     <span className="font-plex-mono text-[11px] text-[#e8edf3]">
-                      {String(live.lastRun.data?.verdict ?? "—")}
+                      {String(live.lastRun.data?.verdict ?? "-")}
                     </span>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-x-3 gap-y-1 font-plex-mono text-[11px]">
                   <span className="text-[#e8edf3]/60">duur</span>
-                  <span className="text-right">{String(live.lastRun.data?.ms ?? "—")} ms</span>
+                  <span className="text-right">{String(live.lastRun.data?.ms ?? "-")} ms</span>
                   <span className="text-[#e8edf3]/60">input-lengte</span>
                   <span className="text-right">
-                    {String(live.lastRun.data?.inputLen ?? "—")} chars
+                    {String(live.lastRun.data?.inputLen ?? "-")} chars
                   </span>
                   <span className="text-[#e8edf3]/60">directe hits</span>
                   <span className="text-right">{String(live.lastRun.data?.directHits ?? 0)}</span>
@@ -303,22 +303,22 @@ export function LiveTechMonitor({ trigger }: { trigger: React.ReactNode }) {
                     {String(live.lastRun.data?.contextualHits ?? 0)}
                   </span>
                   <span className="text-[#e8edf3]/60">modus</span>
-                  <span className="text-right">{String(live.lastRun.data?.mode ?? "—")}</span>
+                  <span className="text-right">{String(live.lastRun.data?.mode ?? "-")}</span>
                   <span className="text-[#e8edf3]/60">actie</span>
-                  <span className="text-right">{String(live.lastRun.data?.action ?? "—")}</span>
+                  <span className="text-right">{String(live.lastRun.data?.action ?? "-")}</span>
                   <span className="text-[#e8edf3]/60">profiel</span>
                   <span className="text-right truncate">
-                    {String(live.lastRun.data?.profile ?? "—")}
+                    {String(live.lastRun.data?.profile ?? "-")}
                   </span>
                   <span className="text-[#e8edf3]/60">draftCheck</span>
-                  <span className="text-right">{String(live.lastRun.data?.draftCheck ?? "—")}</span>
+                  <span className="text-right">{String(live.lastRun.data?.draftCheck ?? "-")}</span>
                   <span className="text-[#e8edf3]/60">modelGate</span>
                   <span className="text-right truncate">
-                    {String(live.lastRun.data?.modelGate ?? "—")}
+                    {String(live.lastRun.data?.modelGate ?? "-")}
                   </span>
                   <span className="text-[#e8edf3]/60">payload</span>
                   <span className="text-right truncate">
-                    {String(live.lastRun.data?.payloadType ?? "—")}
+                    {String(live.lastRun.data?.payloadType ?? "-")}
                   </span>
                 </div>
               </div>
@@ -339,8 +339,8 @@ export function LiveTechMonitor({ trigger }: { trigger: React.ReactNode }) {
                   </div>
                 </div>
                 <div className="font-plex-mono text-[11px] text-[#e8edf3]/70 break-words">
-                  {String(live.lastExec.data?.action ?? "—")} ·{" "}
-                  {String(live.lastExec.data?.reason ?? "—")}
+                  {String(live.lastExec.data?.action ?? "-")} ·{" "}
+                  {String(live.lastExec.data?.reason ?? "-")}
                 </div>
               </div>
             )}
@@ -408,7 +408,7 @@ export function LiveTechMonitor({ trigger }: { trigger: React.ReactNode }) {
               <StepPill
                 num={1}
                 title="Regex & regels"
-                sub="Lokale patroon-detectie — altijd aan, geen download."
+                sub="Lokale patroon-detectie, altijd aan, geen download."
                 status="ready"
               />
               <StepPill
@@ -441,7 +441,7 @@ export function LiveTechMonitor({ trigger }: { trigger: React.ReactNode }) {
                 {ner?.modelId}
               </div>
               <div className="text-xs text-[#e8edf3]/70">
-                runtime: <strong>{ner?.runtime ?? "—"}</strong> · verified:{" "}
+                runtime: <strong>{ner?.runtime ?? "-"}</strong> · verified:{" "}
                 <strong>{ner?.verified ? "ja" : "nee"}</strong>
               </div>
               {ner?.error && <div className="text-xs text-red-300">{ner.error}</div>}

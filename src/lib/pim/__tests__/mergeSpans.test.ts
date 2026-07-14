@@ -1,4 +1,4 @@
-// Spoor A — bron-bewuste merge: regex-identifiers autoritair, naam-dekking
+// Spoor A, bron-bewuste merge: regex-identifiers autoritair, naam-dekking
 // van regex + SLM versterkt elkaar i.p.v. te concurreren op confidence.
 import { describe, expect, it } from "vitest";
 import { mergeSpans } from "../mergeSpans";

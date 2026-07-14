@@ -6,13 +6,13 @@ import { ShieldX, ShieldAlert, ShieldCheck } from "lucide-react";
 export const Route = createFileRoute("/_site/flags")({
   head: () => ({
     meta: [
-      { title: "Beslissingscodes — Project PiM" },
+      { title: "Beslissingscodes, Project PiM" },
       {
         name: "description",
         content:
-          "Volledige tabel van de PIM_* beslissingscodes. Elke code bevat een ruleId, reasonCode, ernst en standaard verdict — nooit inhoud.",
+          "Volledige tabel van de PIM_* beslissingscodes. Elke code bevat een ruleId, reasonCode, ernst en standaard verdict, nooit inhoud.",
       },
-      { property: "og:title", content: "Beslissingscodes — Project PiM" },
+      { property: "og:title", content: "Beslissingscodes, Project PiM" },
       {
         property: "og:description",
         content: "Alle PIM_* beslissingscodes met ruleId, reasonCode, ernst en verdict.",
@@ -60,7 +60,7 @@ function FlagsPage() {
             De <span className="text-primary">beslissingscodes</span>
           </>
         }
-        description="Elke beslissing van PiM verwijst naar een vaste code met ruleId, reasonCode, ernst en standaard verdict. Een code bevat nooit tekst — alleen metadata."
+        description="Elke beslissing van PiM verwijst naar een vaste code met ruleId, reasonCode, ernst en standaard verdict. Een code bevat nooit tekst, alleen metadata."
       />
 
       <section className="mx-auto max-w-7xl px-6 py-10 grid grid-cols-2 md:grid-cols-4 gap-3">

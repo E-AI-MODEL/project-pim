@@ -20,11 +20,11 @@ export interface EngineConfig {
   profileId?: PipelineProfileId;
   thresholdOverrides?: Partial<Record<Action, number>>;
   disabledCategories?: ReadonlySet<PiiCategory>;
-  /** Default true — BERT (NER) active. */
+  /** Default true, BERT (NER) active. */
   bertEnabled?: boolean;
-  /** Default false — lock-principe strict mode. */
+  /** Default false, lock-principe strict mode. */
   strictMode?: boolean;
-  /** Default true — model integrity gate verified. UI toggles this via modelGateFor. */
+  /** Default true, model integrity gate verified. UI toggles this via modelGateFor. */
   modelVerified?: boolean;
   /**
    * When provided the engine computes the modelGate per action itself
@@ -74,7 +74,7 @@ export interface EngineState {
   pseudoMapping: Map<string, string> | null;
   guard: DraftCheckResult | null;
   payloadType: PayloadType;
-  /** Decision for a hypothetical `display` action — always safe to compute. */
+  /** Decision for a hypothetical `display` action, always safe to compute. */
   displayDecision: PimDecision | null;
 }
 

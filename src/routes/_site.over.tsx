@@ -27,7 +27,7 @@ export const Route = createFileRoute("/_site/over")({
       {
         property: "og:description",
         content:
-          "Hoe Project PiM persoonsgegevens herkent, beoordeelt en tegenhoudt — volledig in je browser.",
+          "Hoe Project PiM persoonsgegevens herkent, beoordeelt en tegenhoudt, volledig in je browser.",
       },
     ],
   }),
@@ -99,7 +99,7 @@ function HomePage() {
             Lokale privacy voor onderwijs.
           </>
         }
-        description="Een controle die in je browser draait en de paden voor ruwe tekst, pseudonieme verwerking, anonieme verwerking en netwerkverkeer strikt gescheiden houdt — zodat schijnveiligheid geen optie meer is."
+        description="Een controle die in je browser draait en de paden voor ruwe tekst, pseudonieme verwerking, anonieme verwerking en netwerkverkeer strikt gescheiden houdt, zodat schijnveiligheid geen optie meer is."
       >
         <div className="flex flex-wrap gap-3">
           <Link
@@ -168,7 +168,7 @@ function HomePage() {
           03 · Twee modi, strikt gescheiden
         </div>
         <h2 className="font-display text-3xl md:text-4xl font-bold mb-10">
-          Anoniem of pseudoniem — nooit allebei tegelijk.
+          Anoniem of pseudoniem, nooit allebei tegelijk.
         </h2>
         <div className="grid gap-5 md:grid-cols-2">
           <div className="pipeline-stage p-7">
@@ -179,7 +179,7 @@ function HomePage() {
             <div className="font-display text-2xl font-bold mb-3">Niet terug te draaien</div>
             <p className="text-sm text-muted-foreground leading-relaxed mb-4">
               Generaliseren zonder koppelingstabel. Geen tokens, geen herstel. Geschikt voor delen,
-              export en — onder strikte risico-drempels — externe AI.
+              export en, onder strikte risico-drempels, externe AI.
             </p>
             <ul className="text-xs space-y-1.5 text-muted-foreground/90">
               <li>✓ Onomkeerbare generalisatie</li>
@@ -193,7 +193,7 @@ function HomePage() {
               Pseudonieme route
             </div>
             <div className="font-display text-2xl font-bold mb-3">
-              Omkeerbaar — uitsluitend lokaal
+              Omkeerbaar, uitsluitend lokaal
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed mb-4">
               Lokale tokenisatie met een versleutelde koppelingstabel. De interface ziet alleen
@@ -227,7 +227,7 @@ function HomePage() {
             </h2>
             <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
               Plak een stukje tekst, kies een modus en een actie, en zie elke laag van de controle
-              live aan het werk — met het uiteindelijke oordeel van PiM. Alles in je eigen browser.
+              live aan het werk, met het uiteindelijke oordeel van PiM. Alles in je eigen browser.
             </p>
             <Link
               to="/try"

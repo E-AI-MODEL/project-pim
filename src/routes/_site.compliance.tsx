@@ -12,12 +12,12 @@ import {
 export const Route = createFileRoute("/_site/compliance")({
   head: () => ({
     meta: [
-      { title: "Compliance — Project PiM" },
+      { title: "Compliance, Project PiM" },
       {
         name: "description",
         content: "Juridische afbakening, AI Act-grenzen en dreigingsmodel van Project PiM.",
       },
-      { property: "og:title", content: "Compliance — Project PiM" },
+      { property: "og:title", content: "Compliance, Project PiM" },
       {
         property: "og:description",
         content: "Juridische afbakening en dreigingsmodel van Project PiM.",
@@ -33,11 +33,11 @@ const SOURCES = [
     url: "https://www.edpb.europa.eu/our-work-tools/documents/public-consultations/2025/guidelines-012025-pseudonymisation",
   },
   {
-    name: "Autoriteit Persoonsgegevens — Handleiding AVG",
+    name: "Autoriteit Persoonsgegevens, Handleiding AVG",
     url: "https://www.autoriteitpersoonsgegevens.nl/uploads/imported/handleidingalgemeneverordeninggegevensbescherming.pdf",
   },
   {
-    name: "Regulation (EU) 2024/1689 — AI Act",
+    name: "Regulation (EU) 2024/1689, AI Act",
     url: "https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
   },
 ];
@@ -80,7 +80,7 @@ function CompliancePage() {
       label: "Geen placeholder modelhashes",
       detail:
         integrity.length === 0
-          ? "Geen modellen geladen — neutraal"
+          ? "Geen modellen geladen, neutraal"
           : `${integrity.filter((r) => r.status === "placeholder").length} placeholder, ${integrity.filter((r) => r.status === "verified").length} verified, ${integrity.filter((r) => r.status === "mismatch").length} mismatch`,
     },
     {
@@ -101,7 +101,7 @@ function CompliancePage() {
     {
       ok: true,
       label: "Audit zonder inhoud",
-      detail: "Audit log bevat alleen metadata — geen tekstinhoud",
+      detail: "Audit log bevat alleen metadata, geen tekstinhoud",
     },
     {
       ok: true,
@@ -120,11 +120,11 @@ function CompliancePage() {
             Compliance, <span className="text-primary">eerlijk</span>
           </>
         }
-        description="Project PiM claimt geen juridische volledige anonimisering. Het claimt een afdwingbare technische scheiding — meer niet, en dat is bewust."
+        description="Project PiM claimt geen juridische volledige anonimisering. Het claimt een afdwingbare technische scheiding, meer niet, en dat is bewust."
       />
 
       <section className="mx-auto max-w-5xl px-6 py-14 space-y-10">
-        <Block title="Productiegate — v3-2" tone={allGreen ? "green" : "red"}>
+        <Block title="Productiegate, v3-2" tone={allGreen ? "green" : "red"}>
           <p className="text-sm mb-4">
             Een release wordt alleen vrijgegeven als alle onderstaande checks groen zijn. Live
             status:
@@ -210,12 +210,12 @@ function CompliancePage() {
             "Wij garanderen dat elke onderwijscontext altijd juridisch volledig anoniem is."
           </p>
           <p className="mt-3 text-sm">
-            Onderwijscontext is contextueel herkenbaar — kleine klassen, zorgbehoeften, incidenten —
+            Onderwijscontext is contextueel herkenbaar, kleine klassen, zorgbehoeften, incidenten -
             en daarom blijft menselijke verantwoordelijkheid noodzakelijk bij gevoelige dossiers.
           </p>
         </Block>
 
-        <Block title="AI Act — verboden gebruik" tone="red">
+        <Block title="AI Act, verboden gebruik" tone="red">
           <p className="text-sm mb-3">De tool mag niet worden ingezet voor:</p>
           <ul className="grid sm:grid-cols-2 gap-y-2 text-sm">
             {FORBIDDEN.map((x) => (
@@ -227,7 +227,7 @@ function CompliancePage() {
           </ul>
         </Block>
 
-        <Block title="AI Act — toegestane technische focus" tone="green">
+        <Block title="AI Act, toegestane technische focus" tone="green">
           <ul className="flex flex-wrap gap-2">
             {ALLOWED.map((x) => (
               <li

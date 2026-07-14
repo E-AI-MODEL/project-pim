@@ -1,4 +1,4 @@
-// Gedeelde, bron-bewuste span-merge — spoor A.
+// Gedeelde, bron-bewuste span-merge, spoor A.
 //
 // Vóór deze module bestonden er drie losse merges (risk.ts, detectorRegistry.ts
 // ×2) die overlap oplosten met "hoogste confidence wint". Dat is destructief:

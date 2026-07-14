@@ -18,7 +18,7 @@ export function MonitorShell() {
         </div>
       </div>
 
-      {/* body — live demo */}
+      {/* body, live demo */}
       <div className="p-5 sm:p-6">
         <StartGoShell compact />
       </div>

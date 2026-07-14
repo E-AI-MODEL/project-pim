@@ -1,4 +1,4 @@
-// Detector Registry — profile-free detection layers.
+// Detector Registry, profile-free detection layers.
 // Detectors are plug-ins. The runtime uses explicit layers: Regex, Lexicon,
 // Context and the selected BERT model. Profiles are not part of the user-facing
 // or egress decision path anymore.
@@ -69,7 +69,7 @@ registerDetector({
   run: (text) => runRegexDetectors(text),
 });
 
-// Special lexicon — school names / education terms the regex layer misses.
+// Special lexicon, school names / education terms the regex layer misses.
 const EDU_LEXICON: {
   term: RegExp;
   category: PiiSpan["category"];

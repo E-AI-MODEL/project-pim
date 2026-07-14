@@ -6,7 +6,7 @@ import type { Example } from "@/components/pim/start-go/ExamplePicker";
 
 /**
  * Snel proberen: plak tekst, engine evalueert live, resultaat verschijnt na
- * korte debounce. Gebruikt de gedeelde engine uit ProductShell — geen eigen
+ * korte debounce. Gebruikt de gedeelde engine uit ProductShell, geen eigen
  * usePimEngine, geen eigen header/footer, geen advanced panel of modelkaarten.
  */
 export function QuickMode() {
@@ -32,7 +32,7 @@ export function QuickMode() {
     evaluate({ text, mode, autoRepair: false });
   }, [evaluate, text, mode]);
 
-  // Debounced commit — bepaalt wanneer ResultPanel verschijnt.
+  // Debounced commit, bepaalt wanneer ResultPanel verschijnt.
   useEffect(() => {
     setCommitted(false);
     setEgressMsg(null);

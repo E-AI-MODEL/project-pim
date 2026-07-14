@@ -52,14 +52,14 @@ export const Route = createRootRoute({
       {
         name: "description",
         content:
-          "Project PiM controleert tekst lokaal in je browser op persoonsgegevens. Eerst veilig, dan pas delen — met uitleg.",
+          "Project PiM controleert tekst lokaal in je browser op persoonsgegevens. Eerst veilig, dan pas delen, met uitleg.",
       },
       { name: "author", content: "Project PiM" },
       { property: "og:title", content: "Project PiM" },
       {
         property: "og:description",
         content:
-          "Project PiM controleert tekst lokaal in je browser op persoonsgegevens. Eerst veilig, dan pas delen — met uitleg.",
+          "Project PiM controleert tekst lokaal in je browser op persoonsgegevens. Eerst veilig, dan pas delen, met uitleg.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -67,7 +67,7 @@ export const Route = createRootRoute({
       {
         name: "twitter:description",
         content:
-          "Project PiM controleert tekst lokaal in je browser op persoonsgegevens. Eerst veilig, dan pas delen — met uitleg.",
+          "Project PiM controleert tekst lokaal in je browser op persoonsgegevens. Eerst veilig, dan pas delen, met uitleg.",
       },
       {
         property: "og:image",

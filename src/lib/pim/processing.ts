@@ -93,7 +93,7 @@ export function pseudonymize(text: string, signals: PrivacySignals): PseudoResul
   };
 }
 
-// Draft Check Guard — runs detection on the OUTPUT
+// Draft Check Guard, runs detection on the OUTPUT
 export function draftCheck(draft: DraftCandidate, mode: Mode): DraftCheckResult {
   const issues: string[] = [];
   const residual = detectPii(draft.text).filter((s) => !s.contextual);

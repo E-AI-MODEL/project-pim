@@ -1,4 +1,4 @@
-// §6.1 — "Gebruik voorbeeldtekst" — drie compacte starters.
+// §6.1, "Gebruik voorbeeldtekst", drie compacte starters.
 import { COPY } from "@/lib/pim/copy";
 
 export interface Example {
@@ -12,7 +12,7 @@ export const EXAMPLES: Example[] = [
   {
     id: "clean",
     label: "Vakinhoud",
-    hint: "Vakinhoud zonder herleidbare gegevens — verwacht: groen.",
+    hint: "Vakinhoud zonder herleidbare gegevens, verwacht: groen.",
     text:
       "Tussenevaluatie nieuwe rekenmethode na acht weken. Automatiseren tot 100 " +
       "gaat aantoonbaar sneller: gemiddelde tijd op de weektoets daalde van 7'20\" " +
@@ -23,7 +23,7 @@ export const EXAMPLES: Example[] = [
   {
     id: "context",
     label: "Mentor-notitie (contextueel)",
-    hint: "Naam + klascode — verwacht: oranje, anoniemversie aangeboden.",
+    hint: "Naam + klascode, verwacht: oranje, anoniemversie aangeboden.",
     text:
       "Gesprek gevoerd met Tom de Vries (4H2) over de aanloop naar het schoolexamen " +
       "Nederlands. Twee PTA-deadlines vallen in dezelfde week van november: " +
@@ -33,7 +33,7 @@ export const EXAMPLES: Example[] = [
   {
     id: "hard",
     label: "Zorgnotitie (harde PII)",
-    hint: "BSN, IBAN, telefoon, adres — verwacht: rood / niet delen.",
+    hint: "BSN, IBAN, telefoon, adres, verwacht: rood / niet delen.",
     text:
       "Betreft: Sarah Jansen, groep 6, basisschool De Wilg te Utrecht. Geboortedatum " +
       "14-03-2015, BSN 123456782, leerlingnummer 4582193. Adres: Bredestraat 12, " +

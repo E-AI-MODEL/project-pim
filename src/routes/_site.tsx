@@ -24,7 +24,7 @@ function SiteFooter() {
       <div className="mx-auto max-w-5xl px-6 flex flex-wrap items-center justify-between gap-3 text-[11px] text-muted-foreground">
         <div className="flex items-center gap-2">
           <Shield className="h-3.5 w-3.5 text-primary" />
-          <span>Project PiM — volledig lokaal, zonder tracking</span>
+          <span>Project PiM, volledig lokaal, zonder tracking</span>
         </div>
         <div className="flex items-center gap-4">
           <Link to="/over" className="hover:text-foreground">

@@ -1,4 +1,4 @@
-// Unified light header — spiegelt AppHeader visueel, zonder mode-switcher.
+// Unified light header, spiegelt AppHeader visueel, zonder mode-switcher.
 import { Link } from "@tanstack/react-router";
 import { ShieldCheck } from "lucide-react";
 import { BurgerMenu } from "./BurgerMenu";
@@ -7,7 +7,7 @@ export function StartHeader() {
   return (
     <header className="sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-[#e5e7ef]">
       <div className="mx-auto max-w-5xl px-4 sm:px-6 h-16 flex items-center gap-4">
-        <Link to="/" aria-label="Project PiM — home" className="flex items-center gap-2.5 shrink-0">
+        <Link to="/" aria-label="Project PiM, home" className="flex items-center gap-2.5 shrink-0">
           <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-[#6d4aff]/10 text-[#6d4aff]">
             <ShieldCheck className="h-5 w-5" strokeWidth={2.25} />
           </span>

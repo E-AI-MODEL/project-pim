@@ -6,7 +6,7 @@ import { ArrowRight, PenLine, ShieldCheck } from "lucide-react";
 export const Route = createFileRoute("/_site/")({
   head: () => ({
     meta: [
-      { title: "Project PiM — Controleer je tekst op privacy voordat je hem deelt" },
+      { title: "Project PiM, Controleer je tekst op privacy voordat je hem deelt" },
       {
         name: "description",
         content:
@@ -14,7 +14,7 @@ export const Route = createFileRoute("/_site/")({
       },
       {
         property: "og:title",
-        content: "Project PiM — Controleer je tekst op privacy voordat je hem deelt",
+        content: "Project PiM, Controleer je tekst op privacy voordat je hem deelt",
       },
       {
         property: "og:description",
@@ -40,7 +40,7 @@ function HomePage() {
         </h1>
         <p className="mt-4 text-base sm:text-lg text-[#475569] max-w-2xl leading-relaxed">
           Plak een stuk tekst of schrijf een verslag. PiM streept namen,
-          adressen en andere persoonsgegevens direct aan — zonder iets te
+          adressen en andere persoonsgegevens direct aan, zonder iets te
           versturen.
         </p>
         <div className="mt-7 flex flex-wrap gap-2.5">

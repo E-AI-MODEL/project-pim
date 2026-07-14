@@ -12,7 +12,7 @@ const emptySignals: PrivacySignals = {
 };
 const passCheck: DraftCheckResult = { status: "pass", issues: [] };
 
-describe("policy.decide — basis", () => {
+describe("policy.decide, basis", () => {
   it("ALLOW bij anonymous + display + pass + verified + certified payload", () => {
     const d = decide({
       mode: "anonymous",

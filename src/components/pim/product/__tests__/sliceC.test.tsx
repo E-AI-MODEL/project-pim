@@ -1,4 +1,4 @@
-// Slice C — consolidatie: één AppHeader/StatusFooter, één gedeeld
+// Slice C, consolidatie: één AppHeader/StatusFooter, één gedeeld
 // expertpaneel achter een expliciete knop, LiveTechMonitor niet permanent
 // zichtbaar, WriterWorkspace bevat geen lokaal AdvancedPanel.
 
@@ -18,7 +18,7 @@ vi.mock("@/components/pim/product/modes/QuickMode", () => ({
 vi.mock("@/components/pim/product/modes/StartMode", () => ({
   StartMode: () => <div data-testid="start-mode" />,
 }));
-// LiveTechMonitor telt als "diagnostiek" — we tellen op testid en volgen
+// LiveTechMonitor telt als "diagnostiek", we tellen op testid en volgen
 // of hij open of dicht is via zijn trigger.
 vi.mock("@/components/pim/start-go/LiveTechMonitor", () => ({
   LiveTechMonitor: ({ trigger }: { trigger: React.ReactNode }) => (
@@ -34,13 +34,13 @@ vi.mock("@/components/pim/start-go/AdvancedPanel", () => ({
 
 import { ProductShell } from "@/components/pim/product/ProductShell";
 
-describe("Slice C — consolidatie", () => {
+describe("Slice C, consolidatie", () => {
   for (const mode of ["quick", "start", "write"] as const) {
     it(`mode=${mode}: precies één AppHeader en één StatusFooter, geen dubbele TrustBadge/LocalStatusPill`, () => {
       render(<ProductShell mode={mode} />);
       expect(screen.getAllByTestId("app-header")).toHaveLength(1);
       expect(screen.getAllByRole("contentinfo")).toHaveLength(1); // <footer>
-      // Diagnostiek-trigger komt uit de StatusFooter — precies één.
+      // Diagnostiek-trigger komt uit de StatusFooter, precies één.
       expect(screen.getAllByTestId("open-diagnostics")).toHaveLength(1);
       expect(screen.getAllByTestId("open-expert")).toHaveLength(1);
     });
@@ -48,7 +48,7 @@ describe("Slice C — consolidatie", () => {
 
   it("LiveTechMonitor is niet permanent zichtbaar: alleen een 'Diagnostiek'-trigger", () => {
     render(<ProductShell mode="quick" />);
-    // De mock rendert altijd zijn trigger — we controleren dat de knop
+    // De mock rendert altijd zijn trigger, we controleren dat de knop
     // aanwezig is (achter expliciete knop) en niet als vol paneel.
     expect(screen.getByTestId("open-diagnostics")).toBeTruthy();
   });

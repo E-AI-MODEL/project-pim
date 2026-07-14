@@ -5,13 +5,13 @@ import { Check, X, ArrowRight } from "lucide-react";
 export const Route = createFileRoute("/_site/modes")({
   head: () => ({
     meta: [
-      { title: "Anoniem of pseudoniem — Project PiM" },
+      { title: "Anoniem of pseudoniem, Project PiM" },
       {
         name: "description",
         content:
           "Vergelijking van de twee verwerkingsmodi van Project PiM: wat mag, wat niet, en waarom.",
       },
-      { property: "og:title", content: "Anoniem of pseudoniem — Project PiM" },
+      { property: "og:title", content: "Anoniem of pseudoniem, Project PiM" },
       {
         property: "og:description",
         content: "De twee verwerkingsmodi van Project PiM, naast elkaar gezet.",
@@ -30,8 +30,8 @@ const ROWS: { label: string; anon: string | boolean; pseudo: string | boolean }[
   { label: "Copy / print / share", anon: "ja, mits risk laag", pseudo: false },
   { label: "Export bestand", anon: "ja, mits risk < 25%", pseudo: false },
   { label: "Send external AI", anon: "ja, mits risk < 18%", pseudo: false },
-  { label: "Mapping naar server", anon: "—", pseudo: false },
-  { label: "Mapping naar externe AI", anon: "—", pseudo: false },
+  { label: "Mapping naar server", anon: "-", pseudo: false },
+  { label: "Mapping naar externe AI", anon: "-", pseudo: false },
 ];
 
 function Cell({ v }: { v: string | boolean }) {
@@ -72,7 +72,7 @@ function ModesPage() {
           </div>
           <h2 className="font-display text-3xl font-bold mb-3">Niet-omkeerbaar</h2>
           <p className="text-sm text-muted-foreground leading-relaxed mb-5">
-            Bedoeld voor delen, export, rapportage, onderzoek en — bij voldoende lage risk — externe
+            Bedoeld voor delen, export, rapportage, onderzoek en, bij voldoende lage risk, externe
             AI. Generalisatie vervangt PII door categorieën zonder herstelroute.
           </p>
           <div className="space-y-2 text-sm">
@@ -88,7 +88,7 @@ function ModesPage() {
           <div className="font-mono text-xs text-cyan uppercase tracking-wider mb-1">
             Pseudonymous
           </div>
-          <h2 className="font-display text-3xl font-bold mb-3">Omkeerbaar — alleen lokaal</h2>
+          <h2 className="font-display text-3xl font-bold mb-3">Omkeerbaar, alleen lokaal</h2>
           <p className="text-sm text-muted-foreground leading-relaxed mb-5">
             Voor lokaal werk door een bevoegde gebruiker. Tokens vervangen PII; de mapping leeft in
             een AES-GCM container die de browser niet verlaat.

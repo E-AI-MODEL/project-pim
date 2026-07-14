@@ -1,4 +1,4 @@
-// §8.4 — status → reden → highlights/veilige tekst → primaire actie → details dicht.
+// §8.4, status → reden → highlights/veilige tekst → primaire actie → details dicht.
 import { useEffect, useMemo, useState } from "react";
 import type { PimDecision, PrivacySignals } from "@/lib/pim/types";
 import type { ModelIntegrityRecord } from "@/lib/pim/modelCatalog";
@@ -111,7 +111,7 @@ export function ResultPanel({
           <FindingChips spans={directSpans} />
           <p className="text-[12px] text-[#475569] leading-relaxed">
             Verwijder deze gegevens of zet de modus op{" "}
-            <span className="font-medium text-[#0f172a]">Anoniem</span> — PiM controleert opnieuw.
+            <span className="font-medium text-[#0f172a]">Anoniem</span>, PiM controleert opnieuw.
           </p>
         </div>
       )}
@@ -141,8 +141,8 @@ export function ResultPanel({
           </div>
           <div className="text-[10px] text-[#94a3b8]">
             {tab === "safe" && isEdited
-              ? `Bewerkt · opnieuw beoordeeld: ${liveSafeVerdict ?? "—"}`
-              : "Bewerkbaar — controle vernieuwt mee"}
+              ? `Bewerkt · opnieuw beoordeeld: ${liveSafeVerdict ?? "-"}`
+              : "Bewerkbaar, controle vernieuwt mee"}
           </div>
         </div>
         {tab === "original" ? (

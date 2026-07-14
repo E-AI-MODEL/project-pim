@@ -5,17 +5,17 @@ import { validateAppSearch } from "./app.search";
 
 const HEAD_BY_MODE: Record<ProductMode, { title: string; description: string }> = {
   quick: {
-    title: "PiM App — Snel proberen",
+    title: "PiM App, Snel proberen",
     description:
       "Plak tekst en zie meteen welke persoonsgegevens erin zitten. Alles blijft lokaal in je browser.",
   },
   start: {
-    title: "PiM App — Start & Go",
+    title: "PiM App, Start & Go",
     description:
-      "Begeleide zes-stappen pipeline: detectie, anonimisatie, draft-check, beleid en egress — lokaal.",
+      "Begeleide zes-stappen pipeline: detectie, anonimisatie, draft-check, beleid en egress, lokaal.",
   },
   write: {
-    title: "PiM App — Schrijven",
+    title: "PiM App, Schrijven",
     description: "Schrijf met privacy als vangnet. Live controle terwijl je typt.",
   },
 };

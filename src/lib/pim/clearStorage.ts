@@ -1,4 +1,4 @@
-// Lokale opslag wissen — schone lei tussen teksten.
+// Lokale opslag wissen, schone lei tussen teksten.
 //
 // PiM draait volledig lokaal. Tijdens een sessie stapelt er state op die
 // gevoelig of vervuilend kan zijn als je meerdere teksten achter elkaar
@@ -11,7 +11,7 @@
 //
 // Deze helper geeft één knop om dat allemaal op te ruimen. Het wissen van de
 // modelcaches betekent dat NER/Qwen bij volgend gebruik opnieuw gedownload
-// worden — daarom maakt de UI dat expliciet (aparte optie + bevestiging).
+// worden, daarom maakt de UI dat expliciet (aparte optie + bevestiging).
 
 import { clearReviewQueue } from "./reviewQueue";
 import { retryNerSlm } from "./nerSlm";
@@ -72,7 +72,7 @@ export async function clearAllLocalData(options: ClearOptions = {}): Promise<Cle
     result.errors.push(`sessionStorage: ${(e as Error).message}`);
   }
 
-  // 3) Modelcaches (Cache API + IndexedDB) — alleen op verzoek.
+  // 3) Modelcaches (Cache API + IndexedDB), alleen op verzoek.
   if (includeModels) {
     try {
       if (typeof caches !== "undefined") {
@@ -124,7 +124,7 @@ export async function clearAllLocalData(options: ClearOptions = {}): Promise<Cle
                 // als gewist en melden het, zodat de UI geen valse "klaar" geeft.
                 req.onblocked = () => {
                   result.errors.push(
-                    `indexedDB "${name}": geblokkeerd door open verbinding — sluit tabbladen/herlaad`,
+                    `indexedDB "${name}": geblokkeerd door open verbinding, sluit tabbladen/herlaad`,
                   );
                   resolve();
                 };

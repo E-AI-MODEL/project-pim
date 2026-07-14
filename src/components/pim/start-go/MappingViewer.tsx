@@ -1,4 +1,4 @@
-// Pseudoniem token → origineel mapping viewer. Lokaal — geen egress.
+// Pseudoniem token → origineel mapping viewer. Lokaal, geen egress.
 import { useState, useMemo } from "react";
 import { ChevronDown, ChevronRight, Copy, KeyRound, Search } from "lucide-react";
 
@@ -14,7 +14,7 @@ export function MappingViewer({ mapping }: Props) {
   const rows = useMemo(() => {
     const arr = Array.from(mapping.entries()).map(([token, original]) => {
       const catMatch = /\[([A-Z_]+)_\d{3}\]/.exec(token);
-      const category = catMatch ? catMatch[1].toLowerCase() : "—";
+      const category = catMatch ? catMatch[1].toLowerCase() : "-";
       return { token, original, category };
     });
     const q = filter.trim().toLowerCase();

@@ -48,7 +48,7 @@ export function ResultActions({
   const [shortMsg, setShortMsg] = useState<string | null>(null);
   // Quick-copy/download geldt voor de BEWERKTE veilige tekst. Wanneer de
   // gebruiker daar PII in terugzet, levert liveVerdict BLOCK op en blokt
-  // de gate de actie — knoppen worden dan visueel disabled.
+  // de gate de actie, knoppen worden dan visueel disabled.
   const effectiveVerdict = liveVerdict ?? verdict;
   const canCopyOrDownload =
     effectiveVerdict !== "BLOCK" && !!safeText && safeText.trim().length > 0;

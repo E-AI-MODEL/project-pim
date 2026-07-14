@@ -6,7 +6,7 @@ export interface PipelineStepView {
   id: string;
   index: number;
   title: string; // Human Dutch title, e.g. "Patroon-detectie"
-  subtitle: string; // 3-6 words — what it does
+  subtitle: string; // 3-6 words, what it does
   detail: string; // Semantic explanation based on current state
   status: PipelineStepStatus;
   badge?: string; // small chip e.g. "3 matches"

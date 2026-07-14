@@ -1,4 +1,4 @@
-// PipelineProfile — spec hfst 15 / v3-2.
+// PipelineProfile, spec hfst 15 / v3-2.
 // Release 1 scope: alleen education-nl. Twee profielen: full en rules-only.
 // Andere profielen blijven ontwerpvoorbereiding (zichtbaar maar niet selecteerbaar).
 
@@ -29,7 +29,7 @@ export const PIPELINE_PROFILES: Record<PipelineProfileId, PipelineProfile> = {
   "education-nl-full": {
     id: "education-nl-full",
     domain: "education-nl",
-    label: "Education NL — Full",
+    label: "Education NL, Full",
     description:
       "Regels + special lexicon + NER SLM + onderwijscontext-detector. Volledige egress alleen na alle gates groen.",
     detectors: {
@@ -45,7 +45,7 @@ export const PIPELINE_PROFILES: Record<PipelineProfileId, PipelineProfile> = {
   "education-nl-rules-only": {
     id: "education-nl-rules-only",
     domain: "education-nl",
-    label: "Education NL — Rules-only",
+    label: "Education NL, Rules-only",
     description:
       "Alleen regex + special lexicon. Geen modelafhankelijkheid, dus geen modelintegriteit-blokkade. Egress is gedegradeerd: geen export of externe AI.",
     detectors: {

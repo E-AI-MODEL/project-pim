@@ -1,8 +1,8 @@
-// WriterWorkspace — inhoudscomponent voor de schrijfmodus binnen ProductShell.
+// WriterWorkspace, inhoudscomponent voor de schrijfmodus binnen ProductShell.
 //
 // Dit is de refactor van WriterShell zonder eigen paginachrome:
 // - geen eigen <header>, geen LiveTechMonitor (die zit in de gedeelde StatusFooter);
-// - geen eigen usePimEngine — de shell-engine uit ProductShellContext wordt gebruikt;
+// - geen eigen usePimEngine, de shell-engine uit ProductShellContext wordt gebruikt;
 // - AppHeader, TrustBadge, BurgerMenu, ModeSwitcher, LocalStatusPill komen uit
 //   de ProductShell. De workspace levert alleen editor + writer-specifieke acties
 //   (import/export/leeg, AdvancedPanel writer-tab, live highlights).
@@ -257,7 +257,7 @@ export function WriterWorkspace() {
     if (!files || files.length === 0 || !editor) return;
     const file = files[0];
     if (!/\.docx$/i.test(file.name)) {
-      setImportError("Alleen .docx-bestanden — voor andere formaten gebruik je de homepage.");
+      setImportError("Alleen .docx-bestanden, voor andere formaten gebruik je de homepage.");
       return;
     }
     try {
@@ -316,7 +316,7 @@ export function WriterWorkspace() {
   const riskScore = Math.min(9, totalFindings);
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]" data-testid="writer-workspace">
-      {/* LEFT — editor card */}
+      {/* LEFT, editor card */}
       <section className="rounded-2xl border border-[#e5e7ef] bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] overflow-hidden flex flex-col">
         <div className="flex items-center justify-between gap-3 border-b border-[#eef0f5] px-4 py-2.5">
           <Toolbar editor={editor} />
@@ -342,7 +342,7 @@ export function WriterWorkspace() {
         <div className="border-t border-[#eef0f5] px-4 py-2.5 flex items-center justify-between text-[12px] text-[#64748b]">
           <span className="inline-flex items-center gap-2">
             <ShieldCheck className="h-3.5 w-3.5 text-[#6d4aff]" />
-            PiM streept mee terwijl je typt — zonder iets te versturen.
+            PiM streept mee terwijl je typt, zonder iets te versturen.
           </span>
           <span className="inline-flex items-center gap-1.5">
             <span className={`h-1.5 w-1.5 rounded-full ${totalFindings > 0 ? "bg-rose-500" : "bg-emerald-500"}`} />
@@ -351,7 +351,7 @@ export function WriterWorkspace() {
         </div>
       </section>
 
-      {/* RIGHT — privacy panel */}
+      {/* RIGHT, privacy panel */}
       <aside className="space-y-4">
         <FindingsCard spans={foundSpans} score={riskScore} />
         <SafeVersionCard
@@ -362,7 +362,7 @@ export function WriterWorkspace() {
               await navigator.clipboard.writeText(safeText);
               setEgressMsg("Veilige versie staat op je klembord.");
             } catch {
-              setEgressMsg("Kopiëren lukte niet — probeer het opnieuw.");
+              setEgressMsg("Kopiëren lukte niet, probeer het opnieuw.");
             }
           }}
           onDownload={() => {
@@ -636,7 +636,7 @@ function FindingsCard({ spans, score }: { spans: PiiSpan[]; score: number }) {
           <div className="text-[12px] text-[#64748b] leading-snug mt-0.5">
             {total > 0
               ? "PiM vond persoonsgegevens en gevoelige context in je tekst."
-              : "Je tekst is schoon — er staan geen persoonsgegevens in."}
+              : "Je tekst is schoon, er staan geen persoonsgegevens in."}
           </div>
         </div>
         <div className="shrink-0 text-right">

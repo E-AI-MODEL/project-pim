@@ -1,4 +1,4 @@
-// §8.2 — textarea + voorbeeldknop + Start PiM + korte privacyregel.
+// §8.2, textarea + voorbeeldknop + Start PiM + korte privacyregel.
 import { COPY } from "@/lib/pim/copy";
 import { EXAMPLES, ExamplePicker, type Example } from "./ExamplePicker";
 import {
@@ -33,9 +33,9 @@ interface Props {
   onStart: () => void;
   onExample: (e: Example) => void;
   busy?: boolean;
-  /** Compacte variant zonder hero — voor de Console-layout op /. */
+  /** Compacte variant zonder hero, voor de Console-layout op /. */
   compact?: boolean;
-  /** Mode/action controls — in compact-modus in de toolbar gerenderd. */
+  /** Mode/action controls, in compact-modus in de toolbar gerenderd. */
   mode?: Mode;
   onModeChange?: (m: Mode) => void;
   action?: Action;
@@ -133,7 +133,7 @@ export function InputPanel({
 }
 
 /* ---------------------------------------------------------------------------
- * Compact composer — chat-style (à la ChatGPT/Gemini): textarea boven, toolbar
+ * Compact composer, chat-style (à la ChatGPT/Gemini): textarea boven, toolbar
  * onder met [+] voorbeelden, [⚙] modus & bestemming, status, en [↑] verstuur.
  * ------------------------------------------------------------------------- */
 function CompactComposer({
@@ -161,7 +161,7 @@ function CompactComposer({
   const scrubRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Live wissen — debounced. Als directe PII gevonden wordt, vervangen we
+  // Live wissen, debounced. Als directe PII gevonden wordt, vervangen we
   // de inhoud door de geanonimiseerde variant en flashen het kader rood.
   useEffect(() => {
     if (!liveScrub) return;
@@ -330,7 +330,7 @@ function CompactComposer({
                 <div className="min-w-0">
                   <div className="text-sm text-[#0f172a]">Bestand uploaden</div>
                   <div className="text-[11px] text-[#64748b] leading-snug mt-0.5">
-                    .txt · .md · .csv · .json · .html · .docx — tot {formatBytes(MAX_DOC_BYTES)}.
+                    .txt · .md · .csv · .json · .html · .docx, tot {formatBytes(MAX_DOC_BYTES)}.
                     Lokaal verwerkt.
                   </div>
                 </div>
@@ -432,8 +432,8 @@ function CompactComposer({
               aria-pressed={liveScrub}
               title={
                 liveScrub
-                  ? "Live wissen staat aan — BSN, e-mail, telefoon en IBAN worden direct vervangen door een label"
-                  : "Live wissen aanzetten — harde PII (BSN, e-mail, telefoon, IBAN) wordt meteen vervangen door een label"
+                  ? "Live wissen staat aan, BSN, e-mail, telefoon en IBAN worden direct vervangen door een label"
+                  : "Live wissen aanzetten, harde PII (BSN, e-mail, telefoon, IBAN) wordt meteen vervangen door een label"
               }
               className={`inline-flex items-center gap-1.5 h-8 px-2 rounded-md text-[11px] font-plex-mono border transition-colors ${
                 liveScrub
@@ -489,7 +489,7 @@ function CompactComposer({
         </div>
       )}
 
-      {/* Live wissen — eerste-keer toelichting */}
+      {/* Live wissen, eerste-keer toelichting */}
       {liveScrubToast && (
         <div className="flex items-start gap-2 px-3 py-2 rounded-lg border border-rose-400/40 bg-rose-500/10 text-rose-200 text-[11px] leading-relaxed">
           <Eraser className="h-3.5 w-3.5 mt-0.5 shrink-0" />

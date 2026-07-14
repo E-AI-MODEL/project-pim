@@ -1,4 +1,4 @@
-// Slice C.1 — bewijst dat de publieke chrome (StartHeader/SiteFooter) alleen
+// Slice C.1, bewijst dat de publieke chrome (StartHeader/SiteFooter) alleen
 // onder de _site-layout leeft. /app rendert enkel de ProductShell-chrome.
 // We toetsen dit statisch op basis van de route-configuratie i.p.v. een
 // volledige router-mount, zodat de test snel en deterministisch is.

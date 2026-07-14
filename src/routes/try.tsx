@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
-// Fase 3 slice B — `/try` is opgegaan in de ProductShell. We redirecten
+// Fase 3 slice B, `/try` is opgegaan in de ProductShell. We redirecten
 // permanent naar de Snel-proberen-modus zodat oude links blijven werken.
 export const Route = createFileRoute("/try")({
   beforeLoad: () => {

@@ -1,4 +1,4 @@
-// Model Catalog — spec hfst 9 / 14 / v3-2.
+// Model Catalog, spec hfst 9 / 14 / v3-2.
 //
 // Dit bestand bevat catalogusdata en types. Runtime-integriteit,
 // browser-local pins en registry-state staan in modelIntegrity.ts.

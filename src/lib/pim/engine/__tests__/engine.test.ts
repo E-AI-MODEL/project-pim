@@ -12,7 +12,7 @@ function make(overrides: Partial<Parameters<typeof createEngine>[0]> = {}) {
   });
 }
 
-describe("PimEngine — happy path", () => {
+describe("PimEngine, happy path", () => {
   it("anonymous clean text → ALLOW display + certified payload", () => {
     const engine = make();
     const state = engine.evaluate({ mode: "anonymous", text: "De methode werkt beter." });
@@ -34,7 +34,7 @@ describe("PimEngine — happy path", () => {
   });
 });
 
-describe("PimEngine — lock-principe (BERT off)", () => {
+describe("PimEngine, lock-principe (BERT off)", () => {
   it("strict mode blocks external AI action", async () => {
     const engine = make({ bertEnabled: false, strictMode: true });
     engine.evaluate({ mode: "anonymous", text: "Schone tekst zonder PII." });
@@ -58,7 +58,7 @@ describe("PimEngine — lock-principe (BERT off)", () => {
   });
 });
 
-describe("PimEngine — integrity + payload gate", () => {
+describe("PimEngine, integrity + payload gate", () => {
   it("modelVerified=false blocks any egress", async () => {
     const engine = make({ modelVerified: false });
     engine.evaluate({ mode: "anonymous", text: "Schone tekst." });
@@ -75,7 +75,7 @@ describe("PimEngine — integrity + payload gate", () => {
   });
 });
 
-describe("PimEngine — lifecycle", () => {
+describe("PimEngine, lifecycle", () => {
   it("requestAction before evaluate throws", async () => {
     const engine = make();
     await expect(engine.requestAction({ action: "copy" })).rejects.toThrow(/before evaluate/);

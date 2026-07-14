@@ -1,4 +1,4 @@
-// Contextual Generalization + Repair — spec hfst 29 + 31.
+// Contextual Generalization + Repair, spec hfst 29 + 31.
 // Doel: residuele kleine-groep / locatie / temporele specificiteit
 // generaliseren zodat de Draft Check Guard alsnog "pass" geeft.
 // Loopt ALLEEN op de output van anonymize() (anonieme modus), nooit

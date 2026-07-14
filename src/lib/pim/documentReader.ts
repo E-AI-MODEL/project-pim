@@ -1,4 +1,4 @@
-// In-browser document text extraction. 100% client-side — geen upload, geen tracking.
+// In-browser document text extraction. 100% client-side, geen upload, geen tracking.
 // Ondersteund: .txt, .md, .csv, .json, .html, .docx
 // PDF en OCR bewust uitgesteld (zware deps / extra modellen).
 

@@ -1,4 +1,4 @@
-// Review Queue — spec hfst 18 / 31.
+// Review Queue, spec hfst 18 / 31.
 // Wanneer de Draft Check Guard "repair" of "fail" geeft, kan de UI het
 // geval naar de queue sturen. Inhoud blijft altijd lokaal (geen egress).
 // Bewaart alleen metadata + de geredacteerde draft; nooit het origineel.
@@ -12,7 +12,7 @@ export interface ReviewItem {
   riskLevel: RiskLevel;
   guardStatus: DraftCheckResult["status"];
   issues: string[];
-  /** Laatste draft (anonymous of pseudonymous) — nooit het origineel. */
+  /** Laatste draft (anonymous of pseudonymous), nooit het origineel. */
   draftPreview: string;
   resolved: boolean;
 }
