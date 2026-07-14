@@ -35,21 +35,31 @@ export function ProductShell({ mode }: { mode: ProductMode }) {
       settings.integrity,
     ],
   );
-  const engine = usePimEngine(engineConfig);
+  const {
+    state: engineState,
+    evaluate,
+    previewDecision,
+    requestAction,
+    reset,
+  } = usePimEngine(engineConfig);
 
   // Reset-event vanuit BurgerMenu ("nieuwe test").
   useEffect(() => {
     const onReset = () => {
       setText("");
-      engine.reset();
+      reset();
     };
     window.addEventListener("pim:reset", onReset);
     return () => window.removeEventListener("pim:reset", onReset);
-  }, [engine]);
+  }, [reset]);
 
   const ctx = useMemo(
     () => ({
-      engine,
+      engineState,
+      evaluate,
+      previewDecision,
+      requestAction,
+      reset,
       settings,
       text,
       setText,
@@ -58,7 +68,7 @@ export function ProductShell({ mode }: { mode: ProductMode }) {
       action,
       setAction,
     }),
-    [engine, settings, text, pimMode, action],
+    [engineState, evaluate, previewDecision, requestAction, reset, settings, text, pimMode, action],
   );
 
   return (

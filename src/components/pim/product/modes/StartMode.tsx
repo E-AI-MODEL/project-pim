@@ -18,8 +18,17 @@ interface Step {
  * gedeelde engine-state. Geen eigen engine, geen dubbele header/monitor.
  */
 export function StartMode() {
-  const { engine, text, setText, mode, setMode, action, setAction } = useProductShell();
-  const { state, evaluate, previewDecision } = engine;
+  const {
+    engineState: state,
+    evaluate,
+    previewDecision,
+    text,
+    setText,
+    mode,
+    setMode,
+    action,
+    setAction,
+  } = useProductShell();
 
   useEffect(() => {
     if (!text.trim()) return;

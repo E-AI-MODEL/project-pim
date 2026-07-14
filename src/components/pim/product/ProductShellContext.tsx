@@ -1,10 +1,14 @@
 import { createContext, useContext } from "react";
 import type { Action, Mode } from "@/lib/pim";
-import type { UsePimEngineResult } from "@/hooks/usePimEngine";
+import type { EngineState, PimEngine } from "@/lib/pim/engine";
 import type { PimSettings } from "@/hooks/usePimSettings";
 
 export interface ProductShellContextValue {
-  engine: UsePimEngineResult;
+  engineState: EngineState;
+  evaluate: PimEngine["evaluate"];
+  previewDecision: PimEngine["previewDecision"];
+  requestAction: PimEngine["requestAction"];
+  reset: PimEngine["reset"];
   settings: PimSettings;
   text: string;
   setText: (v: string) => void;

@@ -10,8 +10,19 @@ import type { Example } from "@/components/pim/start-go/ExamplePicker";
  * usePimEngine, geen eigen header/footer, geen advanced panel of modelkaarten.
  */
 export function QuickMode() {
-  const { engine, settings, text, setText, mode, setMode, action, setAction } = useProductShell();
-  const { state: engineState, evaluate, previewDecision } = engine;
+  const {
+    engineState,
+    evaluate,
+    previewDecision,
+    requestAction,
+    settings,
+    text,
+    setText,
+    mode,
+    setMode,
+    action,
+    setAction,
+  } = useProductShell();
   const [committed, setCommitted] = useState(false);
   const [egressMsg, setEgressMsg] = useState<string | null>(null);
 
@@ -55,7 +66,7 @@ export function QuickMode() {
   };
 
   const runQuickAction = async (payload: string, act: typeof action) => {
-    const outcome = await engine.requestAction({ action: act, payloadText: payload });
+    const outcome = await requestAction({ action: act, payloadText: payload });
     return { executed: outcome.executed, reason: outcome.reason };
   };
 
