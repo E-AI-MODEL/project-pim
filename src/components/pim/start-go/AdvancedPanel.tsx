@@ -151,8 +151,8 @@ export function AdvancedPanel({
         aria-expanded={open}
         className="w-full flex items-center gap-4 px-5 py-4 text-left transition-colors hover:bg-[#f6f7fb]"
       >
-        <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-cyan-400/35 bg-cyan-400/10 shadow-[inset_0_0_20px_rgba(34,211,238,0.08)]">
-          <SlidersHorizontal className="h-5 w-5 text-cyan-300" />
+        <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-cyan-400/35 bg-cyan-50 shadow-[inset_0_0_20px_rgba(34,211,238,0.08)]">
+          <SlidersHorizontal className="h-5 w-5 text-cyan-600" />
         </span>
         <div className="flex-1 min-w-0">
           <div className="text-base font-semibold leading-tight text-[#0f172a]">
@@ -199,7 +199,7 @@ export function AdvancedPanel({
 
             {showTechnical && (
               <div className="mt-4 space-y-4">
-                <div className="flex items-start gap-2 rounded-xl border border-amber-300/30 bg-amber-300/10 px-3 py-2.5 text-xs leading-snug text-amber-100">
+                <div className="flex items-start gap-2 rounded-xl border border-amber-300/30 bg-amber-50 px-3 py-2.5 text-xs leading-snug text-amber-700">
                   <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
                   <div>Gebruik dit alleen voor testen. Markeer is veiliger dan Uit.</div>
                 </div>
@@ -302,7 +302,7 @@ function LayerSettings({
               type="button"
               onClick={ner.onStart}
               disabled={ner.status?.loading || ner.status?.working}
-              className="inline-flex h-10 shrink-0 items-center justify-center rounded-xl border border-cyan-300/25 bg-cyan-300/10 px-4 text-sm font-semibold text-cyan-100 hover:bg-cyan-300/16 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-10 shrink-0 items-center justify-center rounded-xl border border-cyan-300/25 bg-cyan-50 px-4 text-sm font-semibold text-cyan-700 hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {ner.status?.loading
                 ? "Laden en testen…"
@@ -364,11 +364,11 @@ function BertOption({
     <button
       type="button"
       onClick={() => onClick(value)}
-      className={`rounded-2xl border p-3 text-left transition-colors ${selected ? "border-cyan-300/70 bg-cyan-300/14 text-[#0f172a]" : "border-[#e2e8f0] bg-[#f6f7fb] text-[#334155] hover:bg-[#eef2f7]"}`}
+      className={`rounded-2xl border p-3 text-left transition-colors ${selected ? "border-cyan-300/70 bg-cyan-100 text-[#0f172a]" : "border-[#e2e8f0] bg-[#f6f7fb] text-[#334155] hover:bg-[#eef2f7]"}`}
     >
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm font-semibold">{title}</span>
-        {selected && <CheckCircle2 className="h-4 w-4 text-cyan-200" />}
+        {selected && <CheckCircle2 className="h-4 w-4 text-cyan-700" />}
       </div>
       <p className="mt-1 text-xs text-[#334155]/70">{text}</p>
     </button>
@@ -408,14 +408,14 @@ function WriterActions({ writer }: { writer: NonNullable<AdvancedPanelProps["wri
                       <button
                         type="button"
                         onClick={() => writer.onAutoRedactChange(cat, true)}
-                        className={`rounded-md px-2 py-1 text-[10px] font-semibold ${scrub ? "bg-emerald-300/18 text-emerald-100" : "text-[#64748b] hover:text-[#0f172a]"}`}
+                        className={`rounded-md px-2 py-1 text-[10px] font-semibold ${scrub ? "bg-emerald-100 text-emerald-700" : "text-[#64748b] hover:text-[#0f172a]"}`}
                       >
                         Wis
                       </button>
                       <button
                         type="button"
                         onClick={() => writer.onAutoRedactChange(cat, false)}
-                        className={`rounded-md px-2 py-1 text-[10px] font-semibold ${!scrub ? "bg-amber-300/18 text-amber-100" : "text-[#64748b] hover:text-[#0f172a]"}`}
+                        className={`rounded-md px-2 py-1 text-[10px] font-semibold ${!scrub ? "bg-amber-100 text-amber-700" : "text-[#64748b] hover:text-[#0f172a]"}`}
                       >
                         Markeer
                       </button>
@@ -430,12 +430,12 @@ function WriterActions({ writer }: { writer: NonNullable<AdvancedPanelProps["wri
       <button
         type="button"
         onClick={() => writer.onStrictChange(!writer.strict)}
-        className={`rounded-2xl border px-3 py-2.5 text-left transition-colors ${writer.strict ? "border-amber-300/45 bg-amber-300/10" : "border-[#e2e8f0] bg-[#f6f7fb] hover:bg-[#eef2f7]"}`}
+        className={`rounded-2xl border px-3 py-2.5 text-left transition-colors ${writer.strict ? "border-amber-300/45 bg-amber-50" : "border-[#e2e8f0] bg-[#f6f7fb] hover:bg-[#eef2f7]"}`}
       >
         <div className="flex items-center justify-between gap-3">
           <span className="text-xs font-semibold text-[#0f172a]">Strenge cijfercontrole</span>
           <span
-            className={`text-[10px] font-semibold uppercase tracking-[0.18em] ${writer.strict ? "text-amber-100" : "text-[#64748b]"}`}
+            className={`text-[10px] font-semibold uppercase tracking-[0.18em] ${writer.strict ? "text-amber-700" : "text-[#64748b]"}`}
           >
             {writer.strict ? "aan" : "uit"}
           </span>
@@ -494,10 +494,10 @@ function CategoryToggles({
               return (
                 <label
                   key={cat}
-                  className={`flex cursor-pointer items-center justify-between gap-2 rounded-xl border px-2.5 py-2 transition-colors ${off ? "border-rose-400/25 bg-rose-400/8" : "border-[#e2e8f0] bg-white hover:bg-[#eef2f7]"}`}
+                  className={`flex cursor-pointer items-center justify-between gap-2 rounded-xl border px-2.5 py-2 transition-colors ${off ? "border-rose-400/25 bg-rose-50" : "border-[#e2e8f0] bg-white hover:bg-[#eef2f7]"}`}
                 >
                   <span
-                    className={`block truncate text-xs font-medium ${off ? "text-rose-100" : "text-[#0f172a]"}`}
+                    className={`block truncate text-xs font-medium ${off ? "text-rose-700" : "text-[#0f172a]"}`}
                   >
                     {CATEGORY_LABELS[cat] ?? cat}
                   </span>
@@ -556,12 +556,12 @@ function modelStatus(
   if (status?.working)
     return {
       label: "Werkt",
-      className: "border-emerald-300/35 bg-emerald-300/12 text-emerald-100",
+      className: "border-emerald-300/35 bg-emerald-50 text-emerald-700",
     };
   if (status?.loading)
     return {
       label: "Laden/testen",
-      className: "border-amber-300/35 bg-amber-300/12 text-amber-100",
+      className: "border-amber-300/35 bg-amber-50 text-amber-700",
     };
   if (status?.error || status?.healthError)
     return { label: "Fout", className: "border-red-300/35 bg-red-300/12 text-red-100" };
