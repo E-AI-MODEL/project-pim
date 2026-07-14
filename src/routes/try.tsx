@@ -6,13 +6,8 @@ import { PipelineTimeline, type PipelineStepView } from "@/components/pim/Pipeli
 import { AnonymizedText } from "@/components/pim/AnonymizedText";
 import { RiskBanner } from "@/components/pim/RiskBanner";
 import { usePipelineHeartbeat, type StepId } from "@/hooks/usePipelineHeartbeat";
+import { usePimEngine } from "@/hooks/usePimEngine";
 import {
-  computeSignals,
-  anonymize,
-  pseudonymize,
-  draftCheck,
-  decide,
-  executeAction,
   createMappingContainer,
   restoreFromContainer,
   destroyContainer,
@@ -32,7 +27,6 @@ import {
   type PipelineProfileId,
   onModelIntegrity,
   type ModelIntegrityRecord,
-  repairAnonymousDraft,
   activeDetectorsFor,
   detectorSourceLabel,
   enqueueReview,
@@ -51,9 +45,7 @@ import {
   type AuditEvent,
   type MappingHandle,
   type PiiSpan,
-  type CertifiedPayload,
-  type PayloadType,
-  modelGateFor,
+  coerceDetectionSettings,
 } from "@/lib/pim";
 import { loadRewriteLlm } from "@/lib/pim/rewriteLlm";
 import {
