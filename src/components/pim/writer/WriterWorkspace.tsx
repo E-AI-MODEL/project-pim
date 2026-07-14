@@ -91,6 +91,8 @@ export function WriterWorkspace() {
   const [foundSpans, setFoundSpans] = useState<PiiSpan[]>([]);
   const [safeText, setSafeText] = useState<string>("");
   const [egressMsg, setEgressMsg] = useState<string | null>(null);
+  const [hasAnalyzed, setHasAnalyzed] = useState(false);
+  const [analysisStale, setAnalysisStale] = useState(false);
   const usesNerSlm = usesBert(detectionSettings);
   const { nerSpans, nerStatus, startNer } = useNerSpans(plainText, { enabled: usesNerSlm });
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -136,6 +138,8 @@ export function WriterWorkspace() {
     if (!editor) return;
     const { plain, map } = extractPlain(editor.state.doc);
     setPlainText(plain);
+    setHasAnalyzed(true);
+    setAnalysisStale(false);
     const next = evaluate({ text: plain, mode: "anonymous", extraSpans: nerSpans });
     const signals = next.signals;
     if (!signals) return;
@@ -188,18 +192,13 @@ export function WriterWorkspace() {
 
   useEffect(() => {
     if (!editor) return;
-    let raf = 0;
-    const debounced = () => {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() => setTimeout(scan, 120));
+    const markAnalysisStale = () => {
+      setClicked(null);
+      if (hasAnalyzed) setAnalysisStale(true);
     };
-    editor.on("update", debounced);
-    debounced();
-    return () => {
-      cancelAnimationFrame(raf);
-      editor.off("update", debounced);
-    };
-  }, [editor, scan]);
+    editor.on("update", markAnalysisStale);
+    return () => editor.off("update", markAnalysisStale);
+  }, [editor, hasAnalyzed]);
 
   useEffect(() => {
     const root = editorRootRef.current;
@@ -302,6 +301,11 @@ export function WriterWorkspace() {
     editor.commands.setContent("<p></p>");
     setIgnored(new Set());
     setStats({ scrubbed: 0, marked: 0 });
+    setFoundSpans([]);
+    setSafeText("");
+    setPlainText("");
+    setHasAnalyzed(false);
+    setAnalysisStale(false);
     setWriterContent(null);
   }, [editor, setWriterContent]);
   // ProductShell luistert al naar "pim:reset" en wist gedeelde tekst; hier
@@ -321,6 +325,14 @@ export function WriterWorkspace() {
         <div className="flex items-center justify-between gap-3 border-b border-[#eef0f5] px-4 py-2.5">
           <Toolbar editor={editor} />
           <div className="flex shrink-0 items-center gap-1.5">
+            <button
+              type="button"
+              onClick={scan}
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[#6d4aff] px-3 text-[12px] font-semibold text-white transition-colors hover:bg-[#5b3dea]"
+            >
+              <ShieldCheck className="h-4 w-4" />
+              Analyseer
+            </button>
             <LightAction icon={<Upload className="h-4 w-4" />} label="Import" onClick={onImportClick} />
             <LightAction icon={<Download className="h-4 w-4" />} label="Export" onClick={onExport} />
             <LightAction icon={<Trash2 className="h-4 w-4" />} label="Leeg" onClick={onClear} />
@@ -342,7 +354,11 @@ export function WriterWorkspace() {
         <div className="border-t border-[#eef0f5] px-4 py-2.5 flex items-center justify-between text-[12px] text-[#64748b]">
           <span className="inline-flex items-center gap-2">
             <ShieldCheck className="h-3.5 w-3.5 text-[#6d4aff]" />
-            PiM streept mee terwijl je typt.
+            {hasAnalyzed
+              ? analysisStale
+                ? "Tekst gewijzigd, analyseer opnieuw."
+                : "Analyse klaar."
+              : "Klik op Analyseer om je tekst te controleren."}
           </span>
           <span className="inline-flex items-center gap-1.5">
             <span className={`h-1.5 w-1.5 rounded-full ${totalFindings > 0 ? "bg-rose-500" : "bg-emerald-500"}`} />
