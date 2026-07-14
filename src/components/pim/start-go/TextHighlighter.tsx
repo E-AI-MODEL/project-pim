@@ -71,14 +71,14 @@ export function TextHighlighter({ text, spans, className }: Props) {
 
   return (
     <div className={className}>
-      <pre className="rounded-xl border border-border/40 bg-card/40 p-4 text-sm font-mono whitespace-pre-wrap leading-relaxed max-h-[40vh] overflow-auto">
+      <pre className="rounded-xl border border-[#e5e7ef] bg-white p-4 text-sm font-mono whitespace-pre-wrap leading-relaxed max-h-[40vh] overflow-auto text-[#0f172a]">
         {parts.map((p, i) => {
           if (p.kind === "text") return <span key={i}>{p.text}</span>;
           const s = p.span!;
           const isDirect = !s.contextual;
           const cls = isDirect
-            ? "bg-red-500/25 text-red-100 border-b-2 border-red-400/70 rounded-sm px-0.5"
-            : "bg-amber-500/20 text-amber-100 border-b-2 border-amber-400/60 rounded-sm px-0.5";
+            ? "bg-rose-100 text-rose-900 border-b-2 border-rose-400 rounded-sm px-0.5"
+            : "bg-amber-100 text-amber-900 border-b-2 border-amber-400 rounded-sm px-0.5";
           const label = CAT_LABEL[s.category] ?? s.category;
           return (
             <mark
@@ -92,13 +92,13 @@ export function TextHighlighter({ text, spans, className }: Props) {
         })}
       </pre>
       {hasFindings && (
-        <div className="flex flex-wrap items-center gap-3 mt-2 px-1 text-[10px] text-muted-foreground font-plex-mono">
+        <div className="flex flex-wrap items-center gap-3 mt-2 px-1 text-[10px] text-[#64748b] font-plex-mono">
           <span className="inline-flex items-center gap-1.5">
-            <span className="inline-block w-3 h-3 rounded-sm bg-red-500/25 border-b-2 border-red-400/70" />
+            <span className="inline-block w-3 h-3 rounded-sm bg-rose-100 border-b-2 border-rose-400" />
             direct herleidbaar
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="inline-block w-3 h-3 rounded-sm bg-amber-500/20 border-b-2 border-amber-400/60" />
+            <span className="inline-block w-3 h-3 rounded-sm bg-amber-100 border-b-2 border-amber-400" />
             contextueel
           </span>
           <span className="ml-auto">hover voor details</span>
