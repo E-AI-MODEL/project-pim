@@ -323,22 +323,6 @@ export function WriterWorkspace() {
           <WorkspaceAction icon={<Trash2 className="h-4 w-4" />} label="Leeg" onClick={onClear} />
         </div>
       </div>
-      <AdvancedPanel
-        {...advancedPanelProps}
-        writer={{
-          autoRedact,
-          onAutoRedactChange: (cat, scrub) =>
-            setAutoRedact((p) => {
-              const n = new Set(p);
-              if (scrub) n.add(cat);
-              else n.delete(cat);
-              return n;
-            }),
-          strict,
-          onStrictChange: setStrict,
-        }}
-        ner={{ status: nerStatus, onStart: startNer, available: usesNerSlm }}
-      />
       {importError && (
         <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
           {importError}
