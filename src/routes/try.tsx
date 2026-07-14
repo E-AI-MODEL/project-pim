@@ -477,7 +477,9 @@ function TryPage() {
     () => (slmEnabled ? slmSpans : []),
     [slmEnabled, slmSpans],
   );
-  useEffect(() => {
+  // Synchroon in render — engine.evaluate is idempotent en engine bewaakt
+  // zijn eigen state. useMemo garandeert dat `decision` op eerste render bestaat.
+  useMemo(() => {
     const t0 = performance.now();
     engine.evaluate({
       text,
@@ -595,18 +597,15 @@ function TryPage() {
 
   // Beslissing voor huidige actie via engine (previewDecision) — géén egress.
   const decision = useMemo(() => {
-    if (engine.state.phase !== "ready") return engine.state.displayDecision;
     const t0 = performance.now();
     const d = engine.previewDecision(action);
     queueMicrotask(() => tick("decide", performance.now() - t0));
     return d;
-    // engine identity is stable; re-run when action or engine state changes.
   }, [engine, action, engine.state, tick]);
 
   const onAct = async () => {
     setEgress(null);
     setRestored(null);
-    if (!decision) return;
     let payloadText = effectiveDraft.text;
     const ab = recordSubmission(text, signals);
     setAbuse(ab);
