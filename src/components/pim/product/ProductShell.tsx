@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import type { Action, Mode } from "@/lib/pim";
+import type { Action, Mode, PiiCategory } from "@/lib/pim";
 import { usePimSettings } from "@/hooks/usePimSettings";
 import { usePimEngine } from "@/hooks/usePimEngine";
 import { AppHeader } from "./AppHeader";
@@ -8,7 +8,9 @@ import { ProductShellProvider } from "./ProductShellContext";
 import { QuickMode } from "./modes/QuickMode";
 import { StartMode } from "./modes/StartMode";
 import { WriteMode } from "./modes/WriteMode";
+import { ExpertPanel } from "./ExpertPanel";
 import type { ProductMode } from "./types";
+import { DEFAULT_AUTO_REDACT } from "@/components/pim/writer/pimGeneralizations";
 
 /**
  * ProductShell — één gedeelde chrome (header, footer) en één engine-instance
@@ -21,6 +23,10 @@ export function ProductShell({ mode }: { mode: ProductMode }) {
   const [pimMode, setPimMode] = useState<Mode>("anonymous");
   const [action, setAction] = useState<Action>("send_external_ai");
   const [writerContent, setWriterContent] = useState<string | null>(null);
+  const [writerAutoRedact, setWriterAutoRedact] = useState<ReadonlySet<PiiCategory>>(
+    () => new Set(DEFAULT_AUTO_REDACT),
+  );
+  const [writerStrict, setWriterStrict] = useState(false);
 
   const engineConfig = useMemo(
     () => ({
@@ -49,6 +55,8 @@ export function ProductShell({ mode }: { mode: ProductMode }) {
     const onReset = () => {
       setText("");
       setWriterContent(null);
+      setWriterAutoRedact(new Set(DEFAULT_AUTO_REDACT));
+      setWriterStrict(false);
       reset();
     };
     window.addEventListener("pim:reset", onReset);
@@ -71,6 +79,10 @@ export function ProductShell({ mode }: { mode: ProductMode }) {
       setAction,
       writerContent,
       setWriterContent,
+      writerAutoRedact,
+      setWriterAutoRedact,
+      writerStrict,
+      setWriterStrict,
     }),
     [
       engineState,
@@ -83,6 +95,8 @@ export function ProductShell({ mode }: { mode: ProductMode }) {
       pimMode,
       action,
       writerContent,
+      writerAutoRedact,
+      writerStrict,
     ],
   );
 
@@ -98,6 +112,7 @@ export function ProductShell({ mode }: { mode: ProductMode }) {
           </div>
         </main>
         <StatusFooter />
+        <ExpertPanel mode={mode} />
       </div>
     </ProductShellProvider>
   );
