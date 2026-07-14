@@ -143,22 +143,22 @@ export function AdvancedPanel({
   return (
     <section
       ref={sectionRef}
-      className={`scroll-mt-20 overflow-hidden rounded-[1.75rem] border bg-[#0b1f36]/92 shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur ${isWriter ? "border-cyan-400/30 ring-1 ring-cyan-400/15" : "border-white/10"}`}
+      className={`scroll-mt-20 overflow-hidden rounded-[1.75rem] border bg-white shadow-sm  ${isWriter ? "border-cyan-400/30 ring-1 ring-cyan-400/15" : "border-[#e2e8f0]"}`}
     >
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="w-full flex items-center gap-4 px-5 py-4 text-left transition-colors hover:bg-white/[0.035]"
+        className="w-full flex items-center gap-4 px-5 py-4 text-left transition-colors hover:bg-[#f6f7fb]"
       >
         <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-cyan-400/35 bg-cyan-400/10 shadow-[inset_0_0_20px_rgba(34,211,238,0.08)]">
           <SlidersHorizontal className="h-5 w-5 text-cyan-300" />
         </span>
         <div className="flex-1 min-w-0">
-          <div className="text-base font-semibold leading-tight text-[#eef6ff]">
+          <div className="text-base font-semibold leading-tight text-[#0f172a]">
             {isWriter ? "Als PiM iets vindt" : "Zoeken"}
           </div>
-          <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] text-slate-300/85">
+          <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] text-[#64748b]">
             <Chip>Regex aan</Chip>
             {detectionSettings.lexicon && <Chip>Lexicon</Chip>}
             {detectionSettings.context && <Chip>Context</Chip>}
@@ -168,30 +168,30 @@ export function AdvancedPanel({
           </div>
         </div>
         <ChevronDown
-          className={`h-5 w-5 shrink-0 text-slate-300/75 transition-transform ${open ? "rotate-180" : ""}`}
+          className={`h-5 w-5 shrink-0 text-[#334155]/75 transition-transform ${open ? "rotate-180" : ""}`}
         />
       </button>
 
       {open && (
-        <div className="border-t border-white/10 bg-[#07192d]/62 p-4 sm:p-5 space-y-4">
+        <div className="border-t border-[#e2e8f0] bg-[#f6f7fb] p-4 sm:p-5 space-y-4">
           {isWriter ? (
             <WriterActions writer={writer} />
           ) : (
             <LayerSettings settings={detectionSettings} updateSettings={updateSettings} ner={ner} />
           )}
 
-          <div className="rounded-2xl border border-white/8 bg-[#07182a]/70 p-4">
+          <div className="rounded-2xl border border-[#e2e8f0] bg-white p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <div className="text-sm font-semibold text-[#eef6ff]">Technische instellingen</div>
-                <p className="mt-1 text-xs text-slate-300/72">
+                <div className="text-sm font-semibold text-[#0f172a]">Technische instellingen</div>
+                <p className="mt-1 text-xs text-[#334155]/72">
                   Alleen voor debug. Uit betekent: PiM zoekt die categorie niet meer.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setShowTechnical((v) => !v)}
-                className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs font-medium text-slate-200 hover:bg-white/[0.06]"
+                className="rounded-xl border border-[#e2e8f0] bg-white/[0.03] px-3 py-2 text-xs font-medium text-slate-200 hover:bg-white/[0.06]"
               >
                 {showTechnical ? "Verberg" : "Toon"}
               </button>
@@ -207,7 +207,7 @@ export function AdvancedPanel({
                   <button
                     type="button"
                     onClick={onResetCategories}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs text-slate-200 hover:bg-white/[0.06]"
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-[#e2e8f0] bg-white/[0.03] px-3 py-2 text-xs text-slate-200 hover:bg-white/[0.06]"
                   >
                     <RotateCcw className="h-3.5 w-3.5" /> Alles weer zoeken
                   </button>
@@ -220,7 +220,7 @@ export function AdvancedPanel({
                   <button
                     type="button"
                     onClick={onResetThresholds}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs text-slate-200 hover:bg-white/[0.06]"
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-[#e2e8f0] bg-white/[0.03] px-3 py-2 text-xs text-slate-200 hover:bg-white/[0.06]"
                   >
                     <RotateCcw className="h-3.5 w-3.5" /> Drempels resetten
                   </button>
@@ -283,16 +283,16 @@ function LayerSettings({
         </LayerCard>
       </div>
 
-      <div className="rounded-2xl border border-white/8 bg-[#07182a]/70 p-4">
+      <div className="rounded-2xl border border-[#e2e8f0] bg-white p-4">
         <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h3 className="text-sm font-semibold text-[#eef6ff]">BERT</h3>
+              <h3 className="text-sm font-semibold text-[#0f172a]">BERT</h3>
               <span className={`rounded-full border px-2 py-0.5 text-[11px] ${status.className}`}>
                 {status.label}
               </span>
             </div>
-            <p className="mt-1 text-xs leading-relaxed text-slate-300/75">
+            <p className="mt-1 text-xs leading-relaxed text-[#334155]/75">
               Lokaal taalmodel dat woorden labelt als persoon, organisatie of plaats. Regex, Lexicon
               en Context blijven aan.
             </p>
@@ -364,23 +364,23 @@ function BertOption({
     <button
       type="button"
       onClick={() => onClick(value)}
-      className={`rounded-2xl border p-3 text-left transition-colors ${selected ? "border-cyan-300/70 bg-cyan-300/14 text-[#eef6ff]" : "border-white/8 bg-white/[0.025] text-slate-300 hover:bg-white/[0.055]"}`}
+      className={`rounded-2xl border p-3 text-left transition-colors ${selected ? "border-cyan-300/70 bg-cyan-300/14 text-[#0f172a]" : "border-[#e2e8f0] bg-[#f6f7fb] text-[#334155] hover:bg-[#eef2f7]"}`}
     >
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm font-semibold">{title}</span>
         {selected && <CheckCircle2 className="h-4 w-4 text-cyan-200" />}
       </div>
-      <p className="mt-1 text-xs text-slate-300/70">{text}</p>
+      <p className="mt-1 text-xs text-[#334155]/70">{text}</p>
     </button>
   );
 }
 
 function WriterActions({ writer }: { writer: NonNullable<AdvancedPanelProps["writer"]> }) {
   return (
-    <div className="rounded-2xl border border-white/8 bg-[#07182a]/70 p-4 space-y-4">
+    <div className="rounded-2xl border border-[#e2e8f0] bg-white p-4 space-y-4">
       <div>
-        <div className="text-sm font-semibold text-[#eef6ff]">Als PiM iets vindt</div>
-        <p className="mt-1 text-xs text-slate-300/72">
+        <div className="text-sm font-semibold text-[#0f172a]">Als PiM iets vindt</div>
+        <p className="mt-1 text-xs text-[#334155]/72">
           Kies per soort gegeven: automatisch wissen of alleen markeren.
         </p>
       </div>
@@ -388,9 +388,9 @@ function WriterActions({ writer }: { writer: NonNullable<AdvancedPanelProps["wri
         {CATEGORY_SECTIONS.map((section) => (
           <div
             key={section.label}
-            className="rounded-2xl border border-white/8 bg-white/[0.025] p-3"
+            className="rounded-2xl border border-[#e2e8f0] bg-[#f6f7fb] p-3"
           >
-            <div className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+            <div className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#64748b]">
               {section.label}
             </div>
             <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
@@ -399,23 +399,23 @@ function WriterActions({ writer }: { writer: NonNullable<AdvancedPanelProps["wri
                 return (
                   <div
                     key={cat}
-                    className="flex items-center justify-between gap-2 rounded-xl border border-white/8 bg-[#07182a]/55 px-2.5 py-2"
+                    className="flex items-center justify-between gap-2 rounded-xl border border-[#e2e8f0] bg-white px-2.5 py-2"
                   >
-                    <span className="block truncate text-xs font-medium text-slate-100">
+                    <span className="block truncate text-xs font-medium text-[#0f172a]">
                       {CATEGORY_LABELS[cat] ?? cat}
                     </span>
-                    <div className="inline-flex rounded-lg border border-white/10 bg-black/12 p-0.5 gap-0.5">
+                    <div className="inline-flex rounded-lg border border-[#e2e8f0] bg-black/12 p-0.5 gap-0.5">
                       <button
                         type="button"
                         onClick={() => writer.onAutoRedactChange(cat, true)}
-                        className={`rounded-md px-2 py-1 text-[10px] font-semibold ${scrub ? "bg-emerald-300/18 text-emerald-100" : "text-slate-400 hover:text-slate-100"}`}
+                        className={`rounded-md px-2 py-1 text-[10px] font-semibold ${scrub ? "bg-emerald-300/18 text-emerald-100" : "text-[#64748b] hover:text-[#0f172a]"}`}
                       >
                         Wis
                       </button>
                       <button
                         type="button"
                         onClick={() => writer.onAutoRedactChange(cat, false)}
-                        className={`rounded-md px-2 py-1 text-[10px] font-semibold ${!scrub ? "bg-amber-300/18 text-amber-100" : "text-slate-400 hover:text-slate-100"}`}
+                        className={`rounded-md px-2 py-1 text-[10px] font-semibold ${!scrub ? "bg-amber-300/18 text-amber-100" : "text-[#64748b] hover:text-[#0f172a]"}`}
                       >
                         Markeer
                       </button>
@@ -430,12 +430,12 @@ function WriterActions({ writer }: { writer: NonNullable<AdvancedPanelProps["wri
       <button
         type="button"
         onClick={() => writer.onStrictChange(!writer.strict)}
-        className={`rounded-2xl border px-3 py-2.5 text-left transition-colors ${writer.strict ? "border-amber-300/45 bg-amber-300/10" : "border-white/8 bg-white/[0.025] hover:bg-white/[0.055]"}`}
+        className={`rounded-2xl border px-3 py-2.5 text-left transition-colors ${writer.strict ? "border-amber-300/45 bg-amber-300/10" : "border-[#e2e8f0] bg-[#f6f7fb] hover:bg-[#eef2f7]"}`}
       >
         <div className="flex items-center justify-between gap-3">
-          <span className="text-xs font-semibold text-slate-100">Strenge cijfercontrole</span>
+          <span className="text-xs font-semibold text-[#0f172a]">Strenge cijfercontrole</span>
           <span
-            className={`text-[10px] font-semibold uppercase tracking-[0.18em] ${writer.strict ? "text-amber-100" : "text-slate-400"}`}
+            className={`text-[10px] font-semibold uppercase tracking-[0.18em] ${writer.strict ? "text-amber-100" : "text-[#64748b]"}`}
           >
             {writer.strict ? "aan" : "uit"}
           </span>
@@ -457,16 +457,16 @@ function LayerCard({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-white/8 bg-[#07182a]/70 p-4">
+    <div className="rounded-2xl border border-[#e2e8f0] bg-white p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm font-semibold text-[#eef6ff]">{title}</span>
-            <span className="rounded-full border border-white/10 bg-white/[0.035] px-2 py-0.5 text-[11px] text-slate-300">
+            <span className="text-sm font-semibold text-[#0f172a]">{title}</span>
+            <span className="rounded-full border border-[#e2e8f0] bg-[#f6f7fb] px-2 py-0.5 text-[11px] text-[#334155]">
               {status}
             </span>
           </div>
-          <p className="mt-2 text-xs leading-relaxed text-slate-300/75">{description}</p>
+          <p className="mt-2 text-xs leading-relaxed text-[#334155]/75">{description}</p>
         </div>
         {children && <div className="shrink-0 pt-0.5">{children}</div>}
       </div>
@@ -484,8 +484,8 @@ function CategoryToggles({
   return (
     <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
       {CATEGORY_SECTIONS.map((section) => (
-        <div key={section.label} className="rounded-2xl border border-white/8 bg-white/[0.025] p-3">
-          <div className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+        <div key={section.label} className="rounded-2xl border border-[#e2e8f0] bg-[#f6f7fb] p-3">
+          <div className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#64748b]">
             {section.label}
           </div>
           <div className="space-y-1.5">
@@ -494,10 +494,10 @@ function CategoryToggles({
               return (
                 <label
                   key={cat}
-                  className={`flex cursor-pointer items-center justify-between gap-2 rounded-xl border px-2.5 py-2 transition-colors ${off ? "border-rose-400/25 bg-rose-400/8" : "border-white/8 bg-[#07182a]/50 hover:bg-white/[0.055]"}`}
+                  className={`flex cursor-pointer items-center justify-between gap-2 rounded-xl border px-2.5 py-2 transition-colors ${off ? "border-rose-400/25 bg-rose-400/8" : "border-[#e2e8f0] bg-white hover:bg-[#eef2f7]"}`}
                 >
                   <span
-                    className={`block truncate text-xs font-medium ${off ? "text-rose-100" : "text-slate-100"}`}
+                    className={`block truncate text-xs font-medium ${off ? "text-rose-100" : "text-[#0f172a]"}`}
                   >
                     {CATEGORY_LABELS[cat] ?? cat}
                   </span>
@@ -518,16 +518,16 @@ function CategoryToggles({
 
 function IntegrityList({ integrity }: { integrity: ModelIntegrityRecord[] }) {
   if (integrity.length === 0)
-    return <p className="text-xs text-slate-400">Nog geen modelchecks.</p>;
+    return <p className="text-xs text-[#64748b]">Nog geen modelchecks.</p>;
   return (
     <ul className="space-y-1.5">
       {integrity.map((r) => (
         <li
           key={r.key}
-          className="flex justify-between gap-2 rounded-xl border border-white/8 bg-white/[0.025] px-3 py-2 font-plex-mono text-[11px]"
+          className="flex justify-between gap-2 rounded-xl border border-[#e2e8f0] bg-[#f6f7fb] px-3 py-2 font-plex-mono text-[11px]"
         >
-          <span className="truncate text-slate-400">{r.key}</span>
-          <span className="text-slate-100">{r.status}</span>
+          <span className="truncate text-[#64748b]">{r.key}</span>
+          <span className="text-[#0f172a]">{r.status}</span>
         </li>
       ))}
     </ul>
@@ -536,7 +536,7 @@ function IntegrityList({ integrity }: { integrity: ModelIntegrityRecord[] }) {
 
 function Chip({ children }: { children: React.ReactNode }) {
   return (
-    <span className="rounded-full border border-white/8 bg-black/14 px-2 py-0.5 shadow-sm">
+    <span className="rounded-full border border-[#e2e8f0] bg-black/14 px-2 py-0.5 shadow-sm">
       {children}
     </span>
   );
@@ -552,7 +552,7 @@ function modelStatus(
   bert: BertChoice,
 ): { label: string; className: string } {
   if (bert === "off")
-    return { label: "Uit", className: "border-white/10 bg-white/[0.035] text-slate-300" };
+    return { label: "Uit", className: "border-[#e2e8f0] bg-[#f6f7fb] text-[#334155]" };
   if (status?.working)
     return {
       label: "Werkt",
@@ -567,6 +567,6 @@ function modelStatus(
     return { label: "Fout", className: "border-red-300/35 bg-red-300/12 text-red-100" };
   return {
     label: `${bert === "100mb" ? "100 MB" : "180 MB"} niet geladen`,
-    className: "border-white/10 bg-white/[0.035] text-slate-300",
+    className: "border-[#e2e8f0] bg-[#f6f7fb] text-[#334155]",
   };
 }
