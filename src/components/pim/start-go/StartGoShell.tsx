@@ -100,19 +100,21 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
     }),
     [detectionSettings, thresholdOverrides, disabledCategories, integrity],
   );
-  const engine = usePimEngine(engineConfig);
+  const { state: engineState, evaluate, previewDecision, requestAction } =
+    usePimEngine(engineConfig);
 
-  // Live evaluatie op elke input-mutatie — engine is idempotent en snel.
-  useMemo(() => {
+  // Live evaluatie op elke relevante input-mutatie — als effect, niet in
+  // useMemo: engine.evaluate() muteert engine-state (side effect).
+  useEffect(() => {
     if (!text.trim()) return;
-    engine.evaluate({
+    evaluate({
       text,
       mode,
       extraSpans: modelSpans,
       autoRepair: false,
       llmDraftText,
     });
-  }, [engine, text, mode, modelSpans, llmDraftText]);
+  }, [evaluate, text, mode, modelSpans, llmDraftText]);
 
   // Reset llm-override zodra brontekst of modus wijzigt.
   useEffect(() => {
@@ -138,7 +140,7 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
     llmDraftText,
   ]);
 
-  const previewSignals: PrivacySignals = engine.state.signals ?? {
+  const previewSignals: PrivacySignals = engineState.signals ?? {
     directPii: [],
     contextualPii: [],
     riskScore: 0,
@@ -149,16 +151,25 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
 
   const result: ResultState | null = useMemo(() => {
     if (!committed) return null;
-    if (!engine.state.signals || !engine.state.guard || !engine.state.draft) return null;
-    const decision = engine.previewDecision(action);
+    if (!engineState.signals || !engineState.guard || !engineState.draft) return null;
+    const decision = previewDecision(action);
     return {
       decision,
-      safeText: engine.state.draft.text,
+      safeText: engineState.draft.text,
       originalText: text,
-      signals: engine.state.signals,
-      mapping: engine.state.pseudoMapping ?? new Map(),
+      signals: engineState.signals,
+      mapping: engineState.pseudoMapping ?? new Map(),
     };
-  }, [committed, engine, action, text]);
+  }, [
+    committed,
+    previewDecision,
+    action,
+    text,
+    engineState.signals,
+    engineState.guard,
+    engineState.draft,
+    engineState.pseudoMapping,
+  ]);
 
   // Debug bus — één regel per commit-run, net als de oude run().
   useEffect(() => {
@@ -169,8 +180,8 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
       detectionSettings,
       hits: result.signals.directPii.length + result.signals.contextualPii.length,
       nerHits: modelSpans.length,
-      draftCheck: engine.state.guard?.status,
-      payloadType: engine.state.payloadType,
+      draftCheck: engineState.guard?.status,
+      payloadType: engineState.payloadType,
     });
   }, [
     result,
@@ -178,8 +189,8 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
     action,
     detectionSettings,
     modelSpans.length,
-    engine.state.guard?.status,
-    engine.state.payloadType,
+    engineState.guard?.status,
+    engineState.payloadType,
   ]);
 
   const startNer = () => {
@@ -231,7 +242,7 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
     }
     setBusy(true);
     try {
-      const outcome = await engine.requestAction({ action, payloadText: editedText });
+      const outcome = await requestAction({ action, payloadText: editedText });
       setEgressMsg(outcome.executed ? `✓ ${outcome.reason}` : `✗ ${outcome.reason}`);
     } finally {
       setBusy(false);
@@ -239,7 +250,7 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
   };
   const runQuickAction = async (editedText: string, quickAction: Action): Promise<EgressResult> => {
     if (!result) return { executed: false, reason: "no result" };
-    const outcome = await engine.requestAction({ action: quickAction, payloadText: editedText });
+    const outcome = await requestAction({ action: quickAction, payloadText: editedText });
     emitDebug(
       "pipeline.execute",
       outcome.executed ? "quick egress toegestaan" : "quick egress geblokt",
