@@ -20,6 +20,7 @@ export function ProductShell({ mode }: { mode: ProductMode }) {
   const [text, setText] = useState("");
   const [pimMode, setPimMode] = useState<Mode>("anonymous");
   const [action, setAction] = useState<Action>("send_external_ai");
+  const [writerContent, setWriterContent] = useState<string | null>(null);
 
   const engineConfig = useMemo(
     () => ({
@@ -47,6 +48,7 @@ export function ProductShell({ mode }: { mode: ProductMode }) {
   useEffect(() => {
     const onReset = () => {
       setText("");
+      setWriterContent(null);
       reset();
     };
     window.addEventListener("pim:reset", onReset);
@@ -67,8 +69,21 @@ export function ProductShell({ mode }: { mode: ProductMode }) {
       setMode: setPimMode,
       action,
       setAction,
+      writerContent,
+      setWriterContent,
     }),
-    [engineState, evaluate, previewDecision, requestAction, reset, settings, text, pimMode, action],
+    [
+      engineState,
+      evaluate,
+      previewDecision,
+      requestAction,
+      reset,
+      settings,
+      text,
+      pimMode,
+      action,
+      writerContent,
+    ],
   );
 
   return (

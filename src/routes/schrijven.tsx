@@ -1,22 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { WriterShell } from "@/components/pim/writer/WriterShell";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
+// Fase 3 slice B — de schrijfmodus zit nu binnen `/app?mode=write`. We houden
+// `/schrijven` beschikbaar als redirect zodat bestaande bookmarks/deeplinks
+// niet breken.
 export const Route = createFileRoute("/schrijven")({
-  head: () => ({
-    meta: [
-      { title: "Schrijfmodus — Project PiM" },
-      {
-        name: "description",
-        content:
-          "Word-achtige editor met Project PiM ingebouwd. Schrijf, plak of importeer .docx — gevoelige gegevens worden direct gemarkeerd of gewist, alles lokaal in je browser.",
-      },
-      { property: "og:title", content: "Schrijfmodus — Project PiM" },
-      {
-        property: "og:description",
-        content:
-          "Schrijf veilig met PiM. Live highlights, auto-redact en .docx-export — 100% lokaal.",
-      },
-    ],
-  }),
-  component: WriterShell,
+  beforeLoad: () => {
+    throw redirect({ to: "/app", search: { mode: "write" }, replace: true });
+  },
 });

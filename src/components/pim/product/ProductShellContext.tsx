@@ -16,6 +16,13 @@ export interface ProductShellContextValue {
   setMode: (m: Mode) => void;
   action: Action;
   setAction: (a: Action) => void;
+  /**
+   * Cached editor HTML voor WriteMode. WriterWorkspace unmount bij modewissel
+   * en zou anders zijn Tiptap-state kwijtraken — de shell bewaart de HTML
+   * hier zodat quick → write → quick de tekst behoudt.
+   */
+  writerContent: string | null;
+  setWriterContent: (html: string | null) => void;
 }
 
 const ProductShellContext = createContext<ProductShellContextValue | null>(null);

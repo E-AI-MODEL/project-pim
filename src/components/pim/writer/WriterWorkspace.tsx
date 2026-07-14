@@ -1,8 +1,11 @@
-// Schrijfmodus — Word-achtige editor met PiM ingebouwd.
-// - Live highlights tijdens typen
-// - Klik op gemarkeerde tekst: vervang / negeer
-// - Harde PII (BSN/IBAN/email/telefoon/...) wordt direct auto-geredact
-// - Import .docx (mammoth) + export .docx (docx package)
+// WriterWorkspace — inhoudscomponent voor de schrijfmodus binnen ProductShell.
+//
+// Dit is de refactor van WriterShell zonder eigen paginachrome:
+// - geen eigen <header>, geen LiveTechMonitor (die zit in de gedeelde StatusFooter);
+// - geen eigen usePimEngine — de shell-engine uit ProductShellContext wordt gebruikt;
+// - AppHeader, TrustBadge, BurgerMenu, ModeSwitcher, LocalStatusPill komen uit
+//   de ProductShell. De workspace levert alleen editor + writer-specifieke acties
+//   (import/export/leeg, AdvancedPanel writer-tab, live highlights).
 
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -19,8 +22,6 @@ import {
   Redo2,
   Upload,
   Download,
-  Shield,
-  ShieldCheck,
   Trash2,
   X,
 } from "lucide-react";
@@ -32,11 +33,9 @@ import {
   type NerStatus,
 } from "@/lib/pim";
 import { useNerSpans } from "@/hooks/useNerSpans";
-import { usePimSettings } from "@/hooks/usePimSettings";
-import { usePimEngine } from "@/hooks/usePimEngine";
-import { LiveTechMonitor } from "@/components/pim/start-go/LiveTechMonitor";
 import { AdvancedPanel } from "@/components/pim/start-go/AdvancedPanel";
-import { GENERALIZATIONS, DEFAULT_AUTO_REDACT, CATEGORY_LABELS } from "./pimGeneralizations";
+import { useProductShell } from "@/components/pim/product/ProductShellContext";
+import { GENERALIZATIONS, DEFAULT_AUTO_REDACT } from "./pimGeneralizations";
 import {
   createPimPlugin,
   pimPluginKey,
@@ -56,11 +55,16 @@ interface ClickedSpan {
   y: number;
 }
 
-export function WriterShell() {
+export function WriterWorkspace() {
+  // ProductShell-context is de bron van waarheid voor engine, settings en reset.
+  const { evaluate, settings, writerContent, setWriterContent } = useProductShell();
+  const { detectionSettings, disabledCategories, advancedPanelProps } = settings;
+
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
   }, []);
+
   const [autoRedact, setAutoRedact] = useState<Set<PiiCategory>>(
     () => new Set(DEFAULT_AUTO_REDACT),
   );
@@ -70,26 +74,20 @@ export function WriterShell() {
   const [clicked, setClicked] = useState<ClickedSpan | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const [importWarnings, setImportWarnings] = useState<string[]>([]);
-  const { detectionSettings, disabledCategories, advancedPanelProps } = usePimSettings();
   const [plainText, setPlainText] = useState("");
   const usesNerSlm = usesBert(detectionSettings);
   const { nerSpans, nerStatus, startNer } = useNerSpans(plainText, { enabled: usesNerSlm });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editorRootRef = useRef<HTMLDivElement>(null);
 
-  // Central PiM engine — WriterShell must not compute signals / draft / policy itself.
-  const engineConfig = useMemo(
-    () => ({ detectionSettings, disabledCategories }),
-    [detectionSettings, disabledCategories],
-  );
-  const { evaluate } = usePimEngine(engineConfig);
-
   const pimPlugin = useMemo(() => createPimPlugin(), []);
+  const initialContent =
+    writerContent ??
+    "<h1>Nieuwe notitie</h1><p>Begin met typen — PiM leest mee. Namen worden gemarkeerd; harde gegevens zoals BSN, e-mail en telefoonnummer worden direct vervangen door een label.</p>";
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [StarterKit.configure({ heading: { levels: [1, 2, 3] } })],
-    content:
-      "<h1>Nieuwe notitie</h1><p>Begin met typen — PiM leest mee. Namen worden gemarkeerd; harde gegevens zoals BSN, e-mail en telefoonnummer worden direct vervangen door een label.</p>",
+    content: initialContent,
     editorProps: {
       attributes: {
         class:
@@ -97,6 +95,20 @@ export function WriterShell() {
       },
     },
   });
+
+  // Persist editorinhoud in de shell zodat modewissel (write → quick → write)
+  // de tekst behoudt. We schrijven pas bij unmount en niet tijdens typen om
+  // renderloops te vermijden.
+  useEffect(() => {
+    if (!editor) return;
+    return () => {
+      try {
+        setWriterContent(editor.getHTML());
+      } catch {
+        /* editor may already be destroyed */
+      }
+    };
+  }, [editor, setWriterContent]);
 
   useEffect(() => {
     if (!editor) return;
@@ -270,7 +282,10 @@ export function WriterShell() {
     editor.commands.setContent("<p></p>");
     setIgnored(new Set());
     setStats({ scrubbed: 0, marked: 0 });
-  }, [editor]);
+    setWriterContent(null);
+  }, [editor, setWriterContent]);
+  // ProductShell luistert al naar "pim:reset" en wist gedeelde tekst; hier
+  // wissen we tegelijk de editor zodat write-mode ook mee-reset.
   useEffect(() => {
     window.addEventListener("pim:reset", onClear);
     return () => window.removeEventListener("pim:reset", onClear);
@@ -278,81 +293,64 @@ export function WriterShell() {
 
   if (!mounted || !editor) return null;
   return (
-    <div className="min-h-screen bg-[#071527] text-[#e8edf3]">
-      <header className="sticky top-0 z-20 border-b border-white/10 bg-[#071527]/94 backdrop-blur px-4 py-3">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
-          <div className="flex min-w-0 items-center gap-3">
-            <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-cyan-300/25 bg-cyan-300/10">
-              <Shield className="h-5 w-5 text-cyan-200" />
-            </span>
-            <div className="min-w-0">
-              <div className="truncate font-serif-display text-xl font-semibold tracking-tight text-[#f3f8ff]">
-                PiM schrijven
-              </div>
-              <WriterStatusBar
-                nerStatus={nerStatus}
-                onStartNer={startNer}
-                detectionSettings={detectionSettings}
-              />
-            </div>
-          </div>
-          <div className="flex shrink-0 items-center gap-2">
-            <LiveTechMonitor
-              trigger={<HeaderAction icon={<ShieldCheck className="h-4 w-4" />} label="Status" />}
-            />
-            <HeaderAction
-              icon={<Upload className="h-4 w-4" />}
-              label="Import"
-              onClick={onImportClick}
-            />
-            <HeaderAction
-              icon={<Download className="h-4 w-4" />}
-              label="Export"
-              onClick={onExport}
-            />
-            <HeaderAction icon={<Trash2 className="h-4 w-4" />} label="Leeg" onClick={onClear} />
-          </div>
-        </div>
-      </header>
-      <main className="mx-auto max-w-6xl px-4 py-6 space-y-4">
-        <AdvancedPanel
-          {...advancedPanelProps}
-          writer={{
-            autoRedact,
-            onAutoRedactChange: (cat, scrub) =>
-              setAutoRedact((p) => {
-                const n = new Set(p);
-                if (scrub) n.add(cat);
-                else n.delete(cat);
-                return n;
-              }),
-            strict,
-            onStrictChange: setStrict,
-          }}
-          ner={{ status: nerStatus, onStart: startNer, available: usesNerSlm }}
+    <div className="space-y-4" data-testid="writer-workspace">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-[#101f3d] px-4 py-3">
+        <WriterStatusBar
+          nerStatus={nerStatus}
+          onStartNer={startNer}
+          detectionSettings={detectionSettings}
         />
-        {importError && (
-          <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
-            {importError}
-          </div>
-        )}
-        {importWarnings.length > 0 && (
-          <div className="rounded-lg border border-amber-400/30 bg-amber-400/10 p-3 text-sm text-amber-100">
-            {importWarnings.join(" · ")}
-          </div>
-        )}
-        <Toolbar editor={editor} />
-        <div
-          ref={editorRootRef}
-          className="rounded-[1.75rem] border border-white/10 bg-[#101f3d] shadow-[0_18px_55px_rgba(0,0,0,0.25)] overflow-hidden"
-        >
-          <EditorContent editor={editor} />
+        <div className="flex shrink-0 items-center gap-2">
+          <WorkspaceAction
+            icon={<Upload className="h-4 w-4" />}
+            label="Import"
+            onClick={onImportClick}
+          />
+          <WorkspaceAction
+            icon={<Download className="h-4 w-4" />}
+            label="Export"
+            onClick={onExport}
+          />
+          <WorkspaceAction icon={<Trash2 className="h-4 w-4" />} label="Leeg" onClick={onClear} />
         </div>
-        <div className="text-xs text-[#e8edf3]/55 flex gap-3">
-          <span>Gewist: {stats.scrubbed}</span>
-          <span>Gemarkeerd: {stats.marked}</span>
+      </div>
+      <AdvancedPanel
+        {...advancedPanelProps}
+        writer={{
+          autoRedact,
+          onAutoRedactChange: (cat, scrub) =>
+            setAutoRedact((p) => {
+              const n = new Set(p);
+              if (scrub) n.add(cat);
+              else n.delete(cat);
+              return n;
+            }),
+          strict,
+          onStrictChange: setStrict,
+        }}
+        ner={{ status: nerStatus, onStart: startNer, available: usesNerSlm }}
+      />
+      {importError && (
+        <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
+          {importError}
         </div>
-      </main>
+      )}
+      {importWarnings.length > 0 && (
+        <div className="rounded-lg border border-amber-400/30 bg-amber-400/10 p-3 text-sm text-amber-100">
+          {importWarnings.join(" · ")}
+        </div>
+      )}
+      <Toolbar editor={editor} />
+      <div
+        ref={editorRootRef}
+        className="rounded-[1.75rem] border border-white/10 bg-[#101f3d] shadow-[0_18px_55px_rgba(0,0,0,0.25)] overflow-hidden"
+      >
+        <EditorContent editor={editor} />
+      </div>
+      <div className="text-xs text-[#e8edf3]/55 flex gap-3">
+        <span>Gewist: {stats.scrubbed}</span>
+        <span>Gemarkeerd: {stats.marked}</span>
+      </div>
       <input
         ref={fileInputRef}
         type="file"
@@ -380,7 +378,7 @@ export function WriterShell() {
   );
 }
 
-function HeaderAction({
+function WorkspaceAction({
   icon,
   label,
   onClick,
@@ -393,7 +391,7 @@ function HeaderAction({
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex h-10 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.035] px-3 text-sm font-semibold text-slate-100 transition-colors hover:bg-white/[0.07]"
+      className="inline-flex h-9 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.035] px-3 text-sm font-semibold text-slate-100 transition-colors hover:bg-white/[0.07]"
     >
       {icon}
       <span className="hidden sm:inline">{label}</span>
@@ -482,7 +480,7 @@ function WriterStatusBar({
         : "bg-cyan-400/70";
   const canStart = detectionSettings.bert !== "off" && !nerStatus?.working && !nerStatus?.loading;
   return (
-    <div className="mt-1 flex items-center gap-2 text-[11px] text-slate-300/70">
+    <div className="flex items-center gap-2 text-[11px] text-slate-300/70">
       <span className={`h-2 w-2 rounded-full ${tone}`} />
       <span>{label}</span>
       {canStart && (
