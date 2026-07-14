@@ -169,6 +169,18 @@ const RULES: RuleDef[] = [
       /(?<=\b(?:ik heet|mijn naam is|noem (?:mij|me))\s+)[a-zà-ÿ]{2,}(?:\s+(?:van|de|der|den|ten|ter)\s+[a-zà-ÿ]+|\s+[a-zà-ÿ]{2,})?/gi,
     confidence: 0.7,
   },
+  // Lowercase namen na opsommings-triggers ("met jan en piet", "onder andere
+  // jacobus en frank"). Bewust smal: alleen na expliciete triggers, minimaal
+  // 3 letters, en met een korte stopwoord-blocklist zodat we niet elk woord
+  // pakken. Contextueel + lage confidence: PiM markeert, gebruiker beslist.
+  {
+    id: "rule.name_lower_list",
+    category: "name",
+    regex:
+      /(?<=\b(?:met|en|onder\s?andere|namelijk|zoals|waaronder|tussen)\s+)(?!(?:de|het|een|die|dat|deze|dit|hun|onze|jullie|zijn|haar|mijn|jouw|ouders?|leerling(?:en)?|docent(?:en)?|mentor|meester|juf|meneer|mevrouw|kinderen|leraren|klasgenoten|jongens|meisjes|team|groep|school|klas)\b)[a-zà-ÿ]{3,}(?:\s+en\s+(?!(?:de|het|een|zijn|haar)\b)[a-zà-ÿ]{3,})?/gi,
+    confidence: 0.55,
+    contextual: true,
+  },
   // Social handle (@user).
   {
     id: "rule.social_handle",
