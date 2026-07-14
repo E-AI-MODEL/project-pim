@@ -97,6 +97,7 @@ export function WriterWorkspace() {
   const { nerSpans, nerStatus, startNer } = useNerSpans(plainText, { enabled: usesNerSlm });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editorRootRef = useRef<HTMLDivElement>(null);
+  const applyingAnalysisRef = useRef(false);
 
   const pimPlugin = useMemo(() => createPimPlugin(), []);
   const initialContent =
@@ -178,6 +179,7 @@ export function WriterWorkspace() {
       const tr = editor.state.tr;
       for (const r of toReplace) tr.replaceWith(r.from, r.to, editor.schema.text(r.label));
       tr.setMeta("addToHistory", false);
+      applyingAnalysisRef.current = true;
       editor.view.dispatch(tr);
       setStats((p) => ({ scrubbed: p.scrubbed + toReplace.length, marked: p.marked }));
       return;
@@ -193,11 +195,17 @@ export function WriterWorkspace() {
   useEffect(() => {
     if (!editor) return;
     const markAnalysisStale = () => {
+      if (applyingAnalysisRef.current) {
+        applyingAnalysisRef.current = false;
+        return;
+      }
       setClicked(null);
       if (hasAnalyzed) setAnalysisStale(true);
     };
     editor.on("update", markAnalysisStale);
-    return () => editor.off("update", markAnalysisStale);
+    return () => {
+      editor.off("update", markAnalysisStale);
+    };
   }, [editor, hasAnalyzed]);
 
   useEffect(() => {
