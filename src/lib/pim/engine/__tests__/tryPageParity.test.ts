@@ -15,8 +15,7 @@ import type { Action } from "../../types";
 
 const CLEAN = "De methode werkt beter. Leerlingen scoren gemiddeld hoger op de weektoets.";
 const REPAIR = "Kort mentorverslag over Tom de Vries (4H2) — planning aanscherpen.";
-const BLOCK =
-  "Sarah Jansen, groep 6, De Wilg te Utrecht. BSN 123456782, mail jansen@voorbeeld.nl.";
+const BLOCK = "Sarah Jansen, groep 6, De Wilg te Utrecht. BSN 123456782, mail jansen@voorbeeld.nl.";
 
 function baseline(text: string, action: Action) {
   const signals = computeSignals(text, [], DEFAULT_DETECTION_SETTINGS);
@@ -30,8 +29,7 @@ function baseline(text: string, action: Action) {
   const effective = { ...initialDraft, text: draftText };
   const guard = draftCheck(effective, "anonymous");
   const decisionSignals = computeSignals(draftText, [], DEFAULT_DETECTION_SETTINGS);
-  const payloadType =
-    guard.status === "pass" ? "draft_anonymous_certified" : ("unknown" as const);
+  const payloadType = guard.status === "pass" ? "draft_anonymous_certified" : ("unknown" as const);
   const decision = decide({
     mode: "anonymous",
     action,

@@ -28,10 +28,7 @@ export default tseslint.config(
     // Central PiM engine boundary — UI code may not reach past the façade.
     // See docs/pim-refactor/00-overzicht.md and .lovable/plan.md (Fase 2).
     files: ["src/routes/**/*.{ts,tsx}", "src/components/**/*.{ts,tsx}"],
-    ignores: [
-      "src/components/pim/start-go/StartGoShell.tsx",
-      "src/components/pim/writer/WriterShell.tsx",
-    ],
+    ignores: ["src/components/pim/writer/WriterShell.tsx"],
     rules: {
       "no-restricted-imports": [
         "error",

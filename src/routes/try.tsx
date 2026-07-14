@@ -603,7 +603,7 @@ function TryPage() {
     const d = engine.previewDecision(action);
     queueMicrotask(() => tick("decide", performance.now() - t0));
     return d;
-  }, [engine, action, guard, decisionSignals, engine.state.payloadType, tick]);
+  }, [engine, action, tick]);
 
   const onAct = async () => {
     setEgress(null);

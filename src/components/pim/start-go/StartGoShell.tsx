@@ -1,13 +1,6 @@
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { AlertTriangle, Check, Cpu, Loader2, Sparkles } from "lucide-react";
 import {
-  computeSignals,
-  anonymize,
-  pseudonymize,
-  draftCheck,
-  decide,
-  executeAction,
-  modelGateFor,
   usesBert,
   detectionSettingsToNerVariant,
   setNerVariant,
@@ -16,16 +9,14 @@ import {
   rewriteAnonymousDraft,
   type NerStatus,
   type RewriteStatus,
-  type CertifiedPayload,
-  type PayloadType,
   type Mode,
   type Action,
   type PiiSpan,
-  type DraftCandidate,
   type EgressResult,
   type PimDecision,
   type PrivacySignals,
 } from "@/lib/pim";
+import { usePimEngine } from "@/hooks/usePimEngine";
 import { useNerSpans } from "@/hooks/useNerSpans";
 import { usePimSettings } from "@/hooks/usePimSettings";
 import { emitDebug } from "@/lib/pim/debugBus";
@@ -57,9 +48,10 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
   const [nerEnabled, setNerEnabled] = useState(false);
   const [llmStatus, setLlmStatus] = useState<RewriteStatus | null>(null);
   const [llmMsg, setLlmMsg] = useState<string | null>(null);
-  const [result, setResult] = useState<ResultState | null>(null);
   const [egressMsg, setEgressMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [committed, setCommitted] = useState(false);
+  const [llmDraftText, setLlmDraftText] = useState<string | null>(null);
   const usesNerSlm = usesBert(detectionSettings);
   const llmDevice = useLlmDeviceGuard();
 
@@ -78,7 +70,8 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
   useEffect(() => {
     const onReset = () => {
       setText("");
-      setResult(null);
+      setCommitted(false);
+      setLlmDraftText(null);
       setEgressMsg(null);
       setLlmMsg(null);
       if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
@@ -94,35 +87,99 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
   }, [usesNerSlm, nerStatus?.working]);
 
   const modelSpans = nerSpans;
-  const previewSignals = useMemo(
-    () => computeSignals(text, modelSpans, detectionSettings, disabledCategories),
-    [text, modelSpans, detectionSettings, disabledCategories],
-  );
 
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // ── Centrale PiM Evaluation Engine (Fase 2 slice 3) ────────────────────
+  // Deze shell doet zelf géén detect / anonymize / guard / decide / egress.
+  // Alle logica loopt via @/lib/pim/engine.
+  const engineConfig = useMemo(
+    () => ({
+      detectionSettings,
+      thresholdOverrides,
+      disabledCategories,
+      integrity,
+    }),
+    [detectionSettings, thresholdOverrides, disabledCategories, integrity],
+  );
+  const engine = usePimEngine(engineConfig);
+
+  // Live evaluatie op elke input-mutatie — engine is idempotent en snel.
+  useMemo(() => {
+    if (!text.trim()) return;
+    engine.evaluate({
+      text,
+      mode,
+      extraSpans: modelSpans,
+      autoRepair: false,
+      llmDraftText,
+    });
+  }, [engine, text, mode, modelSpans, llmDraftText]);
+
+  // Reset llm-override zodra brontekst of modus wijzigt.
   useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (!text.trim()) {
-      setResult(null);
-      setEgressMsg(null);
-      return;
-    }
-    debounceRef.current = setTimeout(() => {
-      run();
-    }, 450);
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setLlmDraftText(null);
+  }, [text, mode]);
+
+  // Debounced commit — bepaalt wanneer het ResultPanel verschijnt.
+  useEffect(() => {
+    setCommitted(false);
+    setEgressMsg(null);
+    if (!text.trim()) return;
+    const t = setTimeout(() => setCommitted(true), 450);
+    return () => clearTimeout(t);
   }, [
     text,
     mode,
     action,
-    integrity,
+    modelSpans,
     detectionSettings,
     thresholdOverrides,
     disabledCategories,
-    modelSpans,
+    integrity,
+    llmDraftText,
+  ]);
+
+  const previewSignals: PrivacySignals = engine.state.signals ?? {
+    directPii: [],
+    contextualPii: [],
+    riskScore: 0,
+    riskLevel: "low",
+    reasons: [],
+    ruleIds: [],
+  };
+
+  const result: ResultState | null = useMemo(() => {
+    if (!committed) return null;
+    if (!engine.state.signals || !engine.state.guard || !engine.state.draft) return null;
+    const decision = engine.previewDecision(action);
+    return {
+      decision,
+      safeText: engine.state.draft.text,
+      originalText: text,
+      signals: engine.state.signals,
+      mapping: engine.state.pseudoMapping ?? new Map(),
+    };
+  }, [committed, engine, action, text]);
+
+  // Debug bus — één regel per commit-run, net als de oude run().
+  useEffect(() => {
+    if (!result) return;
+    emitDebug("pipeline.run", `run: ${result.decision.verdict}`, {
+      mode,
+      action,
+      detectionSettings,
+      hits: result.signals.directPii.length + result.signals.contextualPii.length,
+      nerHits: modelSpans.length,
+      draftCheck: engine.state.guard?.status,
+      payloadType: engine.state.payloadType,
+    });
+  }, [
+    result,
+    mode,
+    action,
+    detectionSettings,
+    modelSpans.length,
+    engine.state.guard?.status,
+    engine.state.payloadType,
   ]);
 
   const startNer = () => {
@@ -135,56 +192,10 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
     void loadRewriteLlm().catch(() => {});
   };
 
+  // Startknop = direct committen (skip debounce). Engine.evaluate liep al live.
   const run = () => {
     if (!text.trim()) return;
-    setBusy(true);
-    const t0 = performance.now();
-    try {
-      const signals = computeSignals(text, modelSpans, detectionSettings, disabledCategories);
-      let draft: DraftCandidate;
-      let mapping = new Map<string, string>();
-      if (mode === "anonymous") draft = anonymize(text, signals);
-      else {
-        const pseudo = pseudonymize(text, signals);
-        draft = pseudo.draft;
-        mapping = pseudo.mapping;
-      }
-      const guard = draftCheck(draft, mode);
-      const gate = modelGateFor(action, detectionSettings, integrity);
-      const payloadType: PayloadType =
-        mode === "anonymous" && guard.status === "pass"
-          ? "draft_anonymous_certified"
-          : mode === "pseudonymous"
-            ? "draft_pseudonymous_local"
-            : "unknown";
-      const decisionSignals = computeSignals(draft.text, [], detectionSettings, disabledCategories);
-      const decision: PimDecision = decide({
-        mode,
-        action,
-        signals: decisionSignals,
-        draftCheck: guard,
-        modelVerified: gate.verified,
-        detectionSettings,
-        payloadType,
-        thresholdOverrides,
-      });
-      setResult({ decision, safeText: draft.text, originalText: text, signals, mapping });
-      setEgressMsg(null);
-      setLlmMsg(null);
-      emitDebug("pipeline.run", `run: ${decision.verdict}`, {
-        ms: Math.round(performance.now() - t0),
-        mode,
-        action,
-        detectionSettings,
-        hits: signals.directPii.length + signals.contextualPii.length,
-        nerHits: modelSpans.length,
-        draftCheck: guard.status,
-        modelGate: gate.reason,
-        payloadType,
-      });
-    } finally {
-      setBusy(false);
-    }
+    setCommitted(true);
   };
 
   const rewriteCurrentResult = async () => {
@@ -198,92 +209,53 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
         setEgressMsg(`Qwen: ${rewrite.reason}`);
         return;
       }
-      const guard = draftCheck(
-        {
-          mode: "anonymous",
-          text: rewrite.text,
-          rawHadPii: result.signals.directPii.length + result.signals.contextualPii.length > 0,
-        },
-        "anonymous",
-      );
-      const gate = modelGateFor(action, detectionSettings, integrity);
-      const payloadType: PayloadType =
-        guard.status === "pass" ? "draft_anonymous_certified" : "unknown";
-      const decisionSignals = computeSignals(
-        rewrite.text,
-        [],
-        detectionSettings,
-        disabledCategories,
-      );
-      const decision = decide({
-        mode: "anonymous",
-        action,
-        signals: decisionSignals,
-        draftCheck: guard,
-        modelVerified: gate.verified,
-        detectionSettings,
-        payloadType,
-        thresholdOverrides,
-      });
-      setResult({ ...result, decision, safeText: rewrite.text });
+      // Zet de LLM-tekst als effective draft; engine.evaluate re-runt guard + decide.
+      setLlmDraftText(rewrite.text);
+      setCommitted(true);
       setEgressMsg(`Qwen: ${rewrite.reason}`);
       emitDebug("model.llm.rewrite", rewrite.reason, {
         inputLen: result.safeText.length,
         outputLen: rewrite.text.length,
-        draftCheck: guard.status,
-        verdict: decision.verdict,
       });
     } finally {
       setBusy(false);
     }
   };
 
-  const buildCertified = (editedText: string): CertifiedPayload => {
-    if (!result) throw new Error("no result");
-    const guardStatus =
-      result.decision.payloadType === "draft_anonymous_certified" && editedText === result.safeText
-        ? ("pass" as const)
-        : ("repair" as const);
-    return {
-      text: editedText,
-      mode: result.decision.mode,
-      payloadType: result.decision.payloadType ?? "unknown",
-      detectionSettings,
-      guardStatus,
-    };
-  };
   const onPrimary = async (editedText: string) => {
     if (!result) return;
     if (result.decision.verdict === "BLOCK") {
-      setResult(null);
+      setCommitted(false);
       setEgressMsg(null);
       return;
     }
     setBusy(true);
     try {
-      const r = await executeAction(result.decision, buildCertified(editedText));
-      setEgressMsg(r.executed ? `✓ ${r.reason}` : `✗ ${r.reason}`);
+      const outcome = await engine.requestAction({ action, payloadText: editedText });
+      setEgressMsg(outcome.executed ? `✓ ${outcome.reason}` : `✗ ${outcome.reason}`);
     } finally {
       setBusy(false);
     }
   };
   const runQuickAction = async (editedText: string, quickAction: Action): Promise<EgressResult> => {
     if (!result) return { executed: false, reason: "no result" };
-    const r = await executeAction(
-      { ...result.decision, action: quickAction },
-      buildCertified(editedText),
+    const outcome = await engine.requestAction({ action: quickAction, payloadText: editedText });
+    emitDebug(
+      "pipeline.execute",
+      outcome.executed ? "quick egress toegestaan" : "quick egress geblokt",
+      {
+        executed: outcome.executed,
+        reason: outcome.reason,
+        action: quickAction,
+        quick: true,
+      },
     );
-    emitDebug("pipeline.execute", r.executed ? "quick egress toegestaan" : "quick egress geblokt", {
-      executed: r.executed,
-      reason: r.reason,
-      action: quickAction,
-      quick: true,
-    });
-    return r;
+    return { executed: outcome.executed, reason: outcome.reason };
   };
   const onExample = (e: Example) => {
     setText(e.text);
-    setResult(null);
+    setCommitted(false);
+    setLlmDraftText(null);
     setEgressMsg(null);
     setLlmMsg(null);
   };
@@ -296,7 +268,8 @@ export function StartGoShell({ compact = false }: { compact?: boolean } = {}) {
         text={text}
         onTextChange={(v) => {
           setText(v);
-          setResult(null);
+          setCommitted(false);
+          setLlmDraftText(null);
           setEgressMsg(null);
           setLlmMsg(null);
         }}
