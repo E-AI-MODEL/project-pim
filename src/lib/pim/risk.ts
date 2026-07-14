@@ -1,11 +1,23 @@
 import type { PiiSpan, PiiCategory, PrivacySignals, RiskLevel } from "./types";
 import { runRegistrySync } from "./detectorRegistry";
 import { mergeSpans } from "./mergeSpans";
-import { DEFAULT_DETECTION_SETTINGS, coerceDetectionSettings, type DetectionLayerSettings } from "./detectionSettings";
+import {
+  DEFAULT_DETECTION_SETTINGS,
+  coerceDetectionSettings,
+  type DetectionLayerSettings,
+} from "./detectionSettings";
 
 const HIGH_SEVERITY: ReadonlySet<string> = new Set([
-  "bsn", "iban", "email", "phone", "address", "student_id",
-  "credit_card", "license_plate", "birthdate_text", "id_document",
+  "bsn",
+  "iban",
+  "email",
+  "phone",
+  "address",
+  "student_id",
+  "credit_card",
+  "license_plate",
+  "birthdate_text",
+  "id_document",
 ]);
 
 export function computeSignals(
@@ -28,7 +40,7 @@ export function computeSignals(
   let score = 0;
 
   for (const s of direct) {
-    score += HIGH_SEVERITY.has(s.category) ? 0.18 : 0.10;
+    score += HIGH_SEVERITY.has(s.category) ? 0.18 : 0.1;
     ruleIds.push(s.ruleId);
   }
   for (const s of ctx) {
@@ -37,35 +49,53 @@ export function computeSignals(
   }
 
   const cats = new Set(spans.map((s) => s.category));
-  if (cats.has("name") && cats.has("school")) { score += 0.15; reasons.push("naam + school"); }
-  if (cats.has("context_care") && cats.has("name")) { score += 0.20; reasons.push("zorg + naam"); }
-  if (cats.has("context_incident")) { score += 0.10; reasons.push("incident-context"); }
+  if (cats.has("name") && cats.has("school")) {
+    score += 0.15;
+    reasons.push("naam + school");
+  }
+  if (cats.has("context_care") && cats.has("name")) {
+    score += 0.2;
+    reasons.push("zorg + naam");
+  }
+  if (cats.has("context_incident")) {
+    score += 0.1;
+    reasons.push("incident-context");
+  }
   if (cats.has("context_small_group") && (cats.has("name") || cats.has("context_role"))) {
-    score += 0.18; reasons.push("kleine groep + identifier");
+    score += 0.18;
+    reasons.push("kleine groep + identifier");
   }
   if (cats.has("context_protected_class")) {
-    score += 0.25; reasons.push("bijzondere persoonsgegevens");
+    score += 0.25;
+    reasons.push("bijzondere persoonsgegevens");
   }
   if (cats.has("context_health")) {
-    score += 0.20; reasons.push("gezondheidsinformatie");
+    score += 0.2;
+    reasons.push("gezondheidsinformatie");
   }
   if (cats.has("context_legal")) {
-    score += 0.22; reasons.push("justitie-/politiecontext");
+    score += 0.22;
+    reasons.push("justitie-/politiecontext");
   }
   if (cats.has("context_family")) {
-    score += 0.15; reasons.push("familie-/thuiscontext");
+    score += 0.15;
+    reasons.push("familie-/thuiscontext");
   }
   if (cats.has("context_financial")) {
-    score += 0.10; reasons.push("financiële context");
+    score += 0.1;
+    reasons.push("financiële context");
   }
   if (cats.has("context_performance") && cats.has("name")) {
-    score += 0.15; reasons.push("schoolprestatie + naam");
+    score += 0.15;
+    reasons.push("schoolprestatie + naam");
   }
   if (cats.has("context_location_specific") && cats.has("context_small_group")) {
-    score += 0.10; reasons.push("specifieke locatie + kleine groep");
+    score += 0.1;
+    reasons.push("specifieke locatie + kleine groep");
   }
   if (ctx.length >= 3) {
-    score += 0.10; reasons.push(`${ctx.length} contextsignalen`);
+    score += 0.1;
+    reasons.push(`${ctx.length} contextsignalen`);
   }
 
   if (direct.length > 0) reasons.push(`${direct.length} directe detectie(s)`);
@@ -73,7 +103,7 @@ export function computeSignals(
 
   score = Math.min(1, score);
   const riskLevel: RiskLevel =
-    score >= 0.65 ? "critical" : score >= 0.40 ? "high" : score >= 0.18 ? "medium" : "low";
+    score >= 0.65 ? "critical" : score >= 0.4 ? "high" : score >= 0.18 ? "medium" : "low";
 
   return {
     directPii: direct,

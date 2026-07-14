@@ -19,9 +19,21 @@ import type { PiiSpan, PiiCategory } from "./types";
 
 /** Categorieën die uit gevalideerde/gestructureerde regex-regels komen. */
 const STRUCTURED_IDENTIFIER: ReadonlySet<PiiCategory> = new Set([
-  "email", "phone", "bsn", "iban", "postcode", "student_id", "credit_card",
-  "license_plate", "url", "ip_address", "social_handle", "birthdate_text",
-  "date", "class_code", "id_document",
+  "email",
+  "phone",
+  "bsn",
+  "iban",
+  "postcode",
+  "student_id",
+  "credit_card",
+  "license_plate",
+  "url",
+  "ip_address",
+  "social_handle",
+  "birthdate_text",
+  "date",
+  "class_code",
+  "id_document",
 ]);
 
 /** Herkomst afleiden uit de ruleId-prefix (zelfde conventie als detectorSourceLabel). */
@@ -40,10 +52,14 @@ function sourceOf(ruleId: string): "regex" | "lex" | "slm" | "ctx" {
 export function spanRank(s: PiiSpan): number {
   if (STRUCTURED_IDENTIFIER.has(s.category)) return 100;
   switch (sourceOf(s.ruleId)) {
-    case "lex": return 80;   // gecureerd lexicon (schoolkoepels etc.)
-    case "regex": return 72; // regex naam/adres-heuristiek
-    case "slm": return 64;   // model-naamherkenning
-    default: return 50;      // contextuele heuristiek
+    case "lex":
+      return 80; // gecureerd lexicon (schoolkoepels etc.)
+    case "regex":
+      return 72; // regex naam/adres-heuristiek
+    case "slm":
+      return 64; // model-naamherkenning
+    default:
+      return 50; // contextuele heuristiek
   }
 }
 
@@ -62,7 +78,7 @@ function preferReplacement(kept: PiiSpan, cand: PiiSpan): boolean {
   // Beide naam-achtig/contextueel: kies de RUIMERE dekking, maar alleen als
   // de kandidaat de behouden span volledig omvat (geen partiële coverage-verlies).
   const candCoversKept = cand.start <= kept.start && cand.end >= kept.end;
-  const candLonger = (cand.end - cand.start) > (kept.end - kept.start);
+  const candLonger = cand.end - cand.start > kept.end - kept.start;
   if (candCoversKept && candLonger) return true;
   if (cand.start === kept.start && cand.end === kept.end) return cand.confidence > kept.confidence;
   return false;
@@ -72,18 +88,16 @@ function preferReplacement(kept: PiiSpan, cand: PiiSpan): boolean {
  * Voeg overlappende spans samen volgens de precedentie-ladder.
  * `disabled` filtert categorieën die de gebruiker heeft uitgezet.
  */
-export function mergeSpans(
-  spans: PiiSpan[],
-  disabled?: ReadonlySet<PiiCategory>,
-): PiiSpan[] {
+export function mergeSpans(spans: PiiSpan[], disabled?: ReadonlySet<PiiCategory>): PiiSpan[] {
   const pool = disabled ? spans.filter((s) => !disabled.has(s.category)) : spans.slice();
   // Sorteer zodat de sterkste kandidaat per startpositie eerst langskomt:
   // start asc → rank desc → langste dekking → hoogste confidence.
-  pool.sort((a, b) =>
-    a.start - b.start ||
-    spanRank(b) - spanRank(a) ||
-    (b.end - b.start) - (a.end - a.start) ||
-    b.confidence - a.confidence,
+  pool.sort(
+    (a, b) =>
+      a.start - b.start ||
+      spanRank(b) - spanRank(a) ||
+      b.end - b.start - (a.end - a.start) ||
+      b.confidence - a.confidence,
   );
   const out: PiiSpan[] = [];
   for (const s of pool) {

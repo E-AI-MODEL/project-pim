@@ -26,7 +26,8 @@ export const MODEL_CATALOG = {
     task: "token-classification",
     preferredDevice: "webgpu",
     fallbackDevice: "wasm",
-    expectedConfigSha256: "LOCAL_PIN:Xenova/distilbert-base-multilingual-cased-ner-hrl@main/config.json",
+    expectedConfigSha256:
+      "LOCAL_PIN:Xenova/distilbert-base-multilingual-cased-ner-hrl@main/config.json",
     releaseStatus: "release-1",
     notes: "Multilingual DistilBERT NER (PER/ORG/LOC). Browser-local config pin, ~100 MB.",
   },
@@ -73,7 +74,8 @@ export const NER_VARIANTS: Record<NerVariantKey, NerVariant> = {
     key: "small",
     modelId: "Xenova/distilbert-base-multilingual-cased-ner-hrl",
     revision: "main",
-    expectedConfigSha256: "LOCAL_PIN:Xenova/distilbert-base-multilingual-cased-ner-hrl@main/config.json",
+    expectedConfigSha256:
+      "LOCAL_PIN:Xenova/distilbert-base-multilingual-cased-ner-hrl@main/config.json",
     label: "Compact (DistilBERT)",
     sizeLabel: "~100 MB",
     notes: "Lichter en sneller; iets lagere recall. Standaard.",

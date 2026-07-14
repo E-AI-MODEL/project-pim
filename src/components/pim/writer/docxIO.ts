@@ -122,16 +122,18 @@ export async function exportEditorToDocx(editor: Editor, filename: string): Prom
         },
       ],
     },
-    sections: [{
-      properties: {
-        page: {
-          // A4 in DXA: 11906 × 16838, marges 1417 ≈ 2,5 cm.
-          size: { width: 11906, height: 16838 },
-          margin: { top: 1417, right: 1417, bottom: 1417, left: 1417 },
+    sections: [
+      {
+        properties: {
+          page: {
+            // A4 in DXA: 11906 × 16838, marges 1417 ≈ 2,5 cm.
+            size: { width: 11906, height: 16838 },
+            margin: { top: 1417, right: 1417, bottom: 1417, left: 1417 },
+          },
         },
+        children: paragraphs,
       },
-      children: paragraphs,
-    }],
+    ],
   });
 
   const blob = await Packer.toBlob(doc);

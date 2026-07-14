@@ -36,7 +36,8 @@ export function isValidIban(raw: string): boolean {
 // toegekend nummer). In strict-modus eisen we daarom CONTEXT: een 6–8-cijferig
 // getal telt alleen als leerlingnummer wanneer er vlakbij een trefwoord staat.
 // Zo verdwijnen willekeurige getallen (jaartallen, bedragen, codes) als FP.
-const STUDENT_ID_CONTEXT = /(?:leerling(?:nummer|-?id)?|lln\.?|studentnummer|student-?id|inschrijfnummer|onderwijsnummer|pgn)/i;
+const STUDENT_ID_CONTEXT =
+  /(?:leerling(?:nummer|-?id)?|lln\.?|studentnummer|student-?id|inschrijfnummer|onderwijsnummer|pgn)/i;
 
 export function hasStudentIdContext(plain: string, start: number, end: number): boolean {
   const before = plain.slice(Math.max(0, start - 40), start);
@@ -45,7 +46,8 @@ export function hasStudentIdContext(plain: string, start: number, end: number): 
 }
 
 /** Kenteken-formaat (NL sidecodes 1–10, ruw). */
-const PLATE_VALID = /^(?:[A-Z]{2}-\d{2}-\d{2}|\d{2}-[A-Z]{2}-\d{2}|\d{2}-\d{2}-[A-Z]{2}|[A-Z]{2}-\d{2}-[A-Z]{2}|\d{2}-[A-Z]{2}-[A-Z]{2}|[A-Z]{2}-[A-Z]{2}-\d{2}|\d-[A-Z]{3}-\d{2}|[A-Z]{3}-\d{2}-[A-Z]|\d{2}-[A-Z]{3}-\d|[A-Z]-\d{3}-[A-Z]{2})$/;
+const PLATE_VALID =
+  /^(?:[A-Z]{2}-\d{2}-\d{2}|\d{2}-[A-Z]{2}-\d{2}|\d{2}-\d{2}-[A-Z]{2}|[A-Z]{2}-\d{2}-[A-Z]{2}|\d{2}-[A-Z]{2}-[A-Z]{2}|[A-Z]{2}-[A-Z]{2}-\d{2}|\d-[A-Z]{3}-\d{2}|[A-Z]{3}-\d{2}-[A-Z]|\d{2}-[A-Z]{3}-\d|[A-Z]-\d{3}-[A-Z]{2})$/;
 export function isValidLicensePlate(raw: string): boolean {
   return PLATE_VALID.test(raw.toUpperCase());
 }

@@ -14,7 +14,8 @@ function NotFoundComponent() {
         <h1 className="font-display text-7xl font-bold text-primary">404</h1>
         <h2 className="mt-4 text-xl font-semibold">Pagina niet gevonden</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Deze pagina bestaat niet. PiM houdt zich aan zijn eigen regel: bij twijfel niets doorlaten.
+          Deze pagina bestaat niet. PiM houdt zich aan zijn eigen regel: bij twijfel niets
+          doorlaten.
         </p>
         <div className="mt-6">
           <Link
@@ -50,16 +51,36 @@ export const Route = createRootRoute({
           "frame-ancestors 'none'",
       },
       { title: "Project PiM" },
-      { name: "description", content: "Project PiM controleert tekst lokaal in je browser op persoonsgegevens. Eerst veilig, dan pas delen — met uitleg." },
+      {
+        name: "description",
+        content:
+          "Project PiM controleert tekst lokaal in je browser op persoonsgegevens. Eerst veilig, dan pas delen — met uitleg.",
+      },
       { name: "author", content: "Project PiM" },
       { property: "og:title", content: "Project PiM" },
-      { property: "og:description", content: "Project PiM controleert tekst lokaal in je browser op persoonsgegevens. Eerst veilig, dan pas delen — met uitleg." },
+      {
+        property: "og:description",
+        content:
+          "Project PiM controleert tekst lokaal in je browser op persoonsgegevens. Eerst veilig, dan pas delen — met uitleg.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Project PiM" },
-      { name: "twitter:description", content: "Project PiM controleert tekst lokaal in je browser op persoonsgegevens. Eerst veilig, dan pas delen — met uitleg." },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/ed0bcc87-d534-440f-a0b5-007a242bd0d8" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/ed0bcc87-d534-440f-a0b5-007a242bd0d8" },
+      {
+        name: "twitter:description",
+        content:
+          "Project PiM controleert tekst lokaal in je browser op persoonsgegevens. Eerst veilig, dan pas delen — met uitleg.",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/ed0bcc87-d534-440f-a0b5-007a242bd0d8",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/ed0bcc87-d534-440f-a0b5-007a242bd0d8",
+      },
     ],
     links: [
       {
@@ -117,9 +138,15 @@ function SiteFooter() {
           <span>Project PiM — volledig lokaal, zonder tracking</span>
         </div>
         <div className="flex items-center gap-4">
-          <Link to="/over" className="hover:text-foreground">Over</Link>
-          <Link to="/trust" className="hover:text-foreground">Trust</Link>
-          <Link to="/try" className="hover:text-foreground">Expert lab</Link>
+          <Link to="/over" className="hover:text-foreground">
+            Over
+          </Link>
+          <Link to="/trust" className="hover:text-foreground">
+            Trust
+          </Link>
+          <Link to="/try" className="hover:text-foreground">
+            Expert lab
+          </Link>
         </div>
       </div>
     </footer>

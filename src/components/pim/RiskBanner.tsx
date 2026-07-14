@@ -10,9 +10,7 @@ export function RiskBanner({ level, reasons }: { level: RiskLevel; reasons: stri
       role="alert"
       className={
         "mb-3 flex items-start gap-3 rounded-lg border p-3 " +
-        (isCrit
-          ? "border-red/60 bg-red/10 text-red"
-          : "border-orange/60 bg-orange/10 text-orange")
+        (isCrit ? "border-red/60 bg-red/10 text-red" : "border-orange/60 bg-orange/10 text-orange")
       }
     >
       <Icon className="h-5 w-5 shrink-0 mt-0.5" />

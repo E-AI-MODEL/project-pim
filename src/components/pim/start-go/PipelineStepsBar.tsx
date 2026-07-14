@@ -6,7 +6,9 @@ import { ChevronDown } from "lucide-react";
 function useIsMobileLowMem(): { mobile: boolean; lowMem: boolean } {
   const [state, setState] = useState({ mobile: false, lowMem: false });
   useEffect(() => {
-    const mobile = typeof window !== "undefined" && window.matchMedia("(max-width: 768px), (pointer: coarse)").matches;
+    const mobile =
+      typeof window !== "undefined" &&
+      window.matchMedia("(max-width: 768px), (pointer: coarse)").matches;
     const mem = (navigator as Navigator & { deviceMemory?: number }).deviceMemory;
     const lowMem = typeof mem === "number" && mem < 4;
     setState({ mobile, lowMem });
@@ -15,7 +17,14 @@ function useIsMobileLowMem(): { mobile: boolean; lowMem: boolean } {
 }
 
 function StepPill({
-  num, title, sub, status, pct, onClick, disabled, badge,
+  num,
+  title,
+  sub,
+  status,
+  pct,
+  onClick,
+  disabled,
+  badge,
 }: {
   num: number;
   title: string;
@@ -27,15 +36,23 @@ function StepPill({
   badge?: string;
 }) {
   const color =
-    status === "ready" ? "border-green-400/60 bg-green-400/5"
-    : status === "loading" ? "border-amber-400/60 bg-amber-400/5"
-    : status === "error" ? "border-red-400/60 bg-red-400/5"
-    : "border-[#3b6fa0]/40 bg-[#0f1b3d]/40";
+    status === "ready"
+      ? "border-green-400/60 bg-green-400/5"
+      : status === "loading"
+        ? "border-amber-400/60 bg-amber-400/5"
+        : status === "error"
+          ? "border-red-400/60 bg-red-400/5"
+          : "border-[#3b6fa0]/40 bg-[#0f1b3d]/40";
   const label =
-    status === "ready" ? "actief"
-    : status === "loading" ? (typeof pct === "number" ? `${pct}%` : "laden…")
-    : status === "error" ? "fout"
-    : "uit";
+    status === "ready"
+      ? "actief"
+      : status === "loading"
+        ? typeof pct === "number"
+          ? `${pct}%`
+          : "laden…"
+        : status === "error"
+          ? "fout"
+          : "uit";
 
   return (
     <div className={`rounded-md border ${color} p-3 flex flex-col gap-2 min-w-0`}>
@@ -51,9 +68,7 @@ function StepPill({
         </span>
       </div>
       <div className="text-[11px] text-[#e8edf3]/60 leading-snug">{sub}</div>
-      {badge && (
-        <div className="text-[10px] text-amber-300/80 font-plex-mono">{badge}</div>
-      )}
+      {badge && <div className="text-[10px] text-amber-300/80 font-plex-mono">{badge}</div>}
       {onClick && status !== "ready" && (
         <button
           onClick={onClick}
@@ -81,18 +96,30 @@ export function PipelineStepsBar() {
   useEffect(() => onNerStatus(setNer), []);
   useEffect(() => onRewriteStatus(setLlm), []);
 
-  const nerStatus: "ready" | "loading" | "idle" | "error" =
-    ner?.error ? "error" : ner?.ready ? "ready" : ner?.loading ? "loading" : "idle";
-  const llmStatus: "ready" | "loading" | "idle" | "error" =
-    llm?.error ? "error" : llm?.ready ? "ready" : llm?.loading ? "loading" : "idle";
+  const nerStatus: "ready" | "loading" | "idle" | "error" = ner?.error
+    ? "error"
+    : ner?.ready
+      ? "ready"
+      : ner?.loading
+        ? "loading"
+        : "idle";
+  const llmStatus: "ready" | "loading" | "idle" | "error" = llm?.error
+    ? "error"
+    : llm?.ready
+      ? "ready"
+      : llm?.loading
+        ? "loading"
+        : "idle";
 
-  const nerPct = ner?.progress?.pct != null ? Math.round(ner.progress.pct * (ner.progress.pct > 1 ? 1 : 100)) : undefined;
+  const nerPct =
+    ner?.progress?.pct != null
+      ? Math.round(ner.progress.pct * (ner.progress.pct > 1 ? 1 : 100))
+      : undefined;
   const llmPct = llm?.progress?.pct;
 
   const llmDisabled = mobile || lowMem;
 
-  const readyCount =
-    1 + (nerStatus === "ready" ? 1 : 0) + (llmStatus === "ready" ? 1 : 0);
+  const readyCount = 1 + (nerStatus === "ready" ? 1 : 0) + (llmStatus === "ready" ? 1 : 0);
 
   return (
     <div className="rounded-md border border-[#3b6fa0]/40 bg-[#0f1b3d]/40 overflow-hidden">
@@ -116,31 +143,31 @@ export function PipelineStepsBar() {
       </button>
       {open && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 p-2 border-t border-[#3b6fa0]/30">
-      <StepPill
-        num={1}
-        title="Regex & regels"
-        sub="Lokale patroon-detectie — altijd aan, geen download."
-        status="ready"
-      />
-      <StepPill
-        num={2}
-        title="NER-SLM"
-        sub="DistilBERT NER · ~100 MB · WebGPU/WASM"
-        status={nerStatus}
-        pct={nerPct}
-        badge={mobile ? "Mobiel: eerste laad ~20-40s" : undefined}
-        onClick={() => loadNerSlm().catch(() => {})}
-      />
-      <StepPill
-        num={3}
-        title="Generalisatie-LLM"
-        sub="Qwen2.5-0.5B · ~400 MB · WebGPU"
-        status={llmStatus}
-        pct={llmPct}
-        badge={llmDisabled ? "Alleen desktop met ≥4 GB RAM" : undefined}
-        onClick={() => loadRewriteLlm().catch(() => {})}
-        disabled={llmDisabled}
-      />
+          <StepPill
+            num={1}
+            title="Regex & regels"
+            sub="Lokale patroon-detectie — altijd aan, geen download."
+            status="ready"
+          />
+          <StepPill
+            num={2}
+            title="NER-SLM"
+            sub="DistilBERT NER · ~100 MB · WebGPU/WASM"
+            status={nerStatus}
+            pct={nerPct}
+            badge={mobile ? "Mobiel: eerste laad ~20-40s" : undefined}
+            onClick={() => loadNerSlm().catch(() => {})}
+          />
+          <StepPill
+            num={3}
+            title="Generalisatie-LLM"
+            sub="Qwen2.5-0.5B · ~400 MB · WebGPU"
+            status={llmStatus}
+            pct={llmPct}
+            badge={llmDisabled ? "Alleen desktop met ≥4 GB RAM" : undefined}
+            onClick={() => loadRewriteLlm().catch(() => {})}
+            disabled={llmDisabled}
+          />
         </div>
       )}
     </div>

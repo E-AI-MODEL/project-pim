@@ -3,8 +3,10 @@ import type { Mode, Action } from "@/lib/pim/types";
 import { COPY } from "@/lib/pim/copy";
 
 interface Props {
-  mode: Mode; onModeChange: (m: Mode) => void;
-  action: Action; onActionChange: (a: Action) => void;
+  mode: Mode;
+  onModeChange: (m: Mode) => void;
+  action: Action;
+  onActionChange: (a: Action) => void;
 }
 
 const TARGETS: { id: Action; label: string }[] = [
@@ -20,23 +22,39 @@ export function ModeTargetBar({ mode, onModeChange, action, onActionChange }: Pr
   return (
     <div className="space-y-3 rounded-xl border border-border/40 bg-card/40 p-4">
       <div className="space-y-1.5">
-        <span className="text-[11px] uppercase tracking-wider text-muted-foreground">Hoe verwerken</span>
+        <span className="text-[11px] uppercase tracking-wider text-muted-foreground">
+          Hoe verwerken
+        </span>
         <div className="flex flex-wrap gap-2">
-          <Toggle on={mode === "anonymous"} onClick={() => onModeChange("anonymous")}
-            hint={COPY.modeAnonymousHint}>{COPY.modeAnonymous}</Toggle>
-          <Toggle on={mode === "pseudonymous"} onClick={() => onModeChange("pseudonymous")}
-            hint={COPY.modePseudonymousHint}>{COPY.modePseudonymous}</Toggle>
+          <Toggle
+            on={mode === "anonymous"}
+            onClick={() => onModeChange("anonymous")}
+            hint={COPY.modeAnonymousHint}
+          >
+            {COPY.modeAnonymous}
+          </Toggle>
+          <Toggle
+            on={mode === "pseudonymous"}
+            onClick={() => onModeChange("pseudonymous")}
+            hint={COPY.modePseudonymousHint}
+          >
+            {COPY.modePseudonymous}
+          </Toggle>
         </div>
       </div>
       <div className="space-y-1.5">
-        <span className="text-[11px] uppercase tracking-wider text-muted-foreground">{COPY.targetLabel}</span>
+        <span className="text-[11px] uppercase tracking-wider text-muted-foreground">
+          {COPY.targetLabel}
+        </span>
         <select
           value={action}
           onChange={(e) => onActionChange(e.target.value as Action)}
           className="w-full sm:w-auto rounded-lg border border-border/60 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
         >
           {TARGETS.map((t) => (
-            <option key={t.id} value={t.id}>{t.label}</option>
+            <option key={t.id} value={t.id}>
+              {t.label}
+            </option>
           ))}
         </select>
       </div>
@@ -44,7 +62,17 @@ export function ModeTargetBar({ mode, onModeChange, action, onActionChange }: Pr
   );
 }
 
-function Toggle({ on, onClick, children, hint }: { on: boolean; onClick: () => void; children: React.ReactNode; hint?: string }) {
+function Toggle({
+  on,
+  onClick,
+  children,
+  hint,
+}: {
+  on: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+  hint?: string;
+}) {
   return (
     <button
       type="button"

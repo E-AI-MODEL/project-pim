@@ -3,17 +3,34 @@
 import type { PiiSpan } from "@/lib/pim/types";
 
 const CAT_LABEL: Record<string, string> = {
-  email: "e-mail", phone: "telefoonnummer", bsn: "BSN", iban: "IBAN",
-  postcode: "postcode", name: "naam", school: "school", date: "datum",
-  address: "adres", student_id: "leerlingnummer", class_code: "klas",
-  credit_card: "creditcard", license_plate: "kenteken", url: "link",
-  ip_address: "IP-adres", social_handle: "handle", birthdate_text: "geboortedatum",
-  context_small_group: "kleine groep", context_care: "zorgcontext",
-  context_incident: "incident", context_role: "rol",
-  context_health: "gezondheid", context_family: "gezinscontext",
-  context_legal: "justitie", context_financial: "financieel",
+  email: "e-mail",
+  phone: "telefoonnummer",
+  bsn: "BSN",
+  iban: "IBAN",
+  postcode: "postcode",
+  name: "naam",
+  school: "school",
+  date: "datum",
+  address: "adres",
+  student_id: "leerlingnummer",
+  class_code: "klas",
+  credit_card: "creditcard",
+  license_plate: "kenteken",
+  url: "link",
+  ip_address: "IP-adres",
+  social_handle: "handle",
+  birthdate_text: "geboortedatum",
+  context_small_group: "kleine groep",
+  context_care: "zorgcontext",
+  context_incident: "incident",
+  context_role: "rol",
+  context_health: "gezondheid",
+  context_family: "gezinscontext",
+  context_legal: "justitie",
+  context_financial: "financieel",
   context_protected_class: "bijzondere categorie",
-  context_performance: "schoolprestatie", context_location_specific: "locatie",
+  context_performance: "schoolprestatie",
+  context_location_specific: "locatie",
 };
 
 interface Props {
@@ -25,9 +42,7 @@ interface Props {
 export function TextHighlighter({ text, spans, className }: Props) {
   if (!text) {
     return (
-      <div className={`text-xs text-muted-foreground italic ${className ?? ""}`}>
-        Geen tekst.
-      </div>
+      <div className={`text-xs text-muted-foreground italic ${className ?? ""}`}>Geen tekst.</div>
     );
   }
 

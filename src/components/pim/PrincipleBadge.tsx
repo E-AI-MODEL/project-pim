@@ -17,7 +17,9 @@ export function PrincipleBadge({ icon: Icon, title, description, accent = "prima
   };
   return (
     <div className="panel p-5 hover:border-primary/60 transition-colors group">
-      <div className={`inline-flex h-10 w-10 items-center justify-center rounded-lg bg-accent/40 mb-3 ${accentColor[accent]} group-hover:scale-110 transition-transform`}>
+      <div
+        className={`inline-flex h-10 w-10 items-center justify-center rounded-lg bg-accent/40 mb-3 ${accentColor[accent]} group-hover:scale-110 transition-transform`}
+      >
         <Icon className="h-5 w-5" strokeWidth={2} />
       </div>
       <div className="font-display font-semibold text-sm uppercase tracking-wide">{title}</div>

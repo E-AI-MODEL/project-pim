@@ -1,6 +1,11 @@
 import { MODEL_CATALOG, type CatalogKey } from "./modelCatalog";
 
-export type ModelIntegrityStatus = "unverified" | "placeholder" | "verified" | "mismatch" | "missing";
+export type ModelIntegrityStatus =
+  | "unverified"
+  | "placeholder"
+  | "verified"
+  | "mismatch"
+  | "missing";
 
 export interface ModelIntegrityRecord {
   key: CatalogKey;

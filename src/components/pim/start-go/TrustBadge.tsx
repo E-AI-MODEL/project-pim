@@ -21,13 +21,19 @@ export function TrustBadge() {
   const status = report?.status ?? (busy ? "running" : "idle");
   const Icon = status === "pass" ? ShieldCheck : status === "fail" ? ShieldAlert : ShieldQuestion;
   const color =
-    status === "pass" ? "text-emerald-400" :
-    status === "fail" ? "text-rose-400" :
-    "text-[#e8edf3]/45";
+    status === "pass"
+      ? "text-emerald-400"
+      : status === "fail"
+        ? "text-rose-400"
+        : "text-[#e8edf3]/45";
   const label =
-    status === "pass" ? "Self-test PASS" :
-    status === "fail" ? "Self-test FAIL" :
-    status === "running" ? "Self-test loopt…" : "Self-test idle";
+    status === "pass"
+      ? "Self-test PASS"
+      : status === "fail"
+        ? "Self-test FAIL"
+        : status === "running"
+          ? "Self-test loopt…"
+          : "Self-test idle";
 
   return (
     <Popover>
@@ -42,13 +48,19 @@ export function TrustBadge() {
           <span className="font-plex-mono text-[10px] text-[#e8edf3]/55">trust</span>
         </button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-80 bg-[#0f1b3d] border-[#3b6fa0]/40 text-[#e8edf3] p-3 space-y-3">
+      <PopoverContent
+        align="end"
+        className="w-80 bg-[#0f1b3d] border-[#3b6fa0]/40 text-[#e8edf3] p-3 space-y-3"
+      >
         <div className="flex items-center gap-2">
           <Icon className={`h-4 w-4 ${color}`} />
           <div className="text-sm font-medium">{label}</div>
           <button
             type="button"
-            onClick={() => { setBusy(true); runSelfTest().finally(() => setBusy(false)); }}
+            onClick={() => {
+              setBusy(true);
+              runSelfTest().finally(() => setBusy(false));
+            }}
             disabled={busy}
             className="ml-auto text-[10px] font-plex-mono text-[#e8edf3]/60 hover:text-[#e8edf3] px-1.5 py-0.5 rounded hover:bg-[#3b6fa0]/15 disabled:opacity-50"
           >
@@ -61,7 +73,9 @@ export function TrustBadge() {
             <div className="space-y-1 text-[11px]">
               <div className="grid grid-cols-[110px_1fr] gap-2">
                 <span className="text-[#e8edf3]/50">Ruleset hash</span>
-                <span className="font-plex-mono text-[#e8edf3]/85">{report.rulesetHash.slice(0, 16)}…</span>
+                <span className="font-plex-mono text-[#e8edf3]/85">
+                  {report.rulesetHash.slice(0, 16)}…
+                </span>
               </div>
               <div className="grid grid-cols-[110px_1fr] gap-2">
                 <span className="text-[#e8edf3]/50">Golden cases</span>
@@ -71,18 +85,25 @@ export function TrustBadge() {
               </div>
               <div className="grid grid-cols-[110px_1fr] gap-2">
                 <span className="text-[#e8edf3]/50">Egress wrapper</span>
-                <span className={`font-plex-mono ${report.hardening.probeLogged ? "text-emerald-300" : "text-rose-300"}`}>
+                <span
+                  className={`font-plex-mono ${report.hardening.probeLogged ? "text-emerald-300" : "text-rose-300"}`}
+                >
                   {report.hardening.probeLogged ? "actief" : "niet gedetecteerd"}
                 </span>
               </div>
             </div>
             {report.golden.some((g) => !g.ok) && (
               <div className="text-[10px] text-rose-200/80 font-plex-mono pt-1 border-t border-[#3b6fa0]/20">
-                Faalt: {report.golden.filter((g) => !g.ok).map((g) => g.id).join(", ")}
+                Faalt:{" "}
+                {report.golden
+                  .filter((g) => !g.ok)
+                  .map((g) => g.id)
+                  .join(", ")}
               </div>
             )}
             <p className="text-[10px] text-[#e8edf3]/45 leading-snug border-t border-[#3b6fa0]/20 pt-2">
-              De self-test draait een golden-corpus door de detectoren en probeert egress te lokken — alles lokaal.
+              De self-test draait een golden-corpus door de detectoren en probeert egress te lokken
+              — alles lokaal.
             </p>
           </>
         ) : (

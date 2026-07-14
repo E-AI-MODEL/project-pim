@@ -4,8 +4,8 @@
 const KEY_USAGES: KeyUsage[] = ["encrypt", "decrypt"];
 
 export interface MappingHandle {
-  id: string;            // opaque handle naar de container
-  tokenCount: number;    // aantal tokens (metadata, geen inhoud)
+  id: string; // opaque handle naar de container
+  tokenCount: number; // aantal tokens (metadata, geen inhoud)
   createdAt: string;
 }
 

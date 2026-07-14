@@ -5,12 +5,19 @@ export interface PipelineStep {
   label: string;
   lastTickMs: number; // performance.now() of last activity
   durationMs: number; // duration of last activity
-  active: boolean;   // currently considered "live"
+  active: boolean; // currently considered "live"
 }
 
 export type StepId =
-  | "input" | "regex" | "lex" | "slm" | "ctx"
-  | "repair" | "guard" | "decide" | "llm";
+  | "input"
+  | "regex"
+  | "lex"
+  | "slm"
+  | "ctx"
+  | "repair"
+  | "guard"
+  | "decide"
+  | "llm";
 
 const STEP_LABELS: Record<StepId, string> = {
   input: "input",
@@ -45,7 +52,10 @@ export function usePipelineHeartbeat(stepIds: StepId[]) {
       const map = ticksRef.current;
       let active = false;
       for (const v of map.values()) {
-        if (now - v.last < 2500) { active = true; break; }
+        if (now - v.last < 2500) {
+          active = true;
+          break;
+        }
       }
       if (active) {
         setNow(now);

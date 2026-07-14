@@ -49,7 +49,11 @@ export function MappingViewer({ mapping }: Props) {
         className="w-full flex items-center justify-between gap-2 px-4 py-3 hover:bg-violet-500/10 transition-colors"
       >
         <div className="flex items-center gap-2">
-          {open ? <ChevronDown className="h-4 w-4 text-violet-300" /> : <ChevronRight className="h-4 w-4 text-violet-300" />}
+          {open ? (
+            <ChevronDown className="h-4 w-4 text-violet-300" />
+          ) : (
+            <ChevronRight className="h-4 w-4 text-violet-300" />
+          )}
           <KeyRound className="h-3.5 w-3.5 text-violet-300" />
           <span className="text-sm font-medium text-foreground/90">Pseudoniem-mapping</span>
           <span className="text-[10px] font-plex-mono text-muted-foreground">
@@ -83,9 +87,15 @@ export function MappingViewer({ mapping }: Props) {
             <table className="w-full text-xs">
               <thead className="bg-muted/20 sticky top-0">
                 <tr className="text-left">
-                  <th className="px-2.5 py-1.5 font-medium text-muted-foreground font-plex-mono">Token</th>
-                  <th className="px-2.5 py-1.5 font-medium text-muted-foreground font-plex-mono">Origineel</th>
-                  <th className="px-2.5 py-1.5 font-medium text-muted-foreground font-plex-mono">Categorie</th>
+                  <th className="px-2.5 py-1.5 font-medium text-muted-foreground font-plex-mono">
+                    Token
+                  </th>
+                  <th className="px-2.5 py-1.5 font-medium text-muted-foreground font-plex-mono">
+                    Origineel
+                  </th>
+                  <th className="px-2.5 py-1.5 font-medium text-muted-foreground font-plex-mono">
+                    Categorie
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -97,10 +107,17 @@ export function MappingViewer({ mapping }: Props) {
                   </tr>
                 ) : (
                   rows.map((r) => (
-                    <tr key={r.token} className="border-t border-border/30 hover:bg-violet-500/[0.04]">
-                      <td className="px-2.5 py-1.5 font-mono text-violet-200 break-all">{r.token}</td>
+                    <tr
+                      key={r.token}
+                      className="border-t border-border/30 hover:bg-violet-500/[0.04]"
+                    >
+                      <td className="px-2.5 py-1.5 font-mono text-violet-200 break-all">
+                        {r.token}
+                      </td>
                       <td className="px-2.5 py-1.5 text-foreground/90 break-all">{r.original}</td>
-                      <td className="px-2.5 py-1.5 text-muted-foreground font-plex-mono">{r.category}</td>
+                      <td className="px-2.5 py-1.5 text-muted-foreground font-plex-mono">
+                        {r.category}
+                      </td>
                     </tr>
                   ))
                 )}
@@ -108,8 +125,9 @@ export function MappingViewer({ mapping }: Props) {
             </table>
           </div>
           <p className="text-[10px] text-muted-foreground leading-relaxed">
-            Deze koppeling blijft op dit apparaat. Egress is fail-closed: de mapping verlaat je browser nooit,
-            ook niet via copy/share/export. JSON-kopie is alleen voor lokale handmatige acties.
+            Deze koppeling blijft op dit apparaat. Egress is fail-closed: de mapping verlaat je
+            browser nooit, ook niet via copy/share/export. JSON-kopie is alleen voor lokale
+            handmatige acties.
           </p>
         </div>
       )}

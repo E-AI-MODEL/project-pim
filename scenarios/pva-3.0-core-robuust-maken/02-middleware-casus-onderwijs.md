@@ -79,14 +79,14 @@ Feedbackmodule
 
 ## Moduskeuze per route
 
-| Route | PiM-modus | Mag naar externe AI? | Opmerking |
-|---|---|---:|---|
-| Alleen lokale docentpreview | pseudonymous of anonymous | nee | Pseudoniem kan nuttig zijn om later lokaal te herstellen. |
-| Lokale browseranalyse | pseudonymous mogelijk | nee | Alleen als model lokaal draait en mapping lokaal blijft. |
-| Serveranalyse | anonymous | alleen na PIM allow | Geen mapping of tokens naar server. |
-| Externe AI-feedback | anonymous | alleen na PIM allow | Lage risk en alle guards groen. |
-| Export rapport | anonymous | alleen na PIM allow | Hard-review labels blokkeren. |
-| Terugzetten naar origineel | pseudonymous | nee | Alleen lokaal met mapping. |
+| Route                       | PiM-modus                 | Mag naar externe AI? | Opmerking                                                 |
+| --------------------------- | ------------------------- | -------------------: | --------------------------------------------------------- |
+| Alleen lokale docentpreview | pseudonymous of anonymous |                  nee | Pseudoniem kan nuttig zijn om later lokaal te herstellen. |
+| Lokale browseranalyse       | pseudonymous mogelijk     |                  nee | Alleen als model lokaal draait en mapping lokaal blijft.  |
+| Serveranalyse               | anonymous                 |  alleen na PIM allow | Geen mapping of tokens naar server.                       |
+| Externe AI-feedback         | anonymous                 |  alleen na PIM allow | Lage risk en alle guards groen.                           |
+| Export rapport              | anonymous                 |  alleen na PIM allow | Hard-review labels blokkeren.                             |
+| Terugzetten naar origineel  | pseudonymous              |                  nee | Alleen lokaal met mapping.                                |
 
 ## Middleware-boundary
 
@@ -103,11 +103,18 @@ Na PiM mogen onderwijsapps niet meer werken met ruwe tekst, behalve in lokale ed
 
 ```ts
 interface PimMiddlewareRequest {
-  sourceKind: 'ocr' | 'typed_text' | 'uploaded_doc' | 'lms_submission';
+  sourceKind: "ocr" | "typed_text" | "uploaded_doc" | "lms_submission";
   text: string;
-  mode: 'anonymous' | 'pseudonymous';
-  intendedAction: 'display' | 'save_local' | 'send_external_ai' | 'export_file' | 'copy' | 'print' | 'share';
-  profileId: 'education-nl-full' | 'education-nl-rules-only';
+  mode: "anonymous" | "pseudonymous";
+  intendedAction:
+    | "display"
+    | "save_local"
+    | "send_external_ai"
+    | "export_file"
+    | "copy"
+    | "print"
+    | "share";
+  profileId: "education-nl-full" | "education-nl-rules-only";
 }
 
 interface PimMiddlewareResponse {
@@ -118,13 +125,13 @@ interface PimMiddlewareResponse {
   profileId: string;
   activeDetectorIds: string[];
   decision: {
-    decision: 'allow' | 'allow_with_warning' | 'block';
+    decision: "allow" | "allow_with_warning" | "block";
     ruleId: string;
     reasonCode: string;
   };
   mappingHandle?: {
     id: string;
-    mode: 'memory_only' | 'encrypted_local';
+    mode: "memory_only" | "encrypted_local";
   };
 }
 ```

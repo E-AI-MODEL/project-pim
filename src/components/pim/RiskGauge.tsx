@@ -17,10 +17,13 @@ export function RiskGauge({ score, level, size = 152, label = "risk" }: Props) {
     level === "critical" || level === "high"
       ? "var(--red)"
       : level === "medium"
-      ? "var(--orange)"
-      : "var(--green)";
+        ? "var(--orange)"
+        : "var(--green)";
   return (
-    <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
+    <div
+      className="relative inline-flex items-center justify-center"
+      style={{ width: size, height: size }}
+    >
       <svg width={size} height={size} className="-rotate-90">
         <circle
           cx={size / 2}
@@ -39,7 +42,10 @@ export function RiskGauge({ score, level, size = 152, label = "risk" }: Props) {
           strokeWidth={stroke}
           strokeDasharray={`${dash} ${c - dash}`}
           strokeLinecap="round"
-          style={{ transition: "stroke-dasharray 300ms ease, stroke 300ms ease", filter: `drop-shadow(0 0 12px ${color})` }}
+          style={{
+            transition: "stroke-dasharray 300ms ease, stroke 300ms ease",
+            filter: `drop-shadow(0 0 12px ${color})`,
+          }}
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">

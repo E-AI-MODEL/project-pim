@@ -3,7 +3,12 @@ import { decide } from "../policy";
 import type { DraftCheckResult, PrivacySignals } from "../types";
 
 const emptySignals: PrivacySignals = {
-  directPii: [], contextualPii: [], riskScore: 0, riskLevel: "low", reasons: [], ruleIds: [],
+  directPii: [],
+  contextualPii: [],
+  riskScore: 0,
+  riskLevel: "low",
+  reasons: [],
+  ruleIds: [],
 };
 const passCheck: DraftCheckResult = { status: "pass", issues: [] };
 
@@ -18,13 +23,23 @@ const baseInput = {
 describe("policy.decide — lock-principe (BERT uit)", () => {
   describe("strikte modus", () => {
     it("BLOCK externe AI met PIM_RULES_ONLY_EXTERNAL_AI_BLOCK", () => {
-      const d = decide({ ...baseInput, action: "send_external_ai", bertEnabled: false, strictMode: true });
+      const d = decide({
+        ...baseInput,
+        action: "send_external_ai",
+        bertEnabled: false,
+        strictMode: true,
+      });
       expect(d.verdict).toBe("BLOCK");
       expect(d.flag).toBe("PIM_RULES_ONLY_EXTERNAL_AI_BLOCK");
     });
 
     it("BLOCK export met PIM_RULES_ONLY_EXPORT_BLOCK", () => {
-      const d = decide({ ...baseInput, action: "export_file", bertEnabled: false, strictMode: true });
+      const d = decide({
+        ...baseInput,
+        action: "export_file",
+        bertEnabled: false,
+        strictMode: true,
+      });
       expect(d.verdict).toBe("BLOCK");
       expect(d.flag).toBe("PIM_RULES_ONLY_EXPORT_BLOCK");
     });

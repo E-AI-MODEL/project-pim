@@ -33,7 +33,9 @@ export function AnonymizedText({ text, streaming }: { text: string; streaming?: 
           </span>
         ),
       )}
-      {streaming && <span className="inline-block w-2 h-4 bg-purple/80 align-middle animate-pulse ml-0.5" />}
+      {streaming && (
+        <span className="inline-block w-2 h-4 bg-purple/80 align-middle animate-pulse ml-0.5" />
+      )}
     </pre>
   );
 }

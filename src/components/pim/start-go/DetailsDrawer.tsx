@@ -29,18 +29,30 @@ export function DetailsDrawer({ decision, signals, integrity }: Props) {
           <Row k="Verdict" v={`${decision.verdict} · ${decision.flag ?? decision.reasonCode}`} />
           <Row k="Profiel" v={decision.profileId ?? "—"} />
           <Row k="Payload-type" v={decision.payloadType ?? "—"} />
-          <Row k="Risk score" v={`${(signals.riskScore * 100).toFixed(0)}% · ${signals.riskLevel}`} />
-          <Row k="Categorieën" v={
-            [...signals.directPii, ...signals.contextualPii].map((s) => s.category).join(", ") || "geen"
-          } />
+          <Row
+            k="Risk score"
+            v={`${(signals.riskScore * 100).toFixed(0)}% · ${signals.riskLevel}`}
+          />
+          <Row
+            k="Categorieën"
+            v={
+              [...signals.directPii, ...signals.contextualPii].map((s) => s.category).join(", ") ||
+              "geen"
+            }
+          />
           <Row k="Detectoren (rule IDs)" v={signals.ruleIds.join(", ") || "—"} />
           <Row k="Policyregel" v={`${decision.ruleId} (${decision.policyVersion})`} />
-          <Row k="Modelintegriteit" v={
-            integrity.length === 0 ? "geen models geladen" :
-            integrity.map((r) => `${r.key}=${r.status}`).join(" · ")
-          } />
+          <Row
+            k="Modelintegriteit"
+            v={
+              integrity.length === 0
+                ? "geen models geladen"
+                : integrity.map((r) => `${r.key}=${r.status}`).join(" · ")
+            }
+          />
           <p className="text-[11px] text-muted-foreground pt-1 border-t border-border/30">
-            Audit-metadata (timestamp + verdict + ruleId) is bewaard. Geen ruwe tekst, geen drafttekst, geen mapping.
+            Audit-metadata (timestamp + verdict + ruleId) is bewaard. Geen ruwe tekst, geen
+            drafttekst, geen mapping.
           </p>
         </div>
       )}

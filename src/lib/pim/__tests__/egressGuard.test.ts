@@ -4,18 +4,35 @@ import { executeAction } from "../egressGuard";
 import type { CertifiedPayload, PimDecision, PayloadType } from "../types";
 
 const baseDecision = (action: PimDecision["action"]): PimDecision => ({
-  verdict: "ALLOW", reason: "ok", reasonCode: "OK", ruleId: "test", policyVersion: "test",
-  riskLevel: "low", mode: "anonymous", action, timestamp: new Date().toISOString(),
-  profileId: "education-nl-full", payloadType: "draft_anonymous_certified",
+  verdict: "ALLOW",
+  reason: "ok",
+  reasonCode: "OK",
+  ruleId: "test",
+  policyVersion: "test",
+  riskLevel: "low",
+  mode: "anonymous",
+  action,
+  timestamp: new Date().toISOString(),
+  profileId: "education-nl-full",
+  payloadType: "draft_anonymous_certified",
 });
 
 const cert = (type: PayloadType): CertifiedPayload => ({
-  text: "Lege schone tekst.", mode: "anonymous", payloadType: type,
-  profileId: "education-nl-full", guardStatus: "pass",
+  text: "Lege schone tekst.",
+  mode: "anonymous",
+  payloadType: type,
+  profileId: "education-nl-full",
+  guardStatus: "pass",
 });
 
 describe("executeAction — payload-type gate", () => {
-  for (const bad of ["raw_input", "mapping", "restored", "unknown", "draft_pseudonymous_local"] as PayloadType[]) {
+  for (const bad of [
+    "raw_input",
+    "mapping",
+    "restored",
+    "unknown",
+    "draft_pseudonymous_local",
+  ] as PayloadType[]) {
     it(`copy met payloadType=${bad} wordt geweigerd`, async () => {
       const r = await executeAction(baseDecision("copy"), cert(bad));
       expect(r.executed).toBe(false);

@@ -8,12 +8,10 @@ export const COPY = {
   titleLine2: "voordat je hem deelt.",
   subtitle:
     "PiM leest mee in je browser, herkent gevoelige gegevens en zegt of je veilig kunt delen — alles gebeurt lokaal, zonder ingewikkelde technische stappen.",
-  placeholder:
-    "Plak of typ je tekst — of kies hieronder een voorbeeld.",
+  placeholder: "Plak of typ je tekst — of kies hieronder een voorbeeld.",
   startButton: "Controleer deze tekst",
   startButtonShort: "Controleer",
-  privacyHint:
-    "Verwerking blijft in je browser. Geen upload, geen tracking.",
+  privacyHint: "Verwerking blijft in je browser. Geen upload, geen tracking.",
   detailsLink: "Toon technische details (modelstatus, regels, audit)",
   liveBadge: "Leest mee",
 
@@ -38,12 +36,10 @@ export const COPY = {
   // Monitor frame
   monitorLabel: "Live monitor",
   monitorStatus: "Local Guard actief",
-  monitorEmptyHint:
-    "Kies een voorbeeld of typ je eigen tekst — PiM geeft direct een verdict.",
+  monitorEmptyHint: "Kies een voorbeeld of typ je eigen tekst — PiM geeft direct een verdict.",
 
   // Verdict-zin — voor de docent, in mens-taal
-  statusGreen:
-    "Deze versie is veilig genoeg voor de actie die je koos.",
+  statusGreen: "Deze versie is veilig genoeg voor de actie die je koos.",
   statusOrange:
     "Bruikbaar, maar de context blijft herkenbaar. Lees de gemarkeerde stukken nog één keer rustig na.",
   statusRed:

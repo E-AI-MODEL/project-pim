@@ -40,7 +40,9 @@ export function getReviewQueue(): ReviewItem[] {
 }
 
 export function enqueueReview(input: Omit<ReviewItem, "id" | "ts" | "resolved">): ReviewItem {
-  const id = (crypto as Crypto & { randomUUID?: () => string }).randomUUID?.() ?? `r-${Math.random().toString(36).slice(2)}`;
+  const id =
+    (crypto as Crypto & { randomUUID?: () => string }).randomUUID?.() ??
+    `r-${Math.random().toString(36).slice(2)}`;
   const item: ReviewItem = {
     ...input,
     id,

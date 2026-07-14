@@ -6,8 +6,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import {
-  onNerStatus, loadNerSlm, retryNerSlm, detectPersonsSlm,
-  type NerStatus, type PiiSpan,
+  onNerStatus,
+  loadNerSlm,
+  retryNerSlm,
+  detectPersonsSlm,
+  type NerStatus,
+  type PiiSpan,
 } from "@/lib/pim";
 
 interface UseNerSpansResult {
@@ -42,10 +46,17 @@ export function useNerSpans(text: string, opts: { enabled: boolean }): UseNerSpa
     let cancelled = false;
     const id = window.setTimeout(() => {
       detectPersonsSlm(text)
-        .then((s) => { if (!cancelled) setSpans(s); })
-        .catch(() => { if (!cancelled) setSpans([]); });
+        .then((s) => {
+          if (!cancelled) setSpans(s);
+        })
+        .catch(() => {
+          if (!cancelled) setSpans([]);
+        });
     }, 260);
-    return () => { cancelled = true; window.clearTimeout(id); };
+    return () => {
+      cancelled = true;
+      window.clearTimeout(id);
+    };
   }, [text, enabled, ready]);
 
   const startNer = useCallback(() => {

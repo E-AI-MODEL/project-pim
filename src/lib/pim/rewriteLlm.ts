@@ -31,7 +31,8 @@ function emit(p: Partial<RewriteStatus>) {
   for (const l of listeners) l(status);
   if (p.ready) emitDebug("model.llm.status", "LLM ready", { modelId: status.modelId });
   else if (p.error) emitDebug("model.llm.status", "LLM error", { error: p.error });
-  else if (p.loading && !p.progress) emitDebug("model.llm.status", "LLM laden gestart", { modelId: status.modelId });
+  else if (p.loading && !p.progress)
+    emitDebug("model.llm.status", "LLM laden gestart", { modelId: status.modelId });
 }
 
 export function onRewriteStatus(cb: (s: RewriteStatus) => void): () => void {
@@ -40,7 +41,9 @@ export function onRewriteStatus(cb: (s: RewriteStatus) => void): () => void {
   return () => listeners.delete(cb);
 }
 
-export function getRewriteStatus(): RewriteStatus { return status; }
+export function getRewriteStatus(): RewriteStatus {
+  return status;
+}
 
 type EngineLike = {
   chat: { completions: { create: (req: Record<string, unknown>) => Promise<unknown> } };
@@ -76,10 +79,17 @@ const SAMPLING = {
 export function dedupeSentences(text: string): string {
   const seen = new Set<string>();
   const normalize = (s: string) =>
-    s.trim().toLowerCase().replace(/\s+/g, " ").replace(/[.!?]+$/, "");
+    s
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, " ")
+      .replace(/[.!?]+$/, "");
   const outLines: string[] = [];
   for (const line of text.split(/\n/)) {
-    if (line.trim() === "") { outLines.push(""); continue; }
+    if (line.trim() === "") {
+      outLines.push("");
+      continue;
+    }
     const kept: string[] = [];
     for (const sentence of line.split(/(?<=[.!?])\s+/)) {
       const norm = normalize(sentence);
@@ -93,7 +103,10 @@ export function dedupeSentences(text: string): string {
     const joined = kept.join(" ").trim();
     if (joined) outLines.push(joined);
   }
-  return outLines.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+  return outLines
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
 
 export async function loadRewriteLlm(): Promise<EngineLike | null> {
@@ -129,7 +142,9 @@ export async function loadRewriteLlm(): Promise<EngineLike | null> {
  * Probeer een anonieme draft te herschrijven. Faalt veilig: bij elke fout
  * geven we de ORIGINELE draft terug zodat de pipeline niet breekt.
  */
-export async function rewriteAnonymousDraft(draft: string): Promise<{ text: string; usedLlm: boolean; reason: string }> {
+export async function rewriteAnonymousDraft(
+  draft: string,
+): Promise<{ text: string; usedLlm: boolean; reason: string }> {
   const eng = await loadRewriteLlm();
   if (!eng) return { text: draft, usedLlm: false, reason: "LLM niet beschikbaar" };
   try {

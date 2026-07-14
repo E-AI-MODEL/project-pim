@@ -3,13 +3,25 @@ import { describe, expect, it } from "vitest";
 import { decide } from "../policy";
 import type { DraftCheckResult, PrivacySignals, Action, PayloadType } from "../types";
 
-const sig = (): PrivacySignals => ({ directPii: [], contextualPii: [], riskScore: 0, riskLevel: "low", reasons: [], ruleIds: [] });
+const sig = (): PrivacySignals => ({
+  directPii: [],
+  contextualPii: [],
+  riskScore: 0,
+  riskLevel: "low",
+  reasons: [],
+  ruleIds: [],
+});
 const pass: DraftCheckResult = { status: "pass", issues: [] };
 
 function call(action: Action, opts: Partial<Parameters<typeof decide>[0]> = {}) {
   return decide({
-    mode: "anonymous", action, signals: sig(), draftCheck: pass,
-    modelVerified: true, profileId: "education-nl-full", payloadType: "draft_anonymous_certified",
+    mode: "anonymous",
+    action,
+    signals: sig(),
+    draftCheck: pass,
+    modelVerified: true,
+    profileId: "education-nl-full",
+    payloadType: "draft_anonymous_certified",
     ...opts,
   });
 }
@@ -17,12 +29,17 @@ function call(action: Action, opts: Partial<Parameters<typeof decide>[0]> = {}) 
 describe("§11.3 — privacy-invarianten", () => {
   // 1.30 pseudonymous + send_external_ai => BLOCK
   it("1.30 pseudonymous + send_external_ai BLOCK", () => {
-    expect(call("send_external_ai", { mode: "pseudonymous", payloadType: "draft_pseudonymous_local" }).verdict).toBe("BLOCK");
+    expect(
+      call("send_external_ai", { mode: "pseudonymous", payloadType: "draft_pseudonymous_local" })
+        .verdict,
+    ).toBe("BLOCK");
   });
   // 1.31–1.34 pseudonymous + {export,copy,print,share} => BLOCK
   for (const action of ["export_file", "copy", "print", "share"] as Action[]) {
     it(`pseudonymous + ${action} BLOCK`, () => {
-      expect(call(action, { mode: "pseudonymous", payloadType: "draft_pseudonymous_local" }).verdict).toBe("BLOCK");
+      expect(
+        call(action, { mode: "pseudonymous", payloadType: "draft_pseudonymous_local" }).verdict,
+      ).toBe("BLOCK");
     });
   }
   // 1.35 anonymous + restore => BLOCK
@@ -32,7 +49,11 @@ describe("§11.3 — privacy-invarianten", () => {
   // 1.36 anonymous draft met pseudo-token => fail/block via draftCheck
   it("1.36 anonymous + mode-mix payload => BLOCK via draftCheck fail", () => {
     const d = call("copy", {
-      draftCheck: { status: "fail", issues: ["mode-mix tokens"], modeMix: true } as DraftCheckResult,
+      draftCheck: {
+        status: "fail",
+        issues: ["mode-mix tokens"],
+        modeMix: true,
+      } as DraftCheckResult,
     });
     expect(d.verdict).toBe("BLOCK");
   });

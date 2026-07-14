@@ -4,8 +4,13 @@ import { _resetIntegrityRegistry, verifyModel, type ModelIntegrityRecord } from 
 import { DEFAULT_DETECTION_SETTINGS, RULES_ONLY_DETECTION_SETTINGS } from "../detectionSettings";
 
 const rec = (status: ModelIntegrityRecord["status"]): ModelIntegrityRecord => ({
-  key: "ner_multilingual", modelId: "x", status,
-  expected: "e", actual: "a", message: "", timestamp: new Date().toISOString(),
+  key: "ner_multilingual",
+  modelId: "x",
+  status,
+  expected: "e",
+  actual: "a",
+  message: "",
+  timestamp: new Date().toISOString(),
 });
 
 beforeEach(() => {
@@ -23,11 +28,15 @@ describe("modelGateFor", () => {
   });
 
   it("BERT aan + placeholder + egress => false", () => {
-    expect(modelGateFor("send_external_ai", DEFAULT_DETECTION_SETTINGS, [rec("placeholder")]).verified).toBe(false);
+    expect(
+      modelGateFor("send_external_ai", DEFAULT_DETECTION_SETTINGS, [rec("placeholder")]).verified,
+    ).toBe(false);
   });
 
   it("BERT aan + mismatch + egress => false", () => {
-    expect(modelGateFor("copy", DEFAULT_DETECTION_SETTINGS, [rec("mismatch")]).verified).toBe(false);
+    expect(modelGateFor("copy", DEFAULT_DETECTION_SETTINGS, [rec("mismatch")]).verified).toBe(
+      false,
+    );
   });
 
   it("BERT aan + missing + egress => false", () => {
@@ -35,13 +44,15 @@ describe("modelGateFor", () => {
   });
 
   it("BERT aan + placeholder + lokale actie => true", () => {
-    expect(modelGateFor("display", DEFAULT_DETECTION_SETTINGS, [rec("placeholder")]).verified).toBe(true);
+    expect(modelGateFor("display", DEFAULT_DETECTION_SETTINGS, [rec("placeholder")]).verified).toBe(
+      true,
+    );
   });
 });
 
 describe("browser-local model pins", () => {
   it("pint een modelconfig lokaal bij eerste verificatie", async () => {
-    const first = await verifyModel("ner_multilingual", "{\"model\":\"v1\"}", {
+    const first = await verifyModel("ner_multilingual", '{"model":"v1"}', {
       modelId: "test/model",
       expected: "LOCAL_PIN:test/model@abc/config.json",
     });
@@ -52,12 +63,12 @@ describe("browser-local model pins", () => {
   });
 
   it("blokkeert als een lokaal gepinde modelconfig verandert", async () => {
-    await verifyModel("ner_multilingual", "{\"model\":\"v1\"}", {
+    await verifyModel("ner_multilingual", '{"model":"v1"}', {
       modelId: "test/model",
       expected: "LOCAL_PIN:test/model@abc/config.json",
     });
 
-    const second = await verifyModel("ner_multilingual", "{\"model\":\"v2\"}", {
+    const second = await verifyModel("ner_multilingual", '{"model":"v2"}', {
       modelId: "test/model",
       expected: "LOCAL_PIN:test/model@abc/config.json",
     });

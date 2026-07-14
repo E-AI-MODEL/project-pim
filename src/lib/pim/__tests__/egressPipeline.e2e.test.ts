@@ -16,7 +16,9 @@ const allowDecision = (action: PimDecision["action"]): PimDecision => ({
   payloadType: "draft_anonymous_certified",
 });
 
-const certified = (text = "Clean anonymous text without direct identifiers."): CertifiedPayload => ({
+const certified = (
+  text = "Clean anonymous text without direct identifiers.",
+): CertifiedPayload => ({
   text,
   mode: "anonymous",
   payloadType: "draft_anonymous_certified",

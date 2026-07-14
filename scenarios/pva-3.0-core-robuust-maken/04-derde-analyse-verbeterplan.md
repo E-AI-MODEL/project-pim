@@ -10,6 +10,7 @@ Bronnen: eerder verbeterplan, aangeleverde zip `project-pim-main (2).zip`, uitge
 Bij elke afgeronde taak: `[ ]` → `[x]`, datum, eventuele afwijking.
 
 ### Guardrails (§16)
+
 - [x] G1 Geen extra panelen aan `/try` (gevolgd in alle fasen).
 - [x] G2 Geen UI bouwen vóór build/tests groen zijn — Fase 0 eerst.
 - [x] G3 Geen claim "productie-anonimisatie".
@@ -20,6 +21,7 @@ Bij elke afgeronde taak: `[ ]` → `[x]`, datum, eventuele afwijking.
 - [x] G8 Geen OCR vóór egress + tests hard.
 
 ### Fase 0 — Repo-hygiëne
+
 - [x] 0.1 `bun install` schoon (2026-06-20).
 - [x] 0.2 Script `typecheck` = `tsc --noEmit`.
 - [x] 0.3 Script `test` = `vitest run`.
@@ -32,6 +34,7 @@ Bij elke afgeronde taak: `[ ]` → `[x]`, datum, eventuele afwijking.
 **Afwijking §4.2:** project gebruikt Bun (`bunfig.toml`); `npm ci`/`package-lock.json` overgeslagen, vervangen door `bun install`/`bun.lock`.
 
 ### Fase 1 — PIM-core hard maken
+
 - [x] 1.1–1.49 ALLE klaar (2026-06-20) — 42 tests groen, typecheck schoon.
   - PayloadType + CertifiedPayload + uitgebreide DraftCheckResult in `types.ts`.
   - `policy.ts`: `decide()` heeft `profileId` + `payloadType`; rules-only blokkeert export + externe AI; payload-gate dwingt `draft_anonymous_certified` af.
@@ -42,6 +45,7 @@ Bij elke afgeronde taak: `[ ]` → `[x]`, datum, eventuele afwijking.
   - Tests: smoke + policy + profiles + invariants (20) + draftCheck + egressGuard + modelIntegrity = **42 cases pass**.
 
 ### Fase 2 — Naamgeving + claims
+
 - [x] 2.1 README term-tabel bovenaan (Project PiM / Privacy Integrity Monitor / PIM / oud: Privacy Intelligence Module).
 - [x] 2.2–2.5 routes gebruiken al consistent "Project PiM" + "Privacy Integrity Monitor"; ripgrep bevestigt geen restanten.
 - [x] 2.6 README modelhash-uitleg eerlijk (trust-on-first-pin descriptor-hash, geen weights-hash).
@@ -49,6 +53,7 @@ Bij elke afgeronde taak: `[ ]` → `[x]`, datum, eventuele afwijking.
 - [x] 2.8 Modeldownload + externe modelhosts (HF, MLC) apart benoemd in README.
 
 ### Fase 3 — App-shell + burger menu
+
 - [x] 3.1 Brede nav weg uit `__root.tsx`.
 - [x] 3.2 Header = logo + LocalStatusPill + ☰.
 - [x] 3.3 `LocalStatusPill.tsx` 3-staten (groen/oranje/rood) uit self-test + modelgate.
@@ -57,6 +62,7 @@ Bij elke afgeronde taak: `[ ]` → `[x]`, datum, eventuele afwijking.
 - [x] 3.17 Footer soberder (logo + 3 links).
 
 ### Fase 4 — `/` wordt Start & Go
+
 - [x] 4.1 `StartGoShell.tsx` — alleen state + PIM-koppeling.
 - [x] 4.2 `InputPanel.tsx` — textarea + voorbeelden + Start + privacyregel.
 - [x] 4.3 `ModeTargetBar.tsx`.
@@ -72,20 +78,24 @@ Bij elke afgeronde taak: `[ ]` → `[x]`, datum, eventuele afwijking.
 - [x] 4.24–4.30 Alle copy strings centraal in `src/lib/pim/copy.ts` (§15 exact).
 
 ### Fase 5 — `/try` wordt expertlab
+
 - [x] 5.1 Titel "Expert lab".
 - [x] 5.2 Link "← terug naar snelle test".
 - [x] 5.3 Pipeline + modelstatus + audit + review queue blijven.
 - [x] 5.4 Geen primaire CTA meer vanaf `/`.
 
 ### Fase 6 — CI gate (optioneel)
+
 - [ ] 6.1 (skipped — Lovable deployt zelf).
 
 ### Fase 7 — Runtime hardening positionering
+
 - [x] 7.1 Hardening-meldingen verschijnen alleen op `/trust` en in `/try` (geavanceerd), niet op `/`.
 - [x] 7.2 `runtimeHardening.ts` logt URL/headers, nooit body-tekst (bevestigd via code-review).
 - [x] 7.3 README positioneert hardening als extra vangnet, niet als de echte gate (Fase 2 update).
 
 ### Acceptatie + backlog
+
 - [x] T1–T5 user-tasks: handmatig verifieerbaar in nieuwe `/` (voorbeeld → Start → resultaat → details).
 - [x] M1–M12 must-have allemaal afgevinkt (zie fasen 0/1/2/3/4 hierboven).
 - [x] S1–S6 should-have idem (DetailsDrawer, LocalStatusPill, ExamplePicker, BLOCK-uitleg, html lang=nl, demo/productie scheiding).
@@ -111,16 +121,16 @@ Belangrijkste reden: de code bevat goede privacyregels, maar de live UI-route ge
 
 Mijn aangepaste oordeel:
 
-| Onderdeel | Nieuwe score | Oordeel |
-|---|---:|---|
-| Idee en onderwijswaarde | 8/10 | Sterk. De casus past goed bij onderwijs en AI-gebruik. |
-| PIM-core | 6/10 | Goede modules, maar enkele gates worden in de UI nog te los gebruikt. |
-| Privacy-architectuur | 6/10 | De opzet klopt, maar productieclaims moeten voorzichtiger. |
-| UI/UX | 4/10 | Te veel uitleg vóór actie. De landingspagina moet de testtool worden. |
-| Bouwbaarheid | 3/10 | `npm ci` faalt door lockfile-mismatch. Dit moet eerst recht. |
-| Testbaarheid | 2/10 | Geen testscript, geen Vitest, geen CI-privacygate. |
-| Productierijpheid | 3/10 | Sterke demo, nog geen productierijpe release. |
-| Haalbaarheid verbetering | 8/10 | Hoog. De reparaties zijn duidelijk en afgebakend. |
+| Onderdeel                | Nieuwe score | Oordeel                                                               |
+| ------------------------ | -----------: | --------------------------------------------------------------------- |
+| Idee en onderwijswaarde  |         8/10 | Sterk. De casus past goed bij onderwijs en AI-gebruik.                |
+| PIM-core                 |         6/10 | Goede modules, maar enkele gates worden in de UI nog te los gebruikt. |
+| Privacy-architectuur     |         6/10 | De opzet klopt, maar productieclaims moeten voorzichtiger.            |
+| UI/UX                    |         4/10 | Te veel uitleg vóór actie. De landingspagina moet de testtool worden. |
+| Bouwbaarheid             |         3/10 | `npm ci` faalt door lockfile-mismatch. Dit moet eerst recht.          |
+| Testbaarheid             |         2/10 | Geen testscript, geen Vitest, geen CI-privacygate.                    |
+| Productierijpheid        |         3/10 | Sterke demo, nog geen productierijpe release.                         |
+| Haalbaarheid verbetering |         8/10 | Hoog. De reparaties zijn duidelijk en afgebakend.                     |
 
 Advies: niet opnieuw beginnen. Wel eerst de basis rechtzetten, daarna de UI radicaal versimpelen.
 
@@ -288,7 +298,7 @@ Dit moet vóór de UI-slag, anders is niet vast te stellen of de privacyregels b
 In `/try.tsx` wordt de beslissing aangeroepen met:
 
 ```ts
-modelVerified: true
+modelVerified: true;
 ```
 
 Daarmee wordt de modelintegriteit in de live beslisroute niet echt meegenomen.
@@ -304,7 +314,7 @@ Actie:
 Maak een functie:
 
 ```ts
-function modelGateFor(profileId, action, integrity): boolean
+function modelGateFor(profileId, action, integrity): boolean;
 ```
 
 Regels:
@@ -369,7 +379,7 @@ Actie:
 Voeg toe:
 
 ```ts
-async function draftCheckWithRegistry(draft, mode, profileId, options)
+async function draftCheckWithRegistry(draft, mode, profileId, options);
 ```
 
 En gebruik die voor:
@@ -659,11 +669,11 @@ Project PiM        lokaal actief        ☰
 
 De statuspill heeft drie toestanden:
 
-| Status | Tekst | Betekenis |
-|---|---|---|
-| groen | lokaal actief | basisdetectoren werken |
-| oranje | beperkte detectie | model of profiel beperkt |
-| rood | niet klaar | self-test, modelgate of lockstatus fout |
+| Status | Tekst             | Betekenis                               |
+| ------ | ----------------- | --------------------------------------- |
+| groen  | lokaal actief     | basisdetectoren werken                  |
+| oranje | beperkte detectie | model of profiel beperkt                |
+| rood   | niet klaar        | self-test, modelgate of lockstatus fout |
 
 ## 7.2 Burger menu
 
@@ -805,19 +815,19 @@ Een resultaatkaart moet altijd tonen:
 
 Teksten:
 
-| Status | Tekst |
-|---|---|
-| groen | Deze draft lijkt veilig genoeg voor de gekozen actie. |
+| Status | Tekst                                                                                |
+| ------ | ------------------------------------------------------------------------------------ |
+| groen  | Deze draft lijkt veilig genoeg voor de gekozen actie.                                |
 | oranje | Deze draft is bruikbaar, maar de context kan herkenbaar zijn. Controleer de details. |
-| rood | Niet delen. PiM vond nog directe persoonsgegevens of een verboden route. |
+| rood   | Niet delen. PiM vond nog directe persoonsgegevens of een verboden route.             |
 
 Knoppen:
 
-| Verdict | Primaire knop |
-|---|---|
-| ALLOW | Kopieer veilige tekst |
+| Verdict            | Primaire knop         |
+| ------------------ | --------------------- |
+| ALLOW              | Kopieer veilige tekst |
 | ALLOW_WITH_WARNING | Controleer en kopieer |
-| BLOCK | Maak opnieuw veilig |
+| BLOCK              | Maak opnieuw veilig   |
 
 ## 11. Testing first
 
@@ -999,12 +1009,12 @@ Doel: geen verwarring tussen productnaam en beslislaag.
 
 Nieuwe taal:
 
-| Term | Betekenis |
-|---|---|
-| Project PiM | productnaam |
-| Privacy Integrity Monitor | volledige naam |
-| PIM | deterministische beslislaag |
-| PiM engine | vermijden of expliciet uitleggen |
+| Term                        | Betekenis                                  |
+| --------------------------- | ------------------------------------------ |
+| Project PiM                 | productnaam                                |
+| Privacy Integrity Monitor   | volledige naam                             |
+| PIM                         | deterministische beslislaag                |
+| PiM engine                  | vermijden of expliciet uitleggen           |
 | Privacy Intelligence Module | oude term, verwijderen of markeren als oud |
 
 Aanpassen:
