@@ -352,7 +352,7 @@ export function WriterWorkspace() {
       </section>
 
       {/* RIGHT, privacy panel */}
-      <aside className="space-y-4">
+      <aside className="space-y-3">
         <FindingsCard spans={foundSpans} score={riskScore} />
         <SafeVersionCard
           safeText={safeText}
@@ -384,20 +384,16 @@ export function WriterWorkspace() {
             {egressMsg}
           </div>
         )}
-        <div className="rounded-lg border border-[#e5e7ef] bg-[#f9fafc] px-3 py-2.5 text-[11px] text-[#64748b] flex items-center gap-2">
-          <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-          Alles blijft op je apparaat. Niets wordt opgeslagen of verstuurd.
-        </div>
-        <div className="text-[11px] text-[#94a3b8] flex gap-3 px-1">
-          <span>Gewist: {stats.scrubbed}</span>
-          <span>Gemarkeerd: {stats.marked}</span>
-          <span className="ml-auto">
-            <WriterStatusBar
-              nerStatus={nerStatus}
-              onStartNer={startNer}
-              detectionSettings={detectionSettings}
-            />
+        <div className="flex items-center justify-between gap-2 px-1 text-[11px] text-[#94a3b8]">
+          <span className="inline-flex items-center gap-1.5">
+            <ShieldCheck className="h-3 w-3 text-emerald-600" />
+            Lokaal · {stats.scrubbed} gewist · {stats.marked} gemarkeerd
           </span>
+          <WriterStatusBar
+            nerStatus={nerStatus}
+            onStartNer={startNer}
+            detectionSettings={detectionSettings}
+          />
         </div>
       </aside>
 
@@ -647,26 +643,30 @@ function FindingsCard({ spans, score }: { spans: PiiSpan[]; score: number }) {
         </div>
       </div>
       <div className="px-4 pb-2">
-        <div className="text-[11px] font-semibold uppercase tracking-wider text-[#64748b] px-1 pb-2 flex items-center justify-between">
-          <span>Wat PiM vond</span>
-          <span className="text-[#94a3b8]">{total}</span>
-        </div>
-        <ul className="divide-y divide-[#eef0f5] border-t border-[#eef0f5]">
-          {GROUPS.map((g) => {
-            const n = counts.get(g.key) ?? 0;
-            return (
-              <li key={g.key} className="flex items-center gap-2.5 py-2 px-1 text-[13px]">
-                <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-[#f1f2f7] text-[#64748b]">
-                  {g.icon}
-                </span>
-                <span className={n > 0 ? "text-[#0f172a]" : "text-[#94a3b8]"}>{g.label}</span>
-                <span className={`ml-auto text-[12px] tabular-nums ${n > 0 ? "text-[#0f172a] font-semibold" : "text-[#cbd5e1]"}`}>
-                  {n}
-                </span>
-              </li>
-            );
-          })}
-        </ul>
+        {total > 0 && (
+          <>
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-[#64748b] px-1 pb-2 flex items-center justify-between">
+              <span>Wat PiM vond</span>
+              <span className="text-[#94a3b8]">{total}</span>
+            </div>
+            <ul className="divide-y divide-[#eef0f5] border-t border-[#eef0f5]">
+              {GROUPS.filter((g) => (counts.get(g.key) ?? 0) > 0).map((g) => {
+                const n = counts.get(g.key) ?? 0;
+                return (
+                  <li key={g.key} className="flex items-center gap-2.5 py-2 px-1 text-[13px]">
+                    <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-[#f1f2f7] text-[#64748b]">
+                      {g.icon}
+                    </span>
+                    <span className="text-[#0f172a]">{g.label}</span>
+                    <span className="ml-auto text-[12px] tabular-nums text-[#0f172a] font-semibold">
+                      {n}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          </>
+        )}
       </div>
     </div>
   );
@@ -745,11 +745,23 @@ function SafeVersionCard({
 
 function buildSafeText(plain: string, spans: PiiSpan[]): string {
   if (!plain) return "";
-  const sorted = [...spans].sort((a, b) => b.start - a.start);
-  let out = plain;
+  // Ontdubbel overlappende spans (detectors leveren soms meerdere spans op
+  // hetzelfde bereik). Zonder deze stap corrupte je "conflict tijdens" tot
+  // "de[incident]p het schoolplein".
+  const sorted = [...spans].sort((a, b) => a.start - b.start || b.end - a.end);
+  const merged: PiiSpan[] = [];
   for (const s of sorted) {
-    const label = GENERALIZATIONS[s.category] ?? "[…]";
-    out = out.slice(0, s.start) + label + out.slice(s.end);
+    const last = merged[merged.length - 1];
+    if (last && s.start < last.end) continue;
+    merged.push(s);
   }
+  let out = "";
+  let cursor = 0;
+  for (const s of merged) {
+    out += plain.slice(cursor, s.start);
+    out += GENERALIZATIONS[s.category] ?? "[…]";
+    cursor = s.end;
+  }
+  out += plain.slice(cursor);
   return out;
 }
