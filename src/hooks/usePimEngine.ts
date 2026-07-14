@@ -11,6 +11,7 @@ import {
 export interface UsePimEngineResult {
   state: EngineState;
   evaluate: PimEngine["evaluate"];
+  previewDecision: PimEngine["previewDecision"];
   requestAction: PimEngine["requestAction"];
   reset: PimEngine["reset"];
 }
@@ -37,6 +38,7 @@ export function usePimEngine(config: EngineConfig): UsePimEngineResult {
     () => ({
       state,
       evaluate: (input: EngineInput) => engine.evaluate(input),
+      previewDecision: (action) => engine.previewDecision(action),
       requestAction: (req) => engine.requestAction(req),
       reset: () => engine.reset(),
     }),
