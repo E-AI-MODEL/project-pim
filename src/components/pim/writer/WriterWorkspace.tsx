@@ -643,26 +643,30 @@ function FindingsCard({ spans, score }: { spans: PiiSpan[]; score: number }) {
         </div>
       </div>
       <div className="px-4 pb-2">
-        <div className="text-[11px] font-semibold uppercase tracking-wider text-[#64748b] px-1 pb-2 flex items-center justify-between">
-          <span>Wat PiM vond</span>
-          <span className="text-[#94a3b8]">{total}</span>
-        </div>
-        <ul className="divide-y divide-[#eef0f5] border-t border-[#eef0f5]">
-          {GROUPS.map((g) => {
-            const n = counts.get(g.key) ?? 0;
-            return (
-              <li key={g.key} className="flex items-center gap-2.5 py-2 px-1 text-[13px]">
-                <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-[#f1f2f7] text-[#64748b]">
-                  {g.icon}
-                </span>
-                <span className={n > 0 ? "text-[#0f172a]" : "text-[#94a3b8]"}>{g.label}</span>
-                <span className={`ml-auto text-[12px] tabular-nums ${n > 0 ? "text-[#0f172a] font-semibold" : "text-[#cbd5e1]"}`}>
-                  {n}
-                </span>
-              </li>
-            );
-          })}
-        </ul>
+        {total > 0 && (
+          <>
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-[#64748b] px-1 pb-2 flex items-center justify-between">
+              <span>Wat PiM vond</span>
+              <span className="text-[#94a3b8]">{total}</span>
+            </div>
+            <ul className="divide-y divide-[#eef0f5] border-t border-[#eef0f5]">
+              {GROUPS.filter((g) => (counts.get(g.key) ?? 0) > 0).map((g) => {
+                const n = counts.get(g.key) ?? 0;
+                return (
+                  <li key={g.key} className="flex items-center gap-2.5 py-2 px-1 text-[13px]">
+                    <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-[#f1f2f7] text-[#64748b]">
+                      {g.icon}
+                    </span>
+                    <span className="text-[#0f172a]">{g.label}</span>
+                    <span className="ml-auto text-[12px] tabular-nums text-[#0f172a] font-semibold">
+                      {n}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          </>
+        )}
       </div>
     </div>
   );
