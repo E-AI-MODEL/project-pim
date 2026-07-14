@@ -20,19 +20,20 @@ function invokeBeforeLoad(route: { options: Record<string, unknown> }): unknown 
 describe("Slice B — redirects", () => {
   it("/try → /app?mode=quick", () => {
     const r = invokeBeforeLoad(TryRoute as unknown as { options: Record<string, unknown> }) as {
-      to?: string;
-      search?: { mode?: string };
+      options: { to?: string; search?: { mode?: string }; replace?: boolean };
     };
-    expect(r.to).toBe("/app");
-    expect(r.search?.mode).toBe("quick");
+    expect(r.options.to).toBe("/app");
+    expect(r.options.search?.mode).toBe("quick");
+    expect(r.options.replace).toBe(true);
   });
 
   it("/schrijven → /app?mode=write", () => {
     const r = invokeBeforeLoad(
       SchrijvenRoute as unknown as { options: Record<string, unknown> },
-    ) as { to?: string; search?: { mode?: string } };
-    expect(r.to).toBe("/app");
-    expect(r.search?.mode).toBe("write");
+    ) as { options: { to?: string; search?: { mode?: string }; replace?: boolean } };
+    expect(r.options.to).toBe("/app");
+    expect(r.options.search?.mode).toBe("write");
+    expect(r.options.replace).toBe(true);
   });
 
   it("redirect target route (/app) accepteert alle drie modi zonder terug te wijzen", async () => {
