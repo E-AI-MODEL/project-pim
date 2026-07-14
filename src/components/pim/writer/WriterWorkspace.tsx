@@ -352,7 +352,7 @@ export function WriterWorkspace() {
       </section>
 
       {/* RIGHT, privacy panel */}
-      <aside className="space-y-4">
+      <aside className="space-y-3">
         <FindingsCard spans={foundSpans} score={riskScore} />
         <SafeVersionCard
           safeText={safeText}
@@ -384,20 +384,16 @@ export function WriterWorkspace() {
             {egressMsg}
           </div>
         )}
-        <div className="rounded-lg border border-[#e5e7ef] bg-[#f9fafc] px-3 py-2.5 text-[11px] text-[#64748b] flex items-center gap-2">
-          <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-          Alles blijft op je apparaat. Niets wordt opgeslagen of verstuurd.
-        </div>
-        <div className="text-[11px] text-[#94a3b8] flex gap-3 px-1">
-          <span>Gewist: {stats.scrubbed}</span>
-          <span>Gemarkeerd: {stats.marked}</span>
-          <span className="ml-auto">
-            <WriterStatusBar
-              nerStatus={nerStatus}
-              onStartNer={startNer}
-              detectionSettings={detectionSettings}
-            />
+        <div className="flex items-center justify-between gap-2 px-1 text-[11px] text-[#94a3b8]">
+          <span className="inline-flex items-center gap-1.5">
+            <ShieldCheck className="h-3 w-3 text-emerald-600" />
+            Lokaal · {stats.scrubbed} gewist · {stats.marked} gemarkeerd
           </span>
+          <WriterStatusBar
+            nerStatus={nerStatus}
+            onStartNer={startNer}
+            detectionSettings={detectionSettings}
+          />
         </div>
       </aside>
 
