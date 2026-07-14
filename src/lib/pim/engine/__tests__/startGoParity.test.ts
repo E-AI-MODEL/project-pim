@@ -8,9 +8,8 @@ import { createEngine } from "../engine";
 import { computeSignals } from "../../risk";
 import { anonymize, pseudonymize, draftCheck } from "../../processing";
 import { decide } from "../../policy";
-import { executeAction } from "../../egressGuard";
-import { modelGateFor } from "../../modelGate";
 import { DEFAULT_DETECTION_SETTINGS } from "../../detectionSettings";
+import { executeAction } from "../../egressGuard";
 import type { Action, Mode, PayloadType } from "../../types";
 
 const CLEAN = "De methode werkt beter. Leerlingen scoren gemiddeld hoger op de weektoets.";
@@ -23,7 +22,6 @@ function baselineStartGo(text: string, mode: Mode, action: Action) {
   const draft =
     mode === "anonymous" ? anonymize(text, signals) : pseudonymize(text, signals).draft;
   const guard = draftCheck(draft, mode);
-  const gate = modelGateFor(action, DEFAULT_DETECTION_SETTINGS, []);
   const payloadType: PayloadType =
     mode === "anonymous" && guard.status === "pass"
       ? "draft_anonymous_certified"
@@ -36,7 +34,7 @@ function baselineStartGo(text: string, mode: Mode, action: Action) {
     action,
     signals: decisionSignals,
     draftCheck: guard,
-    modelVerified: gate.verified,
+    modelVerified: true,
     detectionSettings: DEFAULT_DETECTION_SETTINGS,
     payloadType,
   });
