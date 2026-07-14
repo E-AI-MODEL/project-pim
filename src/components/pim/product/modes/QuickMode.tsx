@@ -22,6 +22,7 @@ export function QuickMode() {
     setMode,
     action,
     setAction,
+    nerSpans,
   } = useProductShell();
   const [committed, setCommitted] = useState(false);
   const [egressMsg, setEgressMsg] = useState<string | null>(null);
@@ -29,8 +30,8 @@ export function QuickMode() {
   // Live evaluate op tekst/mode.
   useEffect(() => {
     if (!text.trim()) return;
-    evaluate({ text, mode, autoRepair: false });
-  }, [evaluate, text, mode]);
+    evaluate({ text, mode, extraSpans: nerSpans, autoRepair: false });
+  }, [evaluate, text, mode, nerSpans]);
 
   // Debounced commit, bepaalt wanneer ResultPanel verschijnt.
   useEffect(() => {
