@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react";
-import type { Action, Mode, PiiCategory } from "@/lib/pim";
+import type { Action, Mode, NerStatus, PiiCategory, PiiSpan } from "@/lib/pim";
 import type { EngineState, PimEngine } from "@/lib/pim/engine";
 import type { PimSettings } from "@/hooks/usePimSettings";
 
@@ -32,6 +32,19 @@ export interface ProductShellContextValue {
   setWriterAutoRedact: (next: ReadonlySet<PiiCategory>) => void;
   writerStrict: boolean;
   setWriterStrict: (v: boolean) => void;
+  /**
+   * Centrale NER/BERT-runtime, gedeeld door Quick, Start en Write.
+   * `nerSourceText` is de tekstbron die actief door NER moet;
+   * in write-mode zet WriterWorkspace hier zijn plainText in,
+   * in quick/start valt `ProductShell` terug op de shell-`text`.
+   */
+  usesNerSlm: boolean;
+  nerEnabled: boolean;
+  nerSpans: PiiSpan[];
+  nerStatus: NerStatus | null;
+  startNer: () => void;
+  nerSourceText: string;
+  setNerSourceText: (v: string) => void;
 }
 
 const ProductShellContext = createContext<ProductShellContextValue | null>(null);

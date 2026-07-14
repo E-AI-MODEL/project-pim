@@ -35,13 +35,11 @@ import {
   Eye,
 } from "lucide-react";
 import {
-  usesBert,
   type DetectionLayerSettings,
   type PiiCategory,
   type PiiSpan,
   type NerStatus,
 } from "@/lib/pim";
-import { useNerSpans } from "@/hooks/useNerSpans";
 import { useProductShell } from "@/components/pim/product/ProductShellContext";
 import { GENERALIZATIONS } from "./pimGeneralizations";
 import {
@@ -74,6 +72,10 @@ export function WriterWorkspace() {
     writerAutoRedact: autoRedact,
     setWriterAutoRedact: setAutoRedactRaw,
     writerStrict: strict,
+    nerSpans,
+    nerStatus,
+    startNer,
+    setNerSourceText,
   } = useProductShell();
   const { detectionSettings, disabledCategories } = settings;
 
@@ -93,9 +95,17 @@ export function WriterWorkspace() {
   const [egressMsg, setEgressMsg] = useState<string | null>(null);
   const [hasAnalyzed, setHasAnalyzed] = useState(false);
   const [analysisStale, setAnalysisStale] = useState(false);
-  const usesNerSlm = usesBert(detectionSettings);
-  const { nerSpans, nerStatus, startNer } = useNerSpans(plainText, { enabled: usesNerSlm });
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Writer-tekst is de NER-bron zolang de writer gemount is. Cleanup zit in
+  // een aparte effect: als je hem in de plainText-effect zet, vuurt hij bij
+  // elke toetsaanslag en wordt de bron kort leeg (waardoor NER opnieuw start).
+  useEffect(() => {
+    setNerSourceText(plainText);
+  }, [plainText, setNerSourceText]);
+  useEffect(() => {
+    return () => setNerSourceText("");
+  }, [setNerSourceText]);
   const editorRootRef = useRef<HTMLDivElement>(null);
   const applyingAnalysisRef = useRef(false);
 
