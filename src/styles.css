@@ -290,11 +290,11 @@
   color: var(--navy-fg);
   font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
 }
-.pim-landing .font-serif-display {
+.font-serif-display {
   font-family: "Libre Baskerville", Georgia, serif;
   letter-spacing: -0.005em;
 }
-.pim-landing .font-plex-mono {
+.font-plex-mono {
   font-family: "IBM Plex Mono", ui-monospace, monospace;
 }
 .pim-landing .hairline {
