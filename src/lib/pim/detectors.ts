@@ -29,12 +29,22 @@ const RULES: RuleDef[] = [
     confidence: 0.8,
   },
   { id: "rule.bsn", category: "bsn", regex: /\b\d{9}\b/g, confidence: 0.85 },
-  // Leerlingnummer: 6-8 cijfers. Negative lookahead/lookbehind voorkomt overlap met BSN (9) en jaartallen in datums.
+  // Leerlingnummer: 6-8 cijfers zonder context. Negative lookahead/lookbehind
+  // voorkomt overlap met BSN (9) en jaartallen in datums.
   {
     id: "rule.student_id",
     category: "student_id",
     regex: /(?<!\d)\d{6,8}(?!\d)/g,
     confidence: 0.55,
+  },
+  // Leerlingnummer met expliciete context (leerlingnummer 12345, studentnr: 4821, etc).
+  // Case-insensitive trefwoord en 4-8 cijfers, ook korte nummers worden herkend.
+  {
+    id: "rule.student_id_ctx",
+    category: "student_id",
+    regex:
+      /(?<=\b(?:leerling(?:nummer|-?id)?|lln\.?|studentnummer|student-?id|inschrijfnummer|onderwijsnummer|pgn)[\s:#.]{0,4})\d{4,8}\b/gi,
+    confidence: 0.92,
   },
   {
     id: "rule.iban",
