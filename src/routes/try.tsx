@@ -496,16 +496,23 @@ function TryPage() {
   }, [engine, text, mode, extraSpans, llmDraft, tick]);
 
   // Voor UI-weergave vóór de eerste evaluate: veilige defaults.
-  const signals = engine.state.signals ?? {
-    directPii: [],
-    contextualPii: [],
-    riskScore: 0,
-    riskLevel: "low" as const,
-    reasons: [],
-    ruleIds: [],
-  };
+  const signals = useMemo(
+    () =>
+      engine.state.signals ?? {
+        directPii: [],
+        contextualPii: [],
+        riskScore: 0,
+        riskLevel: "low" as const,
+        reasons: [],
+        ruleIds: [],
+      },
+    [engine.state.signals],
+  );
   const decisionSignals = engine.state.decisionSignals ?? signals;
-  const guard = engine.state.guard ?? { status: "pass" as const, issues: [], mode };
+  const guard = useMemo(
+    () => engine.state.guard ?? { status: "pass" as const, issues: [], mode },
+    [engine.state.guard, mode],
+  );
   const effectiveDraft = engine.state.draft ?? { text, mode, rawHadPii: false };
   const repaired = engine.state.repairApplied;
   const finalDraftText =
