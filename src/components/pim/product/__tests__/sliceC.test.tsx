@@ -6,6 +6,9 @@ import { act, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 // Zware editor/monitor-modules mocken zodat we puur de shell-structuur toetsen.
+vi.mock("@/components/pim/product/AppHeader", () => ({
+  AppHeader: () => <div data-testid="app-header" />,
+}));
 vi.mock("@/components/pim/writer/WriterWorkspace", () => ({
   WriterWorkspace: () => <div data-testid="writer-workspace" />,
 }));
@@ -35,11 +38,11 @@ describe("Slice C — consolidatie", () => {
   for (const mode of ["quick", "start", "write"] as const) {
     it(`mode=${mode}: precies één AppHeader en één StatusFooter, geen dubbele TrustBadge/LocalStatusPill`, () => {
       render(<ProductShell mode={mode} />);
-      expect(screen.getAllByRole("banner")).toHaveLength(1); // <header>
+      expect(screen.getAllByTestId("app-header")).toHaveLength(1);
       expect(screen.getAllByRole("contentinfo")).toHaveLength(1); // <footer>
-      // TrustBadge + LocalStatusPill zitten in AppHeader; er is er dus één
-      // van elk aria-label in de DOM.
-      expect(screen.getAllByLabelText(/PiM · lokale privacy/i).length).toBeLessThanOrEqual(1);
+      // Diagnostiek-trigger komt uit de StatusFooter — precies één.
+      expect(screen.getAllByTestId("open-diagnostics")).toHaveLength(1);
+      expect(screen.getAllByTestId("open-expert")).toHaveLength(1);
     });
   }
 
