@@ -33,9 +33,8 @@ import {
   type NerStatus,
 } from "@/lib/pim";
 import { useNerSpans } from "@/hooks/useNerSpans";
-import { AdvancedPanel } from "@/components/pim/start-go/AdvancedPanel";
 import { useProductShell } from "@/components/pim/product/ProductShellContext";
-import { GENERALIZATIONS, DEFAULT_AUTO_REDACT } from "./pimGeneralizations";
+import { GENERALIZATIONS } from "./pimGeneralizations";
 import {
   createPimPlugin,
   pimPluginKey,
@@ -57,18 +56,22 @@ interface ClickedSpan {
 
 export function WriterWorkspace() {
   // ProductShell-context is de bron van waarheid voor engine, settings en reset.
-  const { evaluate, settings, writerContent, setWriterContent } = useProductShell();
-  const { detectionSettings, disabledCategories, advancedPanelProps } = settings;
+  const {
+    evaluate,
+    settings,
+    writerContent,
+    setWriterContent,
+    writerAutoRedact: autoRedact,
+    setWriterAutoRedact: setAutoRedactRaw,
+    writerStrict: strict,
+  } = useProductShell();
+  const { detectionSettings, disabledCategories } = settings;
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const [autoRedact, setAutoRedact] = useState<Set<PiiCategory>>(
-    () => new Set(DEFAULT_AUTO_REDACT),
-  );
-  const [strict, setStrict] = useState(false);
   const [ignored, setIgnored] = useState<Set<string>>(new Set());
   const [stats, setStats] = useState({ scrubbed: 0, marked: 0 });
   const [clicked, setClicked] = useState<ClickedSpan | null>(null);
@@ -264,7 +267,7 @@ export function WriterWorkspace() {
       );
       if (!choice) return;
       if (choice.trim().toLowerCase() === "wis") {
-        setAutoRedact(
+        setAutoRedactRaw(
           new Set<PiiCategory>([
             ...autoRedact,
             ...sig.directPii.map((s) => s.category),
@@ -314,22 +317,6 @@ export function WriterWorkspace() {
           <WorkspaceAction icon={<Trash2 className="h-4 w-4" />} label="Leeg" onClick={onClear} />
         </div>
       </div>
-      <AdvancedPanel
-        {...advancedPanelProps}
-        writer={{
-          autoRedact,
-          onAutoRedactChange: (cat, scrub) =>
-            setAutoRedact((p) => {
-              const n = new Set(p);
-              if (scrub) n.add(cat);
-              else n.delete(cat);
-              return n;
-            }),
-          strict,
-          onStrictChange: setStrict,
-        }}
-        ner={{ status: nerStatus, onStart: startNer, available: usesNerSlm }}
-      />
       {importError && (
         <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
           {importError}

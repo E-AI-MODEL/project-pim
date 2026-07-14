@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react";
-import type { Action, Mode } from "@/lib/pim";
+import type { Action, Mode, PiiCategory } from "@/lib/pim";
 import type { EngineState, PimEngine } from "@/lib/pim/engine";
 import type { PimSettings } from "@/hooks/usePimSettings";
 
@@ -23,6 +23,15 @@ export interface ProductShellContextValue {
    */
   writerContent: string | null;
   setWriterContent: (html: string | null) => void;
+  /**
+   * Writer-specifieke instellingen leven op shell-niveau zodat het gedeelde
+   * expertpaneel ze kan bewerken zonder dat WriterWorkspace een eigen
+   * AdvancedPanel hoeft te renderen.
+   */
+  writerAutoRedact: ReadonlySet<PiiCategory>;
+  setWriterAutoRedact: (next: ReadonlySet<PiiCategory>) => void;
+  writerStrict: boolean;
+  setWriterStrict: (v: boolean) => void;
 }
 
 const ProductShellContext = createContext<ProductShellContextValue | null>(null);
