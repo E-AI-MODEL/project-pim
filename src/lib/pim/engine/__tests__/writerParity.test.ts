@@ -12,8 +12,7 @@ import type { PiiCategory, PiiSpan } from "../../types";
 
 const CLEAN = "De methode werkt beter. Leerlingen scoren gemiddeld hoger op de weektoets.";
 const CONTEXT = "Kort mentorverslag over Tom de Vries (4H2) — planning aanscherpen.";
-const HEAVY =
-  "Sarah Jansen, groep 6, De Wilg te Utrecht. BSN 123456782, mail jansen@voorbeeld.nl.";
+const HEAVY = "Sarah Jansen, groep 6, De Wilg te Utrecht. BSN 123456782, mail jansen@voorbeeld.nl.";
 
 function baseline(text: string, extraSpans: PiiSpan[] = [], disabled?: Set<PiiCategory>) {
   return computeSignals(text, extraSpans, DEFAULT_DETECTION_SETTINGS, disabled);
