@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { COPY } from "@/lib/pim/copy";
 import { MonitorShell } from "@/components/pim/start-go/MonitorShell";
 import { UspGrid } from "@/components/pim/start-go/UspGrid";
@@ -47,6 +48,15 @@ function HomePage() {
             <p className="text-sm sm:text-base lg:text-lg text-[#e8edf3]/75 leading-relaxed max-w-xl">
               {COPY.subtitle}
             </p>
+            <div className="pt-2">
+              <Link
+                to="/app"
+                search={{ mode: "quick" }}
+                className="inline-flex items-center gap-2 rounded-md bg-[#3b6fa0] hover:bg-[#4a80b3] px-5 py-2.5 text-sm font-medium text-white transition-colors"
+              >
+                Open de PiM-app
+              </Link>
+            </div>
           </header>
 
           {/* Live Monitor — col 2 on desktop spanning 2 rows; second on mobile so it's reachable */}
