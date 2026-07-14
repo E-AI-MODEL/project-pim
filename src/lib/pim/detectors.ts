@@ -188,9 +188,9 @@ const RULES: RuleDef[] = [
   {
     id: "ctx.small_group",
     category: "context_small_group",
-    regex: /\b(?:groep\s*[1-8]|klas\s*[1-6][a-z]?|brugklas)\b/gi,
+    regex: /\b(?:groep\s*[1-8][a-z]?|klas\s*[1-6][a-z]?|brugklas)\b/gi,
     contextual: true,
-    confidence: 0.5,
+    confidence: 0.75,
   },
   {
     id: "ctx.care",
