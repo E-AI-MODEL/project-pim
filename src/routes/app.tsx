@@ -1,12 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { zodValidator, fallback } from "@tanstack/zod-adapter";
-import { z } from "zod";
 import { ProductShell } from "@/components/pim/product/ProductShell";
-import type { ProductMode } from "@/components/pim/product/types";
+import { isProductMode, type ProductMode } from "@/components/pim/product/types";
 
-const searchSchema = z.object({
-  mode: fallback(z.enum(["quick", "start", "write"]), "quick").default("quick"),
-});
+/**
+ * Lokale, dependencyvrije validator voor de ?mode= search param.
+ * Accepteert uitsluitend "quick" | "start" | "write"; fallback = "quick".
+ */
+function validateAppSearch(input: Record<string, unknown>): { mode: ProductMode } {
+  const raw = input?.mode;
+  return { mode: isProductMode(raw) ? raw : "quick" };
+}
 
 const HEAD_BY_MODE: Record<ProductMode, { title: string; description: string }> = {
   quick: {
@@ -26,7 +29,7 @@ const HEAD_BY_MODE: Record<ProductMode, { title: string; description: string }> 
 };
 
 export const Route = createFileRoute("/app")({
-  validateSearch: zodValidator(searchSchema),
+  validateSearch: validateAppSearch,
   head: ({ match }) => {
     const mode = (match.search as { mode?: ProductMode }).mode ?? "quick";
     const h = HEAD_BY_MODE[mode];
