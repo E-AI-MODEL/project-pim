@@ -113,7 +113,9 @@ export function installRuntimeHardening() {
           notify();
           console.warn(msg);
         }
-      } catch {}
+      } catch {
+        /* ignore URL parse errors */
+      }
       return new target(...args);
     },
   });
