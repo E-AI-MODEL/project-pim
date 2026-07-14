@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   createEngine,
   EMPTY_ENGINE_STATE,
@@ -34,14 +34,19 @@ export function usePimEngine(config: EngineConfig): UsePimEngineResult {
     engine.updateConfig(config);
   }, [engine, config]);
 
-  return useMemo(
-    () => ({
-      state,
-      evaluate: (input: EngineInput) => engine.evaluate(input),
-      previewDecision: (action) => engine.previewDecision(action),
-      requestAction: (req) => engine.requestAction(req),
-      reset: () => engine.reset(),
-    }),
-    [state, engine],
+  // Commando's zijn referentieel stabiel zolang `engine` gelijk blijft.
+  // Consumenten mogen ze dus veilig als useEffect-dependency gebruiken
+  // zonder oneindige loops te veroorzaken.
+  const evaluate = useCallback((input: EngineInput) => engine.evaluate(input), [engine]);
+  const previewDecision = useCallback<PimEngine["previewDecision"]>(
+    (action) => engine.previewDecision(action),
+    [engine],
   );
+  const requestAction = useCallback<PimEngine["requestAction"]>(
+    (req) => engine.requestAction(req),
+    [engine],
+  );
+  const reset = useCallback(() => engine.reset(), [engine]);
+
+  return { state, evaluate, previewDecision, requestAction, reset };
 }
