@@ -118,8 +118,8 @@ export function StartMode() {
       </ol>
       {state.signals && previewedDecision && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <SafetyVerdictCard decision={previewedDecision} signals={state.signals} />
-          <FindingChips signals={state.signals} />
+          <SafetyVerdictCard verdict={previewedDecision.verdict} reason={previewedDecision.reason} />
+          <FindingChips spans={[...state.signals.directPii, ...state.signals.contextualPii]} />
         </div>
       )}
     </div>
