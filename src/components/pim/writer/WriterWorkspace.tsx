@@ -57,7 +57,7 @@ interface ClickedSpan {
 
 export function WriterWorkspace() {
   // ProductShell-context is de bron van waarheid voor engine, settings en reset.
-  const { evaluate, settings } = useProductShell();
+  const { evaluate, settings, writerContent, setWriterContent } = useProductShell();
   const { detectionSettings, disabledCategories, advancedPanelProps } = settings;
 
   const [mounted, setMounted] = useState(false);
@@ -81,11 +81,13 @@ export function WriterWorkspace() {
   const editorRootRef = useRef<HTMLDivElement>(null);
 
   const pimPlugin = useMemo(() => createPimPlugin(), []);
+  const initialContent =
+    writerContent ??
+    "<h1>Nieuwe notitie</h1><p>Begin met typen — PiM leest mee. Namen worden gemarkeerd; harde gegevens zoals BSN, e-mail en telefoonnummer worden direct vervangen door een label.</p>";
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [StarterKit.configure({ heading: { levels: [1, 2, 3] } })],
-    content:
-      "<h1>Nieuwe notitie</h1><p>Begin met typen — PiM leest mee. Namen worden gemarkeerd; harde gegevens zoals BSN, e-mail en telefoonnummer worden direct vervangen door een label.</p>",
+    content: initialContent,
     editorProps: {
       attributes: {
         class:
@@ -93,6 +95,20 @@ export function WriterWorkspace() {
       },
     },
   });
+
+  // Persist editorinhoud in de shell zodat modewissel (write → quick → write)
+  // de tekst behoudt. We schrijven pas bij unmount en niet tijdens typen om
+  // renderloops te vermijden.
+  useEffect(() => {
+    if (!editor) return;
+    return () => {
+      try {
+        setWriterContent(editor.getHTML());
+      } catch {
+        /* editor may already be destroyed */
+      }
+    };
+  }, [editor, setWriterContent]);
 
   useEffect(() => {
     if (!editor) return;
@@ -266,7 +282,8 @@ export function WriterWorkspace() {
     editor.commands.setContent("<p></p>");
     setIgnored(new Set());
     setStats({ scrubbed: 0, marked: 0 });
-  }, [editor]);
+    setWriterContent(null);
+  }, [editor, setWriterContent]);
   // ProductShell luistert al naar "pim:reset" en wist gedeelde tekst; hier
   // wissen we tegelijk de editor zodat write-mode ook mee-reset.
   useEffect(() => {
