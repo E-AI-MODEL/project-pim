@@ -342,11 +342,11 @@ export function WriterWorkspace() {
         <div className="border-t border-[#eef0f5] px-4 py-2.5 flex items-center justify-between text-[12px] text-[#64748b]">
           <span className="inline-flex items-center gap-2">
             <ShieldCheck className="h-3.5 w-3.5 text-[#6d4aff]" />
-            PiM markeert mogelijke persoonsgegevens en gevoelige context.
+            PiM streept mee terwijl je typt — zonder iets te versturen.
           </span>
           <span className="inline-flex items-center gap-1.5">
             <span className={`h-1.5 w-1.5 rounded-full ${totalFindings > 0 ? "bg-rose-500" : "bg-emerald-500"}`} />
-            {totalFindings > 0 ? `${riskScore} punten risico` : "geen risico"}
+            {totalFindings > 0 ? `risicoscore ${riskScore}` : "geen risico"}
           </span>
         </div>
       </section>
@@ -360,9 +360,9 @@ export function WriterWorkspace() {
           onCopy={async () => {
             try {
               await navigator.clipboard.writeText(safeText);
-              setEgressMsg("Veilige versie gekopieerd");
+              setEgressMsg("Veilige versie staat op je klembord.");
             } catch {
-              setEgressMsg("Kopiëren mislukte");
+              setEgressMsg("Kopiëren lukte niet — probeer het opnieuw.");
             }
           }}
           onDownload={() => {
@@ -386,7 +386,7 @@ export function WriterWorkspace() {
         )}
         <div className="rounded-lg border border-[#e5e7ef] bg-[#f9fafc] px-3 py-2.5 text-[11px] text-[#64748b] flex items-center gap-2">
           <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-          Alles blijft lokaal op dit apparaat. Niets wordt opgeslagen of verzonden.
+          Alles blijft op je apparaat. Niets wordt opgeslagen of verstuurd.
         </div>
         <div className="text-[11px] text-[#94a3b8] flex gap-3 px-1">
           <span>Gewist: {stats.scrubbed}</span>
@@ -631,12 +631,12 @@ function FindingsCard({ spans, score }: { spans: PiiSpan[]; score: number }) {
         </span>
         <div className="flex-1">
           <div className="text-[14px] font-semibold text-[#0f172a]">
-            {total > 0 ? "Gevoelige informatie gevonden" : "Geen gevoelige informatie"}
+            {total > 0 ? "Gevoelige informatie gevonden" : "Geen gevoelige informatie gevonden"}
           </div>
           <div className="text-[12px] text-[#64748b] leading-snug mt-0.5">
             {total > 0
-              ? "Wij hebben persoonsgegevens en/of gevoelige context in je tekst gevonden."
-              : "PiM heeft nog geen persoonsgegevens gevonden in deze tekst."}
+              ? "PiM vond persoonsgegevens en gevoelige context in je tekst."
+              : "Je tekst is schoon — er staan geen persoonsgegevens in."}
           </div>
         </div>
         <div className="shrink-0 text-right">
@@ -648,7 +648,7 @@ function FindingsCard({ spans, score }: { spans: PiiSpan[]; score: number }) {
       </div>
       <div className="px-4 pb-2">
         <div className="text-[11px] font-semibold uppercase tracking-wider text-[#64748b] px-1 pb-2 flex items-center justify-between">
-          <span>Wat we hebben gevonden</span>
+          <span>Wat PiM vond</span>
           <span className="text-[#94a3b8]">{total}</span>
         </div>
         <ul className="divide-y divide-[#eef0f5] border-t border-[#eef0f5]">
@@ -697,7 +697,7 @@ function SafeVersionCard({
           <div className="leading-tight">
             <div className="text-[13px] font-semibold text-[#0f172a]">Veilige versie</div>
             <div className="text-[11px] text-[#64748b]">
-              {hasFindings ? "Klaar om te gebruiken" : "Nog geen wijzigingen nodig"}
+              {hasFindings ? "Klaar om te delen" : "Nog niets aangepast"}
             </div>
           </div>
         </div>
