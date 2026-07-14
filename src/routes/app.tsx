@@ -6,7 +6,7 @@ import { isProductMode, type ProductMode } from "@/components/pim/product/types"
  * Lokale, dependencyvrije validator voor de ?mode= search param.
  * Accepteert uitsluitend "quick" | "start" | "write"; fallback = "quick".
  */
-function validateAppSearch(input: Record<string, unknown>): { mode: ProductMode } {
+export function validateAppSearch(input: Record<string, unknown>): { mode: ProductMode } {
   const raw = input?.mode;
   return { mode: isProductMode(raw) ? raw : "quick" };
 }
