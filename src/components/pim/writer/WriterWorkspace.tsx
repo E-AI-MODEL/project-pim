@@ -377,7 +377,12 @@ export function WriterWorkspace() {
 
       {/* RIGHT, privacy panel */}
       <aside className="space-y-3">
-        <FindingsCard spans={foundSpans} score={riskScore} />
+        <FindingsCard
+          spans={foundSpans}
+          score={riskScore}
+          analyzed={hasAnalyzed}
+          stale={analysisStale}
+        />
         <SafeVersionCard
           safeText={safeText}
           hasFindings={totalFindings > 0}
@@ -627,7 +632,17 @@ const GROUPS: readonly Group[] = [
   },
 ];
 
-function FindingsCard({ spans, score }: { spans: PiiSpan[]; score: number }) {
+function FindingsCard({
+  spans,
+  score,
+  analyzed,
+  stale,
+}: {
+  spans: PiiSpan[];
+  score: number;
+  analyzed: boolean;
+  stale: boolean;
+}) {
   const counts = new Map<string, number>();
   for (const s of spans) {
     for (const g of GROUPS) {
@@ -638,6 +653,30 @@ function FindingsCard({ spans, score }: { spans: PiiSpan[]; score: number }) {
     }
   }
   const total = spans.length;
+  const title = !analyzed
+    ? "Nog niet geanalyseerd"
+    : stale
+      ? "Analyse verouderd"
+      : total > 0
+        ? "Gevoelige informatie gevonden"
+        : "Geen gevoelige informatie gevonden";
+  const subtitle = !analyzed
+    ? "Klik op Analyseer om deze tekst te controleren."
+    : stale
+      ? "Je hebt daarna nog tekst aangepast. Analyseer opnieuw."
+      : total > 0
+        ? "PiM vond persoonsgegevens en gevoelige context in je tekst."
+        : "Je tekst is schoon, er staan geen persoonsgegevens in.";
+  const iconTone = !analyzed || stale
+    ? "bg-amber-50 text-amber-600"
+    : total > 0
+      ? "bg-[#6d4aff]/10 text-[#6d4aff]"
+      : "bg-emerald-50 text-emerald-600";
+  const scoreTone = !analyzed || stale
+    ? "text-amber-600"
+    : total > 0
+      ? "text-[#6d4aff]"
+      : "text-emerald-600";
   return (
     <div className="rounded-2xl border border-[#e5e7ef] bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] overflow-hidden">
       <div className="px-4 py-3 border-b border-[#eef0f5] flex items-center justify-between">
@@ -646,22 +685,16 @@ function FindingsCard({ spans, score }: { spans: PiiSpan[]; score: number }) {
         </div>
       </div>
       <div className="px-4 py-4 flex items-start gap-3">
-        <span className={`shrink-0 inline-flex h-9 w-9 items-center justify-center rounded-lg ${total > 0 ? "bg-[#6d4aff]/10 text-[#6d4aff]" : "bg-emerald-50 text-emerald-600"}`}>
+          <span className={`shrink-0 inline-flex h-9 w-9 items-center justify-center rounded-lg ${iconTone}`}>
           <ShieldCheck className="h-5 w-5" />
         </span>
         <div className="flex-1">
-          <div className="text-[14px] font-semibold text-[#0f172a]">
-            {total > 0 ? "Gevoelige informatie gevonden" : "Geen gevoelige informatie gevonden"}
-          </div>
-          <div className="text-[12px] text-[#64748b] leading-snug mt-0.5">
-            {total > 0
-              ? "PiM vond persoonsgegevens en gevoelige context in je tekst."
-              : "Je tekst is schoon, er staan geen persoonsgegevens in."}
-          </div>
+          <div className="text-[14px] font-semibold text-[#0f172a]">{title}</div>
+          <div className="text-[12px] text-[#64748b] leading-snug mt-0.5">{subtitle}</div>
         </div>
         <div className="shrink-0 text-right">
-          <div className={`text-2xl font-bold leading-none ${total > 0 ? "text-[#6d4aff]" : "text-emerald-600"}`}>
-            {score}
+          <div className={`text-2xl font-bold leading-none ${scoreTone}`}>
+            {analyzed ? score : "–"}
           </div>
           <div className="text-[10px] uppercase tracking-wider text-[#94a3b8] mt-0.5">punten</div>
         </div>
