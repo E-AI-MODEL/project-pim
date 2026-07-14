@@ -104,30 +104,28 @@ export function ResultPanel({
     <section className="space-y-4 animate-fade-in">
       <SafetyVerdictCard verdict={decision.verdict} reason={decision.reason} />
       {decision.verdict === "BLOCK" && directSpans.length > 0 && (
-        <div className="rounded-xl border border-red-500/30 bg-red-500/5 p-4 space-y-2">
-          <div className="text-[11px] font-semibold uppercase tracking-wider text-red-300">
+        <div className="rounded-xl border border-rose-200 bg-rose-50/60 p-3 space-y-2">
+          <div className="text-[11px] font-semibold uppercase tracking-wider text-rose-700">
             PiM herkende deze gegevens in je tekst
           </div>
           <FindingChips spans={directSpans} />
-          <div className="text-xs text-muted-foreground pt-1 leading-relaxed">
-            <span className="text-foreground font-medium">Volgende stap:</span> verwijder deze
-            gegevens, of zet de modus op{" "}
-            <span className="text-foreground font-medium">Anoniem</span> — PiM voert de controle dan
-            automatisch opnieuw uit.
-          </div>
+          <p className="text-[12px] text-[#475569] leading-relaxed">
+            Verwijder deze gegevens of zet de modus op{" "}
+            <span className="font-medium text-[#0f172a]">Anoniem</span> — PiM controleert opnieuw.
+          </p>
         </div>
       )}
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-2 flex-wrap">
-          <div className="inline-flex rounded-lg border border-border/50 bg-card/40 p-0.5">
+          <div className="inline-flex rounded-lg border border-[#e5e7ef] bg-[#f6f7fb] p-0.5">
             <button
               type="button"
               onClick={() => setTab("original")}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${tab === "original" ? "bg-primary/20 text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${tab === "original" ? "bg-white text-[#0f172a] shadow-sm" : "text-[#64748b] hover:text-[#0f172a]"}`}
             >
-              Origineel met markeringen
+              Origineel
               {allSpans.length > 0 && (
-                <span className="ml-1.5 text-[10px] font-plex-mono text-muted-foreground">
+                <span className="ml-1.5 text-[10px] font-plex-mono text-[#94a3b8]">
                   {allSpans.length}
                 </span>
               )}
@@ -136,17 +134,15 @@ export function ResultPanel({
               type="button"
               onClick={() => setTab("safe")}
               disabled={decision.verdict === "BLOCK"}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${tab === "safe" ? "bg-primary/20 text-foreground" : "text-muted-foreground hover:text-foreground"} disabled:opacity-40 disabled:cursor-not-allowed`}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${tab === "safe" ? "bg-white text-[#0f172a] shadow-sm" : "text-[#64748b] hover:text-[#0f172a]"} disabled:opacity-40 disabled:cursor-not-allowed`}
             >
-              Veilige versie
+              Veilig
             </button>
           </div>
-          <div className="text-[10px] text-muted-foreground">
-            {tab === "safe"
-              ? isEdited
-                ? `Handmatig bewerkt — live opnieuw beoordeeld: ${liveSafeVerdict ?? "—"}`
-                : "Bewerkbaar — wijzigingen worden direct opnieuw gecontroleerd"
-              : "Bewerkbaar — markeringen verversen mee tijdens typen"}
+          <div className="text-[10px] text-[#94a3b8]">
+            {tab === "safe" && isEdited
+              ? `Bewerkt · opnieuw beoordeeld: ${liveSafeVerdict ?? "—"}`
+              : "Bewerkbaar — controle vernieuwt mee"}
           </div>
         </div>
         {tab === "original" ? (
@@ -155,7 +151,7 @@ export function ResultPanel({
               <textarea
                 value={originalText}
                 onChange={(e) => onOriginalChange(e.target.value)}
-                className="w-full min-h-[120px] rounded-xl border border-border/50 bg-background/60 p-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+                className="w-full min-h-[120px] rounded-xl border border-[#e5e7ef] bg-white text-[#0f172a] p-3 text-sm outline-none focus:ring-2 focus:ring-[#6d4aff]/30"
               />
             )}
             <TextHighlighter text={originalText} spans={liveOriginalSpans} />
@@ -164,7 +160,7 @@ export function ResultPanel({
           <textarea
             value={editedSafe}
             onChange={(e) => setEditedSafe(e.target.value)}
-            className="w-full min-h-[160px] rounded-xl border border-border/50 bg-background/60 p-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+            className="w-full min-h-[160px] rounded-xl border border-[#e5e7ef] bg-white text-[#0f172a] p-3 text-sm outline-none focus:ring-2 focus:ring-[#6d4aff]/30"
           />
         )}
       </div>
@@ -178,7 +174,7 @@ export function ResultPanel({
         busy={busy}
       />
       {egressMsg && (
-        <div className="rounded-lg border border-border/50 bg-card/45 px-3 py-2 text-xs text-muted-foreground">
+        <div className="rounded-lg border border-[#e5e7ef] bg-white px-3 py-2 text-xs text-[#475569]">
           {egressMsg}
         </div>
       )}
