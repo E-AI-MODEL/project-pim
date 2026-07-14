@@ -20,12 +20,13 @@ export function StartMode() {
     setMode,
     action,
     setAction,
+    nerSpans,
   } = useProductShell();
 
   useEffect(() => {
     if (!text.trim()) return;
-    evaluate({ text, mode, autoRepair: true });
-  }, [evaluate, text, mode]);
+    evaluate({ text, mode, extraSpans: nerSpans, autoRepair: true });
+  }, [evaluate, text, mode, nerSpans]);
 
   const previewedDecision = useMemo(
     () => (state.signals ? previewDecision(action) : null),
@@ -46,7 +47,9 @@ export function StartMode() {
       <InputPanel
         text={text}
         onTextChange={setText}
-        onStart={() => text.trim() && evaluate({ text, mode, autoRepair: true })}
+        onStart={() =>
+          text.trim() && evaluate({ text, mode, extraSpans: nerSpans, autoRepair: true })
+        }
         onExample={(e: Example) => setText(e.text)}
         compact
         mode={mode}
