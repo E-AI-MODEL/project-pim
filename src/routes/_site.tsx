@@ -27,9 +27,15 @@ function SiteFooter() {
           <span>Project PiM — volledig lokaal, zonder tracking</span>
         </div>
         <div className="flex items-center gap-4">
-          <Link to="/over" className="hover:text-foreground">Over</Link>
-          <Link to="/trust" className="hover:text-foreground">Trust</Link>
-          <Link to="/app" search={{ mode: "quick" }} className="hover:text-foreground">App</Link>
+          <Link to="/over" className="hover:text-foreground">
+            Over
+          </Link>
+          <Link to="/trust" className="hover:text-foreground">
+            Trust
+          </Link>
+          <Link to="/app" search={{ mode: "quick" }} className="hover:text-foreground">
+            App
+          </Link>
         </div>
       </div>
     </footer>

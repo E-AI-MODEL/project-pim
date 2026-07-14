@@ -72,7 +72,12 @@ const MORE: Group = {
     },
     { kind: "link", to: "/modes", label: COPY.menuModes, icon: <Layers className="h-4 w-4" /> },
     { kind: "link", to: "/flags", label: COPY.menuFlags, icon: <Flag className="h-4 w-4" /> },
-    { kind: "link", to: "/trust", label: COPY.menuTrust, icon: <ShieldCheck className="h-4 w-4" /> },
+    {
+      kind: "link",
+      to: "/trust",
+      label: COPY.menuTrust,
+      icon: <ShieldCheck className="h-4 w-4" />,
+    },
     {
       kind: "link",
       to: "/compliance",
@@ -163,9 +168,10 @@ export function BurgerMenu() {
 
   const handleNewText = () => {
     // Bevestig alleen wanneer de writer echt tekstinhoud heeft.
-    const cached = typeof document !== "undefined"
-      ? (document.body.getAttribute("data-pim-writer-has-content") === "1")
-      : false;
+    const cached =
+      typeof document !== "undefined"
+        ? document.body.getAttribute("data-pim-writer-has-content") === "1"
+        : false;
     if (cached) {
       const ok = window.confirm(
         "Er staat tekst in de schrijfmodus. Weet je zeker dat je alles wilt " +
