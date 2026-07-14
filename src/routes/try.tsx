@@ -596,13 +596,14 @@ function TryPage() {
   };
 
   // Beslissing voor huidige actie via engine (previewDecision) — géén egress.
+  // We hangen expliciet aan de engine-state-velden die de beslissing bepalen
+  // (guard, decisionSignals, payloadType) zodat React re-runt bij elke evaluate.
   const decision = useMemo(() => {
     const t0 = performance.now();
     const d = engine.previewDecision(action);
     queueMicrotask(() => tick("decide", performance.now() - t0));
     return d;
-    // engine.state is the trigger; engine itself is stable.
-  }, [engine, action, engine.state, tick]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [engine, action, guard, decisionSignals, engine.state.payloadType, tick]);
 
   const onAct = async () => {
     setEgress(null);
