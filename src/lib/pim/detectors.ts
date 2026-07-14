@@ -90,7 +90,7 @@ const RULES: RuleDef[] = [
     id: "rule.name",
     category: "name",
     regex:
-      /\b(?:[A-Z][a-zà-ÿ]{2,})(?:\s+(?:van|de|der|den|ten|ter)\s+[A-Z][a-zà-ÿ]+|\s+[A-Z][a-zà-ÿ]{2,})\b/g,
+      /\b[A-Z][a-zà-ÿ]{2,}(?:\s+(?:van|de|der|den|ten|ter))*\s+[A-Z][a-zà-ÿ]+(?:\s+(?:van|de|der|den|ten|ter)\s+[A-Z][a-zà-ÿ]+)?\b/g,
     confidence: 0.6,
   },
   {
