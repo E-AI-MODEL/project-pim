@@ -23,13 +23,8 @@ import type { PiiCategory } from "@/lib/pim";
  * zelf géén AdvancedPanel meer hoeft te tonen.
  */
 export function ExpertPanel({ mode }: { mode: ProductMode }) {
-  const {
-    settings,
-    writerAutoRedact,
-    setWriterAutoRedact,
-    writerStrict,
-    setWriterStrict,
-  } = useProductShell();
+  const { settings, writerAutoRedact, setWriterAutoRedact, writerStrict, setWriterStrict } =
+    useProductShell();
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -67,9 +62,7 @@ export function ExpertPanel({ mode }: { mode: ProductMode }) {
         data-testid="expert-panel"
       >
         <SheetHeader>
-          <SheetTitle className="font-serif-display text-[#e8edf3]">
-            Expertinstellingen
-          </SheetTitle>
+          <SheetTitle className="font-serif-display text-[#e8edf3]">Expertinstellingen</SheetTitle>
           <SheetDescription className="text-[#e8edf3]/60 text-xs">
             Detectielagen, model, drempels en categorieën — geldt voor alle modi.
           </SheetDescription>
