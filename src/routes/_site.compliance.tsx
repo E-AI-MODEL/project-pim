@@ -9,7 +9,7 @@ import {
   RELEASE_1_PROFILES,
 } from "@/lib/pim";
 
-export const Route = createFileRoute("/compliance")({
+export const Route = createFileRoute("/_site/compliance")({
   head: () => ({
     meta: [
       { title: "Compliance — Project PiM" },

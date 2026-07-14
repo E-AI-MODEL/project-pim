@@ -3,7 +3,7 @@ import { PageHero } from "@/components/pim/PageHero";
 import { PIM_FLAGS } from "@/lib/pim/flags";
 import { ShieldX, ShieldAlert, ShieldCheck } from "lucide-react";
 
-export const Route = createFileRoute("/flags")({
+export const Route = createFileRoute("/_site/flags")({
   head: () => ({
     meta: [
       { title: "Beslissingscodes — Project PiM" },

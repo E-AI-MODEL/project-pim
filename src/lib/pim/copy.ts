@@ -89,7 +89,7 @@ export const COPY = {
   pillTagline: "De privacy-engine draait in je browser",
 
   // Burgermenu (§7.2)
-  menuNewTest: "Nieuwe controle",
+  menuNewTest: "Nieuwe tekst",
   menuExamples: "Voorbeelden",
   menuWriter: "Schrijven",
   menuExpertLab: "Tech-expert lab",

@@ -63,6 +63,16 @@ export function ProductShell({ mode }: { mode: ProductMode }) {
     return () => window.removeEventListener("pim:reset", onReset);
   }, [reset]);
 
+  // Slice C.1 — BurgerMenu leest deze flag om te weten of "Nieuwe tekst"
+  // een bevestiging moet vragen. Alleen writer-inhoud is duurbaar; quick/start
+  // is een tekstveld en verdient geen extra vraag.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const has = writerContent && writerContent.replace(/<[^>]*>/g, "").trim().length > 0;
+    document.body.setAttribute("data-pim-writer-has-content", has ? "1" : "0");
+    return () => document.body.removeAttribute("data-pim-writer-has-content");
+  }, [writerContent]);
+
   const ctx = useMemo(
     () => ({
       engineState,

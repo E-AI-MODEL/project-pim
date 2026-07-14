@@ -1,6 +1,5 @@
 import { Link } from "@tanstack/react-router";
 import { BurgerMenu } from "@/components/pim/start-go/BurgerMenu";
-import { TrustBadge } from "@/components/pim/start-go/TrustBadge";
 import { LocalStatusPill } from "@/components/pim/start-go/LocalStatusPill";
 import { ModeSwitcher } from "./ModeSwitcher";
 import type { ProductMode } from "./types";
@@ -23,7 +22,6 @@ export function AppHeader({ mode }: { mode: ProductMode }) {
           <div className="hidden md:block">
             <LocalStatusPill />
           </div>
-          <TrustBadge />
           <BurgerMenu />
         </div>
       </div>

@@ -5,7 +5,7 @@ import { MonitorShell } from "@/components/pim/start-go/MonitorShell";
 import { UspGrid } from "@/components/pim/start-go/UspGrid";
 import { AnonPseudoStrip } from "@/components/pim/start-go/AnonPseudoStrip";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/_site/")({
   head: () => ({
     meta: [
       { title: "Project PiM — Controleer je tekst op privacy voordat je hem deelt" },

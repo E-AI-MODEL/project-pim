@@ -1,9 +1,7 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
-import { Shield } from "lucide-react";
 import { useEffect } from "react";
 import { installRuntimeHardening } from "@/lib/pim/runtimeHardening";
 import { runSelfTest } from "@/lib/pim/selfTest";
-import { StartHeader } from "@/components/pim/start-go/StartHeader";
 
 import appCss from "../styles.css?url";
 
@@ -118,37 +116,5 @@ function RootComponent() {
     runSelfTest().catch((e) => console.error("[PIM self-test] error", e));
   }, []);
 
-  return (
-    <div className="min-h-screen flex flex-col">
-      <StartHeader />
-      <main className="flex-1">
-        <Outlet />
-      </main>
-      <SiteFooter />
-    </div>
-  );
-}
-
-function SiteFooter() {
-  return (
-    <footer className="border-t border-border/40 mt-16 py-6">
-      <div className="mx-auto max-w-5xl px-6 flex flex-wrap items-center justify-between gap-3 text-[11px] text-muted-foreground">
-        <div className="flex items-center gap-2">
-          <Shield className="h-3.5 w-3.5 text-primary" />
-          <span>Project PiM — volledig lokaal, zonder tracking</span>
-        </div>
-        <div className="flex items-center gap-4">
-          <Link to="/over" className="hover:text-foreground">
-            Over
-          </Link>
-          <Link to="/trust" className="hover:text-foreground">
-            Trust
-          </Link>
-          <Link to="/try" className="hover:text-foreground">
-            Expert lab
-          </Link>
-        </div>
-      </div>
-    </footer>
-  );
+  return <Outlet />;
 }

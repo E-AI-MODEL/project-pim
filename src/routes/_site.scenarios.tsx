@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import type { ComponentType, SVGProps } from "react";
 
-export const Route = createFileRoute("/scenarios")({
+export const Route = createFileRoute("/_site/scenarios")({
   head: () => ({
     meta: [
       { title: "Scenarios — Waar PiM in de onderwijspipeline past" },

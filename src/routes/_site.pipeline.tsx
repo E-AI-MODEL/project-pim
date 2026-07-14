@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { PageHero } from "@/components/pim/PageHero";
 
-export const Route = createFileRoute("/pipeline")({
+export const Route = createFileRoute("/_site/pipeline")({
   head: () => ({
     meta: [
       { title: "Hoe de pipeline werkt — Project PiM" },

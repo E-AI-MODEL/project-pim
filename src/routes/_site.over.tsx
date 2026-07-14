@@ -14,7 +14,7 @@ import {
 import { PageHero } from "@/components/pim/PageHero";
 import { PrincipleBadge } from "@/components/pim/PrincipleBadge";
 
-export const Route = createFileRoute("/over")({
+export const Route = createFileRoute("/_site/over")({
   head: () => ({
     meta: [
       { title: "Over Project PiM" },

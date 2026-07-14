@@ -1,5 +1,7 @@
 // Spec §7.2 — menu-items in vaste volgorde.
-import { Link, useRouterState } from "@tanstack/react-router";
+// Slice C.1 — primaire taken los van technische items. Secundaire
+// (expert/diagnostiek) staan onder "Meer", standaard ingeklapt.
+import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import {
   Menu,
   X,
@@ -16,6 +18,8 @@ import {
   FilePlus2,
   Trash2,
   Loader2,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
@@ -25,11 +29,68 @@ import { clearAllLocalData } from "@/lib/pim";
 type Item =
   | { kind: "link"; to: string; label: string; icon: React.ReactNode; hash?: string }
   | { kind: "event"; event: string; label: string; icon: React.ReactNode }
+  | { kind: "new-text"; label: string; icon: React.ReactNode }
   | { kind: "clear-storage"; label: string; icon: React.ReactNode };
 
-type Group = { label: string; items: Item[] };
+type Group = { label: string; items: Item[]; collapsible?: boolean };
 
-const GROUPS: Group[] = [
+const PRIMARY: Group = {
+  label: "Werken met tekst",
+  items: [
+    { kind: "new-text", label: COPY.menuNewTest, icon: <FilePlus2 className="h-4 w-4" /> },
+    {
+      kind: "link",
+      to: "/schrijven",
+      label: COPY.menuWriter,
+      icon: <PenLine className="h-4 w-4" />,
+    },
+    {
+      kind: "event",
+      event: "pim:open-advanced",
+      label: COPY.menuSettings,
+      icon: <Settings className="h-4 w-4" />,
+    },
+    { kind: "link", to: "/over", label: COPY.menuAbout, icon: <Info className="h-4 w-4" /> },
+  ],
+};
+
+const MORE: Group = {
+  label: "Expert & diagnostiek",
+  collapsible: true,
+  items: [
+    {
+      kind: "event",
+      event: "pim:open-diagnostics",
+      label: "Diagnostiek",
+      icon: <FlaskConical className="h-4 w-4" />,
+    },
+    {
+      kind: "link",
+      to: "/pipeline",
+      label: COPY.menuPipeline,
+      icon: <Workflow className="h-4 w-4" />,
+    },
+    { kind: "link", to: "/modes", label: COPY.menuModes, icon: <Layers className="h-4 w-4" /> },
+    { kind: "link", to: "/flags", label: COPY.menuFlags, icon: <Flag className="h-4 w-4" /> },
+    {
+      kind: "link",
+      to: "/trust",
+      label: COPY.menuTrust,
+      icon: <ShieldCheck className="h-4 w-4" />,
+    },
+    {
+      kind: "link",
+      to: "/compliance",
+      label: COPY.menuCompliance,
+      icon: <CheckCircle className="h-4 w-4" />,
+    },
+    { kind: "clear-storage", label: COPY.menuClearStorage, icon: <Trash2 className="h-4 w-4" /> },
+  ],
+};
+
+const GROUPS: Group[] = [PRIMARY, MORE];
+// Legacy const kept for downstream reference; unused elsewhere.
+const _LEGACY_GROUPS: Group[] = [
   {
     label: "Werken met tekst",
     items: [
@@ -101,7 +162,31 @@ const GROUPS: Group[] = [
 export function BurgerMenu() {
   const [open, setOpen] = useState(false);
   const [clearing, setClearing] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
+
+  const handleNewText = () => {
+    // Bevestig alleen wanneer de writer echt tekstinhoud heeft.
+    const cached =
+      typeof document !== "undefined"
+        ? document.body.getAttribute("data-pim-writer-has-content") === "1"
+        : false;
+    if (cached) {
+      const ok = window.confirm(
+        "Er staat tekst in de schrijfmodus. Weet je zeker dat je alles wilt " +
+          "wissen en met een nieuwe tekst wilt beginnen?",
+      );
+      if (!ok) return;
+    }
+    setOpen(false);
+    // Reset engine + invoer via bestaande handler in ProductShell.
+    window.dispatchEvent(new CustomEvent("pim:reset"));
+    // Navigeer naar Controleren-modus.
+    navigate({ to: "/app", search: { mode: "quick" } });
+    // Focushint voor het hoofdtekstveld.
+    setTimeout(() => window.dispatchEvent(new CustomEvent("pim:focus-primary")), 80);
+  };
 
   const handleClearStorage = async () => {
     if (clearing) return;
@@ -187,10 +272,26 @@ export function BurgerMenu() {
                     key={group.label}
                     className={gi > 0 ? "mt-2 pt-2 border-t border-border/30" : ""}
                   >
-                    <h3 className="px-4 pt-1 pb-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
-                      {group.label}
-                    </h3>
-                    <ul>
+                    {group.collapsible ? (
+                      <button
+                        type="button"
+                        onClick={() => setMoreOpen((v) => !v)}
+                        aria-expanded={moreOpen}
+                        className="w-full flex items-center justify-between px-4 pt-1 pb-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70 hover:text-foreground"
+                      >
+                        <span>{group.label}</span>
+                        {moreOpen ? (
+                          <ChevronDown className="h-3 w-3" />
+                        ) : (
+                          <ChevronRight className="h-3 w-3" />
+                        )}
+                      </button>
+                    ) : (
+                      <h3 className="px-4 pt-1 pb-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+                        {group.label}
+                      </h3>
+                    )}
+                    <ul hidden={group.collapsible && !moreOpen}>
                       {group.items.map((item, i) => (
                         <li key={`${item.label}-${i}`}>
                           {item.kind === "link" ? (
@@ -228,6 +329,16 @@ export function BurgerMenu() {
                                 )}
                               </span>
                               {clearing ? "Bezig met wissen…" : item.label}
+                            </button>
+                          ) : item.kind === "new-text" ? (
+                            <button
+                              type="button"
+                              data-testid="menu-new-text"
+                              onClick={handleNewText}
+                              className="w-full text-left flex items-center gap-3 px-4 py-2 text-[13px] font-medium rounded-md mx-2 my-0.5 text-foreground/80 hover:bg-accent/40 hover:text-foreground transition-colors"
+                            >
+                              <span className="text-muted-foreground">{item.icon}</span>
+                              {item.label}
                             </button>
                           ) : (
                             <button
