@@ -14,18 +14,18 @@ interface Props {
 export function DetailsDrawer({ decision, signals, integrity }: Props) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="rounded-md border border-border/40 bg-card/40">
+    <div className="rounded-lg border border-[#e5e7ef] bg-white">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm font-medium hover:bg-accent/20"
+        className="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm font-medium text-[#334155] hover:bg-[#f6f7fb]"
         aria-expanded={open}
       >
-        <span className="text-primary">{COPY.detailsLink}</span>
+        <span className="text-[#0f172a]">{COPY.detailsLink}</span>
         {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
       </button>
       {open && (
-        <div className="px-4 pb-4 space-y-3 text-xs">
+        <div className="px-4 pb-4 space-y-3 text-xs text-[#334155]">
           <Row k="Verdict" v={`${decision.verdict} · ${decision.flag ?? decision.reasonCode}`} />
           <Row k="Profiel" v={decision.profileId ?? "-"} />
           <Row k="Payload-type" v={decision.payloadType ?? "-"} />
@@ -50,7 +50,7 @@ export function DetailsDrawer({ decision, signals, integrity }: Props) {
                 : integrity.map((r) => `${r.key}=${r.status}`).join(" · ")
             }
           />
-          <p className="text-[11px] text-muted-foreground pt-1 border-t border-border/30">
+          <p className="text-[11px] text-[#64748b] pt-1 border-t border-[#eef0f5]">
             Audit-metadata (timestamp + verdict + ruleId) is bewaard. Geen ruwe tekst, geen
             drafttekst, geen mapping.
           </p>
