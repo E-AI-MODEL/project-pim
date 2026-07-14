@@ -26,7 +26,7 @@ import {
   MODEL_CATALOG,
 } from "@/lib/pim";
 
-export const Route = createFileRoute("/trust")({
+export const Route = createFileRoute("/_site/trust")({
   head: () => ({
     meta: [
       { title: "Vertrouwensdashboard — Project PiM" },

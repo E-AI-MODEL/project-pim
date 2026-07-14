@@ -11,7 +11,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 
-export const Route = createFileRoute("/architecture")({
+export const Route = createFileRoute("/_site/architecture")({
   head: () => ({
     meta: [
       { title: "Architectuur — Project PiM" },

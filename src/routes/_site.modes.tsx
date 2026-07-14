@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageHero } from "@/components/pim/PageHero";
 import { Check, X, ArrowRight } from "lucide-react";
 
-export const Route = createFileRoute("/modes")({
+export const Route = createFileRoute("/_site/modes")({
   head: () => ({
     meta: [
       { title: "Anoniem of pseudoniem — Project PiM" },

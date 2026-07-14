@@ -10,26 +10,21 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TryRouteImport } from './routes/try'
-import { Route as TrustRouteImport } from './routes/trust'
 import { Route as SchrijvenRouteImport } from './routes/schrijven'
-import { Route as ScenariosRouteImport } from './routes/scenarios'
-import { Route as PipelineRouteImport } from './routes/pipeline'
-import { Route as OverRouteImport } from './routes/over'
-import { Route as ModesRouteImport } from './routes/modes'
-import { Route as FlagsRouteImport } from './routes/flags'
-import { Route as ComplianceRouteImport } from './routes/compliance'
-import { Route as ArchitectureRouteImport } from './routes/architecture'
 import { Route as AppRouteImport } from './routes/app'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as SiteIndexRouteImport } from './routes/_site.index'
+import { Route as SiteTrustRouteImport } from './routes/_site.trust'
+import { Route as SiteScenariosRouteImport } from './routes/_site.scenarios'
+import { Route as SitePipelineRouteImport } from './routes/_site.pipeline'
+import { Route as SiteOverRouteImport } from './routes/_site.over'
+import { Route as SiteModesRouteImport } from './routes/_site.modes'
+import { Route as SiteFlagsRouteImport } from './routes/_site.flags'
+import { Route as SiteComplianceRouteImport } from './routes/_site.compliance'
+import { Route as SiteArchitectureRouteImport } from './routes/_site.architecture'
 
 const TryRoute = TryRouteImport.update({
   id: '/try',
   path: '/try',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TrustRoute = TrustRouteImport.update({
-  id: '/trust',
-  path: '/trust',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SchrijvenRoute = SchrijvenRouteImport.update({
@@ -37,100 +32,106 @@ const SchrijvenRoute = SchrijvenRouteImport.update({
   path: '/schrijven',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ScenariosRoute = ScenariosRouteImport.update({
-  id: '/scenarios',
-  path: '/scenarios',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PipelineRoute = PipelineRouteImport.update({
-  id: '/pipeline',
-  path: '/pipeline',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OverRoute = OverRouteImport.update({
-  id: '/over',
-  path: '/over',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ModesRoute = ModesRouteImport.update({
-  id: '/modes',
-  path: '/modes',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FlagsRoute = FlagsRouteImport.update({
-  id: '/flags',
-  path: '/flags',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ComplianceRoute = ComplianceRouteImport.update({
-  id: '/compliance',
-  path: '/compliance',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ArchitectureRoute = ArchitectureRouteImport.update({
-  id: '/architecture',
-  path: '/architecture',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AppRoute = AppRouteImport.update({
   id: '/app',
   path: '/app',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
+const SiteIndexRoute = SiteIndexRouteImport.update({
+  id: '/_site/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SiteTrustRoute = SiteTrustRouteImport.update({
+  id: '/_site/trust',
+  path: '/trust',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SiteScenariosRoute = SiteScenariosRouteImport.update({
+  id: '/_site/scenarios',
+  path: '/scenarios',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitePipelineRoute = SitePipelineRouteImport.update({
+  id: '/_site/pipeline',
+  path: '/pipeline',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SiteOverRoute = SiteOverRouteImport.update({
+  id: '/_site/over',
+  path: '/over',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SiteModesRoute = SiteModesRouteImport.update({
+  id: '/_site/modes',
+  path: '/modes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SiteFlagsRoute = SiteFlagsRouteImport.update({
+  id: '/_site/flags',
+  path: '/flags',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SiteComplianceRoute = SiteComplianceRouteImport.update({
+  id: '/_site/compliance',
+  path: '/compliance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SiteArchitectureRoute = SiteArchitectureRouteImport.update({
+  id: '/_site/architecture',
+  path: '/architecture',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
   '/app': typeof AppRoute
-  '/architecture': typeof ArchitectureRoute
-  '/compliance': typeof ComplianceRoute
-  '/flags': typeof FlagsRoute
-  '/modes': typeof ModesRoute
-  '/over': typeof OverRoute
-  '/pipeline': typeof PipelineRoute
-  '/scenarios': typeof ScenariosRoute
   '/schrijven': typeof SchrijvenRoute
-  '/trust': typeof TrustRoute
   '/try': typeof TryRoute
+  '/architecture': typeof SiteArchitectureRoute
+  '/compliance': typeof SiteComplianceRoute
+  '/flags': typeof SiteFlagsRoute
+  '/modes': typeof SiteModesRoute
+  '/over': typeof SiteOverRoute
+  '/pipeline': typeof SitePipelineRoute
+  '/scenarios': typeof SiteScenariosRoute
+  '/trust': typeof SiteTrustRoute
+  '/': typeof SiteIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
   '/app': typeof AppRoute
-  '/architecture': typeof ArchitectureRoute
-  '/compliance': typeof ComplianceRoute
-  '/flags': typeof FlagsRoute
-  '/modes': typeof ModesRoute
-  '/over': typeof OverRoute
-  '/pipeline': typeof PipelineRoute
-  '/scenarios': typeof ScenariosRoute
   '/schrijven': typeof SchrijvenRoute
-  '/trust': typeof TrustRoute
   '/try': typeof TryRoute
+  '/architecture': typeof SiteArchitectureRoute
+  '/compliance': typeof SiteComplianceRoute
+  '/flags': typeof SiteFlagsRoute
+  '/modes': typeof SiteModesRoute
+  '/over': typeof SiteOverRoute
+  '/pipeline': typeof SitePipelineRoute
+  '/scenarios': typeof SiteScenariosRoute
+  '/trust': typeof SiteTrustRoute
+  '/': typeof SiteIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
   '/app': typeof AppRoute
-  '/architecture': typeof ArchitectureRoute
-  '/compliance': typeof ComplianceRoute
-  '/flags': typeof FlagsRoute
-  '/modes': typeof ModesRoute
-  '/over': typeof OverRoute
-  '/pipeline': typeof PipelineRoute
-  '/scenarios': typeof ScenariosRoute
   '/schrijven': typeof SchrijvenRoute
-  '/trust': typeof TrustRoute
   '/try': typeof TryRoute
+  '/_site/architecture': typeof SiteArchitectureRoute
+  '/_site/compliance': typeof SiteComplianceRoute
+  '/_site/flags': typeof SiteFlagsRoute
+  '/_site/modes': typeof SiteModesRoute
+  '/_site/over': typeof SiteOverRoute
+  '/_site/pipeline': typeof SitePipelineRoute
+  '/_site/scenarios': typeof SiteScenariosRoute
+  '/_site/trust': typeof SiteTrustRoute
+  '/_site/': typeof SiteIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/'
     | '/app'
+    | '/schrijven'
+    | '/try'
     | '/architecture'
     | '/compliance'
     | '/flags'
@@ -138,13 +139,13 @@ export interface FileRouteTypes {
     | '/over'
     | '/pipeline'
     | '/scenarios'
-    | '/schrijven'
     | '/trust'
-    | '/try'
+    | '/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
     | '/app'
+    | '/schrijven'
+    | '/try'
     | '/architecture'
     | '/compliance'
     | '/flags'
@@ -152,38 +153,37 @@ export interface FileRouteTypes {
     | '/over'
     | '/pipeline'
     | '/scenarios'
-    | '/schrijven'
     | '/trust'
-    | '/try'
+    | '/'
   id:
     | '__root__'
-    | '/'
     | '/app'
-    | '/architecture'
-    | '/compliance'
-    | '/flags'
-    | '/modes'
-    | '/over'
-    | '/pipeline'
-    | '/scenarios'
     | '/schrijven'
-    | '/trust'
     | '/try'
+    | '/_site/architecture'
+    | '/_site/compliance'
+    | '/_site/flags'
+    | '/_site/modes'
+    | '/_site/over'
+    | '/_site/pipeline'
+    | '/_site/scenarios'
+    | '/_site/trust'
+    | '/_site/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRoute
-  ArchitectureRoute: typeof ArchitectureRoute
-  ComplianceRoute: typeof ComplianceRoute
-  FlagsRoute: typeof FlagsRoute
-  ModesRoute: typeof ModesRoute
-  OverRoute: typeof OverRoute
-  PipelineRoute: typeof PipelineRoute
-  ScenariosRoute: typeof ScenariosRoute
   SchrijvenRoute: typeof SchrijvenRoute
-  TrustRoute: typeof TrustRoute
   TryRoute: typeof TryRoute
+  SiteArchitectureRoute: typeof SiteArchitectureRoute
+  SiteComplianceRoute: typeof SiteComplianceRoute
+  SiteFlagsRoute: typeof SiteFlagsRoute
+  SiteModesRoute: typeof SiteModesRoute
+  SiteOverRoute: typeof SiteOverRoute
+  SitePipelineRoute: typeof SitePipelineRoute
+  SiteScenariosRoute: typeof SiteScenariosRoute
+  SiteTrustRoute: typeof SiteTrustRoute
+  SiteIndexRoute: typeof SiteIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -195,67 +195,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TryRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/trust': {
-      id: '/trust'
-      path: '/trust'
-      fullPath: '/trust'
-      preLoaderRoute: typeof TrustRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/schrijven': {
       id: '/schrijven'
       path: '/schrijven'
       fullPath: '/schrijven'
       preLoaderRoute: typeof SchrijvenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/scenarios': {
-      id: '/scenarios'
-      path: '/scenarios'
-      fullPath: '/scenarios'
-      preLoaderRoute: typeof ScenariosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pipeline': {
-      id: '/pipeline'
-      path: '/pipeline'
-      fullPath: '/pipeline'
-      preLoaderRoute: typeof PipelineRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/over': {
-      id: '/over'
-      path: '/over'
-      fullPath: '/over'
-      preLoaderRoute: typeof OverRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/modes': {
-      id: '/modes'
-      path: '/modes'
-      fullPath: '/modes'
-      preLoaderRoute: typeof ModesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/flags': {
-      id: '/flags'
-      path: '/flags'
-      fullPath: '/flags'
-      preLoaderRoute: typeof FlagsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/compliance': {
-      id: '/compliance'
-      path: '/compliance'
-      fullPath: '/compliance'
-      preLoaderRoute: typeof ComplianceRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/architecture': {
-      id: '/architecture'
-      path: '/architecture'
-      fullPath: '/architecture'
-      preLoaderRoute: typeof ArchitectureRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app': {
@@ -265,29 +209,85 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
+    '/_site/': {
+      id: '/_site/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+      preLoaderRoute: typeof SiteIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_site/trust': {
+      id: '/_site/trust'
+      path: '/trust'
+      fullPath: '/trust'
+      preLoaderRoute: typeof SiteTrustRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_site/scenarios': {
+      id: '/_site/scenarios'
+      path: '/scenarios'
+      fullPath: '/scenarios'
+      preLoaderRoute: typeof SiteScenariosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_site/pipeline': {
+      id: '/_site/pipeline'
+      path: '/pipeline'
+      fullPath: '/pipeline'
+      preLoaderRoute: typeof SitePipelineRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_site/over': {
+      id: '/_site/over'
+      path: '/over'
+      fullPath: '/over'
+      preLoaderRoute: typeof SiteOverRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_site/modes': {
+      id: '/_site/modes'
+      path: '/modes'
+      fullPath: '/modes'
+      preLoaderRoute: typeof SiteModesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_site/flags': {
+      id: '/_site/flags'
+      path: '/flags'
+      fullPath: '/flags'
+      preLoaderRoute: typeof SiteFlagsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_site/compliance': {
+      id: '/_site/compliance'
+      path: '/compliance'
+      fullPath: '/compliance'
+      preLoaderRoute: typeof SiteComplianceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_site/architecture': {
+      id: '/_site/architecture'
+      path: '/architecture'
+      fullPath: '/architecture'
+      preLoaderRoute: typeof SiteArchitectureRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
   AppRoute: AppRoute,
-  ArchitectureRoute: ArchitectureRoute,
-  ComplianceRoute: ComplianceRoute,
-  FlagsRoute: FlagsRoute,
-  ModesRoute: ModesRoute,
-  OverRoute: OverRoute,
-  PipelineRoute: PipelineRoute,
-  ScenariosRoute: ScenariosRoute,
   SchrijvenRoute: SchrijvenRoute,
-  TrustRoute: TrustRoute,
   TryRoute: TryRoute,
+  SiteArchitectureRoute: SiteArchitectureRoute,
+  SiteComplianceRoute: SiteComplianceRoute,
+  SiteFlagsRoute: SiteFlagsRoute,
+  SiteModesRoute: SiteModesRoute,
+  SiteOverRoute: SiteOverRoute,
+  SitePipelineRoute: SitePipelineRoute,
+  SiteScenariosRoute: SiteScenariosRoute,
+  SiteTrustRoute: SiteTrustRoute,
+  SiteIndexRoute: SiteIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
