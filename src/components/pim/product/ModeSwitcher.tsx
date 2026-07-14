@@ -3,8 +3,8 @@ import { Zap, Workflow, PenLine } from "lucide-react";
 import type { ProductMode } from "./types";
 
 const MODES: { id: ProductMode; label: string; icon: React.ReactNode }[] = [
-  { id: "quick", label: "Controleren", icon: <Zap className="h-3.5 w-3.5" /> },
-  { id: "start", label: "Begeleid", icon: <Workflow className="h-3.5 w-3.5" /> },
+  { id: "quick", label: "Snel checken", icon: <Zap className="h-3.5 w-3.5" /> },
+  { id: "start", label: "Stap voor stap", icon: <Workflow className="h-3.5 w-3.5" /> },
   { id: "write", label: "Schrijven", icon: <PenLine className="h-3.5 w-3.5" /> },
 ];
 
