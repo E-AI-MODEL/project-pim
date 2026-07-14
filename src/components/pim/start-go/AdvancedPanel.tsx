@@ -191,7 +191,7 @@ export function AdvancedPanel({
               <button
                 type="button"
                 onClick={() => setShowTechnical((v) => !v)}
-                className="rounded-xl border border-[#e2e8f0] bg-white/[0.03] px-3 py-2 text-xs font-medium text-slate-200 hover:bg-white/[0.06]"
+                className="rounded-xl border border-[#e2e8f0] bg-[#f6f7fb] px-3 py-2 text-xs font-medium text-[#334155] hover:bg-[#eef2f7]"
               >
                 {showTechnical ? "Verberg" : "Toon"}
               </button>
@@ -207,7 +207,7 @@ export function AdvancedPanel({
                   <button
                     type="button"
                     onClick={onResetCategories}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-[#e2e8f0] bg-white/[0.03] px-3 py-2 text-xs text-slate-200 hover:bg-white/[0.06]"
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-[#e2e8f0] bg-[#f6f7fb] px-3 py-2 text-xs text-[#334155] hover:bg-[#eef2f7]"
                   >
                     <RotateCcw className="h-3.5 w-3.5" /> Alles weer zoeken
                   </button>
@@ -220,7 +220,7 @@ export function AdvancedPanel({
                   <button
                     type="button"
                     onClick={onResetThresholds}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-[#e2e8f0] bg-white/[0.03] px-3 py-2 text-xs text-slate-200 hover:bg-white/[0.06]"
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-[#e2e8f0] bg-[#f6f7fb] px-3 py-2 text-xs text-[#334155] hover:bg-[#eef2f7]"
                   >
                     <RotateCcw className="h-3.5 w-3.5" /> Drempels resetten
                   </button>
