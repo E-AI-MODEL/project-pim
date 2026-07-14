@@ -14,13 +14,11 @@ import type { Action, Mode, PayloadType } from "../../types";
 
 const CLEAN = "De methode werkt beter. Leerlingen scoren gemiddeld hoger op de weektoets.";
 const CONTEXT = "Kort mentorverslag over Tom de Vries (4H2) — planning aanscherpen.";
-const HEAVY =
-  "Sarah Jansen, groep 6, De Wilg te Utrecht. BSN 123456782, mail jansen@voorbeeld.nl.";
+const HEAVY = "Sarah Jansen, groep 6, De Wilg te Utrecht. BSN 123456782, mail jansen@voorbeeld.nl.";
 
 function baselineStartGo(text: string, mode: Mode, action: Action) {
   const signals = computeSignals(text, [], DEFAULT_DETECTION_SETTINGS);
-  const draft =
-    mode === "anonymous" ? anonymize(text, signals) : pseudonymize(text, signals).draft;
+  const draft = mode === "anonymous" ? anonymize(text, signals) : pseudonymize(text, signals).draft;
   const guard = draftCheck(draft, mode);
   const payloadType: PayloadType =
     mode === "anonymous" && guard.status === "pass"

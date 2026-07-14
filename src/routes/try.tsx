@@ -472,13 +472,18 @@ function TryPage() {
     }),
     [profileId, integrity],
   );
-  const engine = usePimEngine(engineConfig);
+  const {
+    state: engineState,
+    evaluate,
+    previewDecision,
+    requestAction,
+  } = usePimEngine(engineConfig);
   const extraSpans = useMemo(() => (slmEnabled ? slmSpans : []), [slmEnabled, slmSpans]);
-  // Synchroon in render — engine.evaluate is idempotent en engine bewaakt
-  // zijn eigen state. useMemo garandeert dat `decision` op eerste render bestaat.
-  useMemo(() => {
+  // Engine-evaluaties zijn side effects (mutéren engine-state) en horen dus
+  // in useEffect thuis, nooit in useMemo of tijdens render.
+  useEffect(() => {
     const t0 = performance.now();
-    engine.evaluate({
+    evaluate({
       text,
       mode,
       extraSpans,
@@ -493,12 +498,12 @@ function TryPage() {
       tick("guard", dur);
       tick("repair", dur);
     });
-  }, [engine, text, mode, extraSpans, llmDraft, tick]);
+  }, [evaluate, text, mode, extraSpans, llmDraft, tick]);
 
   // Voor UI-weergave vóór de eerste evaluate: veilige defaults.
   const signals = useMemo(
     () =>
-      engine.state.signals ?? {
+      engineState.signals ?? {
         directPii: [],
         contextualPii: [],
         riskScore: 0,
@@ -506,20 +511,20 @@ function TryPage() {
         reasons: [],
         ruleIds: [],
       },
-    [engine.state.signals],
+    [engineState.signals],
   );
-  const decisionSignals = engine.state.decisionSignals ?? signals;
+  const decisionSignals = engineState.decisionSignals ?? signals;
   const guard = useMemo(
-    () => engine.state.guard ?? { status: "pass" as const, issues: [], mode },
-    [engine.state.guard, mode],
+    () => engineState.guard ?? { status: "pass" as const, issues: [], mode },
+    [engineState.guard, mode],
   );
-  const effectiveDraft = engine.state.draft ?? { text, mode, rawHadPii: false };
-  const repaired = engine.state.repairApplied;
+  const effectiveDraft = engineState.draft ?? { text, mode, rawHadPii: false };
+  const repaired = engineState.repairApplied;
   const finalDraftText =
-    engine.state.llmApplied && engine.state.initialDraft
-      ? engine.state.initialDraft.text
+    engineState.llmApplied && engineState.initialDraft
+      ? engineState.initialDraft.text
       : effectiveDraft.text;
-  const plainMap = engine.state.pseudoMapping;
+  const plainMap = engineState.pseudoMapping;
 
   const sourceCounts = useMemo(() => {
     const counts = { regex: 0, lex: 0, slm: 0, ctx: 0 } as Record<
@@ -599,11 +604,25 @@ function TryPage() {
   // We hangen expliciet aan de engine-state-velden die de beslissing bepalen
   // (guard, decisionSignals, payloadType) zodat React re-runt bij elke evaluate.
   const decision = useMemo(() => {
+    if (engineState.phase !== "ready" || !engineState.guard) {
+      // Eerste render vóórdat de evaluate-effect heeft gedraaid.
+      return {
+        verdict: "ALLOW" as const,
+        reason: "engine warming up",
+        reasonCode: "engine.idle",
+        ruleId: "engine.idle",
+        policyVersion: "n/a",
+        riskLevel: "low" as const,
+        mode,
+        action,
+        timestamp: new Date().toISOString(),
+      };
+    }
     const t0 = performance.now();
-    const d = engine.previewDecision(action);
+    const d = previewDecision(action);
     queueMicrotask(() => tick("decide", performance.now() - t0));
     return d;
-  }, [engine, action, tick]);
+  }, [previewDecision, action, tick, mode, engineState.phase, engineState.guard]);
 
   const onAct = async () => {
     setEgress(null);
@@ -623,7 +642,7 @@ function TryPage() {
       payloadText = await restoreFromContainer(handle, effectiveDraft.text);
       setRestored(payloadText);
     }
-    const outcome = await engine.requestAction({
+    const outcome = await requestAction({
       action,
       payloadText,
       payloadType: action === "restore" ? "restored" : undefined,
