@@ -66,12 +66,6 @@ export function WriterWorkspace() {
     writerStrict: strict,
   } = useProductShell();
   const { detectionSettings, disabledCategories } = settings;
-  const setAutoRedact = useCallback(
-    (updater: (prev: ReadonlySet<PiiCategory>) => ReadonlySet<PiiCategory>) => {
-      setAutoRedactRaw(updater(autoRedact));
-    },
-    [autoRedact, setAutoRedactRaw],
-  );
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
