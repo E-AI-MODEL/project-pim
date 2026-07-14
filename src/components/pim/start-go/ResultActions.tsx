@@ -29,7 +29,7 @@ export function ResultActions({
     ALLOW: {
       label: COPY.buttonAllow,
       Icon: Copy,
-      cls: "bg-primary text-primary-foreground hover:bg-primary/90",
+      cls: "bg-[#6d4aff] text-white hover:bg-[#5b3dea]",
     },
     ALLOW_WITH_WARNING: {
       label: COPY.buttonAllowWarning,
@@ -39,7 +39,7 @@ export function ResultActions({
     BLOCK: {
       label: COPY.buttonBlock,
       Icon: RotateCcw,
-      cls: "bg-card border border-border hover:bg-accent/40",
+      cls: "bg-white border border-[#e5e7ef] text-[#334155] hover:bg-[#f6f7fb]",
     },
   }[verdict];
   const { Icon } = map;
@@ -97,10 +97,10 @@ export function ResultActions({
             <button
               type="button"
               onClick={copySafe}
-              className="inline-flex items-center gap-2 px-3 py-2.5 rounded-lg border border-border/60 bg-card/40 hover:bg-accent/40 text-sm font-medium transition-colors"
+              className="inline-flex items-center gap-2 px-3 py-2.5 rounded-lg border border-[#e5e7ef] bg-white text-[#334155] hover:bg-[#f6f7fb] text-sm font-medium transition-colors"
             >
               {copied ? (
-                <Check className="h-4 w-4 text-green-400" />
+                <Check className="h-4 w-4 text-emerald-600" />
               ) : (
                 <FileText className="h-4 w-4" />
               )}
@@ -109,7 +109,7 @@ export function ResultActions({
             <button
               type="button"
               onClick={downloadSafe}
-              className="inline-flex items-center gap-2 px-3 py-2.5 rounded-lg border border-border/60 bg-card/40 hover:bg-accent/40 text-sm font-medium transition-colors"
+              className="inline-flex items-center gap-2 px-3 py-2.5 rounded-lg border border-[#e5e7ef] bg-white text-[#334155] hover:bg-[#f6f7fb] text-sm font-medium transition-colors"
             >
               <Download className="h-4 w-4" />
               Download .txt
@@ -122,7 +122,7 @@ export function ResultActions({
             type="button"
             disabled
             title="Egress-gate blokt: bewerkte tekst is opnieuw beoordeeld als BLOCK."
-            className="inline-flex items-center gap-2 px-3 py-2.5 rounded-lg border border-rose-500/40 bg-rose-500/10 text-rose-200 text-sm font-medium opacity-70 cursor-not-allowed"
+            className="inline-flex items-center gap-2 px-3 py-2.5 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 text-sm font-medium opacity-80 cursor-not-allowed"
           >
             <Shield className="h-4 w-4" />
             Kopie/download geblokt
@@ -132,13 +132,13 @@ export function ResultActions({
         <button
           type="button"
           onClick={newCheck}
-          className="inline-flex items-center gap-2 px-3 py-2.5 rounded-lg border border-border/60 bg-card/40 hover:bg-accent/40 text-sm font-medium transition-colors"
+          className="inline-flex items-center gap-2 px-3 py-2.5 rounded-lg border border-[#e5e7ef] bg-white text-[#334155] hover:bg-[#f6f7fb] text-sm font-medium transition-colors"
         >
           <RotateCcw className="h-4 w-4" />
           Nieuwe controle
         </button>
       </div>
-      {shortMsg && <div className="text-[11px] text-rose-300 px-1">{shortMsg}</div>}
+      {shortMsg && <div className="text-[11px] text-rose-600 px-1">{shortMsg}</div>}
     </div>
   );
 }
