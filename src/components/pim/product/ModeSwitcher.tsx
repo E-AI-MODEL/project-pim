@@ -12,7 +12,7 @@ export function ModeSwitcher({ active }: { active: ProductMode }) {
   return (
     <nav
       aria-label="Modus"
-      className="inline-flex items-center gap-1 rounded-md border border-[#3b6fa0]/30 bg-[#0f1b3d]/40 p-1"
+      className="inline-flex items-center gap-1 rounded-lg border border-[#e5e7ef] bg-white p-1 shadow-sm"
     >
       {MODES.map((m) => {
         const isActive = active === m.id;
@@ -21,10 +21,10 @@ export function ModeSwitcher({ active }: { active: ProductMode }) {
             key={m.id}
             to="/app"
             search={{ mode: m.id }}
-            className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded px-2.5 py-1.5 text-xs font-medium transition-colors ${
+            className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-[13px] font-medium transition-colors ${
               isActive
-                ? "bg-[#3b6fa0]/40 text-[#e8edf3]"
-                : "text-[#e8edf3]/60 hover:text-[#e8edf3] hover:bg-[#3b6fa0]/20"
+                ? "bg-[#6d4aff]/10 text-[#6d4aff]"
+                : "text-[#64748b] hover:text-[#0f172a] hover:bg-[#f1f2f7]"
             }`}
             aria-current={isActive ? "page" : undefined}
           >

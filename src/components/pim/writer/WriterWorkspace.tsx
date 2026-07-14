@@ -24,6 +24,15 @@ import {
   Download,
   Trash2,
   X,
+  ShieldCheck,
+  User,
+  Hash,
+  Mail,
+  Calendar,
+  MapPin,
+  Copy as CopyIcon,
+  Send,
+  Eye,
 } from "lucide-react";
 import {
   usesBert,
@@ -59,6 +68,7 @@ export function WriterWorkspace() {
   const {
     evaluate,
     settings,
+    requestAction,
     writerContent,
     setWriterContent,
     writerAutoRedact: autoRedact,
@@ -78,6 +88,9 @@ export function WriterWorkspace() {
   const [importError, setImportError] = useState<string | null>(null);
   const [importWarnings, setImportWarnings] = useState<string[]>([]);
   const [plainText, setPlainText] = useState("");
+  const [foundSpans, setFoundSpans] = useState<PiiSpan[]>([]);
+  const [safeText, setSafeText] = useState<string>("");
+  const [egressMsg, setEgressMsg] = useState<string | null>(null);
   const usesNerSlm = usesBert(detectionSettings);
   const { nerSpans, nerStatus, startNer } = useNerSpans(plainText, { enabled: usesNerSlm });
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -86,7 +99,7 @@ export function WriterWorkspace() {
   const pimPlugin = useMemo(() => createPimPlugin(), []);
   const initialContent =
     writerContent ??
-    "<h1>Nieuwe notitie</h1><p>Begin met typen — PiM leest mee. Namen worden gemarkeerd; harde gegevens zoals BSN, e-mail en telefoonnummer worden direct vervangen door een label.</p>";
+    "<h1>Verslag over incident</h1><p>Op dinsdag 14 mei 2025 was er een incident in groep 7B van de Jan van Brabant school in Eindhoven.</p><p>Leerling Emma de Vries (leerlingnummer 12345) raakte betrokken bij een conflict tijdens de pauze op het schoolplein.</p><p>De ouders, mevrouw Sarah de Vries (e-mailadres: sarah.devries@email.nl), zijn op 14 mei 2025 geïnformeerd.</p><p>Er zijn verdere maatregelen genomen en de situatie is nu stabiel.</p>";
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [StarterKit.configure({ heading: { levels: [1, 2, 3] } })],
@@ -94,7 +107,7 @@ export function WriterWorkspace() {
     editorProps: {
       attributes: {
         class:
-          "prose prose-invert max-w-none focus:outline-none min-h-[50vh] px-6 py-8 text-[15px] leading-relaxed",
+          "prose prose-slate max-w-none focus:outline-none min-h-[60vh] px-8 py-8 text-[15px] leading-relaxed",
       },
     },
   });
@@ -152,6 +165,10 @@ export function WriterWorkspace() {
         if (!ignored.has(ignKey)) toMark.push(s);
       }
     }
+    // Bereken samengevatte bevindingen + veilige versie voor het rechter paneel.
+    const allVisible = [...toMark];
+    setFoundSpans(allVisible);
+    setSafeText(buildSafeText(plain, all));
     if (toReplace.length > 0) {
       toReplace.sort((a, b) => b.from - a.from);
       const tr = editor.state.tr;
@@ -295,49 +312,95 @@ export function WriterWorkspace() {
   }, [onClear]);
 
   if (!mounted || !editor) return null;
+  const totalFindings = foundSpans.length;
+  const riskScore = Math.min(9, totalFindings);
   return (
-    <div className="space-y-4" data-testid="writer-workspace">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-[#101f3d] px-4 py-3">
-        <WriterStatusBar
-          nerStatus={nerStatus}
-          onStartNer={startNer}
-          detectionSettings={detectionSettings}
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]" data-testid="writer-workspace">
+      {/* LEFT — editor card */}
+      <section className="rounded-2xl border border-[#e5e7ef] bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] overflow-hidden flex flex-col">
+        <div className="flex items-center justify-between gap-3 border-b border-[#eef0f5] px-4 py-2.5">
+          <Toolbar editor={editor} />
+          <div className="flex shrink-0 items-center gap-1.5">
+            <LightAction icon={<Upload className="h-4 w-4" />} label="Import" onClick={onImportClick} />
+            <LightAction icon={<Download className="h-4 w-4" />} label="Export" onClick={onExport} />
+            <LightAction icon={<Trash2 className="h-4 w-4" />} label="Leeg" onClick={onClear} />
+          </div>
+        </div>
+        {importError && (
+          <div className="mx-4 mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            {importError}
+          </div>
+        )}
+        {importWarnings.length > 0 && (
+          <div className="mx-4 mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+            {importWarnings.join(" · ")}
+          </div>
+        )}
+        <div ref={editorRootRef} className="flex-1">
+          <EditorContent editor={editor} />
+        </div>
+        <div className="border-t border-[#eef0f5] px-4 py-2.5 flex items-center justify-between text-[12px] text-[#64748b]">
+          <span className="inline-flex items-center gap-2">
+            <ShieldCheck className="h-3.5 w-3.5 text-[#6d4aff]" />
+            PiM markeert mogelijke persoonsgegevens en gevoelige context.
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className={`h-1.5 w-1.5 rounded-full ${totalFindings > 0 ? "bg-rose-500" : "bg-emerald-500"}`} />
+            {totalFindings > 0 ? `${riskScore} punten risico` : "geen risico"}
+          </span>
+        </div>
+      </section>
+
+      {/* RIGHT — privacy panel */}
+      <aside className="space-y-4">
+        <FindingsCard spans={foundSpans} score={riskScore} />
+        <SafeVersionCard
+          safeText={safeText}
+          hasFindings={totalFindings > 0}
+          onCopy={async () => {
+            try {
+              await navigator.clipboard.writeText(safeText);
+              setEgressMsg("Veilige versie gekopieerd");
+            } catch {
+              setEgressMsg("Kopiëren mislukte");
+            }
+          }}
+          onDownload={() => {
+            const blob = new Blob([safeText], { type: "text/plain;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `pim-veilige-versie-${new Date().toISOString().slice(0, 10)}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+          }}
+          onSendAI={async () => {
+            const r = await requestAction({ action: "send_external_ai", payloadText: safeText });
+            setEgressMsg(r.executed ? `✓ ${r.reason}` : `✗ ${r.reason}`);
+          }}
         />
-        <div className="flex shrink-0 items-center gap-2">
-          <WorkspaceAction
-            icon={<Upload className="h-4 w-4" />}
-            label="Import"
-            onClick={onImportClick}
-          />
-          <WorkspaceAction
-            icon={<Download className="h-4 w-4" />}
-            label="Export"
-            onClick={onExport}
-          />
-          <WorkspaceAction icon={<Trash2 className="h-4 w-4" />} label="Leeg" onClick={onClear} />
+        {egressMsg && (
+          <div className="rounded-lg border border-[#e5e7ef] bg-white px-3 py-2 text-[12px] text-[#334155]">
+            {egressMsg}
+          </div>
+        )}
+        <div className="rounded-lg border border-[#e5e7ef] bg-[#f9fafc] px-3 py-2.5 text-[11px] text-[#64748b] flex items-center gap-2">
+          <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+          Alles blijft lokaal op dit apparaat. Niets wordt opgeslagen of verzonden.
         </div>
-      </div>
-      {importError && (
-        <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
-          {importError}
+        <div className="text-[11px] text-[#94a3b8] flex gap-3 px-1">
+          <span>Gewist: {stats.scrubbed}</span>
+          <span>Gemarkeerd: {stats.marked}</span>
+          <span className="ml-auto">
+            <WriterStatusBar
+              nerStatus={nerStatus}
+              onStartNer={startNer}
+              detectionSettings={detectionSettings}
+            />
+          </span>
         </div>
-      )}
-      {importWarnings.length > 0 && (
-        <div className="rounded-lg border border-amber-400/30 bg-amber-400/10 p-3 text-sm text-amber-100">
-          {importWarnings.join(" · ")}
-        </div>
-      )}
-      <Toolbar editor={editor} />
-      <div
-        ref={editorRootRef}
-        className="rounded-[1.75rem] border border-white/10 bg-[#101f3d] shadow-[0_18px_55px_rgba(0,0,0,0.25)] overflow-hidden"
-      >
-        <EditorContent editor={editor} />
-      </div>
-      <div className="text-xs text-[#e8edf3]/55 flex gap-3">
-        <span>Gewist: {stats.scrubbed}</span>
-        <span>Gemarkeerd: {stats.marked}</span>
-      </div>
+      </aside>
+
       <input
         ref={fileInputRef}
         type="file"
@@ -348,15 +411,24 @@ export function WriterWorkspace() {
       {clicked && (
         <div
           style={{ position: "absolute", left: clicked.x, top: clicked.y }}
-          className="z-50 rounded-xl border border-white/15 bg-[#101b35] p-2 shadow-xl flex gap-2"
+          className="z-50 rounded-xl border border-[#e5e7ef] bg-white p-2 shadow-lg flex gap-2"
         >
-          <button className="btn-lite" onClick={replaceClicked}>
+          <button
+            className="rounded-md bg-[#6d4aff] px-2.5 py-1 text-[12px] font-semibold text-white hover:bg-[#5b3dea]"
+            onClick={replaceClicked}
+          >
             Vervang
           </button>
-          <button className="btn-lite" onClick={ignoreClicked}>
+          <button
+            className="rounded-md border border-[#e5e7ef] px-2.5 py-1 text-[12px] text-[#334155] hover:bg-[#f6f7fb]"
+            onClick={ignoreClicked}
+          >
             Negeer
           </button>
-          <button className="btn-lite" onClick={() => setClicked(null)}>
+          <button
+            className="rounded-md px-2 py-1 text-[#64748b] hover:bg-[#f1f2f7]"
+            onClick={() => setClicked(null)}
+          >
             <X className="h-3 w-3" />
           </button>
         </div>
@@ -365,7 +437,7 @@ export function WriterWorkspace() {
   );
 }
 
-function WorkspaceAction({
+function LightAction({
   icon,
   label,
   onClick,
@@ -378,10 +450,10 @@ function WorkspaceAction({
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex h-9 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.035] px-3 text-sm font-semibold text-slate-100 transition-colors hover:bg-white/[0.07]"
+      className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[#e5e7ef] bg-white px-2.5 text-[12px] font-medium text-[#334155] transition-colors hover:bg-[#f6f7fb]"
     >
       {icon}
-      <span className="hidden sm:inline">{label}</span>
+      <span className="hidden md:inline">{label}</span>
     </button>
   );
 }
@@ -392,13 +464,13 @@ function Toolbar({ editor }: { editor: Editor }) {
       type="button"
       title={label}
       onClick={action}
-      className={`inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-200 transition-colors hover:bg-white/[0.07] ${active ? "bg-cyan-300/14 text-cyan-100" : ""}`}
+      className={`inline-flex h-8 w-8 items-center justify-center rounded-md text-[#475569] transition-colors hover:bg-[#f1f2f7] ${active ? "bg-[#6d4aff]/10 text-[#6d4aff]" : ""}`}
     >
       {icon}
     </button>
   );
   return (
-    <div className="rounded-2xl border border-white/10 bg-[#101f3d] p-2 flex flex-wrap gap-1">
+    <div className="flex flex-wrap items-center gap-0.5">
       {btn(
         "Vet",
         <Bold className="h-4 w-4" />,
@@ -441,7 +513,7 @@ function Toolbar({ editor }: { editor: Editor }) {
         () => editor.chain().focus().toggleBlockquote().run(),
         editor.isActive("blockquote"),
       )}
-      <span className="mx-1 w-px bg-white/10" />
+      <span className="mx-1 h-5 w-px bg-[#e5e7ef]" />
       {btn("Ongedaan", <Undo2 className="h-4 w-4" />, () => editor.chain().focus().undo().run())}
       {btn("Opnieuw", <Redo2 className="h-4 w-4" />, () => editor.chain().focus().redo().run())}
     </div>
@@ -459,21 +531,21 @@ function WriterStatusBar({
 }) {
   const label = writerBertLabel(nerStatus, detectionSettings);
   const tone = nerStatus?.working
-    ? "bg-emerald-400"
+    ? "bg-emerald-500"
     : nerStatus?.loading
-      ? "bg-amber-300 animate-pulse"
+      ? "bg-amber-400 animate-pulse"
       : nerStatus?.error
-        ? "bg-red-400"
-        : "bg-cyan-400/70";
+        ? "bg-rose-500"
+        : "bg-slate-300";
   const canStart = detectionSettings.bert !== "off" && !nerStatus?.working && !nerStatus?.loading;
   return (
-    <div className="flex items-center gap-2 text-[11px] text-slate-300/70">
+    <div className="inline-flex items-center gap-1.5 text-[11px] text-[#64748b]">
       <span className={`h-2 w-2 rounded-full ${tone}`} />
       <span>{label}</span>
       {canStart && (
         <button
           onClick={onStartNer}
-          className="font-medium text-slate-200 underline underline-offset-2 hover:text-white"
+          className="font-medium text-[#6d4aff] underline underline-offset-2 hover:text-[#5b3dea]"
         >
           Zet aan
         </button>
@@ -489,4 +561,195 @@ function writerBertLabel(status: NerStatus | null, settings: DetectionLayerSetti
   if (status?.loading) return `${size} laden/testen`;
   if (status?.error || status?.healthError) return `${size} fout`;
   return `${size} niet geladen`;
+}
+
+// ============================================================================
+// Privacy sidebar
+// ============================================================================
+
+type Group = {
+  key: string;
+  label: string;
+  icon: React.ReactNode;
+  cats: readonly PiiCategory[];
+};
+
+const GROUPS: readonly Group[] = [
+  {
+    key: "names",
+    label: "Persoonsnamen",
+    icon: <User className="h-3.5 w-3.5" />,
+    cats: ["name"],
+  },
+  {
+    key: "ids",
+    label: "Identificatoren",
+    icon: <Hash className="h-3.5 w-3.5" />,
+    cats: ["bsn", "iban", "student_id", "id_document", "license_plate", "class_code", "credit_card"],
+  },
+  {
+    key: "contact",
+    label: "Contactgegevens",
+    icon: <Mail className="h-3.5 w-3.5" />,
+    cats: ["email", "phone", "address", "postcode", "url", "social_handle", "ip_address"],
+  },
+  {
+    key: "dates",
+    label: "Data",
+    icon: <Calendar className="h-3.5 w-3.5" />,
+    cats: ["date", "birthdate_text"],
+  },
+  {
+    key: "loc",
+    label: "Locaties & context",
+    icon: <MapPin className="h-3.5 w-3.5" />,
+    cats: ["school", "context_location_specific", "context_incident", "context_care", "context_health", "context_family", "context_legal", "context_financial"],
+  },
+];
+
+function FindingsCard({ spans, score }: { spans: PiiSpan[]; score: number }) {
+  const counts = new Map<string, number>();
+  for (const s of spans) {
+    for (const g of GROUPS) {
+      if ((g.cats as readonly string[]).includes(s.category)) {
+        counts.set(g.key, (counts.get(g.key) ?? 0) + 1);
+        break;
+      }
+    }
+  }
+  const total = spans.length;
+  return (
+    <div className="rounded-2xl border border-[#e5e7ef] bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] overflow-hidden">
+      <div className="px-4 py-3 border-b border-[#eef0f5] flex items-center justify-between">
+        <div className="text-[11px] font-semibold uppercase tracking-wider text-[#64748b]">
+          Privacycontrole
+        </div>
+      </div>
+      <div className="px-4 py-4 flex items-start gap-3">
+        <span className={`shrink-0 inline-flex h-9 w-9 items-center justify-center rounded-lg ${total > 0 ? "bg-[#6d4aff]/10 text-[#6d4aff]" : "bg-emerald-50 text-emerald-600"}`}>
+          <ShieldCheck className="h-5 w-5" />
+        </span>
+        <div className="flex-1">
+          <div className="text-[14px] font-semibold text-[#0f172a]">
+            {total > 0 ? "Gevoelige informatie gevonden" : "Geen gevoelige informatie"}
+          </div>
+          <div className="text-[12px] text-[#64748b] leading-snug mt-0.5">
+            {total > 0
+              ? "Wij hebben persoonsgegevens en/of gevoelige context in je tekst gevonden."
+              : "PiM heeft nog geen persoonsgegevens gevonden in deze tekst."}
+          </div>
+        </div>
+        <div className="shrink-0 text-right">
+          <div className={`text-2xl font-bold leading-none ${total > 0 ? "text-[#6d4aff]" : "text-emerald-600"}`}>
+            {score}
+          </div>
+          <div className="text-[10px] uppercase tracking-wider text-[#94a3b8] mt-0.5">punten</div>
+        </div>
+      </div>
+      <div className="px-4 pb-2">
+        <div className="text-[11px] font-semibold uppercase tracking-wider text-[#64748b] px-1 pb-2 flex items-center justify-between">
+          <span>Wat we hebben gevonden</span>
+          <span className="text-[#94a3b8]">{total}</span>
+        </div>
+        <ul className="divide-y divide-[#eef0f5] border-t border-[#eef0f5]">
+          {GROUPS.map((g) => {
+            const n = counts.get(g.key) ?? 0;
+            return (
+              <li key={g.key} className="flex items-center gap-2.5 py-2 px-1 text-[13px]">
+                <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-[#f1f2f7] text-[#64748b]">
+                  {g.icon}
+                </span>
+                <span className={n > 0 ? "text-[#0f172a]" : "text-[#94a3b8]"}>{g.label}</span>
+                <span className={`ml-auto text-[12px] tabular-nums ${n > 0 ? "text-[#0f172a] font-semibold" : "text-[#cbd5e1]"}`}>
+                  {n}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+function SafeVersionCard({
+  safeText,
+  hasFindings,
+  onCopy,
+  onDownload,
+  onSendAI,
+}: {
+  safeText: string;
+  hasFindings: boolean;
+  onCopy: () => void;
+  onDownload: () => void;
+  onSendAI: () => void;
+}) {
+  const [showFull, setShowFull] = useState(false);
+  const preview = safeText.length > 260 && !showFull ? safeText.slice(0, 260) + "…" : safeText;
+  return (
+    <div className="rounded-2xl border border-[#e5e7ef] bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] overflow-hidden">
+      <div className="px-4 py-3 border-b border-[#eef0f5] flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-emerald-50 text-emerald-600">
+            <ShieldCheck className="h-4 w-4" />
+          </span>
+          <div className="leading-tight">
+            <div className="text-[13px] font-semibold text-[#0f172a]">Veilige versie</div>
+            <div className="text-[11px] text-[#64748b]">
+              {hasFindings ? "Klaar om te gebruiken" : "Nog geen wijzigingen nodig"}
+            </div>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowFull((v) => !v)}
+          className="inline-flex items-center gap-1 text-[12px] text-[#64748b] hover:text-[#0f172a]"
+        >
+          <Eye className="h-3.5 w-3.5" />
+          {showFull ? "Vouw in" : "Bekijk"}
+        </button>
+      </div>
+      <div className="px-4 py-3 text-[12.5px] text-[#334155] leading-relaxed whitespace-pre-wrap max-h-56 overflow-y-auto">
+        {preview || <span className="text-[#94a3b8]">Nog geen tekst om te tonen.</span>}
+      </div>
+      <div className="grid grid-cols-3 gap-1.5 border-t border-[#eef0f5] p-2">
+        <button
+          type="button"
+          onClick={onCopy}
+          className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#6d4aff] hover:bg-[#5b3dea] px-2 py-2 text-[12px] font-semibold text-white"
+        >
+          <CopyIcon className="h-3.5 w-3.5" />
+          Kopiëren
+        </button>
+        <button
+          type="button"
+          onClick={onDownload}
+          className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[#e5e7ef] bg-white hover:bg-[#f6f7fb] px-2 py-2 text-[12px] font-medium text-[#334155]"
+        >
+          <Download className="h-3.5 w-3.5" />
+          Downloaden
+        </button>
+        <button
+          type="button"
+          onClick={onSendAI}
+          className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[#e5e7ef] bg-white hover:bg-[#f6f7fb] px-2 py-2 text-[12px] font-medium text-[#334155]"
+        >
+          <Send className="h-3.5 w-3.5" />
+          Naar AI
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function buildSafeText(plain: string, spans: PiiSpan[]): string {
+  if (!plain) return "";
+  const sorted = [...spans].sort((a, b) => b.start - a.start);
+  let out = plain;
+  for (const s of sorted) {
+    const label = GENERALIZATIONS[s.category] ?? "[…]";
+    out = out.slice(0, s.start) + label + out.slice(s.end);
+  }
+  return out;
 }
