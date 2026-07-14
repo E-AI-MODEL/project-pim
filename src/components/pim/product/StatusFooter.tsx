@@ -1,4 +1,5 @@
 import { LiveTechMonitor } from "@/components/pim/start-go/LiveTechMonitor";
+import { SlidersHorizontal } from "lucide-react";
 
 export function StatusFooter() {
   return (
@@ -11,10 +12,22 @@ export function StatusFooter() {
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <LiveTechMonitor
+        <button
+          type="button"
+          data-testid="open-expert"
+          onClick={() => window.dispatchEvent(new CustomEvent("pim:open-expert"))}
+          className="font-plex-mono text-[10px] uppercase tracking-wider px-2 py-1 rounded bg-[#3b6fa0]/20 hover:bg-[#3b6fa0]/40 text-[#e8edf3]/80 transition-colors inline-flex items-center gap-1.5"
+        >
+          <SlidersHorizontal className="h-3 w-3" />
+          Expert
+        </button>
+        <LiveTechMonitor
             trigger={
-              <button className="font-plex-mono text-[10px] uppercase tracking-wider px-2 py-1 rounded bg-[#3b6fa0]/20 hover:bg-[#3b6fa0]/40 text-[#e8edf3]/80 transition-colors">
-                Live techniek
+            <button
+              data-testid="open-diagnostics"
+              className="font-plex-mono text-[10px] uppercase tracking-wider px-2 py-1 rounded bg-[#3b6fa0]/20 hover:bg-[#3b6fa0]/40 text-[#e8edf3]/80 transition-colors"
+            >
+              Diagnostiek
               </button>
             }
           />
