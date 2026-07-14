@@ -29,7 +29,6 @@ export default tseslint.config(
     // See docs/pim-refactor/00-overzicht.md and .lovable/plan.md (Fase 2).
     files: ["src/routes/**/*.{ts,tsx}", "src/components/**/*.{ts,tsx}"],
     ignores: [
-      "src/routes/try.tsx",
       "src/components/pim/start-go/StartGoShell.tsx",
       "src/components/pim/writer/WriterShell.tsx",
     ],
