@@ -33,9 +33,8 @@ import {
   type NerStatus,
 } from "@/lib/pim";
 import { useNerSpans } from "@/hooks/useNerSpans";
-import { AdvancedPanel } from "@/components/pim/start-go/AdvancedPanel";
 import { useProductShell } from "@/components/pim/product/ProductShellContext";
-import { GENERALIZATIONS, DEFAULT_AUTO_REDACT } from "./pimGeneralizations";
+import { GENERALIZATIONS } from "./pimGeneralizations";
 import {
   createPimPlugin,
   pimPluginKey,
@@ -57,18 +56,28 @@ interface ClickedSpan {
 
 export function WriterWorkspace() {
   // ProductShell-context is de bron van waarheid voor engine, settings en reset.
-  const { evaluate, settings, writerContent, setWriterContent } = useProductShell();
-  const { detectionSettings, disabledCategories, advancedPanelProps } = settings;
+  const {
+    evaluate,
+    settings,
+    writerContent,
+    setWriterContent,
+    writerAutoRedact: autoRedact,
+    setWriterAutoRedact: setAutoRedactRaw,
+    writerStrict: strict,
+  } = useProductShell();
+  const { detectionSettings, disabledCategories } = settings;
+  const setAutoRedact = useCallback(
+    (updater: (prev: ReadonlySet<PiiCategory>) => ReadonlySet<PiiCategory>) => {
+      setAutoRedactRaw(updater(autoRedact));
+    },
+    [autoRedact, setAutoRedactRaw],
+  );
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const [autoRedact, setAutoRedact] = useState<Set<PiiCategory>>(
-    () => new Set(DEFAULT_AUTO_REDACT),
-  );
-  const [strict, setStrict] = useState(false);
   const [ignored, setIgnored] = useState<Set<string>>(new Set());
   const [stats, setStats] = useState({ scrubbed: 0, marked: 0 });
   const [clicked, setClicked] = useState<ClickedSpan | null>(null);
@@ -264,7 +273,7 @@ export function WriterWorkspace() {
       );
       if (!choice) return;
       if (choice.trim().toLowerCase() === "wis") {
-        setAutoRedact(
+        setAutoRedactRaw(
           new Set<PiiCategory>([
             ...autoRedact,
             ...sig.directPii.map((s) => s.category),
