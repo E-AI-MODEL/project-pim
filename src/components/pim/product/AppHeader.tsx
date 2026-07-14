@@ -27,7 +27,7 @@ export function AppHeader({ mode }: { mode: ProductMode }) {
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
             Lokale modus
           </span>
-          <span className="text-[12px] text-[#64748b]">Alles blijft op dit apparaat</span>
+          <span className="text-[12px] text-[#64748b]">Alles blijft op je apparaat</span>
         </div>
 
         {/* Mobile compact status pill */}
