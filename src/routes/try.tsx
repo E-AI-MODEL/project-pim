@@ -629,8 +629,6 @@ function TryPage() {
     mode,
     engineState.phase,
     engineState.guard,
-    engineState.decisionSignals,
-    engineState.payloadType,
   ]);
 
   const onAct = async () => {
