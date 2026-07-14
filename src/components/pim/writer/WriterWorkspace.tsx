@@ -311,11 +311,7 @@ export function WriterWorkspace() {
             label="Export"
             onClick={onExport}
           />
-          <WorkspaceAction
-            icon={<Trash2 className="h-4 w-4" />}
-            label="Leeg"
-            onClick={onClear}
-          />
+          <WorkspaceAction icon={<Trash2 className="h-4 w-4" />} label="Leeg" onClick={onClear} />
         </div>
       </div>
       <AdvancedPanel

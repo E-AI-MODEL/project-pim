@@ -9,9 +9,7 @@ import { describe, expect, it, vi } from "vitest";
 // draaien in deze integratietest. WriterWorkspace zelf blijft echt, maar
 // we ontlasten hem van externe integraties.
 vi.mock("@/components/pim/writer/WriterWorkspace", () => ({
-  WriterWorkspace: () => (
-    <div data-testid="writer-workspace-real">editor</div>
-  ),
+  WriterWorkspace: () => <div data-testid="writer-workspace-real">editor</div>,
 }));
 // Header/footer mocken zodat we in de DOM eenduidig kunnen tellen.
 vi.mock("@/components/pim/product/AppHeader", () => ({
