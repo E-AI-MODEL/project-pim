@@ -30,6 +30,12 @@ export function AppHeader({ mode }: { mode: ProductMode }) {
           <span className="text-[12px] text-[#64748b]">Alles blijft op dit apparaat</span>
         </div>
 
+        {/* Mobile compact status pill */}
+        <span className="md:hidden mx-auto inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+          Lokaal
+        </span>
+
         {/* Right actions */}
         <div className="ml-auto md:ml-0 flex items-center gap-1.5">
           <button
@@ -52,15 +58,16 @@ export function AppHeader({ mode }: { mode: ProductMode }) {
             type="button"
             onClick={() => window.dispatchEvent(new CustomEvent("pim:check-privacy"))}
             className="inline-flex items-center gap-1.5 rounded-lg bg-[#6d4aff] hover:bg-[#5b3dea] px-3 py-1.5 text-[13px] font-semibold text-white shadow-sm"
+            aria-label="Controleer privacy"
           >
             <ShieldAlert className="h-4 w-4" />
-            Controleer privacy
+            <span className="hidden sm:inline">Controleer privacy</span>
           </button>
           <BurgerMenu />
         </div>
       </div>
       {/* Secondary bar: mode switcher */}
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 pb-3 pt-1">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 pb-3 pt-1 overflow-x-auto">
         <ModeSwitcher active={mode} />
       </div>
     </header>

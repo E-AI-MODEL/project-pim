@@ -27,14 +27,14 @@ export function NerVariantPicker({
     <div
       className={
         dark
-          ? "flex items-center justify-between gap-2 rounded-lg border border-[#3b6fa0]/30 bg-[#0f1b3d]/45 px-2.5 py-1.5"
+          ? "flex items-center justify-between gap-2 rounded-lg border border-[#e5e7ef] bg-white/45 px-2.5 py-1.5"
           : "flex items-center justify-between gap-2 rounded-md border border-border/50 bg-background/30 px-2.5 py-1.5"
       }
     >
       <span
         className={
           dark
-            ? "font-plex-mono text-[10px] uppercase tracking-wider text-[#e8edf3]/60"
+            ? "font-plex-mono text-[10px] uppercase tracking-wider text-[#64748b]"
             : "text-[11px] uppercase tracking-wider text-muted-foreground"
         }
       >
@@ -42,16 +42,16 @@ export function NerVariantPicker({
       </span>
       <div
         className={`inline-flex overflow-hidden rounded-md border text-[11px] ${
-          dark ? "border-[#3b6fa0]/40" : "border-border/50"
+          dark ? "border-[#e5e7ef]" : "border-border/50"
         }`}
       >
         {(Object.keys(NER_VARIANTS) as NerVariantKey[]).map((v) => {
           const active = variant === v;
           const activeCls = dark
-            ? "bg-[#3b6fa0]/40 text-[#e8edf3] font-semibold"
+            ? "bg-[#3b6fa0]/40 text-[#0f172a] font-semibold"
             : "bg-primary text-primary-foreground font-semibold";
           const idleCls = dark
-            ? "text-[#e8edf3]/65 hover:bg-[#3b6fa0]/20"
+            ? "text-[#0f172a]/65 hover:bg-[#f1f2f7]"
             : "text-muted-foreground hover:bg-accent/40";
           return (
             <button

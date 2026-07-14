@@ -42,7 +42,7 @@ function StepPill({
         ? "border-amber-400/60 bg-amber-400/5"
         : status === "error"
           ? "border-red-400/60 bg-red-400/5"
-          : "border-[#3b6fa0]/40 bg-[#0f1b3d]/40";
+          : "border-[#e5e7ef] bg-[#f6f7fb]";
   const label =
     status === "ready"
       ? "actief"
@@ -58,28 +58,28 @@ function StepPill({
     <div className={`rounded-md border ${color} p-3 flex flex-col gap-2 min-w-0`}>
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <div className="font-plex-mono text-[10px] tracking-[0.18em] uppercase text-[#e8edf3]/55">
+          <div className="font-plex-mono text-[10px] tracking-[0.18em] uppercase text-[#64748b]">
             Stap {num}
           </div>
-          <div className="font-serif-display text-sm text-[#e8edf3] truncate">{title}</div>
+          <div className="font-serif-display text-sm text-[#0f172a] truncate">{title}</div>
         </div>
-        <span className="font-plex-mono text-[10px] uppercase tracking-wider text-[#e8edf3]/70 whitespace-nowrap">
+        <span className="font-plex-mono text-[10px] uppercase tracking-wider text-[#0f172a]/70 whitespace-nowrap">
           {label}
         </span>
       </div>
-      <div className="text-[11px] text-[#e8edf3]/60 leading-snug">{sub}</div>
+      <div className="text-[11px] text-[#64748b] leading-snug">{sub}</div>
       {badge && <div className="text-[10px] text-amber-300/80 font-plex-mono">{badge}</div>}
       {onClick && status !== "ready" && (
         <button
           onClick={onClick}
           disabled={disabled || status === "loading"}
-          className="mt-1 text-[11px] font-plex-mono uppercase tracking-wider px-2 py-1 rounded bg-[#3b6fa0]/20 hover:bg-[#3b6fa0]/40 disabled:opacity-40 disabled:cursor-not-allowed text-[#e8edf3] transition-colors"
+          className="mt-1 text-[11px] font-plex-mono uppercase tracking-wider px-2 py-1 rounded bg-[#f1f2f7] hover:bg-[#3b6fa0]/40 disabled:opacity-40 disabled:cursor-not-allowed text-[#0f172a] transition-colors"
         >
           {status === "loading" ? "Bezig…" : "Inschakelen"}
         </button>
       )}
       {status === "loading" && typeof pct === "number" && (
-        <div className="h-1 rounded bg-[#0f1b3d]/60 overflow-hidden">
+        <div className="h-1 rounded bg-white overflow-hidden">
           <div className="h-full bg-amber-400/70 transition-all" style={{ width: `${pct}%` }} />
         </div>
       )}
@@ -122,27 +122,27 @@ export function PipelineStepsBar() {
   const readyCount = 1 + (nerStatus === "ready" ? 1 : 0) + (llmStatus === "ready" ? 1 : 0);
 
   return (
-    <div className="rounded-md border border-[#3b6fa0]/40 bg-[#0f1b3d]/40 overflow-hidden">
+    <div className="rounded-md border border-[#e5e7ef] bg-[#f6f7fb] overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="w-full flex items-center justify-between gap-2 px-3 py-2 text-left hover:bg-[#3b6fa0]/10 transition-colors"
+        className="w-full flex items-center justify-between gap-2 px-3 py-2 text-left hover:bg-[#f6f7fb] transition-colors"
       >
         <span className="flex items-center gap-2 min-w-0">
-          <span className="font-plex-mono text-[10px] tracking-[0.18em] uppercase text-[#e8edf3]/70">
+          <span className="font-plex-mono text-[10px] tracking-[0.18em] uppercase text-[#0f172a]/70">
             Browser-modellen
           </span>
-          <span className="font-plex-mono text-[10px] text-[#e8edf3]/55">
+          <span className="font-plex-mono text-[10px] text-[#64748b]">
             {readyCount}/3 actief
           </span>
         </span>
         <ChevronDown
-          className={`h-4 w-4 text-[#e8edf3]/60 shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
+          className={`h-4 w-4 text-[#64748b] shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
         />
       </button>
       {open && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 p-2 border-t border-[#3b6fa0]/30">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 p-2 border-t border-[#e5e7ef]">
           <StepPill
             num={1}
             title="Regex & regels"

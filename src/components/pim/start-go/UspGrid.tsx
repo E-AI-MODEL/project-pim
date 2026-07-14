@@ -14,11 +14,11 @@ export function UspGrid() {
       {ITEMS.map(({ Icon, title, body, num }) => (
         <div key={num} className="space-y-2 border-t hairline pt-4">
           <div className="flex items-center gap-3">
-            <span className="font-plex-mono text-[10px] tracking-widest text-[#3b6fa0]">{num}</span>
-            <Icon className="h-3.5 w-3.5 text-[#3b6fa0]" strokeWidth={2} />
-            <h3 className="font-medium text-[#e8edf3] text-[15px]">{title}</h3>
+            <span className="font-plex-mono text-[10px] tracking-widest text-[#6d4aff]">{num}</span>
+            <Icon className="h-3.5 w-3.5 text-[#6d4aff]" strokeWidth={2} />
+            <h3 className="font-medium text-[#0f172a] text-[15px]">{title}</h3>
           </div>
-          <p className="text-sm text-[#e8edf3]/70 leading-relaxed pl-[1.85rem]">{body}</p>
+          <p className="text-sm text-[#0f172a]/70 leading-relaxed pl-[1.85rem]">{body}</p>
         </div>
       ))}
     </div>
