@@ -342,7 +342,7 @@ export function WriterWorkspace() {
         <div className="border-t border-[#eef0f5] px-4 py-2.5 flex items-center justify-between text-[12px] text-[#64748b]">
           <span className="inline-flex items-center gap-2">
             <ShieldCheck className="h-3.5 w-3.5 text-[#6d4aff]" />
-            PiM streept mee terwijl je typt, zonder iets te versturen.
+            PiM streept mee terwijl je typt.
           </span>
           <span className="inline-flex items-center gap-1.5">
             <span className={`h-1.5 w-1.5 rounded-full ${totalFindings > 0 ? "bg-rose-500" : "bg-emerald-500"}`} />
