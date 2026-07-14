@@ -22,6 +22,11 @@ import {
 export interface PimEngine {
   getState(): EngineState;
   evaluate(input: EngineInput): EngineState;
+  /**
+   * Compute the PIM decision for a given action WITHOUT executing egress.
+   * Uses the last `evaluate()` state. Throws when called before evaluate.
+   */
+  previewDecision(action: Parameters<typeof modelGateFor>[0]): import("../types").PimDecision;
   requestAction(req: RequestedAction): Promise<ActionOutcome>;
   reset(): EngineState;
   subscribe(listener: (state: EngineState) => void): () => void;
@@ -185,9 +190,29 @@ export function createEngine(initial: EngineConfig): PimEngine {
     return state;
   }
 
+  function previewDecision(action: Parameters<typeof modelGateFor>[0]) {
+    if (state.phase !== "ready" || !state.input || !state.guard) {
+      throw new Error("PimEngine.previewDecision called before evaluate()");
+    }
+    return decide({
+      mode: state.input.mode,
+      action: action as Parameters<typeof decide>[0]["action"],
+      signals: state.decisionSignals ?? state.signals!,
+      draftCheck: state.guard,
+      modelVerified: resolveModelVerified(config, action),
+      detectionSettings: config.detectionSettings,
+      profileId: config.profileId,
+      payloadType: state.payloadType,
+      thresholdOverrides: config.thresholdOverrides,
+      bertEnabled: config.bertEnabled,
+      strictMode: config.strictMode,
+    });
+  }
+
   return {
     getState: () => state,
     evaluate,
+    previewDecision,
     requestAction,
     reset,
     subscribe(listener) {
