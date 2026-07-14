@@ -30,12 +30,8 @@ describe("Route chrome scheiding", () => {
   });
 
   it("/app-route ligt niet onder de _site-layout", () => {
-    // Feit: het bestand heet app.tsx (top-level), niet _site.app.tsx.
-    // ID moet dus met "/app" beginnen en niet "/_site" bevatten.
-    const id = (AppRoute as unknown as { id: string }).id ?? AppRoute.options.getParentRoute?.().id;
-    // Fallback: rely on path
-    const path = AppRoute.options.path ?? AppRoute.options.getParentRoute?.().path;
-    expect(String(path ?? "").includes("_site")).toBe(false);
-    expect(String(id ?? "").includes("_site")).toBe(false);
+    const opts = AppRoute.options as unknown as { id?: string; path?: string };
+    expect(String(opts.id ?? "").includes("_site")).toBe(false);
+    expect(String(opts.path ?? "").includes("_site")).toBe(false);
   });
 });
