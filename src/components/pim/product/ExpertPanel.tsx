@@ -58,16 +58,16 @@ export function ExpertPanel({ mode }: { mode: ProductMode }) {
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetContent
         side="right"
-        className="w-full sm:max-w-xl bg-[#0f1b3d] border-l-[#3b6fa0]/30 text-[#e8edf3] overflow-y-auto"
+        className="w-full sm:max-w-md bg-[#f6f7fb] border-l border-[#e2e8f0] text-[#0f172a] overflow-y-auto p-5"
         data-testid="expert-panel"
       >
-        <SheetHeader>
-          <SheetTitle className="font-serif-display text-[#e8edf3]">Expertinstellingen</SheetTitle>
-          <SheetDescription className="text-[#e8edf3]/60 text-xs">
-            Detectielagen, model, drempels en categorieën, geldt voor alle modi.
+        <SheetHeader className="space-y-1 pb-3 border-b border-[#e2e8f0]">
+          <SheetTitle className="font-serif-display text-[#0f172a] text-lg">Expertinstellingen</SheetTitle>
+          <SheetDescription className="text-[#64748b] text-xs">
+            Detectielagen, drempels en categorieën. Geldt voor alle modi.
           </SheetDescription>
         </SheetHeader>
-        <div className="mt-4">
+        <div className="mt-3">
           <AdvancedPanel {...props} writer={writerProps} />
         </div>
       </SheetContent>
