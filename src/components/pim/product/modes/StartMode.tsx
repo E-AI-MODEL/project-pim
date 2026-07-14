@@ -31,8 +31,7 @@ export function StartMode() {
     [previewDecision, action, state.signals],
   );
 
-  const hits =
-    (state.signals?.directPii.length ?? 0) + (state.signals?.contextualPii.length ?? 0);
+  const hits = (state.signals?.directPii.length ?? 0) + (state.signals?.contextualPii.length ?? 0);
 
   const steps: Step[] = [
     {
@@ -72,16 +71,17 @@ export function StartMode() {
       title: "5 · Beslissing",
       subtitle: `Voor doel · ${action}`,
       done: !!previewedDecision,
-      detail: previewedDecision
-        ? `Verdict: ${previewedDecision.verdict}`
-        : "Wacht op draft-check.",
+      detail: previewedDecision ? `Verdict: ${previewedDecision.verdict}` : "Wacht op draft-check.",
     },
     {
       id: "egress",
       title: "6 · Egress",
       subtitle: "Alleen als jij goedkeurt",
       done: false,
-      detail: previewedDecision?.verdict === "ALLOW" ? "Klaar om te versturen." : "Niets verlaat je apparaat.",
+      detail:
+        previewedDecision?.verdict === "ALLOW"
+          ? "Klaar om te versturen."
+          : "Niets verlaat je apparaat.",
     },
   ];
 
@@ -103,9 +103,7 @@ export function StartMode() {
           <li
             key={s.id}
             className={`rounded-md border p-3 ${
-              s.done
-                ? "border-green-400/40 bg-green-400/5"
-                : "border-[#3b6fa0]/30 bg-[#0f1b3d]/40"
+              s.done ? "border-green-400/40 bg-green-400/5" : "border-[#3b6fa0]/30 bg-[#0f1b3d]/40"
             }`}
           >
             <div className="font-plex-mono text-[10px] uppercase tracking-wider text-[#e8edf3]/60">
@@ -118,7 +116,10 @@ export function StartMode() {
       </ol>
       {state.signals && previewedDecision && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <SafetyVerdictCard verdict={previewedDecision.verdict} reason={previewedDecision.reason} />
+          <SafetyVerdictCard
+            verdict={previewedDecision.verdict}
+            reason={previewedDecision.reason}
+          />
           <FindingChips spans={[...state.signals.directPii, ...state.signals.contextualPii]} />
         </div>
       )}

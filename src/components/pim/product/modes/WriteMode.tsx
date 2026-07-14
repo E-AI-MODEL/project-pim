@@ -11,8 +11,7 @@ export function WriteMode() {
       <PenLine className="mx-auto h-8 w-8 text-[#3b6fa0]" />
       <h2 className="font-serif-display text-xl text-[#e8edf3]">Schrijven — in voorbereiding</h2>
       <p className="text-sm text-[#e8edf3]/70 max-w-md mx-auto">
-        De schrijfmodus met live-editor komt straks in deze shell. Open voor nu
-        de bestaande editor.
+        De schrijfmodus met live-editor komt straks in deze shell. Open voor nu de bestaande editor.
       </p>
       <Link
         to="/schrijven"
