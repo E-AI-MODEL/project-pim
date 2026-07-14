@@ -69,7 +69,62 @@ Alle onderstaande slices staan op `main`:
 
 ## Vervolg
 
-Fase 3 is hiermee afgerond. Mogelijke vervolgstappen liggen buiten deze
-refactor: visuele afwerking van de ProductShell, mobiele optimalisatie
-en opruiming van ongebruikte oude route-pagina's die nog buiten `/app`
-leven (`/pipeline`, `/modes`, enz.) mocht dat wenselijk zijn.
+## Slice C.1 — route-chrome herstel en menu-opruiming (in uitvoering)
+
+Slice C was technisch groen (typecheck/lint/tests/build), maar bij de
+visuele controle bleek de ProductShell in de praktijk *dubbele* chrome
+te tonen: de globale `__root.tsx` render zowel `StartHeader` als
+`SiteFooter` rondom élke route, inclusief `/app`. Daardoor stapelden
+publieke informatie-chrome en `AppHeader`/`StatusFooter` op elkaar —
+twee menuknoppen, twee statusregels, dubbele merkbadge. Dit is een
+integratiefout op layoutniveau, niet iets dat één component kan
+oplossen.
+
+Wat Slice C.1 herstelt:
+
+- **Route-chrome scheiding.** Publieke chrome is verplaatst naar een
+  pathless layout `src/routes/_site.tsx`. `__root.tsx` rendert alleen
+  `<Outlet />` en behoudt runtime-hardening, self-test en het
+  `NotFoundComponent`. Alle informatiepagina's (`/`, `/over`, `/trust`,
+  `/compliance`, `/flags`, `/pipeline`, `/modes`, `/architecture`,
+  `/scenarios`) staan nu als `_site.<naam>.tsx` en erven de publieke
+  header/footer. `/app`, `/try` (redirect) en `/schrijven` (redirect)
+  vallen buiten de `_site`-layout en tonen dus uitsluitend de
+  ProductShell-chrome. Geen `display:none`, geen pathname-check.
+- **AppHeader vereenvoudigd.** `TrustBadge` verwijderd uit de vaste
+  header; nu één merk-/statuslaag met `LocalStatusPill` (desktop) en
+  precies één `BurgerMenu`-knop.
+- **Korte moduslabels.** Segmented control gebruikt nu
+  "Controleren / Begeleid / Schrijven" met `whitespace-nowrap`, zodat
+  labels op smalle schermen niet meer op twee regels breken.
+- **BurgerMenu opgeschoond.** Twee groepen: **Werken met tekst**
+  (Nieuwe tekst, Schrijven, Instellingen, Over PiM) en een
+  ingeklapte **Expert & diagnostiek** (Diagnostiek, Pipeline-uitleg,
+  Modi-uitleg, Beslissingscodes, Trust, Compliance, Lokale gegevens
+  wissen). Technische routes staan niet meer tussen normale
+  teksttaken.
+- **"Nieuwe tekst" is een echte actie.** Rename van "Nieuwe controle".
+  Klik dispatcht `pim:reset` (ProductShell wist tekst, writer, engine)
+  én navigeert naar `/app?mode=quick` én sluit het menu. Wanneer de
+  writer inhoud heeft (body-flag `data-pim-writer-has-content=1` uit
+  ProductShell) wordt eerst een `confirm` getoond, annuleren behoudt
+  alles.
+- **Diagnostiek achter dezelfde knop.** `LiveTechMonitor` opent nu ook
+  op `pim:open-diagnostics`, zodat het BurgerMenu-item naar hetzelfde
+  paneel wijst als de footer-knop; er is geen tweede monitor-instance.
+- **Test.** `src/routes/__tests__/routeChrome.test.tsx` verifieert
+  statisch dat `__root` geen `StartHeader`/`SiteFooter` importeert,
+  `_site` die wél draagt, en `/app` uitsluitend de `ProductShell` en
+  niet onder `_site` valt.
+
+Wat expliciet buiten Slice C.1 valt en nog open staat: de volledige
+visuele richting (lichte documentwerkruimte à la de bijgevoegde witte
+referentie), herwerking van QuickMode-hero/actions, de vier-staps
+StartMode zonder architectuurtaal, en de tweekolomseditor in
+WriteMode. Die stappen vergen een aparte visuele slice waarin
+tokens, tailwind-variabelen en per-modus-copy tegelijk worden
+aangepakt; ze zijn plan-technisch belangrijk maar apart van de
+layout-integratiefout die C.1 dicht.
+
+Fase 3 blijft daarmee open op de visuele richting; de structurele en
+navigationele fouten uit Slice C zijn met C.1 hersteld.
