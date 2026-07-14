@@ -745,11 +745,23 @@ function SafeVersionCard({
 
 function buildSafeText(plain: string, spans: PiiSpan[]): string {
   if (!plain) return "";
-  const sorted = [...spans].sort((a, b) => b.start - a.start);
-  let out = plain;
+  // Ontdubbel overlappende spans (detectors leveren soms meerdere spans op
+  // hetzelfde bereik). Zonder deze stap corrupte je "conflict tijdens" tot
+  // "de[incident]p het schoolplein".
+  const sorted = [...spans].sort((a, b) => a.start - b.start || b.end - a.end);
+  const merged: PiiSpan[] = [];
   for (const s of sorted) {
-    const label = GENERALIZATIONS[s.category] ?? "[…]";
-    out = out.slice(0, s.start) + label + out.slice(s.end);
+    const last = merged[merged.length - 1];
+    if (last && s.start < last.end) continue;
+    merged.push(s);
   }
+  let out = "";
+  let cursor = 0;
+  for (const s of merged) {
+    out += plain.slice(cursor, s.start);
+    out += GENERALIZATIONS[s.category] ?? "[…]";
+    cursor = s.end;
+  }
+  out += plain.slice(cursor);
   return out;
 }
