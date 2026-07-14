@@ -239,10 +239,10 @@ function CompactComposer({
     <section ref={composerRef} className="space-y-3 scroll-mt-20">
       {/* Composer-kaart */}
       <div
-        className={`rounded-2xl border bg-[#0f1b3d]/70 transition-all overflow-hidden ${
+        className={`rounded-2xl border bg-white transition-all overflow-hidden ${
           flash
             ? "border-rose-500/80 shadow-[0_0_0_3px_rgba(244,63,94,0.35)]"
-            : "border-[#3b6fa0]/30 focus-within:border-[#3b6fa0]/70 focus-within:shadow-[0_0_0_3px_rgba(59,111,160,0.15)]"
+            : "border-[#e5e7ef] focus-within:border-[#6d4aff]/60 focus-within:shadow-[0_0_0_3px_rgba(59,111,160,0.15)]"
         }`}
       >
         {/* Verborgen file-input voor upload */}
@@ -256,13 +256,13 @@ function CompactComposer({
 
         {/* Geladen-document chip */}
         {loadedDoc && (
-          <div className="flex items-center gap-2 px-3 py-2 border-b border-[#3b6fa0]/15 bg-[#3b6fa0]/10">
-            <FileText className="h-3.5 w-3.5 text-[#3b6fa0]" />
+          <div className="flex items-center gap-2 px-3 py-2 border-b border-[#eef0f5] bg-[#f6f7fb]">
+            <FileText className="h-3.5 w-3.5 text-[#6d4aff]" />
             <div className="flex-1 min-w-0">
-              <div className="text-[12px] text-[#e8edf3] truncate font-plex-mono">
+              <div className="text-[12px] text-[#0f172a] truncate font-plex-mono">
                 {loadedDoc.filename}
               </div>
-              <div className="text-[10px] text-[#e8edf3]/55 font-plex-mono">
+              <div className="text-[10px] text-[#64748b] font-plex-mono">
                 {formatBytes(loadedDoc.bytes)} · {loadedDoc.text.length.toLocaleString("nl-NL")}{" "}
                 tekens
                 {loadedDoc.truncated && " · ingekort"} · lokaal verwerkt
@@ -273,7 +273,7 @@ function CompactComposer({
               onClick={clearDoc}
               aria-label="Bestand verwijderen"
               title="Bestand verwijderen"
-              className="h-6 w-6 inline-flex items-center justify-center rounded-md text-[#e8edf3]/60 hover:text-[#e8edf3] hover:bg-[#3b6fa0]/20 transition-colors"
+              className="h-6 w-6 inline-flex items-center justify-center rounded-md text-[#64748b] hover:text-[#0f172a] hover:bg-[#f1f2f7] transition-colors"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -294,11 +294,11 @@ function CompactComposer({
           placeholder={COPY.placeholder}
           rows={6}
           spellCheck={false}
-          className="w-full bg-transparent px-4 pt-4 pb-2 text-sm leading-relaxed text-[#e8edf3] placeholder:text-[#e8edf3]/35 font-plex-mono resize-y focus:outline-none min-h-[180px]"
+          className="w-full bg-transparent px-4 pt-4 pb-2 text-sm leading-relaxed text-[#0f172a] placeholder:text-[#94a3b8] font-plex-mono resize-y focus:outline-none min-h-[180px]"
         />
 
         {/* Toolbar */}
-        <div className="flex items-center gap-1.5 px-2 py-2 border-t border-[#3b6fa0]/15">
+        <div className="flex items-center gap-1.5 px-2 py-2 border-t border-[#eef0f5]">
           {/* + Toevoegen: bestand uploaden of voorbeeld kiezen */}
           <Popover open={addOpen} onOpenChange={setAddOpen}>
             <PopoverTrigger asChild>
@@ -312,10 +312,10 @@ function CompactComposer({
             </PopoverTrigger>
             <PopoverContent
               align="start"
-              className="w-80 bg-[#0f1b3d] border-[#3b6fa0]/40 text-[#e8edf3] p-2"
+              className="w-80 bg-white border-[#e5e7ef] text-[#0f172a] p-2"
             >
               {/* Upload-actie */}
-              <div className="px-2 py-1 text-[10px] uppercase tracking-wider text-[#e8edf3]/50 font-plex-mono">
+              <div className="px-2 py-1 text-[10px] uppercase tracking-wider text-[#94a3b8] font-plex-mono">
                 Document controleren
               </div>
               <button
@@ -324,19 +324,19 @@ function CompactComposer({
                   setAddOpen(false);
                   fileInputRef.current?.click();
                 }}
-                className="w-full text-left px-2 py-2 rounded-md hover:bg-[#3b6fa0]/20 transition-colors flex items-start gap-2.5"
+                className="w-full text-left px-2 py-2 rounded-md hover:bg-[#f1f2f7] transition-colors flex items-start gap-2.5"
               >
-                <FileUp className="h-4 w-4 mt-0.5 text-[#3b6fa0] shrink-0" />
+                <FileUp className="h-4 w-4 mt-0.5 text-[#6d4aff] shrink-0" />
                 <div className="min-w-0">
-                  <div className="text-sm text-[#e8edf3]">Bestand uploaden</div>
-                  <div className="text-[11px] text-[#e8edf3]/55 leading-snug mt-0.5">
+                  <div className="text-sm text-[#0f172a]">Bestand uploaden</div>
+                  <div className="text-[11px] text-[#64748b] leading-snug mt-0.5">
                     .txt · .md · .csv · .json · .html · .docx — tot {formatBytes(MAX_DOC_BYTES)}.
                     Lokaal verwerkt.
                   </div>
                 </div>
               </button>
-              <div className="my-1 border-t border-[#3b6fa0]/20" />
-              <div className="px-2 py-1 text-[10px] uppercase tracking-wider text-[#e8edf3]/50 font-plex-mono">
+              <div className="my-1 border-t border-[#eef0f5]" />
+              <div className="px-2 py-1 text-[10px] uppercase tracking-wider text-[#94a3b8] font-plex-mono">
                 Voorbeelden
               </div>
               <div className="flex flex-col">
@@ -349,10 +349,10 @@ function CompactComposer({
                       onExample(e);
                       setAddOpen(false);
                     }}
-                    className="text-left px-2 py-2 rounded-md hover:bg-[#3b6fa0]/20 transition-colors"
+                    className="text-left px-2 py-2 rounded-md hover:bg-[#f1f2f7] transition-colors"
                   >
-                    <div className="text-sm text-[#e8edf3]">{e.label}</div>
-                    <div className="text-[11px] text-[#e8edf3]/55 leading-snug mt-0.5">
+                    <div className="text-sm text-[#0f172a]">{e.label}</div>
+                    <div className="text-[11px] text-[#64748b] leading-snug mt-0.5">
                       {e.hint}
                     </div>
                   </button>
@@ -367,17 +367,17 @@ function CompactComposer({
               <PopoverTrigger asChild>
                 <IconBtn label="Modus & bestemming">
                   <SlidersHorizontal className="h-4 w-4" />
-                  <span className="hidden sm:inline ml-1.5 text-[11px] font-plex-mono text-[#e8edf3]/75">
+                  <span className="hidden sm:inline ml-1.5 text-[11px] font-plex-mono text-[#334155]">
                     {mode === "anonymous" ? "Anoniem" : "Pseudoniem"} · {shortTarget(action)}
                   </span>
                 </IconBtn>
               </PopoverTrigger>
               <PopoverContent
                 align="start"
-                className="w-80 bg-[#0f1b3d] border-[#3b6fa0]/40 text-[#e8edf3] p-4 space-y-4"
+                className="w-80 bg-white border-[#e5e7ef] text-[#0f172a] p-4 space-y-4"
               >
                 <div className="space-y-2">
-                  <div className="text-[10px] uppercase tracking-wider text-[#e8edf3]/50 font-plex-mono">
+                  <div className="text-[10px] uppercase tracking-wider text-[#94a3b8] font-plex-mono">
                     Hoe verwerken
                   </div>
                   <div className="grid grid-cols-1 gap-1.5">
@@ -396,13 +396,13 @@ function CompactComposer({
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <div className="text-[10px] uppercase tracking-wider text-[#e8edf3]/50 font-plex-mono">
+                  <div className="text-[10px] uppercase tracking-wider text-[#94a3b8] font-plex-mono">
                     {COPY.targetLabel}
                   </div>
                   <select
                     value={action}
                     onChange={(e) => onActionChange(e.target.value as Action)}
-                    className="w-full rounded-md border border-[#3b6fa0]/40 bg-[#0a142e] px-2.5 py-2 text-sm text-[#e8edf3] focus:outline-none focus:border-[#3b6fa0]"
+                    className="w-full rounded-md border border-[#e5e7ef] bg-white px-2.5 py-2 text-sm text-[#0f172a] focus:outline-none focus:border-[#3b6fa0]"
                   >
                     {TARGETS.map((t) => (
                       <option key={t.id} value={t.id}>
@@ -438,7 +438,7 @@ function CompactComposer({
               className={`inline-flex items-center gap-1.5 h-8 px-2 rounded-md text-[11px] font-plex-mono border transition-colors ${
                 liveScrub
                   ? "bg-rose-500/15 border-rose-400/50 text-rose-200"
-                  : "bg-transparent border-[#3b6fa0]/30 text-[#e8edf3]/55 hover:text-[#e8edf3] hover:border-[#3b6fa0]/60"
+                  : "bg-transparent border-[#e5e7ef] text-[#64748b] hover:text-[#0f172a] hover:border-[#cbd5e1]"
               }`}
             >
               {liveScrub && (
@@ -448,12 +448,12 @@ function CompactComposer({
               <span className="hidden sm:inline">Live wissen</span>
             </button>
             {text.trim().length > 0 ? (
-              <span className="inline-flex items-center gap-1.5 text-[10px] font-plex-mono text-[#3b6fa0]">
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-plex-mono text-[#6d4aff]">
                 <Radio className="h-2.5 w-2.5 animate-pulse" />
                 {COPY.liveBadge}
               </span>
             ) : (
-              <span className="hidden sm:inline text-[10px] font-plex-mono text-[#e8edf3]/40">
+              <span className="hidden sm:inline text-[10px] font-plex-mono text-[#94a3b8]">
                 ⌘↵ om te controleren
               </span>
             )}
@@ -466,7 +466,7 @@ function CompactComposer({
             disabled={!canSend}
             aria-label={COPY.startButton}
             title={COPY.startButton}
-            className="inline-flex items-center justify-center h-9 w-9 rounded-lg bg-[#3b6fa0] text-[#e8edf3] hover:brightness-110 disabled:bg-[#1e3a5f] disabled:text-[#e8edf3]/30 disabled:cursor-not-allowed transition-all"
+            className="inline-flex items-center justify-center h-9 w-9 rounded-lg bg-[#3b6fa0] text-[#0f172a] hover:brightness-110 disabled:bg-[#1e3a5f] disabled:text-[#cbd5e1] disabled:cursor-not-allowed transition-all"
           >
             <ArrowUp className="h-4 w-4" />
           </button>
@@ -503,12 +503,12 @@ function CompactComposer({
 
       {/* Hint onder de composer */}
       {text.trim().length === 0 ? (
-        <p className="text-[11px] text-[#e8edf3]/50 leading-relaxed px-1">
-          {COPY.monitorEmptyHint} Gebruik <span className="text-[#e8edf3]/75">+</span> voor een
+        <p className="text-[11px] text-[#94a3b8] leading-relaxed px-1">
+          {COPY.monitorEmptyHint} Gebruik <span className="text-[#334155]">+</span> voor een
           voorbeeld of document.
         </p>
       ) : (
-        <p className="text-[11px] text-[#e8edf3]/45 leading-relaxed px-1 font-plex-mono truncate">
+        <p className="text-[11px] text-[#0f172a]/45 leading-relaxed px-1 font-plex-mono truncate">
           Bestemming: {activeTarget}
         </p>
       )}
@@ -527,7 +527,7 @@ function IconBtn({
       aria-label={label}
       title={label}
       {...rest}
-      className="inline-flex items-center h-8 px-2 rounded-md text-[#e8edf3]/70 hover:text-[#e8edf3] hover:bg-[#3b6fa0]/15 transition-colors"
+      className="inline-flex items-center h-8 px-2 rounded-md text-[#0f172a]/70 hover:text-[#0f172a] hover:bg-[#f6f7fb] transition-colors"
     >
       {children}
     </button>
@@ -551,15 +551,15 @@ function ModeOption({
       onClick={onClick}
       className={`text-left px-3 py-2 rounded-md border transition-colors ${
         active
-          ? "bg-[#3b6fa0]/25 border-[#3b6fa0]/70"
-          : "bg-transparent border-[#3b6fa0]/20 hover:bg-[#3b6fa0]/10"
+          ? "bg-[#3b6fa0]/25 border-[#6d4aff]/60"
+          : "bg-transparent border-[#eef0f5] hover:bg-[#f6f7fb]"
       }`}
     >
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm font-medium">{title}</span>
-        {active && <Check className="h-3.5 w-3.5 text-[#3b6fa0]" />}
+        {active && <Check className="h-3.5 w-3.5 text-[#6d4aff]" />}
       </div>
-      <div className="text-[11px] text-[#e8edf3]/55 leading-snug mt-0.5">{hint}</div>
+      <div className="text-[11px] text-[#64748b] leading-snug mt-0.5">{hint}</div>
     </button>
   );
 }

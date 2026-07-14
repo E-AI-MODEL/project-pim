@@ -112,14 +112,14 @@ export function StartMode() {
           <li
             key={s.id}
             className={`rounded-md border p-3 ${
-              s.done ? "border-green-400/40 bg-green-400/5" : "border-[#3b6fa0]/30 bg-[#0f1b3d]/40"
+              s.done ? "border-green-400/40 bg-green-400/5" : "border-[#e5e7ef] bg-[#f6f7fb]"
             }`}
           >
-            <div className="font-plex-mono text-[10px] uppercase tracking-wider text-[#e8edf3]/60">
+            <div className="font-plex-mono text-[10px] uppercase tracking-wider text-[#64748b]">
               {s.title}
             </div>
-            <div className="mt-1 text-sm text-[#e8edf3]">{s.subtitle}</div>
-            <div className="mt-2 text-xs text-[#e8edf3]/70">{s.detail}</div>
+            <div className="mt-1 text-sm text-[#0f172a]">{s.subtitle}</div>
+            <div className="mt-2 text-xs text-[#0f172a]/70">{s.detail}</div>
           </li>
         ))}
       </ol>
