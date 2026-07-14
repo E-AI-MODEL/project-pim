@@ -20,3 +20,4 @@ export * from "./rewriteLlm";
 export * from "./selfTest";
 export * from "./modelGate";
 export * from "./clearStorage";
+export * as engine from "./engine";
