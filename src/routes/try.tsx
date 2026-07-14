@@ -604,6 +604,20 @@ function TryPage() {
   // We hangen expliciet aan de engine-state-velden die de beslissing bepalen
   // (guard, decisionSignals, payloadType) zodat React re-runt bij elke evaluate.
   const decision = useMemo(() => {
+    if (engineState.phase !== "ready" || !engineState.guard) {
+      // Eerste render vóórdat de evaluate-effect heeft gedraaid.
+      return {
+        verdict: "ALLOW" as const,
+        reason: "engine warming up",
+        reasonCode: "engine.idle",
+        ruleId: "engine.idle",
+        policyVersion: "n/a",
+        riskLevel: "low" as const,
+        mode,
+        action,
+        timestamp: new Date().toISOString(),
+      };
+    }
     const t0 = performance.now();
     const d = previewDecision(action);
     queueMicrotask(() => tick("decide", performance.now() - t0));
@@ -612,6 +626,8 @@ function TryPage() {
     previewDecision,
     action,
     tick,
+    mode,
+    engineState.phase,
     engineState.guard,
     engineState.decisionSignals,
     engineState.payloadType,
