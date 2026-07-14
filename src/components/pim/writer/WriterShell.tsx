@@ -25,7 +25,6 @@ import {
   X,
 } from "lucide-react";
 import {
-  computeSignals,
   usesBert,
   type DetectionLayerSettings,
   type PiiCategory,
@@ -34,6 +33,7 @@ import {
 } from "@/lib/pim";
 import { useNerSpans } from "@/hooks/useNerSpans";
 import { usePimSettings } from "@/hooks/usePimSettings";
+import { usePimEngine } from "@/hooks/usePimEngine";
 import { LiveTechMonitor } from "@/components/pim/start-go/LiveTechMonitor";
 import { AdvancedPanel } from "@/components/pim/start-go/AdvancedPanel";
 import { GENERALIZATIONS, DEFAULT_AUTO_REDACT, CATEGORY_LABELS } from "./pimGeneralizations";
@@ -77,6 +77,13 @@ export function WriterShell() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editorRootRef = useRef<HTMLDivElement>(null);
 
+  // Central PiM engine — WriterShell must not compute signals / draft / policy itself.
+  const engineConfig = useMemo(
+    () => ({ detectionSettings, disabledCategories }),
+    [detectionSettings, disabledCategories],
+  );
+  const { evaluate } = usePimEngine(engineConfig);
+
   const pimPlugin = useMemo(() => createPimPlugin(), []);
   const editor = useEditor({
     immediatelyRender: false,
@@ -101,7 +108,9 @@ export function WriterShell() {
     if (!editor) return;
     const { plain, map } = extractPlain(editor.state.doc);
     setPlainText(plain);
-    const signals = computeSignals(plain, nerSpans, detectionSettings, disabledCategories);
+    const next = evaluate({ text: plain, mode: "anonymous", extraSpans: nerSpans });
+    const signals = next.signals;
+    if (!signals) return;
     let all = [...signals.directPii, ...signals.contextualPii];
     if (strict) {
       all = all.filter((s) => {
@@ -143,7 +152,7 @@ export function WriterShell() {
       }),
     );
     setStats((p) => ({ scrubbed: p.scrubbed, marked: toMark.length }));
-  }, [editor, autoRedact, ignored, strict, detectionSettings, disabledCategories, nerSpans]);
+  }, [editor, autoRedact, ignored, strict, nerSpans, evaluate]);
 
   useEffect(() => {
     if (!editor) return;
@@ -230,7 +239,8 @@ export function WriterShell() {
   const onExport = async () => {
     if (!editor) return;
     const { plain } = (await import("./pimPlugin")).extractPlain(editor.state.doc);
-    const sig = computeSignals(plain, nerSpans, detectionSettings, disabledCategories);
+    const next = evaluate({ text: plain, mode: "anonymous", extraSpans: nerSpans });
+    const sig = next.signals ?? { directPii: [], contextualPii: [] };
     const total = sig.directPii.length + sig.contextualPii.length;
     if (total > 0) {
       const cats = Array.from(
