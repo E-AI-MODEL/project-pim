@@ -266,10 +266,26 @@ export function BurgerMenu() {
                     key={group.label}
                     className={gi > 0 ? "mt-2 pt-2 border-t border-border/30" : ""}
                   >
-                    <h3 className="px-4 pt-1 pb-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
-                      {group.label}
-                    </h3>
-                    <ul>
+                    {group.collapsible ? (
+                      <button
+                        type="button"
+                        onClick={() => setMoreOpen((v) => !v)}
+                        aria-expanded={moreOpen}
+                        className="w-full flex items-center justify-between px-4 pt-1 pb-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70 hover:text-foreground"
+                      >
+                        <span>{group.label}</span>
+                        {moreOpen ? (
+                          <ChevronDown className="h-3 w-3" />
+                        ) : (
+                          <ChevronRight className="h-3 w-3" />
+                        )}
+                      </button>
+                    ) : (
+                      <h3 className="px-4 pt-1 pb-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+                        {group.label}
+                      </h3>
+                    )}
+                    <ul hidden={group.collapsible && !moreOpen}>
                       {group.items.map((item, i) => (
                         <li key={`${item.label}-${i}`}>
                           {item.kind === "link" ? (
@@ -307,6 +323,16 @@ export function BurgerMenu() {
                                 )}
                               </span>
                               {clearing ? "Bezig met wissen…" : item.label}
+                            </button>
+                          ) : item.kind === "new-text" ? (
+                            <button
+                              type="button"
+                              data-testid="menu-new-text"
+                              onClick={handleNewText}
+                              className="w-full text-left flex items-center gap-3 px-4 py-2 text-[13px] font-medium rounded-md mx-2 my-0.5 text-foreground/80 hover:bg-accent/40 hover:text-foreground transition-colors"
+                            >
+                              <span className="text-muted-foreground">{item.icon}</span>
+                              {item.label}
                             </button>
                           ) : (
                             <button
