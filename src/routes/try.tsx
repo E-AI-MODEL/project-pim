@@ -461,17 +461,63 @@ function TryPage() {
     };
   }, [text, slmEnabled, slmStatus?.ready, tick]);
 
-  const signals = useMemo(() => {
+  // ── Centrale PiM Evaluation Engine (Fase 2 slice 2) ─────────────────────
+  // try.tsx houdt zich niet meer bezig met detect/anonymize/guard/decide/egress —
+  // die logica leeft in @/lib/pim/engine. Deze UI leest alleen de engine-state.
+  const engineConfig = useMemo(
+    () => ({
+      detectionSettings: coerceDetectionSettings(profileId),
+      profileId,
+      integrity,
+    }),
+    [profileId, integrity],
+  );
+  const engine = usePimEngine(engineConfig);
+  const extraSpans = useMemo(
+    () => (slmEnabled ? slmSpans : []),
+    [slmEnabled, slmSpans],
+  );
+  useEffect(() => {
     const t0 = performance.now();
-    const s = computeSignals(text, slmEnabled ? slmSpans : [], profileId);
+    engine.evaluate({
+      text,
+      mode,
+      extraSpans,
+      autoRepair: true,
+      llmDraftText: llmDraft?.text ?? null,
+    });
     const dur = performance.now() - t0;
     queueMicrotask(() => {
       tick("regex", dur);
       tick("lex", dur);
       tick("ctx", dur);
+      tick("guard", dur);
+      tick("repair", dur);
     });
-    return s;
-  }, [text, slmEnabled, slmSpans, profileId, tick]);
+  }, [engine, text, mode, extraSpans, llmDraft, tick]);
+
+  // Voor UI-weergave vóór de eerste evaluate: veilige defaults.
+  const signals =
+    engine.state.signals ??
+    ({
+      directPii: [],
+      contextualPii: [],
+      riskScore: 0,
+      riskLevel: "low" as const,
+      reasons: [],
+      ruleIds: [],
+    });
+  const decisionSignals = engine.state.decisionSignals ?? signals;
+  const guard =
+    engine.state.guard ??
+    ({ status: "pass" as const, issues: [], mode });
+  const effectiveDraft = engine.state.draft ?? { text, mode, rawHadPii: false };
+  const repaired = engine.state.repairApplied;
+  const finalDraftText =
+    engine.state.llmApplied && engine.state.initialDraft
+      ? engine.state.initialDraft.text
+      : effectiveDraft.text;
+  const plainMap = engine.state.pseudoMapping;
 
   const sourceCounts = useMemo(() => {
     const counts = { regex: 0, lex: 0, slm: 0, ctx: 0 } as Record<
@@ -484,16 +530,9 @@ function TryPage() {
     return counts;
   }, [signals]);
 
-  const processed = useMemo(() => {
-    if (mode === "anonymous")
-      return { draft: anonymize(text, signals), plainMap: null as Map<string, string> | null };
-    const r = pseudonymize(text, signals);
-    return { draft: r.draft, plainMap: r.mapping };
-  }, [text, mode, signals]);
-
   useEffect(() => {
     setRestored(null);
-    if (mode !== "pseudonymous" || !processed.plainMap || processed.plainMap.size === 0) {
+    if (mode !== "pseudonymous" || !plainMap || plainMap.size === 0) {
       setHandle((prev) => {
         if (prev) destroyContainer(prev);
         return null;
@@ -502,7 +541,7 @@ function TryPage() {
     }
     let cancelled = false;
     (async () => {
-      const h = await createMappingContainer(processed.plainMap!);
+      const h = await createMappingContainer(plainMap);
       if (cancelled) {
         destroyContainer(h);
         return;
@@ -515,37 +554,7 @@ function TryPage() {
     return () => {
       cancelled = true;
     };
-  }, [processed.draft.text, mode, processed.plainMap]);
-
-  const initialGuard = useMemo(() => {
-    const t0 = performance.now();
-    const g = draftCheck(processed.draft, mode);
-    queueMicrotask(() => tick("guard", performance.now() - t0));
-    return g;
-  }, [processed.draft, mode, tick]);
-
-  const repaired = useMemo(() => {
-    if (mode !== "anonymous" || initialGuard.status === "pass") return null;
-    const t0 = performance.now();
-    const repairedText = repairAnonymousDraft(processed.draft.text, signals);
-    if (repairedText === processed.draft.text) return null;
-    const newDraft = { ...processed.draft, text: repairedText };
-    const newGuard = draftCheck(newDraft, mode);
-    queueMicrotask(() => tick("repair", performance.now() - t0));
-    return { draft: newDraft, guard: newGuard };
-  }, [mode, initialGuard.status, processed.draft, signals, tick]);
-
-  const finalDraft = repaired?.draft ?? processed.draft;
-  const generalizedGuard = repaired?.guard ?? initialGuard;
-
-  const llmRepaired = useMemo(() => {
-    if (mode !== "anonymous" || !llmDraft) return null;
-    const newDraft = { ...processed.draft, text: llmDraft.text };
-    return { draft: newDraft, guard: draftCheck(newDraft, mode) };
-  }, [mode, llmDraft, processed.draft]);
-
-  const effectiveDraft = llmRepaired?.draft ?? finalDraft;
-  const guard = llmRepaired?.guard ?? generalizedGuard;
+  }, [effectiveDraft.text, mode, plainMap]);
 
   useEffect(() => {
     if (guard.status === "pass") return;
@@ -573,7 +582,7 @@ function TryPage() {
     setLlmDraft(null);
     llmAbortRef.current = false;
     try {
-      const r = await rewriteAnonymousDraftStream(finalDraft.text, (_chunk, acc) => {
+      const r = await rewriteAnonymousDraftStream(finalDraftText, (_chunk, acc) => {
         if (llmAbortRef.current) return;
         setLlmStreamText(acc);
         tick("llm", 0);
@@ -584,37 +593,20 @@ function TryPage() {
     }
   };
 
-  const decisionSignals = useMemo(
-    () => (mode === "anonymous" ? computeSignals(effectiveDraft.text, [], profileId) : signals),
-    [mode, effectiveDraft.text, signals, profileId],
-  );
+  // Beslissing voor huidige actie via engine (previewDecision) — géén egress.
   const decision = useMemo(() => {
+    if (engine.state.phase !== "ready") return engine.state.displayDecision;
     const t0 = performance.now();
-    // Spec derde analyse §4.4 — echte modelgate (geen hardcoded true meer).
-    const gate = modelGateFor(profileId, action, integrity);
-    // Spec §4.7 — bepaal payloadType: anonymous + draft pass = certified.
-    const payloadType: PayloadType =
-      mode === "anonymous" && guard.status === "pass"
-        ? "draft_anonymous_certified"
-        : mode === "pseudonymous"
-          ? "draft_pseudonymous_local"
-          : "unknown";
-    const d = decide({
-      mode,
-      action,
-      signals: decisionSignals,
-      draftCheck: guard,
-      modelVerified: gate.verified,
-      profileId,
-      payloadType,
-    });
+    const d = engine.previewDecision(action);
     queueMicrotask(() => tick("decide", performance.now() - t0));
     return d;
-  }, [mode, action, decisionSignals, guard, tick, profileId, integrity]);
+    // engine identity is stable; re-run when action or engine state changes.
+  }, [engine, action, engine.state, tick]);
 
   const onAct = async () => {
     setEgress(null);
     setRestored(null);
+    if (!decision) return;
     let payloadText = effectiveDraft.text;
     const ab = recordSubmission(text, signals);
     setAbuse(ab);
@@ -622,7 +614,7 @@ function TryPage() {
       setEgress({ ok: false, msg: `Abuse-protectie BLOCK: ${ab.reasons.join("; ")}` });
       return;
     }
-    if (decision.action === "restore" && decision.verdict !== "BLOCK") {
+    if (action === "restore" && decision.verdict !== "BLOCK") {
       if (!handle) {
         setEgress({ ok: false, msg: "Geen mapping container — restore onmogelijk." });
         return;
@@ -630,34 +622,24 @@ function TryPage() {
       payloadText = await restoreFromContainer(handle, effectiveDraft.text);
       setRestored(payloadText);
     }
-    // Spec §4.7 — gecertificeerde payload met expliciet type.
-    const certified: CertifiedPayload = {
-      text: payloadText,
-      mode,
-      payloadType:
-        decision.action === "restore"
-          ? "restored"
-          : mode === "anonymous" && guard.status === "pass"
-            ? "draft_anonymous_certified"
-            : mode === "pseudonymous"
-              ? "draft_pseudonymous_local"
-              : "unknown",
-      profileId,
-      guardStatus: guard.status,
-    };
-    const result = await executeAction(decision, certified);
-    setEgress({ ok: result.executed, msg: result.reason });
+    const outcome = await engine.requestAction({
+      action,
+      payloadText,
+      payloadType: action === "restore" ? "restored" : undefined,
+    });
+    setEgress({ ok: outcome.executed, msg: outcome.reason });
+    const d = outcome.decision;
     setAudit((a) =>
       [
         {
-          ts: decision.timestamp,
-          action: decision.action,
-          mode: decision.mode,
-          verdict: decision.verdict,
-          reasonCode: decision.reasonCode,
-          ruleId: decision.ruleId,
-          riskLevel: decision.riskLevel,
-          policyVersion: decision.policyVersion,
+          ts: d.timestamp,
+          action: d.action,
+          mode: d.mode,
+          verdict: d.verdict,
+          reasonCode: d.reasonCode,
+          ruleId: d.ruleId,
+          riskLevel: d.riskLevel,
+          policyVersion: d.policyVersion,
         },
         ...a,
       ].slice(0, 20),
