@@ -19,6 +19,7 @@ import { Route as ModesRouteImport } from './routes/modes'
 import { Route as FlagsRouteImport } from './routes/flags'
 import { Route as ComplianceRouteImport } from './routes/compliance'
 import { Route as ArchitectureRouteImport } from './routes/architecture'
+import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
 
 const TryRoute = TryRouteImport.update({
@@ -71,6 +72,11 @@ const ArchitectureRoute = ArchitectureRouteImport.update({
   path: '/architecture',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppRoute = AppRouteImport.update({
+  id: '/app',
+  path: '/app',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -79,6 +85,7 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/app': typeof AppRoute
   '/architecture': typeof ArchitectureRoute
   '/compliance': typeof ComplianceRoute
   '/flags': typeof FlagsRoute
@@ -92,6 +99,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/app': typeof AppRoute
   '/architecture': typeof ArchitectureRoute
   '/compliance': typeof ComplianceRoute
   '/flags': typeof FlagsRoute
@@ -106,6 +114,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/app': typeof AppRoute
   '/architecture': typeof ArchitectureRoute
   '/compliance': typeof ComplianceRoute
   '/flags': typeof FlagsRoute
@@ -121,6 +130,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/app'
     | '/architecture'
     | '/compliance'
     | '/flags'
@@ -134,6 +144,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/app'
     | '/architecture'
     | '/compliance'
     | '/flags'
@@ -147,6 +158,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/app'
     | '/architecture'
     | '/compliance'
     | '/flags'
@@ -161,6 +173,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRoute
   ArchitectureRoute: typeof ArchitectureRoute
   ComplianceRoute: typeof ComplianceRoute
   FlagsRoute: typeof FlagsRoute
@@ -245,6 +258,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ArchitectureRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app': {
+      id: '/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -257,6 +277,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AppRoute: AppRoute,
   ArchitectureRoute: ArchitectureRoute,
   ComplianceRoute: ComplianceRoute,
   FlagsRoute: FlagsRoute,
