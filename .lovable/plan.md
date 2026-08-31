@@ -37,6 +37,7 @@ De toggle staat op één plek zichtbaar (kop van het werkvlak), de knop **Contro
 ## 3. Eén instellingenplek, twee niveaus
 
 - In de werkbalk blijven alleen de twee dagelijkse keuzes staan, met duidelijke labels: **Anonimiseren als** (anoniem / pseudoniem) en **Wat ga je ermee doen** (kopiëren, exporteren, externe AI, ...). Het woord "modus" wordt daar niet meer gebruikt, dat is voortaan alleen Checken/Schrijven.
+- Al het andere zit in één paneel **Instellingen**, te openen vanuit één knop in de footer. Het tandwiel in de invoerbalk en het losse menu-item verdwijnen; het burgermenu verwijst naar diezelfde knop.
 
 ### Instellingen per functie nagelopen op dubbeling
 
