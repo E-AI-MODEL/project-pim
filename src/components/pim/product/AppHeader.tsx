@@ -28,7 +28,7 @@ export function AppHeader({ mode }: { mode: ProductMode }) {
         </span>
         <BurgerMenu />
       </div>
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 pb-2 pt-0.5">
+      <div className="mx-auto hidden max-w-7xl px-4 pb-2 pt-0.5 sm:block sm:px-6">
         <div className="overflow-x-auto">
           <ModeSwitcher active={mode} />
         </div>
@@ -36,6 +36,7 @@ export function AppHeader({ mode }: { mode: ProductMode }) {
           {MODE_EXPECTATION[mode]}
         </p>
       </div>
+
     </header>
   );
 }
