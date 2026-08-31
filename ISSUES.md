@@ -1,16 +1,27 @@
 # PiM issuelijst (prioriteit)
 
 Bron van waarheid voor vrijgave-impact. Bijgewerkt na de afwerkronde op de
-fiatteringsaudit (commit `edf7d64`).
+fiatteringsaudit (commit `edf7d64`) en de eerlijke go/no-go (commit in deze ronde).
 
 Classificatie:
 - **P0 blocker**: mag niet naar productie/verkoop.
 - **P1 vrijgavevoorwaarde**: mag mee in release 1, moet opgelost of contractueel afgedekt zijn voor betaalde uitrol.
 - **P2 kwaliteit**: verbetering, geen vrijgave-impact.
 
+## Eerlijke go/no-go
+
+- **Privacy-kern: GO.** Geverifieerd in audit en in deze sessie: 0 externe
+  requests tijdens sessie, klembord-uitvoer volledig gemaskeerd, geen
+  persoonsgegevens in localStorage, fail-closed blokkade bij niet-toegestaan
+  profiel/payload/model.
+- **Betaalde uitrol: pas na drie open voorwaarden (zie P1-3, P1-4 en P1-6).**
+  Deze zijn niet oplosbaar door ze weg te schrijven; ze moeten echt gemeten of
+  contractueel afgedekt zijn.
+
 ## P0 blocker
 
 Geen. Alle privacy-kritieke gedragingen zijn in de audit bevestigd: 0 externe requests, klembord-uitvoer volledig gemaskeerd, geen persoonsgegevens in localStorage, fail-closed blokkade bij niet-toegestaan profiel.
+
 
 ## P1 vrijgavevoorwaarden
 
