@@ -101,4 +101,21 @@ describe("release-pinning", () => {
       false,
     );
   });
+
+  it("elke release-1 catalogusentry is productie-gepind (geen main/LOCAL_PIN/PLACEHOLDER)", () => {
+    for (const [key, entry] of Object.entries(MODEL_CATALOG)) {
+      if (entry.releaseStatus !== "release-1") continue;
+      expect(entry.revision, `${key} gebruikt revision main`).not.toBe("main");
+      expect(entry.revision, `${key} heeft geen immutable revision`).toMatch(/^[a-f0-9]{40}$/);
+      expect(
+        hasStaticProductionHash(entry.expectedConfigSha256),
+        `${key} gebruikt geen statische productie-hash`,
+      ).toBe(true);
+    }
+  });
+
+  it("rewrite_qwen en context_education zijn design-only (geen release-1)", () => {
+    expect(MODEL_CATALOG.rewrite_qwen.releaseStatus).toBe("design-only");
+    expect(MODEL_CATALOG.context_education.releaseStatus).toBe("design-only");
+  });
 });
