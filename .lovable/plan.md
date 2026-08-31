@@ -42,7 +42,7 @@ Eerst de woorden, want alle latere schermen gebruiken ze.
 ## Fase 2, routes en modes samenvoegen
 
 - `ProductMode` wordt `"check" | "write"` in `types.ts`; `app.search.ts` accepteert `quick` en `start` en normaliseert die naar `check`, zodat oude links blijven werken. `try.tsx` en `schrijven.tsx` volgen dezelfde normalisatie.
-- `QuickMode.tsx` en `StartMode.tsx` gaan op in één `CheckMode.tsx`. De zes-stappenbalk wordt `PipelineSteps`, uitklapbaar onder het resultaat ("Hoe PiM tot dit oordeel komt"), standaard dicht.
+- `QuickMode.tsx` en `StartMode.tsx` gaan op in één `CheckMode.tsx`. De zes-stappenbalk wordt `PipelineSteps`, uitklapbaar onder de uitkomst ("Hoe PiM dit heeft bekeken"), standaard dicht.
 - `app.tsx` head-teksten teruggebracht tot twee modi.
 
 ## Fase 3, één analysemodel
