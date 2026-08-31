@@ -78,4 +78,22 @@ describe("Gedeeld zijpaneel", () => {
     });
     expect(screen.queryAllByTestId("side-panel")).toHaveLength(0);
   });
+
+  it("zonder eigen instellingencontext (achtergrondpagina) wijst Instellingen naar Tekst nakijken", async () => {
+    const { SidePanel } = await import("@/components/pim/product/SidePanel");
+    navigateMock.mockClear();
+    render(<SidePanel />);
+    await act(async () => {
+      window.dispatchEvent(new Event("pim:open-menu"));
+    });
+    const item = screen.getByTestId("menu-item-settings");
+    expect(item.textContent).toContain("In Tekst nakijken");
+    await act(async () => {
+      item.click();
+    });
+    // Geen eigen instellingenscherm: navigeren naar /app, geen drill-down.
+    expect(navigateMock).toHaveBeenCalledWith({ to: "/app", search: { mode: "check" } });
+    expect(screen.queryAllByTestId("advanced-panel")).toHaveLength(0);
+    expect(screen.queryAllByTestId("side-panel")).toHaveLength(0);
+  });
 });
