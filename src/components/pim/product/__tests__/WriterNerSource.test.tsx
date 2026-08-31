@@ -79,7 +79,7 @@ describe("WriterWorkspace publiceert NER-bron via ProductShell", () => {
     }
   });
 
-  it("wist de NER-bron wanneer de writer unmount (mode-wissel write → quick)", async () => {
+  it("wist de NER-bron wanneer de writer unmount (mode-wissel write → check)", async () => {
     nerInputs.length = 0;
     let rerender!: (ui: React.ReactElement) => void;
     await act(async () => {
