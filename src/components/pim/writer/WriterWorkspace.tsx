@@ -466,6 +466,9 @@ export function WriterWorkspace() {
           />
         </div>
       </aside>
+      </div>
+
+
 
       <input
         ref={fileInputRef}
