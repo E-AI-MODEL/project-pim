@@ -88,7 +88,8 @@ export const NER_VARIANTS: Record<NerVariantKey, NerVariant> = {
     expectedConfigSha256: "7aa891abae067f95a40f5e2005b3de44824a083f256802934a993d301ec25076",
     label: "Volledig (mBERT)",
     sizeLabel: "~180 MB",
-    notes: "Zwaarder maar hogere recall; vindt meer namen/organisaties.",
+    notes:
+      "Zwaarder maar vindt doorgaans meer namen/organisaties. Recall niet extern gevalideerd op een onafhankelijk corpus.",
   },
 };
 
