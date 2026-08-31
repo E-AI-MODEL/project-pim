@@ -43,3 +43,5 @@ Geen. Alle privacy-kritieke gedragingen zijn in de audit bevestigd: 0 externe re
 | P2-3 | BLOCK-verdict schakelt tab "Veilig" uit zonder uitleg | **Opgelost**: inline hint "kies modus Anoniem of verwijder de gegevens" |
 | P2-4 | Zelftest logde als `external fetch detected` waarschuwing | **Opgelost**: probe wordt herkend, gelogd als `[PIM zelftest]` op info-niveau en gefilterd uit de schendingenlijst op `/trust` |
 | P2-5 | Geen voortgang tijdens modeldownload | **Opgelost**: voortgangsbalk met percentage en bestandsnaam in het expertpaneel |
+| P2-6 | rewrite_qwen als release-1 met `main`/`LOCAL_PIN` | **Opgelost**: catalogusentry is nu `design-only`; test bewaakt dat geen release-1 entry `main`/`LOCAL_PIN`/`PLACEHOLDER` gebruikt. UI toont het als experimenteel in Diagnostiek. |
+| P2-7 | context_education placeholder-hash | **Design-only (geaccepteerd)**: model niet gepubliceerd; gate blokkeert al egress bij placeholder. Vervang door echte mirror-hash zodra het model bestaat. |
