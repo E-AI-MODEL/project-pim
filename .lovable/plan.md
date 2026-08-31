@@ -9,11 +9,21 @@ Ze delen dezelfde engine en dezelfde NER/BERT-runtime, maar de interactie versch
 
 Resultaat: twee modi in plaats van drie, één analysemodel, één instellingenplek.
 
-## 1. Modi terug naar twee
+## 1. Modi terug naar twee, met bewoordingen die de verwachting zetten
 
-- `ModeSwitcher`: "Checken" en "Schrijven".
-- `StartMode` verdwijnt als eigen modus. De zes-stappenbalk wordt een uitklapbare regel ("Hoe PiM tot dit oordeel komt") binnen Checken, standaard dicht.
-- `/app?mode=start` blijft werken en stuurt door naar `mode=check`; oude links breken niet.
+De losse woorden "Checken" en "Schrijven" zijn te dun: ze zeggen niets over invoer, resultaat of wat je erna kunt doen. Daarom krijgt elke modus een label plus een resultaatzin:
+
+- **Tekst controleren** - "Plak of upload tekst. PiM geeft een oordeel en een veilige versie die je kunt kopiëren, exporteren of naar een AI sturen."
+- **Zelf schrijven** - "Schrijf in de editor. PiM markeert persoonsgegevens in je tekst en kan ze meteen vervangen. Opslaan als docx."
+
+Uitvoering:
+
+- `ModeSwitcher`: twee tabs met deze labels; de resultaatzin verschijnt als tooltip en, bij een lege werkruimte, als één regel onder de tab.
+- Bij eerste gebruik (lege staat) staan beide modi als twee kaarten naast elkaar met dezelfde zinnen, zodat de keuze bewust is in plaats van geraden.
+- Woordenlijst vastzetten en overal consequent gebruiken: "controleren" (analyse), "veilige versie" (resultaat), "vervangen" (redactie), "bestemming" (wat je met de tekst doet). Synoniemen zoals "scan", "check", "anonimiseren", "scrubben" en "verwerken" verdwijnen uit de UI-teksten.
+- `StartMode` verdwijnt als eigen modus. De zes-stappenbalk wordt een uitklapbare regel ("Hoe PiM tot dit oordeel komt") binnen Tekst controleren, standaard dicht.
+- `/app?mode=quick` en `?mode=start` blijven werken en sturen door naar `mode=check`; oude links breken niet.
+
 
 ## 2. Eén analysemodel met een toggle
 
@@ -27,7 +37,19 @@ De toggle staat op één plek zichtbaar (kop van het werkvlak), de knop **Contro
 ## 3. Eén instellingenplek, twee niveaus
 
 - In de werkbalk blijven alleen de twee dagelijkse keuzes staan, met duidelijke labels: **Anonimiseren als** (anoniem / pseudoniem) en **Wat ga je ermee doen** (kopiëren, exporteren, externe AI, ...). Het woord "modus" wordt daar niet meer gebruikt, dat is voortaan alleen Checken/Schrijven.
-- Al het andere (detectielagen, drempels, categorieën, strict, BERT laden/testen, auto-vervangen per categorie) zit in één paneel **Instellingen**, te openen vanuit één knop in de footer. Het tandwiel in de invoerbalk en het losse menu-item verdwijnen; het burgermenu krijgt hooguit een verwijzing naar diezelfde knop.
+- Al het andere zit in één paneel **Instellingen**, te openen vanuit één knop in de footer. Het tandwiel in de invoerbalk en het losse menu-item verdwijnen; het burgermenu verwijst naar diezelfde knop.
+
+### Instellingen per functie nagelopen op dubbeling
+
+Het paneel bevat nu vier soorten knoppen die deels hetzelfde doen. Ordening en samenvoeging:
+
+- **Detectielagen** (Regex, Lexicon, Context, BERT): dit zijn vier bronnen die dezelfde categorieën kunnen vinden. Ze worden één blok **Waar PiM op zoekt** met per laag één zin in gewone taal ("Lexicon: bekende namen en plaatsen uit een lokale lijst"). Ze blijven apart, want ze hebben echt verschillende kosten en risico's, maar de UI toont voortaan welke laag welke categorie dekt, zodat "Lexicon uit" begrijpelijk is.
+- **Categorieën aan/uit** versus **drempels** versus **strict mode**: drie plekken die alle drie bepalen of iets een hit wordt. Dat wordt één blok **Wat PiM markeert**, met de categorielijst als hoofdvorm en drempel plus strict als geavanceerde regel eronder in dezelfde rij, niet in losse secties.
+- **Categorie uitzetten** versus **niet automatisch vervangen**: nu twee losse categorielijsten (detectie en writer auto-redact) die op elkaar lijken maar iets anders doen. Ze worden één lijst met per categorie twee duidelijke schakelaars: *markeren* en *automatisch vervangen*.
+- **Strenge cijfercontrole** (writer) versus **strict mode**: overlappende namen; ze worden één instelling **Streng met cijfers en codes**, geldig in beide modi.
+- **BERT-varianten (Uit / 100 MB / 180 MB)**: blijft één keuze, maar met verwachtingszinnen (download, snelheid, wat het extra vindt) en de bestaande laad-/testknop en voortgangsbalk op dezelfde plek.
+- **Modelintegriteit en diagnostiek** verdwijnen uit het instellingenpaneel en staan alleen nog in het diagnostiekpaneel, zodat instellingen alleen keuzes bevat en geen status.
+
 
 ## 4. Dubbele en onduidelijke functies opruimen
 
