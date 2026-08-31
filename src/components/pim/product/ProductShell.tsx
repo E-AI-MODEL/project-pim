@@ -32,12 +32,18 @@ export function ProductShell({ mode }: { mode: ProductMode }) {
   const [nerSourceText, setNerSourceText] = useState("");
   const usesNerSlm = usesBert(settings.detectionSettings);
 
+  const isMobile = useIsMobile();
+
   // Eén analysemodel voor beide schermen.
-  const [analysisMode, setAnalysisMode] = useState<AnalysisMode>(
+  const [analysisMode, setAnalysisModeRaw] = useState<AnalysisMode>(
     mode === "write" ? "manual" : "live",
   );
+  // Op mobiel kijkt PiM nooit live mee: dat spaart accu en houdt het moment
+  // van nakijken voorspelbaar (één knop onderaan het scherm).
+  const analysisMode: AnalysisMode = isMobile ? "manual" : analysisMode_;
   const [analysisTick, setAnalysisTick] = useState(0);
   const [isStale, setIsStale] = useState(false);
+
 
   const runAnalysis = useCallback(() => {
     setAnalysisTick((t) => t + 1);
