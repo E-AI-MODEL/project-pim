@@ -513,7 +513,9 @@ export function WriterWorkspace() {
             </button>
           </div>
         </div>
-      </div>
+        </div>
+      )}
+
 
 
       <input
