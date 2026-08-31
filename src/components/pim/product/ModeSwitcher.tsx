@@ -1,26 +1,26 @@
 import { Link } from "@tanstack/react-router";
-import { Zap, Workflow, PenLine } from "lucide-react";
-import type { ProductMode } from "./types";
+import { ShieldCheck, PenLine } from "lucide-react";
+import { MODE_EXPECTATION, MODE_LABEL, PRODUCT_MODES, type ProductMode } from "./types";
 
-const MODES: { id: ProductMode; label: string; icon: React.ReactNode }[] = [
-  { id: "quick", label: "Snel checken", icon: <Zap className="h-3.5 w-3.5" /> },
-  { id: "start", label: "Stap voor stap", icon: <Workflow className="h-3.5 w-3.5" /> },
-  { id: "write", label: "Schrijven", icon: <PenLine className="h-3.5 w-3.5" /> },
-];
+const ICONS: Record<ProductMode, React.ReactNode> = {
+  check: <ShieldCheck className="h-3.5 w-3.5" />,
+  write: <PenLine className="h-3.5 w-3.5" />,
+};
 
 export function ModeSwitcher({ active }: { active: ProductMode }) {
   return (
     <nav
-      aria-label="Modus"
+      aria-label="Wat wil je doen"
       className="inline-flex items-center gap-1 rounded-lg border border-[#e5e7ef] bg-white p-1 shadow-sm"
     >
-      {MODES.map((m) => {
-        const isActive = active === m.id;
+      {PRODUCT_MODES.map((id) => {
+        const isActive = active === id;
         return (
           <Link
-            key={m.id}
+            key={id}
             to="/app"
-            search={{ mode: m.id }}
+            search={{ mode: id }}
+            title={MODE_EXPECTATION[id]}
             className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-[13px] font-medium transition-colors ${
               isActive
                 ? "bg-[#6d4aff]/10 text-[#6d4aff]"
@@ -28,8 +28,8 @@ export function ModeSwitcher({ active }: { active: ProductMode }) {
             }`}
             aria-current={isActive ? "page" : undefined}
           >
-            {m.icon}
-            {m.label}
+            {ICONS[id]}
+            {MODE_LABEL[id]}
           </Link>
         );
       })}
