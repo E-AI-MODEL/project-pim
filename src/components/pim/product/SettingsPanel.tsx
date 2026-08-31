@@ -63,7 +63,7 @@ export function SettingsPanel({ mode }: { mode: ProductMode }) {
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetContent
         side="right"
-        className="w-full sm:max-w-md bg-[#f6f7fb] border-l border-[#e2e8f0] text-[#0f172a] overflow-y-auto p-5"
+        className="w-full h-full sm:max-w-md bg-[#f6f7fb] border-l border-[#e2e8f0] text-[#0f172a] overflow-y-auto p-5"
         data-testid="settings-panel"
       >
         <SheetHeader className="space-y-1 pb-3 border-b border-[#e2e8f0]">
@@ -74,14 +74,31 @@ export function SettingsPanel({ mode }: { mode: ProductMode }) {
             Waar PiM op let en hoe streng hij meekijkt. Geldt voor beide schermen.
           </SheetDescription>
         </SheetHeader>
+        {device?.isMobile && (
+          <div
+            data-testid="mobile-model-advice"
+            className="mt-3 rounded-xl border border-[#e5e7ef] bg-white p-3 text-[12px] leading-relaxed text-[#475569]"
+          >
+            <div className="text-[13px] font-semibold text-[#0f172a]">Op je telefoon</div>
+            <p className="mt-1">
+              Herkennen van namen, nummers, e-mailadressen en adressen werkt altijd en kost niets.
+            </p>
+            <p className="mt-1">{device.advice}</p>
+          </div>
+        )}
         <div className="mt-3">
           <AdvancedPanel
             {...props}
             writer={writerProps}
-            ner={{ status: nerStatus, onStart: startNer, available: usesNerSlm }}
+            ner={{
+              status: nerStatus,
+              onStart: startNer,
+              available: usesNerSlm && (device ? device.canRunSmartModel : true),
+            }}
           />
         </div>
       </SheetContent>
     </Sheet>
   );
 }
+
