@@ -16,7 +16,8 @@ import {
   Eraser,
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import type { Mode, Action } from "@/lib/pim/types";
+import type { Mode, Action, PiiSpan } from "@/lib/pim/types";
+import { HighlightedTextArea } from "./HighlightedTextArea";
 import {
   extractDocument,
   formatBytes,
@@ -40,7 +41,22 @@ interface Props {
   onModeChange?: (m: Mode) => void;
   action?: Action;
   onActionChange?: (a: Action) => void;
+  /**
+   * Eén tekstvlak voor invoer én uitkomst. `spans` markeert de gevonden
+   * gegevens in de eigen tekst; met `safeText` schakelt hetzelfde vlak naar
+   * de veilige versie. Zo staat dezelfde tekst nooit twee keer in beeld.
+   */
+  spans?: PiiSpan[];
+  safeText?: string;
+  onSafeTextChange?: (v: string) => void;
+  tab?: TextTab;
+  onTabChange?: (t: TextTab) => void;
+  safeDisabled?: boolean;
+  safeNote?: string;
 }
+
+export type TextTab = "original" | "safe";
+
 
 const TARGETS: { id: Action; label: string }[] = [
   { id: "send_external_ai", label: COPY.targetExternalAi },
@@ -51,33 +67,14 @@ const TARGETS: { id: Action; label: string }[] = [
   { id: "display", label: COPY.targetDisplay },
 ];
 
-export function InputPanel({
-  text,
-  onTextChange,
-  onStart,
-  onExample,
-  busy,
-  compact,
-  mode,
-  onModeChange,
-  action,
-  onActionChange,
-}: Props) {
+export function InputPanel(props: Props) {
+  const { text, onTextChange, onStart, onExample, busy, compact } = props;
   if (compact) {
-    return (
-      <CompactComposer
-        text={text}
-        onTextChange={onTextChange}
-        onStart={onStart}
-        onExample={onExample}
-        busy={busy}
-        mode={mode}
-        onModeChange={onModeChange}
-        action={action}
-        onActionChange={onActionChange}
-      />
-    );
+    const { compact: _compact, ...rest } = props;
+    void _compact;
+    return <CompactComposer {...rest} />;
   }
+
   return (
     <section className="space-y-5">
       {!compact && (
@@ -146,7 +143,15 @@ function CompactComposer({
   onModeChange,
   action,
   onActionChange,
+  spans,
+  safeText,
+  onSafeTextChange,
+  tab = "original",
+  onTabChange,
+  safeDisabled,
+  safeNote,
 }: Omit<Props, "compact">) {
+
   const canSend = text.trim().length > 0 && !busy;
   const activeTarget = TARGETS.find((t) => t.id === action)?.label ?? "";
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -280,22 +285,63 @@ function CompactComposer({
           </div>
         )}
 
-        {/* Textarea */}
-        <textarea
-          ref={textareaRef}
-          value={text}
-          onChange={(e) => onTextChange(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && canSend) {
-              e.preventDefault();
-              onStart();
-            }
-          }}
-          placeholder={COPY.placeholder}
-          rows={6}
-          spellCheck={false}
-          className="w-full bg-transparent px-4 pt-4 pb-2 text-sm leading-relaxed text-[#0f172a] placeholder:text-[#94a3b8] font-plex-mono resize-y focus:outline-none min-h-[180px]"
-        />
+        {/* Schakelaar: dezelfde tekst, of je eigen versie of de veilige versie */}
+        {onTabChange && safeText !== undefined && (
+          <div className="flex items-center justify-between gap-2 px-3 pt-3">
+            <div className="inline-flex rounded-lg border border-[#e5e7ef] bg-[#f6f7fb] p-0.5">
+              <button
+                type="button"
+                onClick={() => onTabChange("original")}
+                className={`px-3 py-1 text-[12px] font-medium rounded-md transition-colors ${tab === "original" ? "bg-white text-[#0f172a] shadow-sm" : "text-[#64748b] hover:text-[#0f172a]"}`}
+              >
+                Jouw tekst
+                {spans && spans.length > 0 && (
+                  <span className="ml-1.5 text-[10px] font-plex-mono text-[#94a3b8]">
+                    {spans.length}
+                  </span>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => onTabChange("safe")}
+                disabled={safeDisabled}
+                className={`px-3 py-1 text-[12px] font-medium rounded-md transition-colors ${tab === "safe" ? "bg-white text-[#0f172a] shadow-sm" : "text-[#64748b] hover:text-[#0f172a]"} disabled:opacity-40 disabled:cursor-not-allowed`}
+              >
+                Veilige versie
+              </button>
+            </div>
+            {safeNote && <span className="text-[10px] text-[#94a3b8]">{safeNote}</span>}
+          </div>
+        )}
+
+        {/* Eén tekstvlak, met markeringen in de tekst zelf */}
+        {tab === "safe" && safeText !== undefined ? (
+          <textarea
+            value={safeText}
+            onChange={(e) => onSafeTextChange?.(e.target.value)}
+            rows={6}
+            spellCheck={false}
+            className="w-full bg-transparent px-4 pt-4 pb-2 text-sm leading-relaxed text-[#0f172a] placeholder:text-[#94a3b8] font-plex-mono resize-y focus:outline-none min-h-[180px]"
+          />
+        ) : (
+          <HighlightedTextArea
+            ref={textareaRef}
+            value={text}
+            onValueChange={onTextChange}
+            spans={spans}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && canSend) {
+                e.preventDefault();
+                onStart();
+              }
+            }}
+            placeholder={COPY.placeholder}
+            rows={6}
+            boxClassName="w-full px-4 pt-4 pb-2 text-sm leading-relaxed font-plex-mono min-h-[180px]"
+            className="text-[#0f172a] placeholder:text-[#94a3b8] resize-y focus:outline-none"
+          />
+        )}
+
 
         {/* Toolbar */}
         <div className="flex items-center gap-1.5 px-2 py-2 border-t border-[#eef0f5]">

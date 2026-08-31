@@ -1,12 +1,12 @@
-// §8.4, status → reden → highlights/veilige tekst → primaire actie → details dicht.
-import { useEffect, useMemo, useState } from "react";
+// §8.4, status → reden → bevindingen → primaire actie → details dicht.
+// De tekst zelf staat één keer in beeld, in het tekstvlak van CheckMode.
+import { useMemo } from "react";
 import type { PimDecision, PrivacySignals } from "@/lib/pim/types";
 import type { ModelIntegrityRecord } from "@/lib/pim/modelCatalog";
 import { SafetyVerdictCard } from "./SafetyVerdictCard";
 import { ResultActions } from "./ResultActions";
 import { FindingChips } from "./FindingChips";
 import { DetailsDrawer } from "./DetailsDrawer";
-import { TextHighlighter } from "./TextHighlighter";
 import { MappingViewer } from "./MappingViewer";
 import {
   computeSignals,
@@ -20,8 +20,10 @@ import {
 
 interface Props {
   decision: PimDecision;
+  /** De schone tekst zoals de motor hem maakte. */
   safeText: string;
-  originalText: string;
+  /** De schone tekst zoals hij nu in het tekstvlak staat (mag bewerkt zijn). */
+  editedSafeText?: string;
   signals: PrivacySignals;
   mapping: Map<string, string>;
   integrity: ModelIntegrityRecord[];
@@ -30,7 +32,6 @@ interface Props {
   onDownload?: (editedSafeText: string) => Promise<{ executed: boolean; reason: string }>;
   egressMsg: string | null;
   busy?: boolean;
-  onOriginalChange?: (t: string) => void;
   detectionSettings?: DetectionLayerSettings;
   disabledCategories?: ReadonlySet<PiiCategory>;
   thresholdOverrides?: Partial<Record<Action, number>>;
@@ -39,7 +40,7 @@ interface Props {
 export function ResultPanel({
   decision,
   safeText,
-  originalText,
+  editedSafeText,
   signals,
   mapping,
   integrity,
@@ -48,20 +49,12 @@ export function ResultPanel({
   onDownload,
   egressMsg,
   busy,
-  onOriginalChange,
   detectionSettings = DEFAULT_DETECTION_SETTINGS,
   disabledCategories,
   thresholdOverrides,
 }: Props) {
   const directSpans = signals.directPii;
-  const allSpans = [...signals.directPii, ...signals.contextualPii];
-  const [tab, setTab] = useState<"original" | "safe">(
-    decision.verdict === "BLOCK" ? "original" : "safe",
-  );
-  const [editedSafe, setEditedSafe] = useState(safeText);
-  useEffect(() => {
-    setEditedSafe(safeText);
-  }, [safeText]);
+  const editedSafe = editedSafeText ?? safeText;
   const isEdited = editedSafe !== safeText;
 
   const liveSafeVerdict = useMemo(() => {
@@ -93,13 +86,6 @@ export function ResultPanel({
     signals.directPii.length,
   ]);
 
-  const liveOriginalSpans = useMemo(() => {
-    if (!onOriginalChange) return allSpans;
-    const disabled = disabledCategories ?? new Set<PiiCategory>();
-    const sig = computeSignals(originalText, [], detectionSettings, disabled);
-    return [...sig.directPii, ...sig.contextualPii];
-  }, [originalText, onOriginalChange, detectionSettings, disabledCategories, allSpans]);
-
   return (
     <section className="space-y-4 animate-fade-in">
       <SafetyVerdictCard verdict={decision.verdict} reason={decision.reason} />
@@ -115,57 +101,14 @@ export function ResultPanel({
           </p>
         </div>
       )}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between gap-2 flex-wrap">
-          <div className="inline-flex rounded-lg border border-[#e5e7ef] bg-[#f6f7fb] p-0.5">
-            <button
-              type="button"
-              onClick={() => setTab("original")}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${tab === "original" ? "bg-white text-[#0f172a] shadow-sm" : "text-[#64748b] hover:text-[#0f172a]"}`}
-            >
-              Origineel
-              {allSpans.length > 0 && (
-                <span className="ml-1.5 text-[10px] font-plex-mono text-[#94a3b8]">
-                  {allSpans.length}
-                </span>
-              )}
-            </button>
-            <button
-              type="button"
-              onClick={() => setTab("safe")}
-              disabled={decision.verdict === "BLOCK"}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${tab === "safe" ? "bg-white text-[#0f172a] shadow-sm" : "text-[#64748b] hover:text-[#0f172a]"} disabled:opacity-40 disabled:cursor-not-allowed`}
-            >
-              Veilig
-            </button>
-          </div>
-          <div className="text-[10px] text-[#94a3b8]">
-            {decision.verdict === "BLOCK"
-              ? "Nog geen schone versie: kies Namen weghalen of haal de gegevens zelf weg"
-              : tab === "safe" && isEdited
-                ? `Bewerkt · opnieuw beoordeeld: ${liveSafeVerdict ?? "-"}`
-                : "Bewerkbaar, controle vernieuwt mee"}
-          </div>
+      {decision.verdict !== "BLOCK" && directSpans.length > 0 && (
+        <FindingChips spans={directSpans} />
+      )}
+      {isEdited && (
+        <div className="text-[11px] text-[#64748b]">
+          Je hebt de veilige versie aangepast. Opnieuw beoordeeld: {liveSafeVerdict ?? "-"}
         </div>
-        {tab === "original" ? (
-          <div className="space-y-2">
-            {onOriginalChange && (
-              <textarea
-                value={originalText}
-                onChange={(e) => onOriginalChange(e.target.value)}
-                className="w-full min-h-[120px] rounded-xl border border-[#e5e7ef] bg-white text-[#0f172a] p-3 text-sm outline-none focus:ring-2 focus:ring-[#6d4aff]/30"
-              />
-            )}
-            <TextHighlighter text={originalText} spans={liveOriginalSpans} />
-          </div>
-        ) : (
-          <textarea
-            value={editedSafe}
-            onChange={(e) => setEditedSafe(e.target.value)}
-            className="w-full min-h-[160px] rounded-xl border border-[#e5e7ef] bg-white text-[#0f172a] p-3 text-sm outline-none focus:ring-2 focus:ring-[#6d4aff]/30"
-          />
-        )}
-      </div>
+      )}
       <ResultActions
         verdict={decision.verdict}
         liveVerdict={liveSafeVerdict}

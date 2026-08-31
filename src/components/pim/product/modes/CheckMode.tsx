@@ -6,7 +6,7 @@ import { AnalysisStatus, type AnalysisState } from "../AnalysisStatus";
 import { MobileActionBar } from "../MobileActionBar";
 import { NewTextButton } from "../NewTextButton";
 
-import { InputPanel } from "@/components/pim/start-go/InputPanel";
+import { InputPanel, type TextTab } from "@/components/pim/start-go/InputPanel";
 import { ResultPanel } from "@/components/pim/start-go/ResultPanel";
 import type { Example } from "@/components/pim/start-go/ExamplePicker";
 
@@ -91,6 +91,22 @@ export function CheckMode() {
 
   const status: AnalysisState = busy ? "busy" : isStale ? "stale" : result ? "ready" : "idle";
 
+  // Markeringen in het tekstvlak zelf, zoals in het schrijfscherm.
+  const liveSpans = useMemo(() => {
+    const sig = engineState.signals;
+    if (!sig) return [];
+    return [...sig.directPii, ...sig.contextualPii];
+  }, [engineState.signals]);
+
+  const [tab, setTab] = useState<TextTab>("original");
+  const [editedSafe, setEditedSafe] = useState("");
+  useEffect(() => {
+    setEditedSafe(result?.safeText ?? "");
+  }, [result?.safeText]);
+  useEffect(() => {
+    if (!result || result.decision.verdict === "BLOCK") setTab("original");
+  }, [result]);
+
   const steps = [
     { label: "Tekst", done: text.trim().length > 0 },
     { label: "Gegevens gevonden", done: !!engineState.signals },
@@ -133,29 +149,35 @@ export function CheckMode() {
         onModeChange={setMode}
         action={action}
         onActionChange={setAction}
+        spans={liveSpans}
+        safeText={result ? editedSafe : undefined}
+        onSafeTextChange={setEditedSafe}
+        tab={tab}
+        onTabChange={setTab}
+        safeDisabled={!result || result.decision.verdict === "BLOCK"}
+        safeNote={
+          result?.decision.verdict === "BLOCK"
+            ? "Nog geen schone versie, haal de gegevens eerst weg"
+            : undefined
+        }
       />
-
 
       {result && (
         <div className={isStale ? "opacity-50 transition-opacity" : "transition-opacity"}>
           <ResultPanel
             decision={result.decision}
             safeText={result.safeText}
-            originalText={text}
+            editedSafeText={editedSafe}
             signals={result.signals}
             mapping={result.mapping}
             integrity={settings.integrity}
             onPrimary={async (edited) => {
               const r = await runCheckAction(edited, action);
-              setEgressMsg(r.executed ? r.reason : r.reason);
+              setEgressMsg(r.reason);
             }}
             onCopy={(t) => runCheckAction(t, "copy")}
             onDownload={(t) => runCheckAction(t, "export_file")}
             egressMsg={egressMsg}
-            onOriginalChange={(v) => {
-              setText(v);
-              setEgressMsg(null);
-            }}
             detectionSettings={settings.detectionSettings}
             disabledCategories={settings.disabledCategories}
             thresholdOverrides={settings.thresholdOverrides}
@@ -188,6 +210,6 @@ export function CheckMode() {
 
       <MobileActionBar state={status} disabled={!text.trim()} />
     </div>
-
   );
 }
+
