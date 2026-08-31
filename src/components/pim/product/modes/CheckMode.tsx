@@ -104,7 +104,7 @@ export function CheckMode() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="hidden flex-wrap items-center justify-between gap-3 sm:flex">
         <AnalysisModeToggle />
         <AnalysisStatus state={status} />
       </div>
@@ -126,6 +126,7 @@ export function CheckMode() {
         action={action}
         onActionChange={setAction}
       />
+
 
       {result && (
         <div className={isStale ? "opacity-50 transition-opacity" : "transition-opacity"}>
