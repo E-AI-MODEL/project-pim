@@ -146,12 +146,11 @@ export function SidePanel({ settings }: { settings?: React.ReactNode }) {
                           // Achtergrondpagina: instellingen wonen in het
                           // nakijkscherm; navigeer en open ze daar.
                           setOpen(false);
-                          void navigate({ to: "/app", search: { mode: "check" } }).then(() => {
-                            setTimeout(
-                              () => window.dispatchEvent(new CustomEvent("pim:open-settings")),
-                              50,
-                            );
-                          });
+                          void navigate({ to: "/app", search: { mode: "check" } });
+                          setTimeout(
+                            () => window.dispatchEvent(new CustomEvent("pim:open-settings")),
+                            80,
+                          );
                         }
                       }}
                       className={ROW}
