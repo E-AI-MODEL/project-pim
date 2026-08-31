@@ -4,6 +4,7 @@ import { useProductShell } from "../ProductShellContext";
 import { AnalysisModeToggle } from "../AnalysisModeToggle";
 import { AnalysisStatus, type AnalysisState } from "../AnalysisStatus";
 import { MobileActionBar } from "../MobileActionBar";
+import { NewTextButton } from "../NewTextButton";
 
 import { InputPanel } from "@/components/pim/start-go/InputPanel";
 import { ResultPanel } from "@/components/pim/start-go/ResultPanel";
@@ -106,9 +107,14 @@ export function CheckMode() {
 
   return (
     <div className="space-y-5">
-      <div className="hidden flex-wrap items-center justify-between gap-3 sm:flex">
-        <AnalysisModeToggle />
-        <AnalysisStatus state={status} />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="hidden sm:block">
+          <AnalysisModeToggle />
+        </div>
+        <div className="flex items-center gap-2">
+          <AnalysisStatus state={status} />
+          <NewTextButton />
+        </div>
       </div>
 
       <InputPanel
