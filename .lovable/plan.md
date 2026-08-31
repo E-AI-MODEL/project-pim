@@ -48,7 +48,7 @@ Eerst de woorden, want alle latere schermen gebruiken ze.
 ## Fase 3, één analysemodel
 
 - Gedeelde state in `ProductShell`: `analysisMode: "live" | "manual"`, `runAnalysis()` en `isStale`.
-- **Live meelezen** (standaard bij controleren) of **Analyseren als ik klaar ben** (standaard bij schrijven), omschakelbaar met één toggle bij de werkbalk. De knop **Controleer** is er altijd, ook live, als handmatige herhaling.
+- **PiM kijkt mee terwijl ik typ** (standaard bij nakijken) of **Pas kijken als ik klaar ben** (standaard bij schrijven), omschakelbaar met één keuze bij de werkbalk. De knop **Nu nakijken** is er altijd, ook als PiM meekijkt.
 - De eigen analyseknop en debounce-logica in `WriterWorkspace.tsx` en de verborgen debounce in de checkmodus verdwijnen; beide roepen de shell aan. `useNerSpans` blijft de runtime, maar wordt door de shell aangestuurd in plaats van per modus.
 
 ## Fase 4, één instellingenplek
