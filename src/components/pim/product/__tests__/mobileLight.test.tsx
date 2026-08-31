@@ -14,7 +14,7 @@ vi.mock("@/components/pim/writer/WriterWorkspace", () => ({
   WriterWorkspace: () => <div data-testid="writer-workspace" />,
 }));
 vi.mock("@/components/pim/start-go/LiveTechMonitor", () => ({
-  LiveTechMonitor: ({ trigger }: { trigger: React.ReactNode }) => <div>{trigger}</div>,
+  DiagnosticsBody: () => <div data-testid="diagnostics-body" />,
 }));
 vi.mock("@/components/pim/start-go/AdvancedPanel", () => ({
   AdvancedPanel: () => <div data-testid="advanced-panel" />,

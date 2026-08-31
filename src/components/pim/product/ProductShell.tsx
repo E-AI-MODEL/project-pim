@@ -12,7 +12,9 @@ import { StatusFooter } from "./StatusFooter";
 import { ProductShellProvider, type AnalysisMode } from "./ProductShellContext";
 import { CheckMode } from "./modes/CheckMode";
 import { WriteMode } from "./modes/WriteMode";
-import { SettingsPanel } from "./SettingsPanel";
+import { SidePanel } from "./SidePanel";
+import { SettingsTab } from "./SettingsTab";
+
 import type { ProductMode } from "./types";
 import { DEFAULT_AUTO_REDACT } from "@/components/pim/writer/pimGeneralizations";
 
@@ -217,7 +219,7 @@ export function ProductShell({ mode }: { mode: ProductMode }) {
         </main>
 
         <StatusFooter />
-        <SettingsPanel mode={mode} />
+        <SidePanel settings={<SettingsTab mode={mode} />} />
       </div>
     </ProductShellProvider>
   );

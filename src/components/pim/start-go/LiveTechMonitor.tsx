@@ -1,17 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-  SheetDescription,
-} from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { onNerStatus, loadNerSlm, type NerStatus } from "@/lib/pim/nerSlm";
 import { onRewriteStatus, loadRewriteLlm, type RewriteStatus } from "@/lib/pim/rewriteLlm";
 import { onModelIntegrity, type ModelIntegrityRecord } from "@/lib/pim/modelCatalog";
 import { subscribeDebug, clearDebug, type DebugEvent } from "@/lib/pim/debugBus";
+
 
 function useEnv() {
   const [env, setEnv] = useState<Record<string, unknown>>({});
@@ -156,8 +149,11 @@ function verdictTone(v?: string): Tone {
   return "gray";
 }
 
-export function LiveTechMonitor({ trigger }: { trigger: React.ReactNode }) {
-  const [open, setOpen] = useState(false);
+/**
+ * Diagnostiek-inhoud zonder eigen venster. Wordt getoond in het gedeelde
+ * zijpaneel (SidePanel), tabblad "Diagnostiek".
+ */
+export function DiagnosticsBody() {
   const [ner, setNer] = useState<NerStatus | null>(null);
   const [llm, setLlm] = useState<RewriteStatus | null>(null);
   const [integrity, setIntegrity] = useState<ModelIntegrityRecord[]>([]);
@@ -172,19 +168,12 @@ export function LiveTechMonitor({ trigger }: { trigger: React.ReactNode }) {
   useEffect(() => onModelIntegrity(setIntegrity), []);
   useEffect(() => subscribeDebug(setEvents), []);
 
-  // Slice C.1, laat het BurgerMenu-item "Diagnostiek" dit paneel openen.
+  // Lichte re-render zolang het paneel zichtbaar is, voor "x ms geleden".
   useEffect(() => {
-    const onOpen = () => setOpen(true);
-    window.addEventListener("pim:open-diagnostics", onOpen);
-    return () => window.removeEventListener("pim:open-diagnostics", onOpen);
-  }, []);
-
-  // Lichte re-render zolang het paneel open is, voor "x ms geleden"-tellertjes.
-  useEffect(() => {
-    if (!open) return;
     const id = window.setInterval(() => setNowTick((n) => n + 1), 500);
     return () => clearInterval(id);
-  }, [open]);
+  }, []);
+
 
   const nerStatus: "ready" | "loading" | "idle" | "error" = ner?.error
     ? "error"
@@ -221,22 +210,15 @@ export function LiveTechMonitor({ trigger }: { trigger: React.ReactNode }) {
   const isActive = ageMs < 1500;
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>{trigger}</SheetTrigger>
-      <SheetContent
-        side="right"
-        className="w-full sm:max-w-lg bg-white border-l-[#e5e7ef] text-[#0f172a] overflow-y-auto"
-      >
-        <SheetHeader>
-          <SheetTitle className="font-serif-display text-[#0f172a]">Live techniek</SheetTitle>
-          <SheetDescription className="text-[#64748b] text-xs">
-            Realtime kijkje in de pipeline. <strong>Op mobiel is niet alles mogelijk</strong>, de
-            generalisatie-LLM (~400 MB) blijft daar uit; NER-SLM werkt wel maar de eerste download
-            duurt langer.
-          </SheetDescription>
-        </SheetHeader>
+    <div data-testid="diagnostics-body">
+      <p className="text-[#64748b] text-[12px] leading-relaxed">
+        Realtime kijkje in de pipeline. <strong>Op mobiel is niet alles mogelijk</strong>, de
+        generalisatie-LLM (~400 MB) blijft daar uit; NER-SLM werkt wel maar de eerste download duurt
+        langer.
+      </p>
 
-        <Tabs defaultValue="live" className="mt-4">
+      <Tabs defaultValue="live" className="mt-3">
+
           <TabsList className="grid grid-cols-4 bg-[#f1f2f7]">
             <TabsTrigger value="live" className="text-xs">
               Live
@@ -519,8 +501,8 @@ export function LiveTechMonitor({ trigger }: { trigger: React.ReactNode }) {
                 ))}
             </div>
           </TabsContent>
-        </Tabs>
-      </SheetContent>
-    </Sheet>
+      </Tabs>
+    </div>
   );
 }
+

@@ -19,7 +19,7 @@ vi.mock("@/components/pim/product/modes/CheckMode", () => ({
   CheckMode: () => <div data-testid="check-mode" />,
 }));
 vi.mock("@/components/pim/start-go/LiveTechMonitor", () => ({
-  LiveTechMonitor: ({ trigger }: { trigger: React.ReactNode }) => <div>{trigger}</div>,
+  DiagnosticsBody: () => <div data-testid="diagnostics-body" />,
 }));
 vi.mock("@/components/pim/start-go/AdvancedPanel", () => ({
   AdvancedPanel: () => <div data-testid="advanced-panel" />,
@@ -49,12 +49,12 @@ describe("Twee schermen met heldere verwachting", () => {
     expect(screen.getByText(/Plak of upload je tekst/)).toBeTruthy();
   });
 
-  it("instellingen zitten op één plek en openen via de footerknop", async () => {
+  it("instellingen zitten op één plek en openen via de menuknop rechtsboven", async () => {
     render(<ProductShell mode="check" />);
-    expect(screen.getAllByTestId("open-settings")).toHaveLength(1);
+    expect(screen.getAllByTestId("open-menu")).toHaveLength(1);
     expect(screen.queryAllByTestId("advanced-panel")).toHaveLength(0);
     await act(async () => {
-      screen.getByTestId("open-settings").click();
+      screen.getByTestId("open-menu").click();
     });
     expect(screen.getAllByTestId("advanced-panel")).toHaveLength(1);
   });
