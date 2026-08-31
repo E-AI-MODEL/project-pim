@@ -4,8 +4,11 @@ import { usesBert, detectionSettingsToNerVariant, setNerVariant } from "@/lib/pi
 import { useNerSpans } from "@/hooks/useNerSpans";
 import { usePimSettings } from "@/hooks/usePimSettings";
 import { usePimEngine } from "@/hooks/usePimEngine";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { AppHeader } from "./AppHeader";
+import { MobileModePicker } from "./MobileModePicker";
 import { StatusFooter } from "./StatusFooter";
+
 import { ProductShellProvider, type AnalysisMode } from "./ProductShellContext";
 import { CheckMode } from "./modes/CheckMode";
 import { WriteMode } from "./modes/WriteMode";
@@ -32,12 +35,19 @@ export function ProductShell({ mode }: { mode: ProductMode }) {
   const [nerSourceText, setNerSourceText] = useState("");
   const usesNerSlm = usesBert(settings.detectionSettings);
 
+  const isMobile = useIsMobile();
+
   // Eén analysemodel voor beide schermen.
-  const [analysisMode, setAnalysisMode] = useState<AnalysisMode>(
+  const [desktopAnalysisMode, setAnalysisMode] = useState<AnalysisMode>(
     mode === "write" ? "manual" : "live",
   );
+  // Op mobiel kijkt PiM nooit live mee: dat spaart accu en houdt het moment
+  // van nakijken voorspelbaar (één knop onderaan het scherm).
+  const analysisMode: AnalysisMode = isMobile ? "manual" : desktopAnalysisMode;
+
   const [analysisTick, setAnalysisTick] = useState(0);
   const [isStale, setIsStale] = useState(false);
+
 
   const runAnalysis = useCallback(() => {
     setAnalysisTick((t) => t + 1);
@@ -198,11 +208,14 @@ export function ProductShell({ mode }: { mode: ProductMode }) {
       <div className="min-h-screen flex flex-col bg-[#f6f7fb] text-[#0f172a]">
         <AppHeader mode={mode} />
         <main className="flex-1">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6 sm:py-8">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 py-4 sm:py-8 space-y-4">
+            {isMobile && <MobileModePicker active={mode} />}
             {mode === "check" && <CheckMode />}
             {mode === "write" && <WriteMode />}
           </div>
+
         </main>
+
         <StatusFooter />
         <SettingsPanel mode={mode} />
       </div>

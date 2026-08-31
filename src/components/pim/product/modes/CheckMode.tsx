@@ -3,6 +3,8 @@ import { ChevronDown } from "lucide-react";
 import { useProductShell } from "../ProductShellContext";
 import { AnalysisModeToggle } from "../AnalysisModeToggle";
 import { AnalysisStatus, type AnalysisState } from "../AnalysisStatus";
+import { MobileActionBar } from "../MobileActionBar";
+
 import { InputPanel } from "@/components/pim/start-go/InputPanel";
 import { ResultPanel } from "@/components/pim/start-go/ResultPanel";
 import type { Example } from "@/components/pim/start-go/ExamplePicker";
@@ -104,7 +106,7 @@ export function CheckMode() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="hidden flex-wrap items-center justify-between gap-3 sm:flex">
         <AnalysisModeToggle />
         <AnalysisStatus state={status} />
       </div>
@@ -126,6 +128,7 @@ export function CheckMode() {
         action={action}
         onActionChange={setAction}
       />
+
 
       {result && (
         <div className={isStale ? "opacity-50 transition-opacity" : "transition-opacity"}>
@@ -176,6 +179,9 @@ export function CheckMode() {
           </details>
         </div>
       )}
+
+      <MobileActionBar state={status} disabled={!text.trim()} />
     </div>
+
   );
 }

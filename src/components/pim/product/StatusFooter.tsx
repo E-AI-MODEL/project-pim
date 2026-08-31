@@ -8,13 +8,15 @@ import { SlidersHorizontal } from "lucide-react";
 export function StatusFooter() {
   return (
     <footer className="border-t border-[#e5e7ef] bg-white">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-2.5 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2 text-[12px] text-[#64748b] min-w-0">
+      <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-2.5 sm:px-6">
+        <div className="flex min-w-0 items-center gap-2 text-[12px] text-[#64748b]">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-          <span className="font-medium text-[#334155] shrink-0">PiM v1.0.0</span>
+          <span className="truncate text-[#334155] sm:hidden">Lokale modus</span>
+          <span className="font-medium text-[#334155] shrink-0 hidden sm:inline">PiM v1.0.0</span>
           <span className="text-[#cbd5e1] hidden sm:inline">·</span>
           <span className="hidden sm:inline truncate">Je tekst blijft op dit apparaat</span>
         </div>
+
         <div className="flex items-center gap-1.5 shrink-0">
           <button
             type="button"
