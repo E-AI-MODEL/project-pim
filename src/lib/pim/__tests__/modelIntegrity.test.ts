@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { modelGateFor } from "../modelGate";
 import { _resetIntegrityRegistry, verifyModel, type ModelIntegrityRecord } from "../modelIntegrity";
 import { DEFAULT_DETECTION_SETTINGS, RULES_ONLY_DETECTION_SETTINGS } from "../detectionSettings";
+import { MODEL_CATALOG, NER_VARIANTS } from "../modelCatalog";
+import { hasStaticProductionHash } from "../modelIntegrity";
 
 const rec = (status: ModelIntegrityRecord["status"]): ModelIntegrityRecord => ({
   key: "ner_multilingual",
@@ -75,5 +77,28 @@ describe("browser-local model pins", () => {
 
     expect(second.status).toBe("mismatch");
     expect(modelGateFor("copy", DEFAULT_DETECTION_SETTINGS, [second]).verified).toBe(false);
+  });
+});
+
+describe("release-pinning", () => {
+  it("NER-releasevarianten gebruiken immutable revisions en statische hashes", () => {
+    for (const variant of Object.values(NER_VARIANTS)) {
+      expect(variant.revision).not.toBe("main");
+      expect(variant.revision).toMatch(/^[a-f0-9]{40}$/);
+      expect(variant.expectedConfigSha256).toMatch(/^[a-f0-9]{64}$/);
+      expect(hasStaticProductionHash(variant.expectedConfigSha256)).toBe(true);
+    }
+  });
+
+  it("de release-1 NER-catalogusregel is productie-gepind", () => {
+    const entry = MODEL_CATALOG.ner_multilingual;
+    expect(entry.revision).not.toBe("main");
+    expect(hasStaticProductionHash(entry.expectedConfigSha256)).toBe(true);
+  });
+
+  it("een niet-gepubliceerd model blijft placeholder en blokkeert egress", () => {
+    expect(hasStaticProductionHash(MODEL_CATALOG.context_education.expectedConfigSha256)).toBe(
+      false,
+    );
   });
 });

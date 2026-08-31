@@ -15,8 +15,12 @@ Project PiM is nu een browser-native proof of concept met lokale fail-closed pri
 
 1. Publiceer of vervang `context_education` en verwijder de placeholder-hash.
 2. Bepaal of `rewrite_qwen` onderdeel wordt van release 1 of design-only blijft.
-3. Overweeg voor strikt reproduceerbare distributies statische config- en weight-hashes op immutable modelrevisions. De huidige `LOCAL_PIN:*` aanpak is bewust browser-lokaal.
-4. Valideer de CSP op de uiteindelijke hostingomgeving, want niet iedere host leest `public/_headers`.
+3. Valideer de CSP op de uiteindelijke hostingomgeving, want niet iedere host leest `public/_headers`.
+4. Externe validatie van detectiekwaliteit op een onafhankelijk Nederlands onderwijscorpus (P1-4).
+
+Afgehandeld: NER-releasevarianten staan op immutable Hugging Face revisions met
+statische SHA-256 config-hashes; `LOCAL_PIN` bestaat alleen nog voor dev/demo.
+
 
 ## Release 1 hardening
 

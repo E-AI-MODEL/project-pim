@@ -11,7 +11,7 @@
 // die de regex/lexicon-patronen MOETEN raken.
 
 import { computeSignals } from "./risk";
-import { getViolations } from "./runtimeHardening";
+import { getViolations, isSelfTestViolation } from "./runtimeHardening";
 import { sha256Hex } from "./modelCatalog";
 
 export type SelfTestStatus = "idle" | "running" | "pass" | "fail";
@@ -129,12 +129,13 @@ async function probeHardening(): Promise<{
     /* verwacht, geen verbinding */
   }
   const after = getViolations().length;
-  // De wrapper logt alleen de origin (geen pad), dus daarop matchen we.
+  // De wrapper markeert de probe expliciet als zelftest, daarop matchen we.
   const logged =
     after > before &&
     getViolations()
       .slice(before)
-      .some((v) => v.includes("127.0.0.1:0"));
+      .some((v) => isSelfTestViolation(v) || v.includes("127.0.0.1:0"));
+
   return {
     fetchWrapped: typeof window !== "undefined" && window.fetch.length >= 0,
     probeLogged: logged,

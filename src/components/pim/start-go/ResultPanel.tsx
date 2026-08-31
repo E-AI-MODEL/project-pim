@@ -140,9 +140,11 @@ export function ResultPanel({
             </button>
           </div>
           <div className="text-[10px] text-[#94a3b8]">
-            {tab === "safe" && isEdited
-              ? `Bewerkt · opnieuw beoordeeld: ${liveSafeVerdict ?? "-"}`
-              : "Bewerkbaar, controle vernieuwt mee"}
+            {decision.verdict === "BLOCK"
+              ? "Veilige versie is uit: kies modus Anoniem of verwijder de gegevens"
+              : tab === "safe" && isEdited
+                ? `Bewerkt · opnieuw beoordeeld: ${liveSafeVerdict ?? "-"}`
+                : "Bewerkbaar, controle vernieuwt mee"}
           </div>
         </div>
         {tab === "original" ? (

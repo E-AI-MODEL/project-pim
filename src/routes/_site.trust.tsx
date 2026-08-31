@@ -13,6 +13,7 @@ import {
 import { PageHero } from "@/components/pim/PageHero";
 import {
   onViolations,
+  isSelfTestViolation,
   onReviewQueue,
   onModelIntegrity,
   onEgressReconsult,
@@ -53,7 +54,9 @@ function TrustPage() {
   const [selfTest, setSelfTest] = useState<SelfTestReport | null>(null);
 
   useEffect(() => {
-    const off1 = onViolations(setViolations);
+    // Zelftest-meldingen zijn geen echte schendingen; die filteren we hier weg.
+    const off1 = onViolations((v) => setViolations(v.filter((m) => !isSelfTestViolation(m))));
+
     const off2 = onReviewQueue(setReviews);
     const off3 = onModelIntegrity(setIntegrity);
     const off4 = onEgressReconsult(setReconsult);

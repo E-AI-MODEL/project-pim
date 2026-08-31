@@ -22,15 +22,16 @@ export const MODEL_CATALOG = {
   ner_multilingual: {
     id: "ner_multilingual",
     modelId: "Xenova/distilbert-base-multilingual-cased-ner-hrl",
-    revision: "main",
+    revision: "c2a4dbf593c57f47004c5bc2d3770d311aee9c43",
     task: "token-classification",
     preferredDevice: "webgpu",
     fallbackDevice: "wasm",
-    expectedConfigSha256:
-      "LOCAL_PIN:Xenova/distilbert-base-multilingual-cased-ner-hrl@main/config.json",
+    expectedConfigSha256: "38847be4dc6699b1218a749ed69f888c2ccc7b4deba98e3c4a1cac8cb34d54c8",
     releaseStatus: "release-1",
-    notes: "Multilingual DistilBERT NER (PER/ORG/LOC). Browser-local config pin, ~100 MB.",
+    notes:
+      "Multilingual DistilBERT NER (PER/ORG/LOC). Immutable revision + vaste config-hash, ~100 MB.",
   },
+
   context_education: {
     id: "context_education",
     modelId: "pim-education/context-nl-education-v2",
@@ -73,9 +74,8 @@ export const NER_VARIANTS: Record<NerVariantKey, NerVariant> = {
   small: {
     key: "small",
     modelId: "Xenova/distilbert-base-multilingual-cased-ner-hrl",
-    revision: "main",
-    expectedConfigSha256:
-      "LOCAL_PIN:Xenova/distilbert-base-multilingual-cased-ner-hrl@main/config.json",
+    revision: "c2a4dbf593c57f47004c5bc2d3770d311aee9c43",
+    expectedConfigSha256: "38847be4dc6699b1218a749ed69f888c2ccc7b4deba98e3c4a1cac8cb34d54c8",
     label: "Compact (DistilBERT)",
     sizeLabel: "~100 MB",
     notes: "Lichter en sneller; iets lagere recall. Standaard.",
@@ -83,8 +83,8 @@ export const NER_VARIANTS: Record<NerVariantKey, NerVariant> = {
   large: {
     key: "large",
     modelId: "Xenova/bert-base-multilingual-cased-ner-hrl",
-    revision: "main",
-    expectedConfigSha256: "LOCAL_PIN:Xenova/bert-base-multilingual-cased-ner-hrl@main/config.json",
+    revision: "263e82c06569c8c2ac46238a7ae5107598934234",
+    expectedConfigSha256: "7aa891abae067f95a40f5e2005b3de44824a083f256802934a993d301ec25076",
     label: "Volledig (mBERT)",
     sizeLabel: "~180 MB",
     notes: "Zwaarder maar hogere recall; vindt meer namen/organisaties.",
