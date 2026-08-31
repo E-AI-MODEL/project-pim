@@ -1,6 +1,27 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+
+vi.mock("@tanstack/react-router", () => ({
+  Link: ({ children, to, ...rest }: { children: React.ReactNode; to: string }) => (
+    <a href={to} {...rest}>
+      {children}
+    </a>
+  ),
+  useNavigate: () => vi.fn(),
+  useRouterState: () => ({ location: { pathname: "/app" } }),
+}));
+vi.mock("@/components/pim/writer/WriterWorkspace", () => ({
+  WriterWorkspace: () => <div data-testid="writer-workspace" />,
+}));
+vi.mock("@/components/pim/start-go/LiveTechMonitor", () => ({
+  LiveTechMonitor: ({ trigger }: { trigger: React.ReactNode }) => <div>{trigger}</div>,
+}));
+vi.mock("@/components/pim/start-go/AdvancedPanel", () => ({
+  AdvancedPanel: () => <div data-testid="advanced-panel" />,
+}));
+
 import { ProductShell } from "../ProductShell";
+
 
 function setViewport(width: number) {
   Object.defineProperty(window, "innerWidth", { value: width, configurable: true });
