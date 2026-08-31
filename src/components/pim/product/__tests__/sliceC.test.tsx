@@ -15,13 +15,11 @@ vi.mock("@/components/pim/writer/WriterWorkspace", () => ({
 vi.mock("@/components/pim/product/modes/CheckMode", () => ({
   CheckMode: () => <div data-testid="check-mode" />,
 }));
-// LiveTechMonitor telt als "diagnostiek", we tellen op testid en volgen
-// of hij open of dicht is via zijn trigger.
+// Diagnostiek zit als tabblad in het gedeelde zijpaneel.
 vi.mock("@/components/pim/start-go/LiveTechMonitor", () => ({
-  LiveTechMonitor: ({ trigger }: { trigger: React.ReactNode }) => (
-    <div data-testid="live-tech-monitor">{trigger}</div>
-  ),
+  DiagnosticsBody: () => <div data-testid="diagnostics-body" />,
 }));
+
 // AdvancedPanel mocken zodat we tellen kunnen; onthoud writer-prop.
 vi.mock("@/components/pim/start-go/AdvancedPanel", () => ({
   AdvancedPanel: (props: { writer?: unknown }) => (
@@ -37,49 +35,42 @@ describe("Slice C, consolidatie", () => {
       render(<ProductShell mode={mode} />);
       expect(screen.getAllByTestId("app-header")).toHaveLength(1);
       expect(screen.getAllByRole("contentinfo")).toHaveLength(1); // <footer>
-      // Diagnostiek-trigger komt uit de StatusFooter, precies één.
-      expect(screen.getAllByTestId("open-diagnostics")).toHaveLength(1);
-      expect(screen.getAllByTestId("open-settings")).toHaveLength(1);
+      // De footer bevat geen knoppen meer; alles zit in het zijpaneel.
+      expect(screen.queryAllByTestId("open-settings")).toHaveLength(0);
+      expect(screen.queryAllByTestId("open-diagnostics")).toHaveLength(0);
     });
   }
 
-  it("LiveTechMonitor is niet permanent zichtbaar: alleen een 'Diagnostiek'-trigger", () => {
+  it("Diagnostiek is niet permanent zichtbaar, maar opent als tabblad in het zijpaneel", async () => {
     render(<ProductShell mode="check" />);
-    // De mock rendert altijd zijn trigger, we controleren dat de knop
-    // aanwezig is (achter expliciete knop) en niet als vol paneel.
-    expect(screen.getByTestId("open-diagnostics")).toBeTruthy();
-  });
-
-  it("Diagnostiek-knop opent en sluit de LiveTechMonitor (via trigger)", async () => {
-    render(<ProductShell mode="check" />);
-    const btn = screen.getByTestId("open-diagnostics");
+    expect(screen.queryAllByTestId("diagnostics-body")).toHaveLength(0);
     await act(async () => {
-      btn.click();
+      window.dispatchEvent(new Event("pim:open-diagnostics"));
     });
-    // Onze mock plaatst de trigger in een LiveTechMonitor-container; de
-    // trigger blijft interactief.
-    expect(btn).toBeTruthy();
+    expect(screen.getAllByTestId("diagnostics-body")).toHaveLength(1);
   });
 
-  it("Expertinstellingen-knop opent het gedeelde expertpaneel; slechts één AdvancedPanel", async () => {
+
+  it("Instellingen openen via het zijpaneel; slechts één AdvancedPanel", async () => {
     render(<ProductShell mode="check" />);
-    // Vóór klik nog geen AdvancedPanel in de DOM.
+    // Vóór openen nog geen AdvancedPanel in de DOM.
     expect(screen.queryAllByTestId("advanced-panel")).toHaveLength(0);
     await act(async () => {
-      screen.getByTestId("open-settings").click();
+      window.dispatchEvent(new Event("pim:open-menu"));
     });
     expect(screen.getAllByTestId("advanced-panel")).toHaveLength(1);
     // In non-writer-mode geen writer-sub-paneel.
     expect(screen.getByTestId("advanced-panel").getAttribute("data-writer")).toBe("0");
   });
 
-  it("In write-mode toont het expertpaneel de writer-instellingen", async () => {
+  it("In write-mode toont het instellingen-tabblad de writer-instellingen", async () => {
     render(<ProductShell mode="write" />);
     await act(async () => {
-      screen.getByTestId("open-settings").click();
+      window.dispatchEvent(new Event("pim:open-menu"));
     });
     expect(screen.getByTestId("advanced-panel").getAttribute("data-writer")).toBe("1");
   });
+
 
   it("WriterWorkspace bevat geen lokaal AdvancedPanel", () => {
     render(<ProductShell mode="write" />);

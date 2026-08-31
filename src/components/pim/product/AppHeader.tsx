@@ -1,8 +1,9 @@
 import { Link } from "@tanstack/react-router";
 import { ShieldCheck } from "lucide-react";
-import { BurgerMenu } from "@/components/pim/start-go/BurgerMenu";
+import { MenuButton } from "./SidePanel";
 import { ModeSwitcher } from "./ModeSwitcher";
 import { MODE_EXPECTATION, type ProductMode } from "./types";
+
 
 export function AppHeader({ mode }: { mode: ProductMode }) {
   return (
@@ -26,7 +27,7 @@ export function AppHeader({ mode }: { mode: ProductMode }) {
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
           Lokale modus
         </span>
-        <BurgerMenu />
+        <MenuButton />
       </div>
       <div className="mx-auto hidden max-w-7xl px-4 pb-2 pt-0.5 sm:block sm:px-6">
         <div className="overflow-x-auto">

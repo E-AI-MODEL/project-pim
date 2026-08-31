@@ -31,8 +31,9 @@ vi.mock("@/components/pim/product/AppHeader", () => ({
 vi.mock("@/components/pim/product/StatusFooter", () => ({
   StatusFooter: () => <div />,
 }));
-vi.mock("@/components/pim/product/SettingsPanel", () => ({
-  SettingsPanel: () => <div />,
+vi.mock("@/components/pim/product/SidePanel", () => ({
+  MenuButton: () => <button type="button" />,
+  SidePanel: () => <div />,
 }));
 vi.mock("@/components/pim/product/modes/CheckMode", () => ({
   CheckMode: () => <div />,

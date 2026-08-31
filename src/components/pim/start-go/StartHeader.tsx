@@ -1,7 +1,8 @@
 // Unified light header, identiek aan AppHeader (zonder mode-switcher).
 import { Link } from "@tanstack/react-router";
 import { ShieldCheck } from "lucide-react";
-import { BurgerMenu } from "./BurgerMenu";
+import { MenuButton, SidePanel } from "@/components/pim/product/SidePanel";
+
 
 export function StartHeader() {
   return (
@@ -25,7 +26,9 @@ export function StartHeader() {
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
           Lokale modus
         </span>
-        <BurgerMenu />
+        <MenuButton />
+        <SidePanel />
+
       </div>
     </header>
   );

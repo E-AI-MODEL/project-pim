@@ -21,7 +21,7 @@ vi.mock("@/components/pim/product/StatusFooter", () => ({
 // LiveTechMonitor mag niet dubbel voorkomen in write-mode; we voegen een
 // data-testid toe in de mock zodat we tellen kunnen.
 vi.mock("@/components/pim/start-go/LiveTechMonitor", () => ({
-  LiveTechMonitor: () => <div data-testid="live-tech-monitor" />,
+  DiagnosticsBody: () => <div data-testid="diagnostics-body" />,
 }));
 // Andere modes met content mocken zodat er geen onverwachte overlap is.
 vi.mock("@/components/pim/product/modes/CheckMode", () => ({
