@@ -19,16 +19,30 @@ Project PiM is browser-first en fail-closed. Privacygevoelige inhoud blijft in d
 
 ## Lokale opslag
 
-Toegestaan:
+### Statemodel
+
+Functiestate is vluchtig en leeft uitsluitend in React-geheugen (`usePimSettings`,
+`ProductShell`): profiel, detectielagen, drempels, categorieen, tekst en
+analyse-resultaten. Niets hiervan wordt naar `localStorage` of `sessionStorage`
+geschreven. Een "refresh" valt daardoor altijd terug op defaults en kan geen oude
+of gemengde state terugzetten die functies scheef zou trekken.
+
+Live meekijken tijdens typen (Snel checken, Stap voor stap) is een UX-laag, geen
+correctnessvereiste: de engine evalueert lokaal in-memory, zonder
+netwerk-request per toetsaanslag. Schrijven gebruikt de expliciete "Analyseer"-
+knop met gewijzigd-status. Zie `storageBoundary.test.ts` voor de bewaakte grens.
+
+Toegestaan (persistent):
 
 - browser-cache voor publieke modelbestanden;
-- `localStorage` voor SHA-256 hashes van publieke modelconfiguratie;
+- `localStorage` voor SHA-256 hashes van publieke modelconfiguratie
+  (modelintegriteits-pins, bewust persistent per design);
 - in-memory secure mapping container;
 - auditmetadata zonder originele tekst.
 
 Niet toegestaan:
 
-- originele invoer in `localStorage`;
+- originele invoer in `localStorage` of `sessionStorage`;
 - mappingwaarden in `localStorage`;
 - review queue met originele tekst;
 - drafts of mapping naar een backend;
