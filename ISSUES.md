@@ -27,11 +27,12 @@ Geen. Alle privacy-kritieke gedragingen zijn in de audit bevestigd: 0 externe re
 
 | ID | Onderwerp | Status | Afhandeling |
 |----|-----------|--------|-------------|
-| P1-1 | Modelpinning niet immutabel | **Opgelost** | `modelCatalog.ts` gebruikt nu immutable HF-commits (`c2a4dbf…`, `263e82c…`) met vaste SHA-256 van `config.json`. Helper `hasStaticProductionHash()` in `modelIntegrity.ts`; drie tests in `modelIntegrity.test.ts` bewaken dat geen releasevariant nog `main` of `LOCAL_PIN:` gebruikt. |
+| P1-1 | Modelpinning niet immutabel | **Opgelost** | `modelCatalog.ts` gebruikt nu immutable HF-commits (`c2a4dbf…`, `263e82c…`) met vaste SHA-256 van `config.json`. Helper `hasStaticProductionHash()` in `modelIntegrity.ts`; test bewaakt dat geen release-1 entry nog `main` of `LOCAL_PIN`/`PLACEHOLDER` gebruikt. |
 | P1-2 | Modeldownload is de enige egress | **Opgelost** | Expliciet benoemd in het expertpaneel bij BERT en vastgelegd in `docs/GOLDEN_PATH.md` (sectie "Modeldownload en egress"). Download start alleen na gebruikersactie. |
-| P1-3 | WebGPU niet beschikbaar in auditomgeving | **Open, geaccepteerd risico** | WASM-fallback werkt aantoonbaar. Performance op doelhardware moet vóór betaalde uitrol één keer gemeten worden; staat in `ROADMAP.md` onder Release 1 hardening. |
-| P1-4 | Detectiekwaliteit niet extern gevalideerd | **Open, contractueel** | 163 eigen tests dekken de regels. Externe validatie op een onafhankelijk Nederlands onderwijscorpus blijft nodig; recall-claims richting scholen blijven voorzichtig geformuleerd. |
+| P1-3 | WebGPU niet beschikbaar in auditomgeving | **Open, geaccepteerd risico** | WASM-fallback werkt aantoonbaar. Performance in de preview is gemeten (zie `docs/GOLDEN_PATH.md`); doelhardware moet vóór betaalde uitrol één keer gemeten worden. Ligt bij de uitrol-partij. |
+| P1-4 | Detectiekwaliteit niet extern gevalideerd | **Open, contractueel** | Eigen tests dekken de regels. Externe validatie op een onafhankelijk Nederlands onderwijscorpus blijft nodig; recall-claims richting scholen blijven voorzichtig geformuleerd ("niet extern gevalideerd"). |
 | P1-5 | Geen persistentie van gebruikersvoorkeuren | **Opgelost als productgedrag** | Vastgelegd in `docs/GOLDEN_PATH.md`: instellingen zijn bewust vluchtig, refresh valt terug op defaults. Bewaakt door `storageBoundary.test.ts`. |
+| P1-6 | CSP-controle op definitieve hosting | **Open, vrijgavevoorwaarde** | `public/_headers` en dev/preview CSP staan er, maar niet elke host leest `_headers`. Vóór betaalde uitrol moet de CSP op de echte hosting gemeten worden. |
 
 ## P2 kwaliteit
 
