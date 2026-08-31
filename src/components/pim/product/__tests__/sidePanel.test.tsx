@@ -3,13 +3,14 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+const navigateMock = vi.fn();
 vi.mock("@tanstack/react-router", () => ({
   Link: ({ children, to, ...rest }: { children: React.ReactNode; to: string }) => (
     <a href={to} {...rest}>
       {children}
     </a>
   ),
-  useNavigate: () => vi.fn(),
+  useNavigate: () => navigateMock,
   useRouterState: () => ({ location: { pathname: "/app" } }),
 }));
 vi.mock("@/components/pim/writer/WriterWorkspace", () => ({
@@ -75,6 +76,24 @@ describe("Gedeeld zijpaneel", () => {
     await act(async () => {
       fireEvent.keyDown(document.body, { key: "Escape", code: "Escape" });
     });
+    expect(screen.queryAllByTestId("side-panel")).toHaveLength(0);
+  });
+
+  it("zonder eigen instellingencontext (achtergrondpagina) wijst Instellingen naar Tekst nakijken", async () => {
+    const { SidePanel } = await import("@/components/pim/product/SidePanel");
+    navigateMock.mockClear();
+    render(<SidePanel />);
+    await act(async () => {
+      window.dispatchEvent(new Event("pim:open-menu"));
+    });
+    const item = screen.getByTestId("menu-item-settings");
+    expect(item.textContent).toContain("In Tekst nakijken");
+    await act(async () => {
+      item.click();
+    });
+    // Geen eigen instellingenscherm: navigeren naar /app, geen drill-down.
+    expect(navigateMock).toHaveBeenCalledWith({ to: "/app", search: { mode: "check" } });
+    expect(screen.queryAllByTestId("advanced-panel")).toHaveLength(0);
     expect(screen.queryAllByTestId("side-panel")).toHaveLength(0);
   });
 });

@@ -13,7 +13,7 @@ import {
   ShieldCheck,
   CheckCircle,
 } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { DiagnosticsBody } from "@/components/pim/start-go/LiveTechMonitor";
 import { ClearStorageButton } from "./AboutTab";
@@ -59,10 +59,18 @@ export function MenuButton() {
 export function SidePanel({ settings }: { settings?: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<SidePanelView>("menu");
+  const navigate = useNavigate();
 
   useEffect(() => {
     const openWith = (v: SidePanelView) => () => {
-      setView(v === "settings" && !settings ? "menu" : v);
+      if (v === "settings" && !settings) {
+        // Zonder eigen instellingencontext (achtergrondpagina's): ga naar het
+        // nakijkscherm; het daar gemonteerde paneel opent direct de settings.
+        void navigate({ to: "/app", search: { mode: "check" } });
+        setTimeout(() => window.dispatchEvent(new CustomEvent("pim:open-settings")), 80);
+        return;
+      }
+      setView(v);
       setOpen(true);
     };
     const onMenu = openWith("menu");
@@ -127,22 +135,40 @@ export function SidePanel({ settings }: { settings?: React.ReactNode }) {
             <div className="space-y-2" data-testid="panel-menu">
               <nav className="rounded-xl border border-[#e2e8f0] bg-white p-1">
                 <ul>
-                  {settings && (
-                    <li>
-                      <button
-                        type="button"
-                        data-testid="menu-item-settings"
-                        onClick={() => setView("settings")}
-                        className={ROW}
-                      >
-                        <span className="text-[#94a3b8]">
-                          <SlidersHorizontal className="h-4 w-4" />
-                        </span>
-                        <span className="flex-1 text-left">Instellingen</span>
-                        <ChevronRight className="h-3.5 w-3.5 text-[#cbd5e1]" />
-                      </button>
-                    </li>
-                  )}
+                  <li>
+                    <button
+                      type="button"
+                      data-testid="menu-item-settings"
+                      onClick={() => {
+                        if (settings) {
+                          setView("settings");
+                        } else {
+                          // Achtergrondpagina: instellingen wonen in het
+                          // nakijkscherm; navigeer en open ze daar.
+                          setOpen(false);
+                          void navigate({ to: "/app", search: { mode: "check" } });
+                          setTimeout(
+                            () => window.dispatchEvent(new CustomEvent("pim:open-settings")),
+                            80,
+                          );
+                        }
+                      }}
+                      className={ROW}
+                    >
+                      <span className="text-[#94a3b8]">
+                        <SlidersHorizontal className="h-4 w-4" />
+                      </span>
+                      <span className="flex-1 text-left">
+                        Instellingen
+                        {!settings && (
+                          <span className="block text-[11px] font-normal text-[#94a3b8]">
+                            In Tekst nakijken
+                          </span>
+                        )}
+                      </span>
+                      <ChevronRight className="h-3.5 w-3.5 text-[#cbd5e1]" />
+                    </button>
+                  </li>
                   <li>
                     <button
                       type="button"
