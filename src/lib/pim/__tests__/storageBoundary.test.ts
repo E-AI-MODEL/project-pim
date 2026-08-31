@@ -18,16 +18,18 @@ describe("storage-boundary", () => {
     localStorage.clear();
     sessionStorage.clear();
     writeKeys = [];
-    const track = (store: string) =>
-      (_key: string) => {
-        writeKeys.push({ store, key: _key });
-        // laat het originele gedrag intact
-        return true as unknown as void;
-      };
+    // Bewaar de native setItem en wrap met een recorder die wél doorstuurt,
+    // zodat echte opslag (en de modelintegriteits-pin) gewoon werkt.
+    const native = Storage.prototype.setItem;
     setItemSpy = vi
-      .spyOn(Storage.prototype, "setItem", "assign")
-      .mockImplementation(track("localStorage") as never);
-    vi.spyOn(Storage.prototype, "setItem" as never, "assign");
+      .spyOn(Storage.prototype, "setItem")
+      .mockImplementation(function (this: Storage, key: string, value: string) {
+        writeKeys.push({
+          store: this === localStorage ? "localStorage" : "sessionStorage",
+          key,
+        });
+        native.call(this, key, value);
+      });
   });
 
   afterEach(() => {
