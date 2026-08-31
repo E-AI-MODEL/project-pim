@@ -2,6 +2,16 @@
 import { act, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+// Router-context is niet nodig voor deze structuurtest.
+vi.mock("@tanstack/react-router", () => ({
+  Link: ({ children, to, ...rest }: { children: React.ReactNode; to: string }) => (
+    <a href={to} {...rest}>
+      {children}
+    </a>
+  ),
+  useNavigate: () => vi.fn(),
+  useRouterState: () => ({ location: { pathname: "/app" } }),
+}));
 vi.mock("@/components/pim/writer/WriterWorkspace", () => ({
   WriterWorkspace: () => <div data-testid="writer-workspace" />,
 }));
