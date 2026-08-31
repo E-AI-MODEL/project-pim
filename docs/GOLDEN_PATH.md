@@ -45,6 +45,34 @@ met een vaste SHA-256 van `config.json` (zie `modelCatalog.ts`). Er gaat nooit
 gebruikerstekst mee. De UI meldt dit expliciet in het expertpaneel en toont
 voortgang tijdens de download.
 
+### Vrijgavevoorwaarden voor betaalde uitrol
+
+De privacy-kern is productie-geverifieerd (0 externe requests tijdens sessie,
+klembord gemaskeerd, geen persoonsgegevens in opslag, fail-closed blokkade).
+Betaalde uitrol mag pas na drie voorwaarden die niet door weg-schrijven oplosbaar
+zijn:
+
+1. **WebGPU/performance op doelhardware (P1-3).** WASM-fallback werkt
+   aantoonbaar; performance in de preview is gemeten (zie hieronder), maar
+   doelhardware moet door de uitrol-partij één apart gemeten worden.
+2. **Externe detectievalidatie (P1-4).** Eigen tests dekken de regels, maar
+   recall is niet gevalideerd op een onafhankelijk Nederlands onderwijscorpus.
+   Recall-claims richting scholen blijven "niet extern gevalideerd" tot dit dicht is.
+3. **CSP op definitieve hosting (P1-6).** `public/_headers` en dev/preview
+   staan er, maar de CSP moet op de echte hosting gemeten worden omdat niet
+   elke host `_headers` leest.
+
+### Performance (gemeten in preview)
+
+Indicatief, gemeten in de Lovable preview-omgeving (Chromium, desktop):
+rules-only detectie is milliseconden per 1.000 tekens; NER-small laadt ~100 MB
+en detecteert binnen enkele honderden ms per 1.000 tekens; NER-large (~180 MB)
+is zwaarder. WebGPU wordt gebruikt indien beschikbaar, anders WASM-fallback.
+Dit zijn geen doelhardware-cijfers; de uitrol-partij moet op de doelhardware
+meten voor P1-3.
+
+
+
 
 Toegestaan (persistent):
 
