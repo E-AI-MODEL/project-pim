@@ -79,7 +79,8 @@ export const NER_VARIANTS: Record<NerVariantKey, NerVariant> = {
     expectedConfigSha256: "38847be4dc6699b1218a749ed69f888c2ccc7b4deba98e3c4a1cac8cb34d54c8",
     label: "Compact (DistilBERT)",
     sizeLabel: "~100 MB",
-    notes: "Lichter en sneller; iets lagere recall. Standaard.",
+    notes:
+      "Lichter en sneller. Recall niet extern gevalideerd op een onafhankelijk corpus.",
   },
   large: {
     key: "large",
