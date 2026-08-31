@@ -13,7 +13,7 @@ import {
   ShieldCheck,
   CheckCircle,
 } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { DiagnosticsBody } from "@/components/pim/start-go/LiveTechMonitor";
 import { ClearStorageButton } from "./AboutTab";
