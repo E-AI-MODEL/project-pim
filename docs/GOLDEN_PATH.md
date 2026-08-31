@@ -32,6 +32,20 @@ correctnessvereiste: de engine evalueert lokaal in-memory, zonder
 netwerk-request per toetsaanslag. Schrijven gebruikt de expliciete "Analyseer"-
 knop met gewijzigd-status. Zie `storageBoundary.test.ts` voor de bewaakte grens.
 
+Productgedrag (vastgelegd, geen defect): instellingen worden bewust niet bewaard.
+Na een refresh staat PiM weer op de standaardinstellingen. Dat is de prijs van
+"niets over jou blijft achter op dit apparaat".
+
+### Modeldownload en egress
+
+De enige uitgaande verbinding van PiM is de eenmalige download van publieke
+modelbestanden bij Hugging Face, en alleen wanneer de gebruiker BERT inschakelt
+en op "Laden en testen" klikt. Die download is gepind op een immutable revision
+met een vaste SHA-256 van `config.json` (zie `modelCatalog.ts`). Er gaat nooit
+gebruikerstekst mee. De UI meldt dit expliciet in het expertpaneel en toont
+voortgang tijdens de download.
+
+
 Toegestaan (persistent):
 
 - browser-cache voor publieke modelbestanden;

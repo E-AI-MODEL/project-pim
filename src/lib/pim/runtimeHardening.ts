@@ -23,6 +23,18 @@ const MODEL_HOSTS = new Set([
 const violations: string[] = [];
 const listeners = new Set<(v: string[]) => void>();
 
+// Zelftest-probe: geen echte egress, alleen een gedragstest van de wrapper.
+// We loggen die als info zodat hij niet als fout leest in de console.
+export const SELFTEST_PROBE_MARKER = "pim-selftest-probe";
+
+function isSelfTestProbe(url: string): boolean {
+  return url.includes(SELFTEST_PROBE_MARKER);
+}
+
+export function isSelfTestViolation(msg: string): boolean {
+  return msg.startsWith("[PIM zelftest]");
+}
+
 function notify() {
   for (const l of listeners) l([...violations]);
 }
@@ -62,10 +74,14 @@ export function installRuntimeHardening() {
     const url =
       typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
     if (!sameOrigin(url) && !isModelHost(url)) {
-      const msg = `[PIM hardening] external fetch detected → ${new URL(url).origin}`;
+      const selfTest = isSelfTestProbe(url);
+      const msg = selfTest
+        ? `[PIM zelftest] uitgaande-verkeerdetectie werkt (${SELFTEST_PROBE_MARKER})`
+        : `[PIM hardening] external fetch detected → ${new URL(url).origin}`;
       violations.push(msg);
       notify();
-      console.warn(msg);
+      if (selfTest) console.info(msg);
+      else console.warn(msg);
     }
     return origFetch(input as RequestInfo, init);
   };

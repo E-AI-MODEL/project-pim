@@ -49,6 +49,14 @@ function isLocalPin(hash: string): boolean {
   return hash.startsWith("LOCAL_PIN:");
 }
 
+/**
+ * True als een verwachte hash een echte, statische productiehash is
+ * (dus geen browser-local pin en geen placeholder).
+ */
+export function hasStaticProductionHash(expected: string): boolean {
+  return !isLocalPin(expected) && !isPlaceholder(expected);
+}
+
 function getStorage(): Storage | null {
   try {
     if (typeof localStorage === "undefined") return null;

@@ -294,7 +294,8 @@ function LayerSettings({
             </div>
             <p className="mt-1 text-xs leading-relaxed text-[#334155]/75">
               Lokaal taalmodel dat woorden labelt als persoon, organisatie of plaats. Regex, Lexicon
-              en Context blijven aan.
+              en Context blijven aan. Bij de eerste keer laden haalt je browser het modelbestand
+              eenmalig op bij Hugging Face; je tekst blijft altijd op je apparaat.
             </p>
           </div>
           {settings.bert !== "off" && ner && (
@@ -337,8 +338,35 @@ function LayerSettings({
           />
         </div>
 
+        {settings.bert !== "off" && ner?.status?.loading && (
+          <div className="mt-3">
+            <div className="flex items-center justify-between text-[11px] text-[#475569]">
+              <span className="truncate">
+                Model wordt eenmalig gedownload
+                {ner.status.progress?.file ? `: ${ner.status.progress.file}` : ""}
+              </span>
+              <span className="font-plex-mono tabular-nums">
+                {typeof ner.status.progress?.pct === "number"
+                  ? `${Math.round(ner.status.progress.pct)}%`
+                  : "bezig"}
+              </span>
+            </div>
+            <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-[#e2e8f0]">
+              <div
+                className="h-full rounded-full bg-cyan-500 transition-all"
+                style={{
+                  width:
+                    typeof ner.status.progress?.pct === "number"
+                      ? `${Math.min(100, Math.max(2, ner.status.progress.pct))}%`
+                      : "35%",
+                }}
+              />
+            </div>
+          </div>
+        )}
+
         {(ner?.status?.healthError || ner?.status?.error) && settings.bert !== "off" && (
-          <div className="mt-3 rounded-xl border border-red-400/25 bg-red-400/10 px-3 py-2 text-xs text-red-100 break-words">
+          <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700 break-words">
             {ner.status.healthError ?? ner.status.error}
           </div>
         )}
