@@ -62,9 +62,7 @@ export function StartMode() {
           <li key={s.label} className="inline-flex items-center gap-2">
             <span
               className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 ${
-                s.done
-                  ? "bg-emerald-50 text-emerald-700"
-                  : "bg-[#f1f2f7] text-[#94a3b8]"
+                s.done ? "bg-emerald-50 text-emerald-700" : "bg-[#f1f2f7] text-[#94a3b8]"
               }`}
             >
               <span

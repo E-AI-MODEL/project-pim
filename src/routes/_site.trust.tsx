@@ -68,7 +68,10 @@ function TrustPage() {
   }, []);
 
   const profile = PIPELINE_PROFILES[DEFAULT_PROFILE];
-  const hardeningOk = typeof window !== "undefined";
+  // Pas na hydratatie tonen: tijdens SSR is er geen browserruntime, en een
+  // directe `typeof window`-check in de render geeft een hydration mismatch.
+  const [hardeningOk, setHardeningOk] = useState(false);
+  useEffect(() => setHardeningOk(true), []);
   const lastViolation = violations[violations.length - 1] ?? null;
 
   return (

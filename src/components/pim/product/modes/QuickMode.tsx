@@ -88,7 +88,7 @@ export function QuickMode() {
         onActionChange={setAction}
       />
       {!result && text.trim().length > 0 && (
-        <div className="text-xs text-[#e8edf3]/60 border-l-2 border-[#3b6fa0]/50 pl-3 animate-pulse">
+        <div className="text-xs text-[#64748b] border-l-2 border-[#6d4aff]/40 pl-3 animate-pulse">
           PiM leest mee…
         </div>
       )}

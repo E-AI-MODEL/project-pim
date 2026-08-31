@@ -85,12 +85,16 @@ const RULES: RuleDef[] = [
     contextual: true,
     confidence: 0.6,
   },
-  // Naive name: capitalised word, not at sentence start. Browser SLM stub.
+  // Naam: voornaam + (tussenvoegsels) + één of twee achternaamdelen.
+  // Ondersteunt NL tussenvoegsels ("Emma de Vries") en samengestelde
+  // achternamen met hoofdletterdeel ("Youssef El Amrani").
+  // Een korte blocklist voorkomt dat een voorafgaand zelfstandig naamwoord
+  // ("Leerling Emma de Vries") in de span wordt meegetrokken.
   {
     id: "rule.name",
     category: "name",
     regex:
-      /\b[A-Z][a-zà-ÿ]{2,}(?:\s+(?:van|de|der|den|ten|ter))*\s+[A-Z][a-zà-ÿ]+(?:\s+(?:van|de|der|den|ten|ter)\s+[A-Z][a-zà-ÿ]+)?\b/g,
+      /\b(?!(?:Leerling|Leerlinge|Leerlingen|Ouder|Ouders|Docent|Docenten|Mentor|Groep|Klas|School|Meneer|Mevrouw|Juf|Meester|Deze|Onze|Onder)\b)[A-Z][a-zà-ÿ]{2,}(?:\s+(?:van|de|der|den|ten|ter|el|al|bin|ben|di|da|del|op|in)\b)*(?:\s+[A-Z][a-zà-ÿ]+){1,2}\b/g,
     confidence: 0.6,
   },
   {
@@ -176,9 +180,22 @@ const RULES: RuleDef[] = [
   {
     id: "rule.name_lower_list",
     category: "name",
+    // Alleen kleine letters na de trigger: hoofdletterwoorden zoals "BSN" of
+    // "IBAN" zijn geen namen en horen hier niet in.
     regex:
-      /(?<=\b(?:met|en|onder\s?andere|namelijk|zoals|waaronder|tussen)\s+)(?!(?:de|het|een|die|dat|deze|dit|hun|onze|jullie|zijn|haar|mijn|jouw|ouders?|leerling(?:en)?|docent(?:en)?|mentor|meester|juf|meneer|mevrouw|kinderen|leraren|klasgenoten|jongens|meisjes|team|groep|school|klas)\b)[a-zà-ÿ]{3,}(?:\s+en\s+(?!(?:de|het|een|zijn|haar)\b)[a-zà-ÿ]{3,})?/gi,
+      /(?<=\b(?:[Mm]et|[Ee]n|[Oo]nder\s?andere|[Nn]amelijk|[Zz]oals|[Ww]aaronder|[Tt]ussen)\s+)(?!(?:de|het|een|die|dat|deze|dit|hun|onze|jullie|zijn|haar|mijn|jouw|ouders?|leerling(?:en)?|docent(?:en)?|mentor|meester|juf|meneer|mevrouw|kinderen|leraren|klasgenoten|jongens|meisjes|team|groep|school|klas|bsn|iban|tel|mail|email|nummer|adres|datum)\b)[a-zà-ÿ]{3,}(?:\s+en\s+(?!(?:de|het|een|zijn|haar)\b)[a-zà-ÿ]{3,})?/g,
     confidence: 0.55,
+    contextual: true,
+  },
+  // Naam in kleine letters die direct wordt gevolgd door een klas-/groepsaanduiding:
+  // "piet jansen uit klas 4H2", "sanne de boer in groep 6". Smal genoeg om
+  // gewone woordparen niet te raken, want de klas-cue moet erachter staan.
+  {
+    id: "rule.name_lower_class",
+    category: "name",
+    regex:
+      /\b(?!(?:een|het|die|dat|deze|dit|zijn|haar|onze|hun|jullie|geen|elke|alle|ook|nog|weer|toen|daar|hier|iets|niets|meer|zeer|erg|heel|leerling|leerlingen|kind|kinderen|jongen|meisje|docent|mentor|ouder|ouders|conflict|incident|situatie|gesprek|plek|les|tijd|dag|week|jaar)\b)[a-zà-ÿ]{3,}(?:\s+(?:van|de|der|den|ten|ter))?\s+(?!(?:klas|groep|les|uit|in|van)\b)[a-zà-ÿ]{3,}(?=\s+(?:uit|in|van)\s+(?:klas|groep)\b)/gi,
+    confidence: 0.6,
     contextual: true,
   },
   // Social handle (@user).

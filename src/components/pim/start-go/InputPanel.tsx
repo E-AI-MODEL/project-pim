@@ -304,7 +304,7 @@ function CompactComposer({
             <PopoverTrigger asChild>
               <IconBtn label="Bestand of voorbeeld toevoegen">
                 {docBusy ? (
-                  <span className="h-4 w-4 inline-block animate-spin rounded-full border-2 border-[#e8edf3]/30 border-t-[#e8edf3]" />
+                  <span className="h-4 w-4 inline-block animate-spin rounded-full border-2 border-[#e5e7ef] border-t-[#6d4aff]" />
                 ) : (
                   <Plus className="h-4 w-4" />
                 )}
@@ -352,9 +352,7 @@ function CompactComposer({
                     className="text-left px-2 py-2 rounded-md hover:bg-[#f1f2f7] transition-colors"
                   >
                     <div className="text-sm text-[#0f172a]">{e.label}</div>
-                    <div className="text-[11px] text-[#64748b] leading-snug mt-0.5">
-                      {e.hint}
-                    </div>
+                    <div className="text-[11px] text-[#64748b] leading-snug mt-0.5">{e.hint}</div>
                   </button>
                 ))}
               </div>
@@ -402,7 +400,7 @@ function CompactComposer({
                   <select
                     value={action}
                     onChange={(e) => onActionChange(e.target.value as Action)}
-                    className="w-full rounded-md border border-[#e5e7ef] bg-white px-2.5 py-2 text-sm text-[#0f172a] focus:outline-none focus:border-[#3b6fa0]"
+                    className="w-full rounded-md border border-[#e5e7ef] bg-white px-2.5 py-2 text-sm text-[#0f172a] focus:outline-none focus:border-[#6d4aff]"
                   >
                     {TARGETS.map((t) => (
                       <option key={t.id} value={t.id}>
@@ -437,7 +435,7 @@ function CompactComposer({
               }
               className={`inline-flex items-center gap-1.5 h-8 px-2 rounded-md text-[11px] font-plex-mono border transition-colors ${
                 liveScrub
-                  ? "bg-rose-500/15 border-rose-400/50 text-rose-200"
+                  ? "bg-rose-50 border-rose-300 text-rose-700"
                   : "bg-transparent border-[#e5e7ef] text-[#64748b] hover:text-[#0f172a] hover:border-[#cbd5e1]"
               }`}
             >
@@ -466,7 +464,7 @@ function CompactComposer({
             disabled={!canSend}
             aria-label={COPY.startButton}
             title={COPY.startButton}
-            className="inline-flex items-center justify-center h-9 w-9 rounded-lg bg-[#3b6fa0] text-[#0f172a] hover:brightness-110 disabled:bg-[#1e3a5f] disabled:text-[#cbd5e1] disabled:cursor-not-allowed transition-all"
+            className="inline-flex items-center justify-center h-9 w-9 rounded-lg bg-[#6d4aff] text-white hover:bg-[#5b3ce0] disabled:bg-[#e5e7ef] disabled:text-[#94a3b8] disabled:cursor-not-allowed transition-all"
           >
             <ArrowUp className="h-4 w-4" />
           </button>
@@ -475,14 +473,14 @@ function CompactComposer({
 
       {/* Document-foutmelding */}
       {docError && (
-        <div className="flex items-start gap-2 px-3 py-2 rounded-lg border border-rose-500/40 bg-rose-500/10 text-rose-200">
+        <div className="flex items-start gap-2 px-3 py-2 rounded-lg border border-rose-200 bg-rose-50 text-rose-700">
           <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
           <div className="text-[11px] leading-relaxed flex-1">{docError}</div>
           <button
             type="button"
             onClick={() => setDocError(null)}
             aria-label="Sluiten"
-            className="h-5 w-5 inline-flex items-center justify-center rounded text-rose-200/70 hover:text-rose-200"
+            className="h-5 w-5 inline-flex items-center justify-center rounded text-rose-500 hover:text-rose-700"
           >
             <X className="h-3 w-3" />
           </button>
@@ -491,7 +489,7 @@ function CompactComposer({
 
       {/* Live wissen, eerste-keer toelichting */}
       {liveScrubToast && (
-        <div className="flex items-start gap-2 px-3 py-2 rounded-lg border border-rose-400/40 bg-rose-500/10 text-rose-200 text-[11px] leading-relaxed">
+        <div className="flex items-start gap-2 px-3 py-2 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 text-[11px] leading-relaxed">
           <Eraser className="h-3.5 w-3.5 mt-0.5 shrink-0" />
           <div className="flex-1">
             <span className="font-medium">Live wissen actief.</span> BSN, e-mail, telefoon en IBAN
@@ -551,7 +549,7 @@ function ModeOption({
       onClick={onClick}
       className={`text-left px-3 py-2 rounded-md border transition-colors ${
         active
-          ? "bg-[#3b6fa0]/25 border-[#6d4aff]/60"
+          ? "bg-[#6d4aff]/10 border-[#6d4aff]/60"
           : "bg-transparent border-[#eef0f5] hover:bg-[#f6f7fb]"
       }`}
     >

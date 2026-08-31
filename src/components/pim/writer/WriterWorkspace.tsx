@@ -351,8 +351,16 @@ export function WriterWorkspace() {
               <ShieldCheck className="h-4 w-4" />
               Analyseer
             </button>
-            <LightAction icon={<Upload className="h-4 w-4" />} label="Import" onClick={onImportClick} />
-            <LightAction icon={<Download className="h-4 w-4" />} label="Export" onClick={onExport} />
+            <LightAction
+              icon={<Upload className="h-4 w-4" />}
+              label="Import"
+              onClick={onImportClick}
+            />
+            <LightAction
+              icon={<Download className="h-4 w-4" />}
+              label="Export"
+              onClick={onExport}
+            />
             <LightAction icon={<Trash2 className="h-4 w-4" />} label="Leeg" onClick={onClear} />
           </div>
         </div>
@@ -379,7 +387,9 @@ export function WriterWorkspace() {
               : "Klik op Analyseer om je tekst te controleren."}
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className={`h-1.5 w-1.5 rounded-full ${totalFindings > 0 ? "bg-rose-500" : "bg-emerald-500"}`} />
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${totalFindings > 0 ? "bg-rose-500" : "bg-emerald-500"}`}
+            />
             {totalFindings > 0 ? `risicoscore ${riskScore}` : "geen risico"}
           </span>
         </div>
@@ -620,7 +630,15 @@ const GROUPS: readonly Group[] = [
     key: "ids",
     label: "Identificatoren",
     icon: <Hash className="h-3.5 w-3.5" />,
-    cats: ["bsn", "iban", "student_id", "id_document", "license_plate", "class_code", "credit_card"],
+    cats: [
+      "bsn",
+      "iban",
+      "student_id",
+      "id_document",
+      "license_plate",
+      "class_code",
+      "credit_card",
+    ],
   },
   {
     key: "contact",
@@ -638,7 +656,16 @@ const GROUPS: readonly Group[] = [
     key: "loc",
     label: "Locaties & context",
     icon: <MapPin className="h-3.5 w-3.5" />,
-    cats: ["school", "context_location_specific", "context_incident", "context_care", "context_health", "context_family", "context_legal", "context_financial"],
+    cats: [
+      "school",
+      "context_location_specific",
+      "context_incident",
+      "context_care",
+      "context_health",
+      "context_family",
+      "context_legal",
+      "context_financial",
+    ],
   },
 ];
 
@@ -677,16 +704,14 @@ function FindingsCard({
       : total > 0
         ? "PiM vond persoonsgegevens en gevoelige context in je tekst."
         : "Je tekst is schoon, er staan geen persoonsgegevens in.";
-  const iconTone = !analyzed || stale
-    ? "bg-amber-50 text-amber-600"
-    : total > 0
-      ? "bg-[#6d4aff]/10 text-[#6d4aff]"
-      : "bg-emerald-50 text-emerald-600";
-  const scoreTone = !analyzed || stale
-    ? "text-amber-600"
-    : total > 0
-      ? "text-[#6d4aff]"
-      : "text-emerald-600";
+  const iconTone =
+    !analyzed || stale
+      ? "bg-amber-50 text-amber-600"
+      : total > 0
+        ? "bg-[#6d4aff]/10 text-[#6d4aff]"
+        : "bg-emerald-50 text-emerald-600";
+  const scoreTone =
+    !analyzed || stale ? "text-amber-600" : total > 0 ? "text-[#6d4aff]" : "text-emerald-600";
   return (
     <div className="rounded-2xl border border-[#e5e7ef] bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] overflow-hidden">
       <div className="px-4 py-3 border-b border-[#eef0f5] flex items-center justify-between">
@@ -695,7 +720,9 @@ function FindingsCard({
         </div>
       </div>
       <div className="px-4 py-4 flex items-start gap-3">
-          <span className={`shrink-0 inline-flex h-9 w-9 items-center justify-center rounded-lg ${iconTone}`}>
+        <span
+          className={`shrink-0 inline-flex h-9 w-9 items-center justify-center rounded-lg ${iconTone}`}
+        >
           <ShieldCheck className="h-5 w-5" />
         </span>
         <div className="flex-1">

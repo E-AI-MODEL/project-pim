@@ -120,16 +120,21 @@ async function probeHardening(): Promise<{
   const before = getViolations().length;
   const PROBE = "http://127.0.0.1:0/pim-selftest-probe";
   try {
-    await fetch(PROBE, { method: "GET", mode: "no-cors" });
+    // Vooraf afgebroken signaal: de wrapper logt wél, maar er gaat geen
+    // enkel verzoek de deur uit (en er komt geen CSP-melding in de console).
+    const ac = new AbortController();
+    ac.abort();
+    await fetch(PROBE, { method: "GET", mode: "no-cors", signal: ac.signal });
   } catch {
-    /* expected, geen TCP-verbinding */
+    /* verwacht, geen verbinding */
   }
   const after = getViolations().length;
+  // De wrapper logt alleen de origin (geen pad), dus daarop matchen we.
   const logged =
     after > before &&
     getViolations()
       .slice(before)
-      .some((v) => v.includes("pim-selftest-probe"));
+      .some((v) => v.includes("127.0.0.1:0"));
   return {
     fetchWrapped: typeof window !== "undefined" && window.fetch.length >= 0,
     probeLogged: logged,

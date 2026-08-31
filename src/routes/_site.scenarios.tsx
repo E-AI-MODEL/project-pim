@@ -510,8 +510,7 @@ function PipelineMap() {
       <h2 className="font-display text-2xl md:text-3xl font-bold mb-2">De universele inbouwplek</h2>
       <p className="text-muted-foreground mb-8 max-w-3xl">
         Iedere pipeline hieronder is een variant op dezelfde zes-laagse keten. PiM beslaat de
-        laagjes die de vertrouwens­grens kruisen, alles wat tussen "browser-veilig" en "elders"
-        zit.
+        laagjes die de vertrouwens­grens kruisen, alles wat tussen "browser-veilig" en "elders" zit.
       </p>
       <div className="panel p-6 md:p-8 overflow-x-auto">
         <div className="flex items-stretch gap-3 min-w-[760px]">
