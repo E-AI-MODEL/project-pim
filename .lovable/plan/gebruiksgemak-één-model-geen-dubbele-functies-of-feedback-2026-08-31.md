@@ -4,17 +4,19 @@
 
 "Veilige versie", "vervangen", "bestemming" en "verdict" zijn woorden die kloppen als je weet hoe de motor werkt. Een leerkracht of begeleider denkt niet in versies en vervangingen, maar in: kan ik dit zo doorsturen, en wat staat er nog in dat niet naar buiten mag. De taal wordt dus omgedraaid naar wat de gebruiker wil bereiken.
 
-| Nu (motor-taal) | Straks (gebruikerstaal) |
-| --- | --- |
-| Tekst controleren / scan | **Kan dit naar buiten?** |
-| Verdict veilig / block | **Klaar om te delen** / **Nog niet delen** |
-| Veilige versie | **Tekst zonder persoonsgegevens** |
-| Anonimiseren / pseudonimiseren | **Namen weghalen** / **Namen door codenamen vervangen** (bijv. Leerling 1) |
-| Vervangen / redactie / live wipe | **Gegevens weghalen** (automatisch of per stuk) |
-| Bestemming | **Waar gaat de tekst heen** (kopiëren, downloaden, naar een AI-chat) |
-| Findings / markeringen | **Wat PiM gevonden heeft**, per soort: namen, adressen, geboortedata, leerlingnummers |
-| Risicoscore | verdwijnt als getal, wordt één zin: "Nog 3 namen en 1 leerlingnummer in de tekst" |
-| Detectielagen / BERT | **Hoe streng PiM meekijkt** (basis, uitgebreid, slim taalmodel) |
+
+| Nu (motor-taal)                  | Straks (gebruikerstaal)                                                               |
+| -------------------------------- | ------------------------------------------------------------------------------------- |
+| Tekst controleren / scan         | **Tekst controleren**                                                                 |
+| Verdict veilig / block           | **Klaar om te delen** / **Nog niet delen**                                            |
+| Veilige versie                   | **Tekst zonder persoonsgegevens**                                                     |
+| Anonimiseren / pseudonimiseren   | **Anonimiseren / pseudonimiseren**                                                    |
+| Vervangen / redactie / live wipe | **Gegevens weghalen** (automatisch of per woord/ tekstdeel)                           |
+| Bestemming                       | **Welke stap wil je hierna?**(kopiëren, downloaden, naar een AI-chat)                 |
+| Findings / markeringen           | **Wat PiM gevonden heeft**, per soort: namen, adressen, geboortedata, leerlingnummers |
+| Risicoscore                      | verdwijnt als getal, wordt één zin: "Nog 3 namen en 1 leerlingnummer in de tekst"     |
+| Detectielagen / BERT             | **Hoe streng PiM meekijkt** (basis, uitgebreid, slim taalmodel)                       |
+
 
 Regel voor alle teksten: benoem het gegeven en de gevolgen, niet de bewerking. Dus niet "2 entiteiten vervangen" maar "2 namen weggehaald, deze tekst kun je delen".
 
@@ -37,7 +39,6 @@ Eerst de woorden, want alle latere schermen gebruiken ze.
   - **Zelf schrijven**, "Schrijf hier je tekst. PiM kleurt persoonsgegevens terwijl je typt en haalt ze op verzoek weg. Opslaan als Word-bestand."
 - `ModeSwitcher`: twee tabs met die namen, de verwachtingszin eronder of als tooltip. Bij een leeg scherm staan beide als twee kaarten met dezelfde zinnen.
 - Publieke pagina's die nog drie modi uitleggen (`_site.modes.tsx`, `_site.index.tsx`, `_site.pipeline.tsx`, `_site.scenarios.tsx`, `_site.architecture.tsx`) worden gelijkgetrokken met deze twee namen en deze woordenlijst.
-
 
 ## Fase 2, routes en modes samenvoegen
 
