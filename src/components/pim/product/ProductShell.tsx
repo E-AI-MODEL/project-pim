@@ -6,22 +6,21 @@ import { usePimSettings } from "@/hooks/usePimSettings";
 import { usePimEngine } from "@/hooks/usePimEngine";
 import { AppHeader } from "./AppHeader";
 import { StatusFooter } from "./StatusFooter";
-import { ProductShellProvider } from "./ProductShellContext";
-import { QuickMode } from "./modes/QuickMode";
-import { StartMode } from "./modes/StartMode";
+import { ProductShellProvider, type AnalysisMode } from "./ProductShellContext";
+import { CheckMode } from "./modes/CheckMode";
 import { WriteMode } from "./modes/WriteMode";
-import { ExpertPanel } from "./ExpertPanel";
+import { SettingsPanel } from "./SettingsPanel";
 import type { ProductMode } from "./types";
 import { DEFAULT_AUTO_REDACT } from "@/components/pim/writer/pimGeneralizations";
 
 /**
- * ProductShell, één gedeelde chrome (header, footer) en één engine-instance
- * voor alle drie de modi. De modi zijn inhoudsvlakken; ze renderen geen
- * eigen header, footer, monitor of trust-badge.
+ * ProductShell, één gedeelde chrome (header, footer), één engine-instance en
+ * één analysemodel voor beide schermen. De schermen zijn inhoudsvlakken; ze
+ * renderen geen eigen header, footer, monitor of instellingenpaneel.
  */
 export function ProductShell({ mode }: { mode: ProductMode }) {
   const settings = usePimSettings();
-  const [text, setText] = useState("");
+  const [text, setTextRaw] = useState("");
   const [pimMode, setPimMode] = useState<Mode>("anonymous");
   const [action, setAction] = useState<Action>("send_external_ai");
   const [writerContent, setWriterContent] = useState<string | null>(null);
@@ -33,14 +32,35 @@ export function ProductShell({ mode }: { mode: ProductMode }) {
   const [nerSourceText, setNerSourceText] = useState("");
   const usesNerSlm = usesBert(settings.detectionSettings);
 
+  // Eén analysemodel voor beide schermen.
+  const [analysisMode, setAnalysisMode] = useState<AnalysisMode>(
+    mode === "write" ? "manual" : "live",
+  );
+  const [analysisTick, setAnalysisTick] = useState(0);
+  const [isStale, setIsStale] = useState(false);
+
+  const runAnalysis = useCallback(() => {
+    setAnalysisTick((t) => t + 1);
+    setIsStale(false);
+  }, []);
+  const markStale = useCallback(() => setIsStale(true), []);
+  const clearStale = useCallback(() => setIsStale(false), []);
+
+  const setText = useCallback(
+    (v: string) => {
+      setTextRaw(v);
+      setIsStale(analysisMode === "manual" && v.trim().length > 0);
+    },
+    [analysisMode],
+  );
+
   useEffect(() => {
     const variant = detectionSettingsToNerVariant(settings.detectionSettings);
     if (variant) setNerVariant(variant);
   }, [settings.detectionSettings]);
 
-  // Modus-bewuste bron: schrijfmodus gebruikt de editor-tekst,
-  // quick/start gebruiken de shell-`text`. Zo valt een lege writer
-  // niet terug op oude Quick-tekst.
+  // Schermbewuste bron: het schrijfscherm gebruikt de editor-tekst, nakijken
+  // gebruikt de shell-`text`. Zo valt een lege editor niet terug op oude tekst.
   const activeNerText = mode === "write" ? nerSourceText : text;
   const {
     nerSpans,
@@ -84,24 +104,24 @@ export function ProductShell({ mode }: { mode: ProductMode }) {
     reset,
   } = usePimEngine(engineConfig);
 
-  // Reset-event vanuit BurgerMenu ("nieuwe test").
+  // Reset-event vanuit BurgerMenu ("Begin met een lege tekst").
   useEffect(() => {
     const onReset = () => {
-      setText("");
+      setTextRaw("");
       setNerSourceText("");
       setNerEnabled(false);
       setWriterContent(null);
       setWriterAutoRedact(new Set(DEFAULT_AUTO_REDACT));
       setWriterStrict(false);
+      setIsStale(false);
       reset();
     };
     window.addEventListener("pim:reset", onReset);
     return () => window.removeEventListener("pim:reset", onReset);
   }, [reset]);
 
-  // Slice C.1, BurgerMenu leest deze flag om te weten of "Nieuwe tekst"
-  // een bevestiging moet vragen. Alleen writer-inhoud is duurbaar; quick/start
-  // is een tekstveld en verdient geen extra vraag.
+  // BurgerMenu leest deze flag om te weten of een lege start bevestiging
+  // verdient. Alleen schrijfinhoud is duurbaar.
   useEffect(() => {
     if (typeof document === "undefined") return;
     const has = writerContent && writerContent.replace(/<[^>]*>/g, "").trim().length > 0;
@@ -123,6 +143,13 @@ export function ProductShell({ mode }: { mode: ProductMode }) {
       setMode: setPimMode,
       action,
       setAction,
+      analysisMode,
+      setAnalysisMode,
+      analysisTick,
+      runAnalysis,
+      isStale,
+      markStale,
+      clearStale,
       writerContent,
       setWriterContent,
       writerAutoRedact,
@@ -145,8 +172,15 @@ export function ProductShell({ mode }: { mode: ProductMode }) {
       reset,
       settings,
       text,
+      setText,
       pimMode,
       action,
+      analysisMode,
+      analysisTick,
+      runAnalysis,
+      isStale,
+      markStale,
+      clearStale,
       writerContent,
       writerAutoRedact,
       writerStrict,
@@ -165,13 +199,12 @@ export function ProductShell({ mode }: { mode: ProductMode }) {
         <AppHeader mode={mode} />
         <main className="flex-1">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6 sm:py-8">
-            {mode === "quick" && <QuickMode />}
-            {mode === "start" && <StartMode />}
+            {mode === "check" && <CheckMode />}
             {mode === "write" && <WriteMode />}
           </div>
         </main>
         <StatusFooter />
-        <ExpertPanel mode={mode} />
+        <SettingsPanel mode={mode} />
       </div>
     </ProductShellProvider>
   );
