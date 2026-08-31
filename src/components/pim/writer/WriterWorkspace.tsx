@@ -361,10 +361,54 @@ export function WriterWorkspace() {
   if (!mounted || !editor) return null;
   const totalFindings = foundSpans.length;
   const riskScore = Math.min(9, totalFindings);
+  const privacyPanel = (
+    <>
+      <FindingsCard
+        spans={foundSpans}
+        score={riskScore}
+        analyzed={hasAnalyzed}
+        stale={analysisStale}
+      />
+      <SafeVersionCard
+        safeText={safeText}
+        hasFindings={totalFindings > 0}
+        onCopy={async () => {
+          try {
+            await navigator.clipboard.writeText(safeText);
+            setEgressMsg("De tekst zonder persoonsgegevens staat op je klembord.");
+          } catch {
+            setEgressMsg("Kopiëren lukte niet, probeer het opnieuw.");
+          }
+        }}
+        onDownload={() => {
+          const blob = new Blob([safeText], { type: "text/plain;charset=utf-8" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `pim-veilige-versie-${new Date().toISOString().slice(0, 10)}.txt`;
+          a.click();
+          URL.revokeObjectURL(url);
+        }}
+        onSendAI={async () => {
+          const r = await requestAction({ action: "send_external_ai", payloadText: safeText });
+          setEgressMsg(r.executed ? `✓ ${r.reason}` : `✗ ${r.reason}`);
+        }}
+      />
+      {egressMsg && (
+        <div className="rounded-lg border border-[#e5e7ef] bg-white px-3 py-2 text-[12px] text-[#334155]">
+          {egressMsg}
+        </div>
+      )}
+    </>
+  );
+
   return (
     <div className="space-y-4" data-testid="writer-workspace">
-      <AnalysisModeToggle />
+      <div className="hidden sm:block">
+        <AnalysisModeToggle />
+      </div>
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+
         {/* LEFT, editor card */}
         <section className="rounded-2xl border border-[#e5e7ef] bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] overflow-hidden flex flex-col">
           <div className="flex items-center justify-between gap-3 border-b border-[#eef0f5] px-4 py-2.5">
