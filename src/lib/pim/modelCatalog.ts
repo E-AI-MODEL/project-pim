@@ -51,8 +51,9 @@ export const MODEL_CATALOG = {
     preferredDevice: "webgpu",
     fallbackDevice: null,
     expectedConfigSha256: "LOCAL_PIN:Qwen2.5-0.5B-Instruct-q4f16_1-MLC@main/web-llm-manifest",
-    releaseStatus: "release-1",
-    notes: "Browser-local Qwen rewrite via @mlc-ai/web-llm (~400MB, on-demand).",
+    releaseStatus: "design-only",
+    notes:
+      "Experimentele generalisatie-LLM via @mlc-ai/web-llm (~400MB, on-demand). Niet productie-gepind (revision main + browser-local pin); alleen demo in Diagnostiek. Productie-egress geblokkeerd totdat een immutable revision + statische hash worden vastgelegd.",
   },
 } as const satisfies Record<string, CatalogEntry>;
 
