@@ -22,7 +22,8 @@ export const MODE_LABEL: Record<ProductMode, string> = {
 };
 
 export const MODE_EXPECTATION: Record<ProductMode, string> = {
-  check: "Plak of upload je tekst. Je hoort of je hem mag delen en krijgt een versie zonder persoonsgegevens.",
+  check:
+    "Plak of upload je tekst. Je hoort of je hem mag delen en krijgt een versie zonder persoonsgegevens.",
   write:
     "Schrijf hier je tekst. PiM kleurt persoonsgegevens terwijl je typt en haalt ze op verzoek weg. Opslaan als Word-bestand.",
 };

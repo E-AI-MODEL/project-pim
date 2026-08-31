@@ -365,110 +365,108 @@ export function WriterWorkspace() {
     <div className="space-y-4" data-testid="writer-workspace">
       <AnalysisModeToggle />
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-      {/* LEFT, editor card */}
-      <section className="rounded-2xl border border-[#e5e7ef] bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] overflow-hidden flex flex-col">
-        <div className="flex items-center justify-between gap-3 border-b border-[#eef0f5] px-4 py-2.5">
-          <Toolbar editor={editor} />
-          <div className="flex shrink-0 items-center gap-1.5">
-            <button
-              type="button"
-              onClick={runAnalysis}
-              className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[#6d4aff] px-3 text-[12px] font-semibold text-white transition-colors hover:bg-[#5b3dea]"
-            >
-              <ShieldCheck className="h-4 w-4" />
-              Nu nakijken
-            </button>
-            <LightAction
-              icon={<Upload className="h-4 w-4" />}
-              label="Import"
-              onClick={onImportClick}
-            />
-            <LightAction
-              icon={<Download className="h-4 w-4" />}
-              label="Export"
-              onClick={onExport}
-            />
-            <LightAction icon={<Trash2 className="h-4 w-4" />} label="Leeg" onClick={onClear} />
+        {/* LEFT, editor card */}
+        <section className="rounded-2xl border border-[#e5e7ef] bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] overflow-hidden flex flex-col">
+          <div className="flex items-center justify-between gap-3 border-b border-[#eef0f5] px-4 py-2.5">
+            <Toolbar editor={editor} />
+            <div className="flex shrink-0 items-center gap-1.5">
+              <button
+                type="button"
+                onClick={runAnalysis}
+                className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[#6d4aff] px-3 text-[12px] font-semibold text-white transition-colors hover:bg-[#5b3dea]"
+              >
+                <ShieldCheck className="h-4 w-4" />
+                Nu nakijken
+              </button>
+              <LightAction
+                icon={<Upload className="h-4 w-4" />}
+                label="Import"
+                onClick={onImportClick}
+              />
+              <LightAction
+                icon={<Download className="h-4 w-4" />}
+                label="Export"
+                onClick={onExport}
+              />
+              <LightAction icon={<Trash2 className="h-4 w-4" />} label="Leeg" onClick={onClear} />
+            </div>
           </div>
-        </div>
-        {importError && (
-          <div className="mx-4 mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-            {importError}
+          {importError && (
+            <div className="mx-4 mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+              {importError}
+            </div>
+          )}
+          {importWarnings.length > 0 && (
+            <div className="mx-4 mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+              {importWarnings.join(" · ")}
+            </div>
+          )}
+          <div ref={editorRootRef} className="flex-1">
+            <EditorContent editor={editor} />
           </div>
-        )}
-        {importWarnings.length > 0 && (
-          <div className="mx-4 mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-            {importWarnings.join(" · ")}
+          <div className="border-t border-[#eef0f5] px-4 py-2.5 flex items-center justify-between text-[12px] text-[#64748b]">
+            <AnalysisStatus state={!hasAnalyzed ? "idle" : analysisStale ? "stale" : "ready"} />
+            <span>
+              {hasAnalyzed && !analysisStale
+                ? totalFindings > 0
+                  ? `${totalFindings} keer persoonsgegevens gevonden`
+                  : "Geen persoonsgegevens gevonden"
+                : ""}
+            </span>
           </div>
-        )}
-        <div ref={editorRootRef} className="flex-1">
-          <EditorContent editor={editor} />
-        </div>
-        <div className="border-t border-[#eef0f5] px-4 py-2.5 flex items-center justify-between text-[12px] text-[#64748b]">
-          <AnalysisStatus state={!hasAnalyzed ? "idle" : analysisStale ? "stale" : "ready"} />
-          <span>
-            {hasAnalyzed && !analysisStale
-              ? totalFindings > 0
-                ? `${totalFindings} keer persoonsgegevens gevonden`
-                : "Geen persoonsgegevens gevonden"
-              : ""}
-          </span>
-        </div>
-      </section>
+        </section>
 
-      {/* RIGHT, privacy panel */}
-      <aside className="space-y-3">
-        <FindingsCard
-          spans={foundSpans}
-          score={riskScore}
-          analyzed={hasAnalyzed}
-          stale={analysisStale}
-        />
-        <SafeVersionCard
-          safeText={safeText}
-          hasFindings={totalFindings > 0}
-          onCopy={async () => {
-            try {
-              await navigator.clipboard.writeText(safeText);
-              setEgressMsg("Veilige versie staat op je klembord.");
-            } catch {
-              setEgressMsg("Kopiëren lukte niet, probeer het opnieuw.");
-            }
-          }}
-          onDownload={() => {
-            const blob = new Blob([safeText], { type: "text/plain;charset=utf-8" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `pim-veilige-versie-${new Date().toISOString().slice(0, 10)}.txt`;
-            a.click();
-            URL.revokeObjectURL(url);
-          }}
-          onSendAI={async () => {
-            const r = await requestAction({ action: "send_external_ai", payloadText: safeText });
-            setEgressMsg(r.executed ? `✓ ${r.reason}` : `✗ ${r.reason}`);
-          }}
-        />
-        {egressMsg && (
-          <div className="rounded-lg border border-[#e5e7ef] bg-white px-3 py-2 text-[12px] text-[#334155]">
-            {egressMsg}
-          </div>
-        )}
-        <div className="flex items-center justify-between gap-2 px-1 text-[11px] text-[#94a3b8]">
-          <span className="inline-flex items-center gap-1.5">
-            <ShieldCheck className="h-3 w-3 text-emerald-600" />
-            Lokaal · {stats.scrubbed} gewist · {stats.marked} gemarkeerd
-          </span>
-          <WriterStatusBar
-            nerStatus={nerStatus}
-            onStartNer={startNer}
-            detectionSettings={detectionSettings}
+        {/* RIGHT, privacy panel */}
+        <aside className="space-y-3">
+          <FindingsCard
+            spans={foundSpans}
+            score={riskScore}
+            analyzed={hasAnalyzed}
+            stale={analysisStale}
           />
-        </div>
-      </aside>
+          <SafeVersionCard
+            safeText={safeText}
+            hasFindings={totalFindings > 0}
+            onCopy={async () => {
+              try {
+                await navigator.clipboard.writeText(safeText);
+                setEgressMsg("Veilige versie staat op je klembord.");
+              } catch {
+                setEgressMsg("Kopiëren lukte niet, probeer het opnieuw.");
+              }
+            }}
+            onDownload={() => {
+              const blob = new Blob([safeText], { type: "text/plain;charset=utf-8" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = `pim-veilige-versie-${new Date().toISOString().slice(0, 10)}.txt`;
+              a.click();
+              URL.revokeObjectURL(url);
+            }}
+            onSendAI={async () => {
+              const r = await requestAction({ action: "send_external_ai", payloadText: safeText });
+              setEgressMsg(r.executed ? `✓ ${r.reason}` : `✗ ${r.reason}`);
+            }}
+          />
+          {egressMsg && (
+            <div className="rounded-lg border border-[#e5e7ef] bg-white px-3 py-2 text-[12px] text-[#334155]">
+              {egressMsg}
+            </div>
+          )}
+          <div className="flex items-center justify-between gap-2 px-1 text-[11px] text-[#94a3b8]">
+            <span className="inline-flex items-center gap-1.5">
+              <ShieldCheck className="h-3 w-3 text-emerald-600" />
+              Lokaal · {stats.scrubbed} gewist · {stats.marked} gemarkeerd
+            </span>
+            <WriterStatusBar
+              nerStatus={nerStatus}
+              onStartNer={startNer}
+              detectionSettings={detectionSettings}
+            />
+          </div>
+        </aside>
       </div>
-
-
 
       <input
         ref={fileInputRef}

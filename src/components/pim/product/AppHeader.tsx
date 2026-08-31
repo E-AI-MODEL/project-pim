@@ -4,7 +4,6 @@ import { BurgerMenu } from "@/components/pim/start-go/BurgerMenu";
 import { ModeSwitcher } from "./ModeSwitcher";
 import { MODE_EXPECTATION, type ProductMode } from "./types";
 
-
 export function AppHeader({ mode }: { mode: ProductMode }) {
   return (
     <header className="sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-[#e5e7ef]">

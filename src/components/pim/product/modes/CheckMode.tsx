@@ -86,13 +86,7 @@ export function CheckMode() {
     engineState.pseudoMapping,
   ]);
 
-  const status: AnalysisState = busy
-    ? "busy"
-    : isStale
-      ? "stale"
-      : result
-        ? "ready"
-        : "idle";
+  const status: AnalysisState = busy ? "busy" : isStale ? "stale" : result ? "ready" : "idle";
 
   const steps = [
     { label: "Tekst", done: text.trim().length > 0 },

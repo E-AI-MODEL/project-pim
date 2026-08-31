@@ -73,7 +73,8 @@ export const COPY = {
   modeAnonymous: "Namen weghalen",
   modeAnonymousHint: "Namen worden rollen, zoals leerling. Dit kun je niet terugdraaien.",
   modePseudonymous: "Codenamen gebruiken",
-  modePseudonymousHint: "Namen worden codes, zoals L-1. Wie welke code heeft, blijft op dit apparaat.",
+  modePseudonymousHint:
+    "Namen worden codes, zoals L-1. Wie welke code heeft, blijft op dit apparaat.",
   targetLabel: "Wat wil je hierna doen?",
   targetExternalAi: "Externe AI (ChatGPT, Claude…)",
   targetCopy: "Naar het klembord",
