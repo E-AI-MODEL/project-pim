@@ -9,11 +9,21 @@ Ze delen dezelfde engine en dezelfde NER/BERT-runtime, maar de interactie versch
 
 Resultaat: twee modi in plaats van drie, één analysemodel, één instellingenplek.
 
-## 1. Modi terug naar twee
+## 1. Modi terug naar twee, met bewoordingen die de verwachting zetten
 
-- `ModeSwitcher`: "Checken" en "Schrijven".
-- `StartMode` verdwijnt als eigen modus. De zes-stappenbalk wordt een uitklapbare regel ("Hoe PiM tot dit oordeel komt") binnen Checken, standaard dicht.
-- `/app?mode=start` blijft werken en stuurt door naar `mode=check`; oude links breken niet.
+De losse woorden "Checken" en "Schrijven" zijn te dun: ze zeggen niets over invoer, resultaat of wat je erna kunt doen. Daarom krijgt elke modus een label plus een resultaatzin:
+
+- **Tekst controleren** - "Plak of upload tekst. PiM geeft een oordeel en een veilige versie die je kunt kopiëren, exporteren of naar een AI sturen."
+- **Zelf schrijven** - "Schrijf in de editor. PiM markeert persoonsgegevens in je tekst en kan ze meteen vervangen. Opslaan als docx."
+
+Uitvoering:
+
+- `ModeSwitcher`: twee tabs met deze labels; de resultaatzin verschijnt als tooltip en, bij een lege werkruimte, als één regel onder de tab.
+- Bij eerste gebruik (lege staat) staan beide modi als twee kaarten naast elkaar met dezelfde zinnen, zodat de keuze bewust is in plaats van geraden.
+- Woordenlijst vastzetten en overal consequent gebruiken: "controleren" (analyse), "veilige versie" (resultaat), "vervangen" (redactie), "bestemming" (wat je met de tekst doet). Synoniemen zoals "scan", "check", "anonimiseren", "scrubben" en "verwerken" verdwijnen uit de UI-teksten.
+- `StartMode` verdwijnt als eigen modus. De zes-stappenbalk wordt een uitklapbare regel ("Hoe PiM tot dit oordeel komt") binnen Tekst controleren, standaard dicht.
+- `/app?mode=quick` en `?mode=start` blijven werken en sturen door naar `mode=check`; oude links breken niet.
+
 
 ## 2. Eén analysemodel met een toggle
 
