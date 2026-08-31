@@ -7,7 +7,9 @@
 //   de ProductShell. De workspace levert alleen editor + writer-specifieke acties
 //   (import/export/leeg, AdvancedPanel writer-tab, live highlights).
 
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
+
 import StarterKit from "@tiptap/starter-kit";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import {
