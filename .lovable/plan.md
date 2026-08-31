@@ -53,17 +53,17 @@ Eerst de woorden, want alle latere schermen gebruiken ze.
 
 ## Fase 4, één instellingenplek
 
-- In de werkbalk blijven alleen de twee dagelijkse keuzes: **Anonimiseren als** (anoniem of pseudoniem) en **Bestemming**. Het woord "modus" wordt daar niet meer gebruikt.
+- In de werkbalk blijven alleen de twee dagelijkse keuzes: **Namen weghalen of codenamen gebruiken** en **Waar gaat de tekst heen**. Het woord "modus" komt daar niet meer voor.
 - Al het andere in één paneel **Instellingen** (`ExpertPanel` wordt `SettingsPanel`, één event `pim:open-settings`), te openen vanuit één knop in de footer. Het tandwiel in `InputPanel` en het losse menu-item in `BurgerMenu` verdwijnen; het menu verwijst naar diezelfde knop.
 
 ### Instellingen per functie nagelopen op dubbeling
 
-- **Detectielagen** (Regex, Lexicon, Context, BERT): vier bronnen die dezelfde categorieën kunnen vinden. Eén blok **Waar PiM op zoekt**, met per laag één zin in gewone taal en zichtbaar welke categorieën die laag dekt. Ze blijven apart, want kosten en risico verschillen echt.
-- **Categorieën aan/uit** versus **drempels** versus **strict**: drie plekken die bepalen of iets een hit wordt. Eén blok **Wat PiM markeert**, categorielijst als hoofdvorm, drempel en strict als geavanceerde regel daarbinnen.
-- **Categorie uitzetten** versus **auto-vervangen per categorie**: nu twee bijna identieke lijsten (detectie en writer). Eén lijst met per categorie twee schakelaars: markeren en automatisch vervangen.
-- **Strenge cijfercontrole** (writer) versus **strict mode**: samen één instelling **Streng met cijfers en codes**, geldig in beide modi.
-- **Live wissen** in de invoerbalk versus writer auto-redact: één instelling **Automatisch vervangen**, met dezelfde categorielijst voor beide modi.
-- **BERT-varianten** (Uit, 100 MB, 180 MB): blijft één keuze, met verwachtingszinnen over download, snelheid en meerwaarde, plus de bestaande laad- en testknop en voortgangsbalk.
+- **Detectielagen** (Regex, Lexicon, Context, BERT): vier bronnen die hetzelfde kunnen vinden. Eén blok **Hoe streng kijkt PiM mee**, met per niveau één zin in gewone taal en wat het extra vindt. Ze blijven apart, want snelheid en zwaarte verschillen echt.
+- **Categorieën aan/uit** versus **drempels** versus **strict**: drie plekken die bepalen of iets meetelt. Eén blok **Waar moet PiM op letten**, met de soorten gegevens (namen, adressen, geboortedata, leerlingnummers, klas) als hoofdvorm; gevoeligheid en streng zijn een geavanceerde regel daarbinnen.
+- **Categorie uitzetten** versus **auto-vervangen per categorie**: nu twee bijna identieke lijsten. Eén lijst met per soort twee schakelaars: **laten zien** en **meteen weghalen**.
+- **Strenge cijfercontrole** (writer) versus **strict mode**: samen één instelling **Ook twijfelgevallen met cijfers en codes meenemen**, geldig in beide schermen.
+- **Live wissen** in de invoerbalk versus writer auto-redact: één instelling **Gegevens meteen weghalen**, met dezelfde lijst voor beide schermen.
+- **BERT-varianten** (Uit, 100 MB, 180 MB): één keuze **Slim taalmodel**, met zinnen over eenmalige download, snelheid en wat het extra vindt, plus de bestaande laadknop, testknop en voortgangsbalk.
 - **Modelintegriteit en status** verdwijnen uit Instellingen en staan alleen nog in Diagnostiek: instellingen bevat keuzes, geen status.
 
 ## Fase 5, feedback op het scherm: één verhaal in vier lagen
