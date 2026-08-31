@@ -319,7 +319,7 @@ export function BurgerMenu() {
                               type="button"
                               onClick={handleClearStorage}
                               disabled={clearing}
-                              className="w-full text-left flex items-center gap-3 px-4 py-2 text-[13px] font-medium rounded-md mx-2 my-0.5 text-foreground/80 hover:bg-rose-500/10 hover:text-rose-200 disabled:opacity-50 transition-colors"
+                              className="w-full text-left flex items-center gap-3 px-4 py-2 text-[13px] font-medium rounded-md mx-2 my-0.5 text-foreground/80 hover:bg-rose-500/10 hover:text-rose-700 disabled:opacity-50 transition-colors"
                             >
                               <span className="text-muted-foreground">
                                 {clearing ? (

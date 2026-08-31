@@ -1,5 +1,5 @@
 import { LiveTechMonitor } from "@/components/pim/start-go/LiveTechMonitor";
-import { MessageSquare, SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal } from "lucide-react";
 
 export function StatusFooter() {
   return (
@@ -16,7 +16,7 @@ export function StatusFooter() {
             type="button"
             data-testid="open-expert"
             onClick={() => window.dispatchEvent(new CustomEvent("pim:open-expert"))}
-            className="hidden sm:inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[12px] text-[#64748b] hover:bg-[#f1f2f7] hover:text-[#0f172a]"
+            className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[12px] text-[#64748b] hover:bg-[#f1f2f7] hover:text-[#0f172a]"
           >
             <SlidersHorizontal className="h-3.5 w-3.5" />
             Expert
@@ -25,22 +25,12 @@ export function StatusFooter() {
             trigger={
               <button
                 data-testid="open-diagnostics"
-                className="hidden sm:inline-flex items-center rounded-md px-2.5 py-1.5 text-[12px] text-[#64748b] hover:bg-[#f1f2f7] hover:text-[#0f172a]"
+                className="inline-flex items-center rounded-md px-2.5 py-1.5 text-[12px] text-[#64748b] hover:bg-[#f1f2f7] hover:text-[#0f172a]"
               >
                 Diagnostiek
               </button>
             }
           />
-          <button
-            type="button"
-            onClick={() => window.dispatchEvent(new CustomEvent("pim:feedback"))}
-            className="inline-flex items-center gap-1.5 rounded-md border border-[#e5e7ef] bg-white px-2.5 py-1.5 text-[12px] text-[#334155] hover:bg-[#f6f7fb]"
-          >
-            <MessageSquare className="h-3.5 w-3.5" />
-            <span className="hidden xs:inline">Feedback</span>
-            <span className="hidden sm:inline">&nbsp;geven</span>
-            <span className="sm:hidden">Feedback</span>
-          </button>
         </div>
       </div>
     </footer>

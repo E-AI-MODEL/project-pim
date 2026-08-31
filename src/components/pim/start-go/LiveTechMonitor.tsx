@@ -51,7 +51,7 @@ function StatusDot({ tone }: { tone: "green" | "amber" | "red" | "gray" }) {
         ? "bg-amber-400 animate-pulse"
         : tone === "red"
           ? "bg-red-400"
-          : "bg-[#3b6fa0]/40";
+          : "bg-[#f1f2f7]";
   return <span className={`inline-block w-2 h-2 rounded-full ${c}`} aria-hidden />;
 }
 
@@ -104,7 +104,7 @@ function StepPill({
         ? "border-amber-400/60 bg-amber-400/5"
         : status === "error"
           ? "border-red-400/60 bg-red-400/5"
-          : "border-[#3b6fa0]/40 bg-[#0f1b3d]/40";
+          : "border-[#e5e7ef] bg-[#f6f7fb]";
   const label =
     status === "ready"
       ? "actief"
@@ -119,28 +119,28 @@ function StepPill({
     <div className={`rounded-md border ${color} p-3 flex flex-col gap-2 min-w-0`}>
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <div className="font-plex-mono text-[10px] tracking-[0.18em] uppercase text-[#e8edf3]/55">
+          <div className="font-plex-mono text-[10px] tracking-[0.18em] uppercase text-[#94a3b8]">
             Stap {num}
           </div>
-          <div className="font-serif-display text-sm text-[#e8edf3] truncate">{title}</div>
+          <div className="font-serif-display text-sm text-[#0f172a] truncate">{title}</div>
         </div>
-        <span className="font-plex-mono text-[10px] uppercase tracking-wider text-[#e8edf3]/70 whitespace-nowrap">
+        <span className="font-plex-mono text-[10px] uppercase tracking-wider text-[#64748b] whitespace-nowrap">
           {label}
         </span>
       </div>
-      <div className="text-[11px] text-[#e8edf3]/60 leading-snug">{sub}</div>
-      {badge && <div className="text-[10px] text-amber-300/80 font-plex-mono">{badge}</div>}
+      <div className="text-[11px] text-[#64748b] leading-snug">{sub}</div>
+      {badge && <div className="text-[10px] text-amber-600 font-plex-mono">{badge}</div>}
       {onClick && status !== "ready" && (
         <button
           onClick={onClick}
           disabled={disabled || status === "loading"}
-          className="mt-1 text-[11px] font-plex-mono uppercase tracking-wider px-2 py-1 rounded bg-[#3b6fa0]/20 hover:bg-[#3b6fa0]/40 disabled:opacity-40 disabled:cursor-not-allowed text-[#e8edf3] transition-colors"
+          className="mt-1 text-[11px] font-plex-mono uppercase tracking-wider px-2 py-1 rounded bg-[#f1f2f7] hover:bg-[#e5e7ef] disabled:opacity-40 disabled:cursor-not-allowed text-[#0f172a] transition-colors"
         >
           {status === "loading" ? "Bezig…" : "Inschakelen"}
         </button>
       )}
       {status === "loading" && typeof pct === "number" && (
-        <div className="h-1 rounded bg-[#0f1b3d]/60 overflow-hidden">
+        <div className="h-1 rounded bg-[#f6f7fb] overflow-hidden">
           <div className="h-full bg-amber-400/70 transition-all" style={{ width: `${pct}%` }} />
         </div>
       )}
@@ -225,11 +225,11 @@ export function LiveTechMonitor({ trigger }: { trigger: React.ReactNode }) {
       <SheetTrigger asChild>{trigger}</SheetTrigger>
       <SheetContent
         side="right"
-        className="w-full sm:max-w-lg bg-[#0f1b3d] border-l-[#3b6fa0]/30 text-[#e8edf3] overflow-y-auto"
+        className="w-full sm:max-w-lg bg-white border-l-[#e5e7ef] text-[#0f172a] overflow-y-auto"
       >
         <SheetHeader>
-          <SheetTitle className="font-serif-display text-[#e8edf3]">Live techniek</SheetTitle>
-          <SheetDescription className="text-[#e8edf3]/60 text-xs">
+          <SheetTitle className="font-serif-display text-[#0f172a]">Live techniek</SheetTitle>
+          <SheetDescription className="text-[#64748b] text-xs">
             Realtime kijkje in de pipeline. <strong>Op mobiel is niet alles mogelijk</strong>, de
             generalisatie-LLM (~400 MB) blijft daar uit; NER-SLM werkt wel maar de eerste download
             duurt langer.
@@ -237,7 +237,7 @@ export function LiveTechMonitor({ trigger }: { trigger: React.ReactNode }) {
         </SheetHeader>
 
         <Tabs defaultValue="live" className="mt-4">
-          <TabsList className="grid grid-cols-4 bg-[#1e3a5f]/40">
+          <TabsList className="grid grid-cols-4 bg-[#f1f2f7]">
             <TabsTrigger value="live" className="text-xs">
               Live
             </TabsTrigger>
@@ -254,7 +254,7 @@ export function LiveTechMonitor({ trigger }: { trigger: React.ReactNode }) {
 
           <TabsContent value="live" className="mt-3 space-y-3">
             {/* Nu actief */}
-            <div className="rounded border border-[#3b6fa0]/30 p-3 space-y-2">
+            <div className="rounded border border-[#e5e7ef] p-3 space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <StatusDot tone={isActive ? "amber" : "gray"} />
@@ -262,7 +262,7 @@ export function LiveTechMonitor({ trigger }: { trigger: React.ReactNode }) {
                     {isActive ? "PiM rekent…" : "Wacht op invoer"}
                   </span>
                 </div>
-                <span className="font-plex-mono text-[10px] text-[#e8edf3]/55">
+                <span className="font-plex-mono text-[10px] text-[#94a3b8]">
                   {live.recent
                     ? ageMs < 1000
                       ? `${Math.round(ageMs)} ms geleden`
@@ -270,53 +270,53 @@ export function LiveTechMonitor({ trigger }: { trigger: React.ReactNode }) {
                     : "-"}
                 </span>
               </div>
-              <div className="text-[11px] text-[#e8edf3]/70 font-plex-mono break-all">
+              <div className="text-[11px] text-[#64748b] font-plex-mono break-all">
                 {live.recent ? `${live.recent.kind} · ${live.recent.msg}` : "Nog geen activiteit."}
               </div>
             </div>
 
             {/* Laatste beslissing */}
             {live.lastRun && (
-              <div className="rounded border border-[#3b6fa0]/30 p-3 space-y-2 text-xs">
+              <div className="rounded border border-[#e5e7ef] p-3 space-y-2 text-xs">
                 <div className="flex items-center justify-between">
-                  <div className="font-plex-mono text-[10px] uppercase tracking-wider text-[#e8edf3]/55">
+                  <div className="font-plex-mono text-[10px] uppercase tracking-wider text-[#94a3b8]">
                     Laatste run
                   </div>
                   <div className="flex items-center gap-1.5">
                     <StatusDot tone={verdictTone(String(live.lastRun.data?.verdict ?? ""))} />
-                    <span className="font-plex-mono text-[11px] text-[#e8edf3]">
+                    <span className="font-plex-mono text-[11px] text-[#0f172a]">
                       {String(live.lastRun.data?.verdict ?? "-")}
                     </span>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-x-3 gap-y-1 font-plex-mono text-[11px]">
-                  <span className="text-[#e8edf3]/60">duur</span>
+                  <span className="text-[#64748b]">duur</span>
                   <span className="text-right">{String(live.lastRun.data?.ms ?? "-")} ms</span>
-                  <span className="text-[#e8edf3]/60">input-lengte</span>
+                  <span className="text-[#64748b]">input-lengte</span>
                   <span className="text-right">
                     {String(live.lastRun.data?.inputLen ?? "-")} chars
                   </span>
-                  <span className="text-[#e8edf3]/60">directe hits</span>
+                  <span className="text-[#64748b]">directe hits</span>
                   <span className="text-right">{String(live.lastRun.data?.directHits ?? 0)}</span>
-                  <span className="text-[#e8edf3]/60">contextuele hits</span>
+                  <span className="text-[#64748b]">contextuele hits</span>
                   <span className="text-right">
                     {String(live.lastRun.data?.contextualHits ?? 0)}
                   </span>
-                  <span className="text-[#e8edf3]/60">modus</span>
+                  <span className="text-[#64748b]">modus</span>
                   <span className="text-right">{String(live.lastRun.data?.mode ?? "-")}</span>
-                  <span className="text-[#e8edf3]/60">actie</span>
+                  <span className="text-[#64748b]">actie</span>
                   <span className="text-right">{String(live.lastRun.data?.action ?? "-")}</span>
-                  <span className="text-[#e8edf3]/60">profiel</span>
+                  <span className="text-[#64748b]">profiel</span>
                   <span className="text-right truncate">
                     {String(live.lastRun.data?.profile ?? "-")}
                   </span>
-                  <span className="text-[#e8edf3]/60">draftCheck</span>
+                  <span className="text-[#64748b]">draftCheck</span>
                   <span className="text-right">{String(live.lastRun.data?.draftCheck ?? "-")}</span>
-                  <span className="text-[#e8edf3]/60">modelGate</span>
+                  <span className="text-[#64748b]">modelGate</span>
                   <span className="text-right truncate">
                     {String(live.lastRun.data?.modelGate ?? "-")}
                   </span>
-                  <span className="text-[#e8edf3]/60">payload</span>
+                  <span className="text-[#64748b]">payload</span>
                   <span className="text-right truncate">
                     {String(live.lastRun.data?.payloadType ?? "-")}
                   </span>
@@ -326,9 +326,9 @@ export function LiveTechMonitor({ trigger }: { trigger: React.ReactNode }) {
 
             {/* Egress-poort */}
             {live.lastExec && (
-              <div className="rounded border border-[#3b6fa0]/30 p-3 space-y-1 text-xs">
+              <div className="rounded border border-[#e5e7ef] p-3 space-y-1 text-xs">
                 <div className="flex items-center justify-between">
-                  <div className="font-plex-mono text-[10px] uppercase tracking-wider text-[#e8edf3]/55">
+                  <div className="font-plex-mono text-[10px] uppercase tracking-wider text-[#94a3b8]">
                     Egress-poort
                   </div>
                   <div className="flex items-center gap-1.5">
@@ -338,7 +338,7 @@ export function LiveTechMonitor({ trigger }: { trigger: React.ReactNode }) {
                     </span>
                   </div>
                 </div>
-                <div className="font-plex-mono text-[11px] text-[#e8edf3]/70 break-words">
+                <div className="font-plex-mono text-[11px] text-[#64748b] break-words">
                   {String(live.lastExec.data?.action ?? "-")} ·{" "}
                   {String(live.lastExec.data?.reason ?? "-")}
                 </div>
@@ -346,31 +346,31 @@ export function LiveTechMonitor({ trigger }: { trigger: React.ReactNode }) {
             )}
 
             {/* Activiteitstellers */}
-            <div className="rounded border border-[#3b6fa0]/30 p-3 space-y-1 text-xs">
-              <div className="font-plex-mono text-[10px] uppercase tracking-wider text-[#e8edf3]/55">
+            <div className="rounded border border-[#e5e7ef] p-3 space-y-1 text-xs">
+              <div className="font-plex-mono text-[10px] uppercase tracking-wider text-[#94a3b8]">
                 Sessietellers
               </div>
               {Object.keys(live.counts).length === 0 && (
-                <div className="text-[#e8edf3]/50 italic">Nog geen activiteit.</div>
+                <div className="text-[#94a3b8] italic">Nog geen activiteit.</div>
               )}
               {Object.entries(live.counts).map(([k, n]) => (
                 <div key={k} className="flex justify-between font-plex-mono text-[11px]">
-                  <span className="text-[#e8edf3]/60">{k}</span>
+                  <span className="text-[#64748b]">{k}</span>
                   <span>{n}×</span>
                 </div>
               ))}
             </div>
 
             {/* Modellen-mini */}
-            <div className="rounded border border-[#3b6fa0]/30 p-3 space-y-1 text-xs">
-              <div className="font-plex-mono text-[10px] uppercase tracking-wider text-[#e8edf3]/55">
+            <div className="rounded border border-[#e5e7ef] p-3 space-y-1 text-xs">
+              <div className="font-plex-mono text-[10px] uppercase tracking-wider text-[#94a3b8]">
                 Modellen
               </div>
               <div className="flex items-center justify-between font-plex-mono text-[11px]">
                 <span className="flex items-center gap-2">
                   <StatusDot tone={modelTone(ner)} /> NER-SLM
                 </span>
-                <span className="text-[#e8edf3]/70">
+                <span className="text-[#64748b]">
                   {ner?.runtime ?? (ner?.loading ? "laden…" : "uit")}
                 </span>
               </div>
@@ -378,7 +378,7 @@ export function LiveTechMonitor({ trigger }: { trigger: React.ReactNode }) {
                 <span className="flex items-center gap-2">
                   <StatusDot tone={modelTone(llm)} /> Generalisatie-LLM
                 </span>
-                <span className="text-[#e8edf3]/70">
+                <span className="text-[#64748b]">
                   {llm?.ready ? "actief" : llm?.loading ? "laden…" : "uit"}
                 </span>
               </div>
@@ -386,15 +386,15 @@ export function LiveTechMonitor({ trigger }: { trigger: React.ReactNode }) {
 
             {/* Ruwe data (inklap) */}
             {live.lastRun && (
-              <div className="rounded border border-[#3b6fa0]/30 p-3">
+              <div className="rounded border border-[#e5e7ef] p-3">
                 <button
                   onClick={() => setShowRaw((v) => !v)}
-                  className="w-full text-left font-plex-mono text-[10px] uppercase tracking-wider text-[#e8edf3]/55 hover:text-[#e8edf3]/80"
+                  className="w-full text-left font-plex-mono text-[10px] uppercase tracking-wider text-[#94a3b8] hover:text-[#64748b]"
                 >
                   {showRaw ? "− Ruwe data verbergen" : "+ Ruwe data tonen"}
                 </button>
                 {showRaw && (
-                  <pre className="mt-2 text-[10px] text-[#e8edf3]/70 font-plex-mono break-all whitespace-pre-wrap">
+                  <pre className="mt-2 text-[10px] text-[#64748b] font-plex-mono break-all whitespace-pre-wrap">
                     {JSON.stringify(live.lastRun.data, null, 2)}
                   </pre>
                 )}
@@ -432,35 +432,35 @@ export function LiveTechMonitor({ trigger }: { trigger: React.ReactNode }) {
               />
             </div>
 
-            <div className="rounded border border-[#3b6fa0]/30 p-3 space-y-2">
+            <div className="rounded border border-[#e5e7ef] p-3 space-y-2">
               <div className="flex items-center gap-2">
                 <StatusDot tone={modelTone(ner)} />
                 <span className="font-serif-display text-sm">NER-SLM details</span>
               </div>
-              <div className="font-plex-mono text-[10px] text-[#e8edf3]/60 break-all">
+              <div className="font-plex-mono text-[10px] text-[#64748b] break-all">
                 {ner?.modelId}
               </div>
-              <div className="text-xs text-[#e8edf3]/70">
+              <div className="text-xs text-[#64748b]">
                 runtime: <strong>{ner?.runtime ?? "-"}</strong> · verified:{" "}
                 <strong>{ner?.verified ? "ja" : "nee"}</strong>
               </div>
               {ner?.error && <div className="text-xs text-red-300">{ner.error}</div>}
             </div>
 
-            <div className="rounded border border-[#3b6fa0]/30 p-3 space-y-1">
-              <div className="font-plex-mono text-[10px] uppercase tracking-wider text-[#e8edf3]/55">
+            <div className="rounded border border-[#e5e7ef] p-3 space-y-1">
+              <div className="font-plex-mono text-[10px] uppercase tracking-wider text-[#94a3b8]">
                 Integrity
               </div>
               {integrity.length === 0 && (
-                <div className="text-xs text-[#e8edf3]/50 italic">Nog geen verificatie.</div>
+                <div className="text-xs text-[#94a3b8] italic">Nog geen verificatie.</div>
               )}
               {integrity.map((r) => (
                 <div key={r.key} className="flex justify-between gap-2 font-plex-mono text-[11px]">
-                  <span className="text-[#e8edf3]/70">{r.key}</span>
+                  <span className="text-[#64748b]">{r.key}</span>
                   <span
                     className={
                       r.status === "verified"
-                        ? "text-green-300"
+                        ? "text-emerald-700"
                         : r.status === "mismatch"
                           ? "text-red-300"
                           : "text-amber-300"
@@ -474,11 +474,11 @@ export function LiveTechMonitor({ trigger }: { trigger: React.ReactNode }) {
           </TabsContent>
 
           <TabsContent value="env" className="mt-3">
-            <div className="rounded border border-[#3b6fa0]/30 p-3 space-y-1 text-xs">
+            <div className="rounded border border-[#e5e7ef] p-3 space-y-1 text-xs">
               {Object.entries(env).map(([k, v]) => (
                 <div key={k} className="flex justify-between gap-3 font-plex-mono text-[11px]">
-                  <span className="text-[#e8edf3]/60">{k}</span>
-                  <span className="text-[#e8edf3] truncate max-w-[60%] text-right">
+                  <span className="text-[#64748b]">{k}</span>
+                  <span className="text-[#0f172a] truncate max-w-[60%] text-right">
                     {String(v)}
                   </span>
                 </div>
@@ -488,32 +488,32 @@ export function LiveTechMonitor({ trigger }: { trigger: React.ReactNode }) {
 
           <TabsContent value="log" className="mt-3">
             <div className="flex justify-between items-center mb-2">
-              <span className="font-plex-mono text-[10px] uppercase tracking-wider text-[#e8edf3]/55">
+              <span className="font-plex-mono text-[10px] uppercase tracking-wider text-[#94a3b8]">
                 {events.length} events
               </span>
               <button
                 onClick={clearDebug}
-                className="text-[10px] font-plex-mono uppercase tracking-wider px-2 py-1 rounded bg-[#3b6fa0]/20 hover:bg-[#3b6fa0]/40"
+                className="text-[10px] font-plex-mono uppercase tracking-wider px-2 py-1 rounded bg-[#f1f2f7] hover:bg-[#e5e7ef]"
               >
                 Wissen
               </button>
             </div>
-            <div className="rounded border border-[#3b6fa0]/30 p-2 max-h-[60vh] overflow-y-auto font-plex-mono text-[10px] space-y-1">
+            <div className="rounded border border-[#e5e7ef] p-2 max-h-[60vh] overflow-y-auto font-plex-mono text-[10px] space-y-1">
               {events.length === 0 && (
-                <div className="text-[#e8edf3]/40 italic p-2">Nog geen events.</div>
+                <div className="text-[#0f172a]/40 italic p-2">Nog geen events.</div>
               )}
               {events
                 .slice()
                 .reverse()
                 .map((e, i) => (
-                  <div key={i} className="border-b border-[#3b6fa0]/10 pb-1">
-                    <div className="flex justify-between text-[#e8edf3]/50">
+                  <div key={i} className="border-b border-[#e5e7ef] pb-1">
+                    <div className="flex justify-between text-[#94a3b8]">
                       <span>{new Date(e.ts).toLocaleTimeString()}</span>
                       <span>{e.kind}</span>
                     </div>
-                    <div className="text-[#e8edf3]/85">{e.msg}</div>
+                    <div className="text-[#64748b]">{e.msg}</div>
                     {e.data && (
-                      <div className="text-[#e8edf3]/55 break-all">{JSON.stringify(e.data)}</div>
+                      <div className="text-[#94a3b8] break-all">{JSON.stringify(e.data)}</div>
                     )}
                   </div>
                 ))}
