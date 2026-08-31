@@ -412,13 +412,13 @@ function WriterActions({ writer }: { writer: NonNullable<AdvancedPanelProps["wri
           Kies per soort gegeven: automatisch wissen of alleen markeren.
         </p>
       </div>
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3">
         {CATEGORY_SECTIONS.map((section) => (
           <div key={section.label} className="rounded-2xl border border-[#e2e8f0] bg-[#f6f7fb] p-3">
             <div className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#64748b]">
               {section.label}
             </div>
-            <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-1.5">
               {section.cats.map((cat) => {
                 const scrub = writer.autoRedact.has(cat);
                 return (
@@ -426,7 +426,7 @@ function WriterActions({ writer }: { writer: NonNullable<AdvancedPanelProps["wri
                     key={cat}
                     className="flex items-center justify-between gap-2 rounded-xl border border-[#e2e8f0] bg-white px-2.5 py-2"
                   >
-                    <span className="block truncate text-xs font-medium text-[#0f172a]">
+                    <span className="min-w-0 flex-1 text-xs font-medium text-[#0f172a]">
                       {CATEGORY_LABELS[cat] ?? cat}
                     </span>
                     <div className="inline-flex rounded-lg border border-[#e2e8f0] bg-black/12 p-0.5 gap-0.5">
