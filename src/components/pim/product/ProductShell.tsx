@@ -4,8 +4,11 @@ import { usesBert, detectionSettingsToNerVariant, setNerVariant } from "@/lib/pi
 import { useNerSpans } from "@/hooks/useNerSpans";
 import { usePimSettings } from "@/hooks/usePimSettings";
 import { usePimEngine } from "@/hooks/usePimEngine";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { AppHeader } from "./AppHeader";
+import { MobileModePicker } from "./MobileModePicker";
 import { StatusFooter } from "./StatusFooter";
+
 import { ProductShellProvider, type AnalysisMode } from "./ProductShellContext";
 import { CheckMode } from "./modes/CheckMode";
 import { WriteMode } from "./modes/WriteMode";
