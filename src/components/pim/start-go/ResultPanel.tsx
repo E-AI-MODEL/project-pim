@@ -141,7 +141,7 @@ export function ResultPanel({
           </div>
           <div className="text-[10px] text-[#94a3b8]">
             {decision.verdict === "BLOCK"
-              ? "Veilige versie is uit: kies modus Anoniem of verwijder de gegevens"
+              ? "Nog geen schone versie: kies Namen weghalen of haal de gegevens zelf weg"
               : tab === "safe" && isEdited
                 ? `Bewerkt · opnieuw beoordeeld: ${liveSafeVerdict ?? "-"}`
                 : "Bewerkbaar, controle vernieuwt mee"}

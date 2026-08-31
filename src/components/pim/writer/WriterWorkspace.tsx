@@ -370,14 +370,8 @@ export function WriterWorkspace() {
           <div className="flex items-center justify-between gap-3 border-b border-[#eef0f5] px-4 py-2.5">
             <Toolbar editor={editor} />
             <div className="flex shrink-0 items-center gap-1.5">
-              <button
-                type="button"
-                onClick={runAnalysis}
-                className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[#6d4aff] px-3 text-[12px] font-semibold text-white transition-colors hover:bg-[#5b3dea]"
-              >
-                <ShieldCheck className="h-4 w-4" />
-                Nu nakijken
-              </button>
+              {/* Nakijken start via de gedeelde knop boven de editor, zodat
+                  beide schermen dezelfde plek gebruiken. */}
               <LightAction
                 icon={<Upload className="h-4 w-4" />}
                 label="Import"
@@ -430,7 +424,7 @@ export function WriterWorkspace() {
             onCopy={async () => {
               try {
                 await navigator.clipboard.writeText(safeText);
-                setEgressMsg("Veilige versie staat op je klembord.");
+                setEgressMsg("De tekst zonder persoonsgegevens staat op je klembord.");
               } catch {
                 setEgressMsg("Kopiëren lukte niet, probeer het opnieuw.");
               }
@@ -811,7 +805,7 @@ function SafeVersionCard({
             <ShieldCheck className="h-4 w-4" />
           </span>
           <div className="leading-tight">
-            <div className="text-[13px] font-semibold text-[#0f172a]">Veilige versie</div>
+            <div className="text-[13px] font-semibold text-[#0f172a]">Tekst zonder persoonsgegevens</div>
             <div className="text-[11px] text-[#64748b]">
               {hasFindings ? "Klaar om te delen" : "Nog niets aangepast"}
             </div>
