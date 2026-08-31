@@ -27,7 +27,7 @@ export function FindingChips({ spans }: { spans: PiiSpan[] }) {
       {[...counts.entries()].map(([cat, n]) => (
         <span
           key={cat}
-          className="inline-flex items-center gap-1 rounded-md border border-orange-500/40 bg-orange-500/10 px-2 py-0.5 text-[11px] text-orange-200"
+          className="inline-flex items-center gap-1 rounded-md border border-amber-300 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-800"
         >
           {CAT_LABEL[cat] ?? cat}
           {n > 1 ? ` ×${n}` : ""}
