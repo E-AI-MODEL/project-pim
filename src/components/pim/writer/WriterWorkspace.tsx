@@ -102,7 +102,9 @@ export function WriterWorkspace() {
   const [safeText, setSafeText] = useState<string>("");
   const [egressMsg, setEgressMsg] = useState<string | null>(null);
   const [hasAnalyzed, setHasAnalyzed] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
 
   // Writer-tekst is de NER-bron zolang de writer gemount is. Cleanup zit in
   // een aparte effect: als je hem in de plainText-effect zet, vuurt hij bij
