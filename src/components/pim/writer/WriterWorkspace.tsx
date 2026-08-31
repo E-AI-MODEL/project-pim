@@ -105,6 +105,8 @@ export function WriterWorkspace() {
   const [egressMsg, setEgressMsg] = useState<string | null>(null);
   const [hasAnalyzed, setHasAnalyzed] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const isMobile = useIsMobile();
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
 
