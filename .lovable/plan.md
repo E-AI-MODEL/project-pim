@@ -38,10 +38,32 @@ De huidige set haalt te weinig eruit. De regelset wordt uitgebreid met onder mee
 - Namen: meer tussenvoegsels en samenstellingen, initialen (J.P. de Vries), naam met titel (dhr./mevr./juf/meester), voor- en achternaam gescheiden door een komma, en hoofdletterongevoelige varianten.
 - Context: extra signaalwoorden voor zorg, gedrag, incident, thuissituatie, juridisch, gezondheid, geloof/afkomst, en prestaties.
 
+## 4. Schrijffouten, slordige notatie en bewuste omzeiling
+
+De regels worden zo geschreven dat ze ook werken bij tekst die niet netjes is getypt:
+
+- E-mail: "naam (at) school punt nl", "naam @ school .nl", spaties rond de @, komma in plaats van punt, dubbele punten, ontbrekende punt voor de extensie.
+- Telefoon: 06 12345678, 06-12 34 56 78, +31(0)6, 0031 6, puntjes als scheiding, cijfers met spaties per twee, "zes-nul" prefix-typo's zoals 06.12345678.
+- BSN en nummers: met punten of streepjes ertussen, met een spatie na drie cijfers, met een letter erin door een typefout (blijft laag vertrouwen zonder elfproef).
+- Postcode: 1234ab, 1234  AB, 1234-AB, kleine letters, ontbrekende spatie.
+- IBAN: kleine letters, groepjes van vier met extra spaties, met streepjes.
+- Namen: dubbele spaties, vergeten hoofdletter (jan de vries), tussenvoegsels aan elkaar (vd Berg, v.d. Berg, vd. Berg), koppeltekens (Jan-Peter), apostrofnamen ('t Hart, d'Angelo), en veelgemaakte schrijfvarianten van tussenvoegsels.
+- Klas en groep: groep7, groep 7b, Groep 7B, gr. 7, klas2a, 4 vwo, 4-VWO, havo4.
+- Datum: 1-1-26, 01.01.2026, 1 jan 2026, 1e januari, jaar met twee cijfers.
+- Bewuste versluiering: cijfers voor letters (j4n), spaties tussen elke letter van een naam, sterretjes of streepjes in een nummer, en "at"/"dot" in plaats van tekens.
+
+Er komt ook een kleine normaliseerstap voor de detectielaag: dubbele witruimte, unicode-koppeltekens, slimme apostrofs en niet-brekende spaties worden gelijkgetrokken voordat de regels lopen. De weergegeven tekst en de posities van de markeringen blijven ongewijzigd; alleen het zoeken wordt toleranter.
+
+## 5. Bronnen voor de regelset
+
+Als referentie voor de uitbreiding worden publieke, open Nederlandse PII-regelsets gebruikt (onder meer MIT-gelicenseerde de-identificatiebibliotheken voor Nederlandse zorgteksten, een Go-bibliotheek met NL-detectoren voor BSN, telefoon, postcode, KvK en ID-documenten, en publieke gists met NL-regexen voor KvK, btw, IBAN en identiteitsbewijzen). De patronen worden overgenomen als inspiratie en opnieuw geschreven in de PiM-stijl; er wordt geen code met een onduidelijke licentie gekopieerd en er komt geen nieuwe dependency bij.
+
 Uitgangspunten hierbij:
 - Alles blijft lokaal en regelgebaseerd, geen extra netwerkverkeer.
 - Nieuwe regels vallen onder bestaande categorieën waar dat kan; alleen waar echt nodig komt er een categorie bij, zodat instellingen en zijbalk niet uitdijen.
 - Validators blijven leidend voor BSN, IBAN, creditcard en kenteken, zodat de strengere modus geen ruis oplevert.
+- Tolerante varianten krijgen een lager vertrouwen dan strakke treffers, zodat de drempels in instellingen blijven werken en ruis beheersbaar blijft.
+
 
 ## Technische uitwerking
 
