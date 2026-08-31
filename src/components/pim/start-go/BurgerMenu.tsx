@@ -1,12 +1,11 @@
 // Spec §7.2, menu-items in vaste volgorde.
 // Slice C.1, primaire taken los van technische items. Secundaire
 // (expert/diagnostiek) staan onder "Meer", standaard ingeklapt.
-import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import {
   Menu,
   X,
   FileText,
-  PenLine,
   FlaskConical,
   ShieldCheck,
   Workflow,
@@ -15,7 +14,6 @@ import {
   Flag,
   Settings,
   Info,
-  FilePlus2,
   Trash2,
   Loader2,
   ChevronDown,
@@ -29,7 +27,6 @@ import { clearAllLocalData } from "@/lib/pim";
 type Item =
   | { kind: "link"; to: string; label: string; icon: React.ReactNode; hash?: string }
   | { kind: "event"; event: string; label: string; icon: React.ReactNode }
-  | { kind: "new-text"; label: string; icon: React.ReactNode }
   | { kind: "clear-storage"; label: string; icon: React.ReactNode };
 
 type Group = { label: string; items: Item[]; collapsible?: boolean };
@@ -37,13 +34,6 @@ type Group = { label: string; items: Item[]; collapsible?: boolean };
 const PRIMARY: Group = {
   label: "Werken met tekst",
   items: [
-    { kind: "new-text", label: COPY.menuNewTest, icon: <FilePlus2 className="h-4 w-4" /> },
-    {
-      kind: "link",
-      to: "/schrijven",
-      label: COPY.menuWriter,
-      icon: <PenLine className="h-4 w-4" />,
-    },
     {
       kind: "event",
       event: "pim:open-settings",
