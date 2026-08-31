@@ -805,7 +805,9 @@ function SafeVersionCard({
             <ShieldCheck className="h-4 w-4" />
           </span>
           <div className="leading-tight">
-            <div className="text-[13px] font-semibold text-[#0f172a]">Tekst zonder persoonsgegevens</div>
+            <div className="text-[13px] font-semibold text-[#0f172a]">
+              Tekst zonder persoonsgegevens
+            </div>
             <div className="text-[11px] text-[#64748b]">
               {hasFindings ? "Klaar om te delen" : "Nog niets aangepast"}
             </div>
