@@ -59,6 +59,26 @@ Het paneel bevat nu vier soorten knoppen die deels hetzelfde doen. Ordening en s
 - **Dode variant**: de niet-compacte hero-variant van `InputPanel` wordt verwijderd als die nergens meer gerenderd wordt.
 - Elke knop die overblijft krijgt een korte uitlegzin of tooltip in gewone taal (wat het doet, niet hoe het werkt).
 
+## 5. Terugkoppeling op het scherm: één verhaal in vier lagen
+
+Nu geeft PiM op minstens zeven plekken tegelijk feedback: oordeelkaart, chips met bevindingen, markeringen in de tekst, zijbalk "Wat PiM vond", risicoscore, statusregel onderin, "PiM leest mee", egress-melding, mapping-overzicht en diagnostiek. Verschillende woorden en tellingen voor dezelfde uitkomst. Dat wordt teruggebracht tot vier lagen met elk een eigen rol:
+
+1. **Oordeel** (één kaart, bovenaan het resultaat): veilig of geblokkeerd, plus één reden in gewone taal en de vervolgstap. Dit is de enige plek met een verdict.
+2. **Wat gevonden is** (één telling): één lijst met categorie en aantal. De chips en de zijbalklijst worden dezelfde component met dezelfde telling; markeringen in de tekst gebruiken exact dezelfde kleuren en labels, en klikken op een categorie springt naar de eerste markering.
+3. **De tekst zelf**: markeringen in het origineel en de veilige versie. Geen aparte samenvattingsteksten meer die hetzelfde vertellen.
+4. **Verantwoording** (achter één knop): pseudoniem-mapping, gebruikte detectoren, modelstatus, beleidsregel, laatste analysetijd. Dit is hetzelfde diagnostiekpaneel als in punt 4.
+
+Dubbelingen die concreet verdwijnen of samenvallen:
+
+- **Twee tellingen** van bevindingen (chips-teller in het resultaat versus totaal in de zijbalk) worden één bron, zodat ze nooit meer kunnen verschillen.
+- **Risicoscore in punten** naast een verdict: de punten worden secundair getoond binnen de oordeelkaart met één zin uitleg, niet meer als losse score.
+- **Statusruis**: "PiM leest mee", spinner, "Bewerkt, opnieuw beoordeeld" en de footerstatus worden één statusregel bij de werkbalk met vier toestanden: klaar, bezig, verouderd (tekst gewijzigd na laatste controle), fout.
+- **Twee soorten uitkomstmeldingen**: egress-melding met een vinkje/kruis en de knopstaat in `ResultActions` worden één melding direct onder de knop.
+- **Footer**: alleen nog versie, lokale modus, Instellingen en Diagnostiek; geen inhoudelijke bevindingen meer.
+- **Verouderde uitkomst** wordt expliciet: na het bewerken van tekst dimt het resultaat met "Tekst gewijzigd, controleer opnieuw", zodat oude feedback nooit als actueel leest. Dit is de belangrijkste winst van de handmatige analysestand.
+- **Scheiding schrijven versus controleren blijft zichtbaar** in de feedback: in Schrijven ligt de nadruk op markeringen in de tekst en de lijst ernaast (bijsturen tijdens het typen), in Tekst controleren op de oordeelkaart en de veilige versie (doorgaan of niet). Zelfde componenten, andere volgorde en nadruk, dezelfde woorden.
+
+
 ## Technische uitvoering
 
 - `ProductShell`: nieuwe gedeelde state `analysisMode: "live" | "manual"` plus `runAnalysis()`; beide modi consumeren die in plaats van eigen effecten.
