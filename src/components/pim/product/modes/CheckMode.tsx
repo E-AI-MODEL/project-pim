@@ -177,6 +177,9 @@ export function CheckMode() {
           </details>
         </div>
       )}
+
+      <MobileActionBar state={status} disabled={!text.trim()} />
     </div>
+
   );
 }
