@@ -3,6 +3,8 @@ import { ChevronDown } from "lucide-react";
 import { useProductShell } from "../ProductShellContext";
 import { AnalysisModeToggle } from "../AnalysisModeToggle";
 import { AnalysisStatus, type AnalysisState } from "../AnalysisStatus";
+import { MobileActionBar } from "../MobileActionBar";
+
 import { InputPanel } from "@/components/pim/start-go/InputPanel";
 import { ResultPanel } from "@/components/pim/start-go/ResultPanel";
 import type { Example } from "@/components/pim/start-go/ExamplePicker";
