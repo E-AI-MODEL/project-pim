@@ -18,12 +18,12 @@ function invokeBeforeLoad(route: { options: Record<string, unknown> }): unknown 
 }
 
 describe("Slice B, redirects", () => {
-  it("/try → /app?mode=quick", () => {
+  it("/try → /app?mode=check", () => {
     const r = invokeBeforeLoad(TryRoute as unknown as { options: Record<string, unknown> }) as {
       options: { to?: string; search?: { mode?: string }; replace?: boolean };
     };
     expect(r.options.to).toBe("/app");
-    expect(r.options.search?.mode).toBe("quick");
+    expect(r.options.search?.mode).toBe("check");
     expect(r.options.replace).toBe(true);
   });
 
@@ -42,7 +42,7 @@ describe("Slice B, redirects", () => {
       expect(validateAppSearch({ mode }).mode).toBe(mode);
     }
     // Onbekende mode valt terug op quick (default doel van /try),
-    // dus /try → /app?mode=quick → validator → quick. Geen redirect-loop.
+    // dus /try → /app?mode=check → validator → quick. Geen redirect-loop.
     expect(validateAppSearch({ mode: "bogus" }).mode).toBe("quick");
   });
 });

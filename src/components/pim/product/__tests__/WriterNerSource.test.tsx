@@ -31,14 +31,11 @@ vi.mock("@/components/pim/product/AppHeader", () => ({
 vi.mock("@/components/pim/product/StatusFooter", () => ({
   StatusFooter: () => <div />,
 }));
-vi.mock("@/components/pim/product/ExpertPanel", () => ({
-  ExpertPanel: () => <div />,
+vi.mock("@/components/pim/product/SettingsPanel", () => ({
+  SettingsPanel: () => <div />,
 }));
-vi.mock("@/components/pim/product/modes/QuickMode", () => ({
-  QuickMode: () => <div />,
-}));
-vi.mock("@/components/pim/product/modes/StartMode", () => ({
-  StartMode: () => <div />,
+vi.mock("@/components/pim/product/modes/CheckMode", () => ({
+  CheckMode: () => <div />,
 }));
 
 // Fake writer: publiceert een vaste plaintext via de centrale
@@ -91,7 +88,7 @@ describe("WriterWorkspace publiceert NER-bron via ProductShell", () => {
     });
     expect(nerInputs).toContain("John mailt vandaag.");
     await act(async () => {
-      rerender(<ProductShell mode="quick" />);
+      rerender(<ProductShell mode="check" />);
     });
     // Na de mode-wissel is de writer unmount, setNerSourceText("") is
     // aangeroepen en Quick-mode leest weer uit `text` (leeg in deze test),
