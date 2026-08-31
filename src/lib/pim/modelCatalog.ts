@@ -51,8 +51,9 @@ export const MODEL_CATALOG = {
     preferredDevice: "webgpu",
     fallbackDevice: null,
     expectedConfigSha256: "LOCAL_PIN:Qwen2.5-0.5B-Instruct-q4f16_1-MLC@main/web-llm-manifest",
-    releaseStatus: "release-1",
-    notes: "Browser-local Qwen rewrite via @mlc-ai/web-llm (~400MB, on-demand).",
+    releaseStatus: "design-only",
+    notes:
+      "Experimentele generalisatie-LLM via @mlc-ai/web-llm (~400MB, on-demand). Niet productie-gepind (revision main + browser-local pin); alleen demo in Diagnostiek. Productie-egress geblokkeerd totdat een immutable revision + statische hash worden vastgelegd.",
   },
 } as const satisfies Record<string, CatalogEntry>;
 
@@ -78,7 +79,8 @@ export const NER_VARIANTS: Record<NerVariantKey, NerVariant> = {
     expectedConfigSha256: "38847be4dc6699b1218a749ed69f888c2ccc7b4deba98e3c4a1cac8cb34d54c8",
     label: "Compact (DistilBERT)",
     sizeLabel: "~100 MB",
-    notes: "Lichter en sneller; iets lagere recall. Standaard.",
+    notes:
+      "Lichter en sneller. Recall niet extern gevalideerd op een onafhankelijk corpus.",
   },
   large: {
     key: "large",
@@ -87,7 +89,8 @@ export const NER_VARIANTS: Record<NerVariantKey, NerVariant> = {
     expectedConfigSha256: "7aa891abae067f95a40f5e2005b3de44824a083f256802934a993d301ec25076",
     label: "Volledig (mBERT)",
     sizeLabel: "~180 MB",
-    notes: "Zwaarder maar hogere recall; vindt meer namen/organisaties.",
+    notes:
+      "Zwaarder maar vindt doorgaans meer namen/organisaties. Recall niet extern gevalideerd op een onafhankelijk corpus.",
   },
 };
 
