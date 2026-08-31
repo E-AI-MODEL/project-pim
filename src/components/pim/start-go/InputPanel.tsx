@@ -352,9 +352,7 @@ function CompactComposer({
                     className="text-left px-2 py-2 rounded-md hover:bg-[#f1f2f7] transition-colors"
                   >
                     <div className="text-sm text-[#0f172a]">{e.label}</div>
-                    <div className="text-[11px] text-[#64748b] leading-snug mt-0.5">
-                      {e.hint}
-                    </div>
+                    <div className="text-[11px] text-[#64748b] leading-snug mt-0.5">{e.hint}</div>
                   </button>
                 ))}
               </div>

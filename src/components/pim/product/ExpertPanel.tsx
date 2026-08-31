@@ -70,7 +70,9 @@ export function ExpertPanel({ mode }: { mode: ProductMode }) {
         data-testid="expert-panel"
       >
         <SheetHeader className="space-y-1 pb-3 border-b border-[#e2e8f0]">
-          <SheetTitle className="font-serif-display text-[#0f172a] text-lg">Expertinstellingen</SheetTitle>
+          <SheetTitle className="font-serif-display text-[#0f172a] text-lg">
+            Expertinstellingen
+          </SheetTitle>
           <SheetDescription className="text-[#64748b] text-xs">
             Detectielagen, drempels en categorieën. Geldt voor alle modi.
           </SheetDescription>

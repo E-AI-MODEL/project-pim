@@ -38,14 +38,13 @@ function HomePage() {
 
         <div className="mt-8 space-y-5 text-[16px] leading-[1.75] text-[#334155]">
           <p>
-            PiM leest mee terwijl jij typt of een stuk tekst plakt. Namen,
-            adressen, BSN, telefoonnummers en andere persoonsgegevens worden
-            zichtbaar gemaakt, zodat je bewust kunt kiezen wat je wél en niet
-            deelt.
+            PiM leest mee terwijl jij typt of een stuk tekst plakt. Namen, adressen, BSN,
+            telefoonnummers en andere persoonsgegevens worden zichtbaar gemaakt, zodat je bewust
+            kunt kiezen wat je wél en niet deelt.
           </p>
           <p>
-            De controle draait volledig in je browser. Geen server, geen upload,
-            geen log. Wat je typt blijft van jou.
+            De controle draait volledig in je browser. Geen server, geen upload, geen log. Wat je
+            typt blijft van jou.
           </p>
         </div>
 
@@ -75,9 +74,7 @@ function HomePage() {
 
       <section className="mx-auto max-w-2xl px-6 sm:px-8 pb-24">
         <div className="border-t border-[#e5e7ef] pt-10">
-          <h2 className="font-serif-display text-[1.35rem] text-[#0f172a] mb-6">
-            Vier principes
-          </h2>
+          <h2 className="font-serif-display text-[1.35rem] text-[#0f172a] mb-6">Vier principes</h2>
           <UspGrid />
         </div>
       </section>

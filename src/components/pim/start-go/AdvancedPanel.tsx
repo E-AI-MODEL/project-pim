@@ -386,10 +386,7 @@ function WriterActions({ writer }: { writer: NonNullable<AdvancedPanelProps["wri
       </div>
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         {CATEGORY_SECTIONS.map((section) => (
-          <div
-            key={section.label}
-            className="rounded-2xl border border-[#e2e8f0] bg-[#f6f7fb] p-3"
-          >
+          <div key={section.label} className="rounded-2xl border border-[#e2e8f0] bg-[#f6f7fb] p-3">
             <div className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#64748b]">
               {section.label}
             </div>
