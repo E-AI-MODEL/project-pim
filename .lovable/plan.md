@@ -36,7 +36,20 @@ Een rapport (`/mnt/documents/PiM-productie-fiattering.md` plus PDF) met:
 - Vaste schoolcorpus: recall per categorie, false positives op schone tekst
 - Zonder BERT en met BERT, resultaten los gerapporteerd
 
+## Geprioriteerde issuelijst (nieuw)
+
+Die bestaat vandaag niet: `ROADMAP.md` is thematisch geordend en de handoff-blokken 2 tot 5 staan los van elkaar, zonder prioriteit of vrijgave-impact. Het rapport krijgt daarom een aparte issuelijst `ISSUES.md` (repo) plus tabel in het rapport, met per issue: ID, titel, prio, bewijs, impact op vrijgave, voorgestelde fix, geschatte omvang.
+
+Prioriteitsdefinitie:
+
+- **P0 blocker**: verkoop kan niet doorgaan. Privacy- of egresslek, datalek-risico, kapotte kernflow, falende build.
+- **P1 vrijgavevoorwaarde**: mag mee live met expliciet besluit en deadline. Bijvoorbeeld modelintegriteit zonder immutable revision.
+- **P2 kwaliteit**: geen vrijgave-impact, wel schuld. Lintwaarschuwingen, testdekking, documentatie.
+
+De lijst wordt gevuld met alles wat de audit vindt, plus de al bekende punten hieronder en de openstaande punten uit `ROADMAP.md` en de handoff-blokken, zodat er één bron van waarheid is.
+
 ## Bekende punten die het rapport expliciet moet adresseren
+
 
 - Modelintegriteit: `NER_VARIANTS` gebruikt nu `revision: "main"` met `LOCAL_PIN:` hashes, geen immutable commit + statische SHA-256. Volgens de handoff (blok 2) is dat geen productie-verificatie. Het rapport benoemt dit als vrijgavevoorwaarde en beschrijft de impact: lokale analyse blijft werken, maar egress met modelafhankelijk profiel steunt op trust-on-first-use.
 - Contextmodel `PLACEHOLDER:context-nl-education-v2-not-yet-published`: niet-gepubliceerd model in de catalogus.
