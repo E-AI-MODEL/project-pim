@@ -2,7 +2,8 @@ import { Link } from "@tanstack/react-router";
 import { ShieldCheck } from "lucide-react";
 import { BurgerMenu } from "@/components/pim/start-go/BurgerMenu";
 import { ModeSwitcher } from "./ModeSwitcher";
-import type { ProductMode } from "./types";
+import { MODE_EXPECTATION, type ProductMode } from "./types";
+
 
 export function AppHeader({ mode }: { mode: ProductMode }) {
   return (
