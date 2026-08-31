@@ -41,6 +41,8 @@ import {
   type NerStatus,
 } from "@/lib/pim";
 import { useProductShell } from "@/components/pim/product/ProductShellContext";
+import { AnalysisModeToggle } from "@/components/pim/product/AnalysisModeToggle";
+import { AnalysisStatus } from "@/components/pim/product/AnalysisStatus";
 import { GENERALIZATIONS } from "./pimGeneralizations";
 import {
   createPimPlugin,
@@ -76,6 +78,12 @@ export function WriterWorkspace() {
     nerStatus,
     startNer,
     setNerSourceText,
+    analysisMode,
+    analysisTick,
+    runAnalysis,
+    isStale: analysisStale,
+    markStale,
+    clearStale,
   } = useProductShell();
   const { detectionSettings, disabledCategories } = settings;
 
@@ -94,7 +102,6 @@ export function WriterWorkspace() {
   const [safeText, setSafeText] = useState<string>("");
   const [egressMsg, setEgressMsg] = useState<string | null>(null);
   const [hasAnalyzed, setHasAnalyzed] = useState(false);
-  const [analysisStale, setAnalysisStale] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Writer-tekst is de NER-bron zolang de writer gemount is. Cleanup zit in
@@ -107,6 +114,7 @@ export function WriterWorkspace() {
     return () => setNerSourceText("");
   }, [setNerSourceText]);
   const editorRootRef = useRef<HTMLDivElement>(null);
+  const liveTimerRef = useRef<number | undefined>(undefined);
   const applyingAnalysisRef = useRef(false);
 
   const pimPlugin = useMemo(() => createPimPlugin(), []);
@@ -150,7 +158,7 @@ export function WriterWorkspace() {
     const { plain, map } = extractPlain(editor.state.doc);
     setPlainText(plain);
     setHasAnalyzed(true);
-    setAnalysisStale(false);
+    clearStale();
     const next = evaluate({ text: plain, mode: "anonymous", extraSpans: nerSpans });
     const signals = next.signals;
     if (!signals) return;
@@ -200,7 +208,12 @@ export function WriterWorkspace() {
       }),
     );
     setStats((p) => ({ scrubbed: p.scrubbed, marked: toMark.length }));
-  }, [editor, autoRedact, ignored, strict, nerSpans, evaluate]);
+  }, [editor, autoRedact, ignored, strict, nerSpans, evaluate, clearStale]);
+
+  // Ref zodat effects de laatste scan kunnen aanroepen zonder mee te draaien
+  // op elke dependency-wissel.
+  const scanRef = useRef(scan);
+  scanRef.current = scan;
 
   useEffect(() => {
     if (!editor) return;
@@ -210,13 +223,25 @@ export function WriterWorkspace() {
         return;
       }
       setClicked(null);
-      if (hasAnalyzed) setAnalysisStale(true);
+      if (hasAnalyzed) markStale();
+      if (analysisMode === "live") {
+        window.clearTimeout(liveTimerRef.current);
+        liveTimerRef.current = window.setTimeout(() => scanRef.current(), 500);
+      }
     };
     editor.on("update", markAnalysisStale);
     return () => {
       editor.off("update", markAnalysisStale);
+      window.clearTimeout(liveTimerRef.current);
     };
-  }, [editor, hasAnalyzed]);
+  }, [editor, hasAnalyzed, markStale, analysisMode]);
+
+  // Eén gedeelde trigger: de knop "Nu nakijken" in de shell en de knop in de
+  // werkbalk lopen allebei via `analysisTick`.
+  useEffect(() => {
+    if (analysisTick === 0) return;
+    scanRef.current();
+  }, [analysisTick]);
 
   useEffect(() => {
     const root = editorRootRef.current;
@@ -323,9 +348,9 @@ export function WriterWorkspace() {
     setSafeText("");
     setPlainText("");
     setHasAnalyzed(false);
-    setAnalysisStale(false);
+    clearStale();
     setWriterContent(null);
-  }, [editor, setWriterContent]);
+  }, [editor, setWriterContent, clearStale]);
   // ProductShell luistert al naar "pim:reset" en wist gedeelde tekst; hier
   // wissen we tegelijk de editor zodat write-mode ook mee-reset.
   useEffect(() => {
@@ -337,7 +362,9 @@ export function WriterWorkspace() {
   const totalFindings = foundSpans.length;
   const riskScore = Math.min(9, totalFindings);
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]" data-testid="writer-workspace">
+    <div className="space-y-4" data-testid="writer-workspace">
+      <AnalysisModeToggle />
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
       {/* LEFT, editor card */}
       <section className="rounded-2xl border border-[#e5e7ef] bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] overflow-hidden flex flex-col">
         <div className="flex items-center justify-between gap-3 border-b border-[#eef0f5] px-4 py-2.5">
@@ -345,11 +372,11 @@ export function WriterWorkspace() {
           <div className="flex shrink-0 items-center gap-1.5">
             <button
               type="button"
-              onClick={scan}
+              onClick={runAnalysis}
               className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[#6d4aff] px-3 text-[12px] font-semibold text-white transition-colors hover:bg-[#5b3dea]"
             >
               <ShieldCheck className="h-4 w-4" />
-              Analyseer
+              Nu nakijken
             </button>
             <LightAction
               icon={<Upload className="h-4 w-4" />}
@@ -378,19 +405,13 @@ export function WriterWorkspace() {
           <EditorContent editor={editor} />
         </div>
         <div className="border-t border-[#eef0f5] px-4 py-2.5 flex items-center justify-between text-[12px] text-[#64748b]">
-          <span className="inline-flex items-center gap-2">
-            <ShieldCheck className="h-3.5 w-3.5 text-[#6d4aff]" />
-            {hasAnalyzed
-              ? analysisStale
-                ? "Tekst gewijzigd, analyseer opnieuw."
-                : "Analyse klaar."
-              : "Klik op Analyseer om je tekst te controleren."}
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <span
-              className={`h-1.5 w-1.5 rounded-full ${totalFindings > 0 ? "bg-rose-500" : "bg-emerald-500"}`}
-            />
-            {totalFindings > 0 ? `risicoscore ${riskScore}` : "geen risico"}
+          <AnalysisStatus state={!hasAnalyzed ? "idle" : analysisStale ? "stale" : "ready"} />
+          <span>
+            {hasAnalyzed && !analysisStale
+              ? totalFindings > 0
+                ? `${totalFindings} keer persoonsgegevens gevonden`
+                : "Geen persoonsgegevens gevonden"
+              : ""}
           </span>
         </div>
       </section>
