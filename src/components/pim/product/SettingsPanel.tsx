@@ -29,6 +29,11 @@ export function SettingsPanel({ mode }: { mode: ProductMode }) {
     startNer,
   } = useProductShell();
   const [open, setOpen] = useState(false);
+  const [device, setDevice] = useState<DeviceCapability | null>(null);
+  useEffect(() => {
+    setDevice(readDeviceCapability());
+  }, []);
+
 
   useEffect(() => {
     const onOpen = () => setOpen(true);
