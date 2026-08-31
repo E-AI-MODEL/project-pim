@@ -29,8 +29,13 @@ export function AppHeader({ mode }: { mode: ProductMode }) {
         </span>
         <BurgerMenu />
       </div>
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 pb-2 pt-0.5 overflow-x-auto">
-        <ModeSwitcher active={mode} />
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 pb-2 pt-0.5">
+        <div className="overflow-x-auto">
+          <ModeSwitcher active={mode} />
+        </div>
+        <p className="mt-1.5 text-[12px] leading-snug text-[#64748b] max-w-2xl">
+          {MODE_EXPECTATION[mode]}
+        </p>
       </div>
     </header>
   );
