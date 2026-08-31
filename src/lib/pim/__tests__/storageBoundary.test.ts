@@ -21,15 +21,17 @@ describe("storage-boundary", () => {
     // Bewaar de native setItem en wrap met een recorder die wél doorstuurt,
     // zodat echte opslag (en de modelintegriteits-pin) gewoon werkt.
     const native = Storage.prototype.setItem;
-    setItemSpy = vi
-      .spyOn(Storage.prototype, "setItem")
-      .mockImplementation(function (this: Storage, key: string, value: string) {
-        writeKeys.push({
-          store: this === localStorage ? "localStorage" : "sessionStorage",
-          key,
-        });
-        native.call(this, key, value);
+    setItemSpy = vi.spyOn(Storage.prototype, "setItem").mockImplementation(function (
+      this: Storage,
+      key: string,
+      value: string,
+    ) {
+      writeKeys.push({
+        store: this === localStorage ? "localStorage" : "sessionStorage",
+        key,
       });
+      native.call(this, key, value);
+    });
   });
 
   afterEach(() => {
