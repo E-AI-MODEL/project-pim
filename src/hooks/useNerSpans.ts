@@ -29,6 +29,8 @@ interface UseNerSpansResult {
  * model niet gereed is, blijft `nerSpans` leeg en valt de pipeline terug op
  * regex + lexicon.
  */
+const NO_SPANS: PiiSpan[] = [];
+
 export function useNerSpans(text: string, opts: { enabled: boolean }): UseNerSpansResult {
   const { enabled } = opts;
   const [status, setStatus] = useState<NerStatus | null>(null);
@@ -65,7 +67,7 @@ export function useNerSpans(text: string, opts: { enabled: boolean }): UseNerSpa
   }, [status?.error]);
 
   return {
-    nerSpans: enabled && ready ? spans : [],
+    nerSpans: enabled && ready ? spans : NO_SPANS,
     nerStatus: status,
     ready,
     startNer,
