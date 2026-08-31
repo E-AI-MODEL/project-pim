@@ -507,7 +507,7 @@ function CategoryToggles({
   onToggleCategory: (cat: PiiCategory) => void;
 }) {
   return (
-    <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+    <div className="grid grid-cols-1 gap-3">
       {CATEGORY_SECTIONS.map((section) => (
         <div key={section.label} className="rounded-2xl border border-[#e2e8f0] bg-[#f6f7fb] p-3">
           <div className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#64748b]">
@@ -522,7 +522,7 @@ function CategoryToggles({
                   className={`flex cursor-pointer items-center justify-between gap-2 rounded-xl border px-2.5 py-2 transition-colors ${off ? "border-rose-400/25 bg-rose-50" : "border-[#e2e8f0] bg-white hover:bg-[#eef2f7]"}`}
                 >
                   <span
-                    className={`block truncate text-xs font-medium ${off ? "text-rose-700" : "text-[#0f172a]"}`}
+                    className={`min-w-0 flex-1 text-xs font-medium ${off ? "text-rose-700" : "text-[#0f172a]"}`}
                   >
                     {CATEGORY_LABELS[cat] ?? cat}
                   </span>
