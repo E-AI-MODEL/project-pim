@@ -33,7 +33,7 @@ function SiteFooter() {
           <Link to="/trust" className="hover:text-foreground">
             Trust
           </Link>
-          <Link to="/app" search={{ mode: "quick" }} className="hover:text-foreground">
+          <Link to="/app" search={{ mode: "check" }} className="hover:text-foreground">
             App
           </Link>
         </div>

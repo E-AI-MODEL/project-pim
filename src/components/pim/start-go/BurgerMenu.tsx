@@ -46,7 +46,7 @@ const PRIMARY: Group = {
     },
     {
       kind: "event",
-      event: "pim:open-advanced",
+      event: "pim:open-settings",
       label: COPY.menuSettings,
       icon: <Settings className="h-4 w-4" />,
     },
@@ -149,7 +149,7 @@ const _LEGACY_GROUPS: Group[] = [
     items: [
       {
         kind: "event",
-        event: "pim:open-advanced",
+        event: "pim:open-settings",
         label: COPY.menuSettings,
         icon: <Settings className="h-4 w-4" />,
       },
@@ -183,7 +183,7 @@ export function BurgerMenu() {
     // Reset engine + invoer via bestaande handler in ProductShell.
     window.dispatchEvent(new CustomEvent("pim:reset"));
     // Navigeer naar Controleren-modus.
-    navigate({ to: "/app", search: { mode: "quick" } });
+    navigate({ to: "/app", search: { mode: "check" } });
     // Focushint voor het hoofdtekstveld.
     setTimeout(() => window.dispatchEvent(new CustomEvent("pim:focus-primary")), 80);
   };

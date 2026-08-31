@@ -24,15 +24,14 @@ function Probe() {
   );
 }
 
-vi.mock("@/components/pim/product/modes/QuickMode", () => ({ QuickMode: () => <Probe /> }));
-vi.mock("@/components/pim/product/modes/StartMode", () => ({ StartMode: () => <Probe /> }));
+vi.mock("@/components/pim/product/modes/CheckMode", () => ({ CheckMode: () => <Probe /> }));
 vi.mock("@/components/pim/product/modes/WriteMode", () => ({ WriteMode: () => <Probe /> }));
 
 import { ProductShell } from "@/components/pim/product/ProductShell";
 
 describe("ProductShell, slice A.1", () => {
   it("pim:reset wist tekst en zet engine op idle", async () => {
-    render(<ProductShell mode="quick" />);
+    render(<ProductShell mode="check" />);
     await act(async () => {
       screen.getByRole("button", { name: "set" }).click();
     });
@@ -46,13 +45,13 @@ describe("ProductShell, slice A.1", () => {
   });
 
   it("modeswitch behoudt gedeelde invoer", async () => {
-    const { rerender } = render(<ProductShell mode="quick" />);
+    const { rerender } = render(<ProductShell mode="check" />);
     await act(async () => {
       screen.getByRole("button", { name: "set" }).click();
     });
     expect(screen.getByTestId("text").textContent).toBe("Hallo wereld");
 
-    rerender(<ProductShell mode="start" />);
+    rerender(<ProductShell mode="write" />);
     expect(screen.getByTestId("text").textContent).toBe("Hallo wereld");
 
     rerender(<ProductShell mode="write" />);

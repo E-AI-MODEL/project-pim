@@ -12,17 +12,12 @@ import type { ProductMode } from "./types";
 import type { PiiCategory } from "@/lib/pim";
 
 /**
- * Slice C, één gedeeld expertpaneel voor detectielagen, drempels,
- * categorie-instellingen, strict mode en integriteitsdetails. Vervangt
- * de per-modus AdvancedPanels. Opent via de "Expertinstellingen"-knop in
- * de StatusFooter of via het `pim:open-advanced`-event (BurgerMenu).
- *
- * Writer-specifieke instellingen (auto-redact per categorie, strenge
- * cijfercontrole) worden alleen getoond wanneer de shell in write-mode
- * staat; de state leeft op ProductShell-niveau zodat de WriterWorkspace
- * zelf géén AdvancedPanel meer hoeft te tonen.
+ * Eén instellingenplek voor beide schermen: waar PiM op let, hoe streng hij
+ * meekijkt en wat hij meteen weghaalt. Opent via de knop "Instellingen" in de
+ * StatusFooter of via het `pim:open-settings`-event (BurgerMenu). Status en
+ * modelinformatie horen in Diagnostiek, niet hier.
  */
-export function ExpertPanel({ mode }: { mode: ProductMode }) {
+export function SettingsPanel({ mode }: { mode: ProductMode }) {
   const {
     settings,
     writerAutoRedact,
@@ -37,10 +32,12 @@ export function ExpertPanel({ mode }: { mode: ProductMode }) {
 
   useEffect(() => {
     const onOpen = () => setOpen(true);
+    window.addEventListener("pim:open-settings", onOpen);
+    // Oudere namen die elders nog gebruikt kunnen worden.
     window.addEventListener("pim:open-expert", onOpen);
-    // Legacy naam die de BurgerMenu al gebruikt.
     window.addEventListener("pim:open-advanced", onOpen);
     return () => {
+      window.removeEventListener("pim:open-settings", onOpen);
       window.removeEventListener("pim:open-expert", onOpen);
       window.removeEventListener("pim:open-advanced", onOpen);
     };
@@ -67,14 +64,14 @@ export function ExpertPanel({ mode }: { mode: ProductMode }) {
       <SheetContent
         side="right"
         className="w-full sm:max-w-md bg-[#f6f7fb] border-l border-[#e2e8f0] text-[#0f172a] overflow-y-auto p-5"
-        data-testid="expert-panel"
+        data-testid="settings-panel"
       >
         <SheetHeader className="space-y-1 pb-3 border-b border-[#e2e8f0]">
           <SheetTitle className="font-serif-display text-[#0f172a] text-lg">
-            Expertinstellingen
+            Instellingen
           </SheetTitle>
           <SheetDescription className="text-[#64748b] text-xs">
-            Detectielagen, drempels en categorieën. Geldt voor alle modi.
+            Waar PiM op let en hoe streng hij meekijkt. Geldt voor beide schermen.
           </SheetDescription>
         </SheetHeader>
         <div className="mt-3">

@@ -51,7 +51,7 @@ function HomePage() {
         <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 text-[14px]">
           <Link
             to="/app"
-            search={{ mode: "quick" }}
+            search={{ mode: "check" }}
             className="text-[#6d4aff] font-medium hover:underline underline-offset-4"
           >
             Snel een tekst controleren &rarr;

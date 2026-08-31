@@ -24,11 +24,8 @@ vi.mock("@/components/pim/start-go/LiveTechMonitor", () => ({
   LiveTechMonitor: () => <div data-testid="live-tech-monitor" />,
 }));
 // Andere modes met content mocken zodat er geen onverwachte overlap is.
-vi.mock("@/components/pim/product/modes/QuickMode", () => ({
-  QuickMode: () => <div data-testid="quick-mode" />,
-}));
-vi.mock("@/components/pim/product/modes/StartMode", () => ({
-  StartMode: () => <div data-testid="start-mode" />,
+vi.mock("@/components/pim/product/modes/CheckMode", () => ({
+  CheckMode: () => <div data-testid="check-mode" />,
 }));
 
 import { ProductShell } from "@/components/pim/product/ProductShell";
@@ -47,14 +44,14 @@ describe("Slice B, WriteMode in ProductShell", () => {
     expect(screen.getAllByTestId("status-footer")).toHaveLength(1);
   });
 
-  it("mode-switch write → quick → write behoudt gedeelde chrome (geen dubbele header)", async () => {
+  it("mode-switch write → check → write behoudt gedeelde chrome (geen dubbele header)", async () => {
     const { rerender } = render(<ProductShell mode="write" />);
     expect(screen.getAllByTestId("app-header")).toHaveLength(1);
     await act(async () => {
-      rerender(<ProductShell mode="quick" />);
+      rerender(<ProductShell mode="check" />);
     });
     expect(screen.getAllByTestId("app-header")).toHaveLength(1);
-    expect(screen.getByTestId("quick-mode")).toBeTruthy();
+    expect(screen.getByTestId("check-mode")).toBeTruthy();
     await act(async () => {
       rerender(<ProductShell mode="write" />);
     });

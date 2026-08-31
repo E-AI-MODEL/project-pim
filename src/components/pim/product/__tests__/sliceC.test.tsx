@@ -12,11 +12,8 @@ vi.mock("@/components/pim/product/AppHeader", () => ({
 vi.mock("@/components/pim/writer/WriterWorkspace", () => ({
   WriterWorkspace: () => <div data-testid="writer-workspace" />,
 }));
-vi.mock("@/components/pim/product/modes/QuickMode", () => ({
-  QuickMode: () => <div data-testid="quick-mode" />,
-}));
-vi.mock("@/components/pim/product/modes/StartMode", () => ({
-  StartMode: () => <div data-testid="start-mode" />,
+vi.mock("@/components/pim/product/modes/CheckMode", () => ({
+  CheckMode: () => <div data-testid="check-mode" />,
 }));
 // LiveTechMonitor telt als "diagnostiek", we tellen op testid en volgen
 // of hij open of dicht is via zijn trigger.
@@ -35,26 +32,26 @@ vi.mock("@/components/pim/start-go/AdvancedPanel", () => ({
 import { ProductShell } from "@/components/pim/product/ProductShell";
 
 describe("Slice C, consolidatie", () => {
-  for (const mode of ["quick", "start", "write"] as const) {
+  for (const mode of ["check", "write"] as const) {
     it(`mode=${mode}: precies één AppHeader en één StatusFooter, geen dubbele TrustBadge/LocalStatusPill`, () => {
       render(<ProductShell mode={mode} />);
       expect(screen.getAllByTestId("app-header")).toHaveLength(1);
       expect(screen.getAllByRole("contentinfo")).toHaveLength(1); // <footer>
       // Diagnostiek-trigger komt uit de StatusFooter, precies één.
       expect(screen.getAllByTestId("open-diagnostics")).toHaveLength(1);
-      expect(screen.getAllByTestId("open-expert")).toHaveLength(1);
+      expect(screen.getAllByTestId("open-settings")).toHaveLength(1);
     });
   }
 
   it("LiveTechMonitor is niet permanent zichtbaar: alleen een 'Diagnostiek'-trigger", () => {
-    render(<ProductShell mode="quick" />);
+    render(<ProductShell mode="check" />);
     // De mock rendert altijd zijn trigger, we controleren dat de knop
     // aanwezig is (achter expliciete knop) en niet als vol paneel.
     expect(screen.getByTestId("open-diagnostics")).toBeTruthy();
   });
 
   it("Diagnostiek-knop opent en sluit de LiveTechMonitor (via trigger)", async () => {
-    render(<ProductShell mode="quick" />);
+    render(<ProductShell mode="check" />);
     const btn = screen.getByTestId("open-diagnostics");
     await act(async () => {
       btn.click();
@@ -65,11 +62,11 @@ describe("Slice C, consolidatie", () => {
   });
 
   it("Expertinstellingen-knop opent het gedeelde expertpaneel; slechts één AdvancedPanel", async () => {
-    render(<ProductShell mode="quick" />);
+    render(<ProductShell mode="check" />);
     // Vóór klik nog geen AdvancedPanel in de DOM.
     expect(screen.queryAllByTestId("advanced-panel")).toHaveLength(0);
     await act(async () => {
-      screen.getByTestId("open-expert").click();
+      screen.getByTestId("open-settings").click();
     });
     expect(screen.getAllByTestId("advanced-panel")).toHaveLength(1);
     // In non-writer-mode geen writer-sub-paneel.
@@ -79,7 +76,7 @@ describe("Slice C, consolidatie", () => {
   it("In write-mode toont het expertpaneel de writer-instellingen", async () => {
     render(<ProductShell mode="write" />);
     await act(async () => {
-      screen.getByTestId("open-expert").click();
+      screen.getByTestId("open-settings").click();
     });
     expect(screen.getByTestId("advanced-panel").getAttribute("data-writer")).toBe("1");
   });
@@ -91,10 +88,10 @@ describe("Slice C, consolidatie", () => {
     expect(screen.getByTestId("writer-workspace")).toBeTruthy();
   });
 
-  it("Legacy pim:open-advanced-event opent het gedeelde expertpaneel", async () => {
-    render(<ProductShell mode="quick" />);
+  it("Legacy pim:open-settings-event opent het gedeelde expertpaneel", async () => {
+    render(<ProductShell mode="check" />);
     await act(async () => {
-      window.dispatchEvent(new Event("pim:open-advanced"));
+      window.dispatchEvent(new Event("pim:open-settings"));
     });
     expect(screen.getAllByTestId("advanced-panel")).toHaveLength(1);
   });
