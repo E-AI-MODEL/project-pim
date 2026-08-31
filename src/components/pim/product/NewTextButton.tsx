@@ -1,9 +1,12 @@
 // In-screen resetknop, vervangt het oude burgermenu-item "Begin met een
 // lege tekst". Zelfde gedrag: bevestigen als de schrijfruimte inhoud heeft,
-// daarna engine + invoer resetten en focus terug naar het tekstveld.
+// daarna engine + invoer resetten, naar het nakijkscherm en focus op het veld.
 import { FilePlus2 } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 
 export function NewTextButton() {
+  const navigate = useNavigate();
+
   const handleNewText = () => {
     const hasContent =
       typeof document !== "undefined" &&
@@ -16,6 +19,7 @@ export function NewTextButton() {
       if (!ok) return;
     }
     window.dispatchEvent(new CustomEvent("pim:reset"));
+    navigate({ to: "/app", search: { mode: "check" } });
     setTimeout(() => window.dispatchEvent(new CustomEvent("pim:focus-primary")), 80);
   };
 
