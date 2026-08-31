@@ -66,24 +66,24 @@ Eerst de woorden, want alle latere schermen gebruiken ze.
 - **BERT-varianten** (Uit, 100 MB, 180 MB): één keuze **Slim taalmodel**, met zinnen over eenmalige download, snelheid en wat het extra vindt, plus de bestaande laadknop, testknop en voortgangsbalk.
 - **Modelintegriteit en status** verdwijnen uit Instellingen en staan alleen nog in Diagnostiek: instellingen bevat keuzes, geen status.
 
-## Fase 5, feedback op het scherm: één verhaal in vier lagen
+## Fase 5, terugkoppeling op het scherm: één verhaal in vier lagen
 
-Nu geeft PiM tegelijk feedback via oordeelkaart, chips, markeringen in de tekst, zijbalk "Wat PiM vond", risicoscore, "PiM leest mee", egress-melding, mapping en diagnostiek, met verschillende woorden en tellingen. Terug naar vier lagen met elk één rol:
+Nu geeft PiM tegelijk feedback via oordeelkaart, chips, kleuren in de tekst, zijbalk, risicoscore, "PiM leest mee", egress-melding, mapping en diagnostiek, met verschillende woorden en tellingen. Terug naar vier lagen met elk één rol, allemaal in gebruikerstaal:
 
-1. **Oordeel**: één kaart met veilig of geblokkeerd, één reden in gewone taal en de vervolgstap. Enige plek met een verdict (`SafetyVerdictCard`).
-2. **Wat gevonden is**: één lijst met categorie en aantal. `FindingChips` en de zijbalklijst in de writer worden dezelfde component met dezelfde telling; klikken springt naar de eerste markering in de tekst.
-3. **De tekst zelf**: markeringen in origineel en veilige versie (`TextHighlighter`, `pimPlugin`) met exact dezelfde kleuren en labels als laag 2.
-4. **Verantwoording**: één paneel met mapping, detectoren, modelstatus, beleidsregel en tijdstip van de laatste controle. `DetailsDrawer`, `MappingViewer` en `LiveTechMonitor` worden hier samengevoegd tot één Diagnostiek-paneel met tabbladen; de knop onder een resultaat opent hetzelfde paneel op het juiste tabblad.
+1. **Mag dit weg?**: één kaart met **Klaar om te delen** of **Nog niet delen**, één reden in gewone taal en de vervolgstap ("Haal de 2 namen weg en je kunt hem versturen"). Enige plek met een uitspraak (`SafetyVerdictCard`).
+2. **Wat PiM gevonden heeft**: één lijst met soort gegeven en aantal in gewone woorden (namen, adressen, geboortedata, leerlingnummers). `FindingChips` en de zijbalk in het schrijfscherm worden dezelfde component met dezelfde telling; klikken springt naar die plek in de tekst.
+3. **De tekst zelf**: kleuren in de originele tekst en in de tekst zonder persoonsgegevens (`TextHighlighter`, `pimPlugin`), met exact dezelfde kleuren en woorden als laag 2.
+4. **Waarom PiM dit zegt**: één paneel met de vervangingen, wat PiM waarop vond, modelstatus, regel en tijdstip. `DetailsDrawer`, `MappingViewer` en `LiveTechMonitor` worden hier samengevoegd tot één paneel met tabbladen; technische taal mag hier wel.
 
 Dubbelingen die verdwijnen:
 
-- **Twee tellingen** van bevindingen (resultaat en zijbalk) worden één bron.
-- **Risicoscore in punten** (`RiskGauge`, `RiskBanner`) wordt secundair binnen de oordeelkaart met één zin uitleg, niet meer een losse score naast het verdict.
-- **Statusruis** ("PiM leest mee", spinner, "Bewerkt, opnieuw beoordeeld", footerstatus) wordt één statusregel met vier toestanden: klaar, bezig, verouderd, fout.
-- **Uitkomstmeldingen**: egress-melding en knopstaat in `ResultActions` worden één melding onder de knop.
-- **Verouderde uitkomst** wordt expliciet: na tekstwijziging dimt het resultaat met "Tekst gewijzigd, controleer opnieuw".
+- **Twee tellingen** van bevindingen (uitkomst en zijbalk) worden één bron.
+- **Risicoscore in punten** (`RiskGauge`, `RiskBanner`) verdwijnt als los getal en wordt één zin in de kaart: "Nog 3 namen en 1 leerlingnummer in de tekst".
+- **Statusruis** ("PiM leest mee", spinner, "Bewerkt, opnieuw beoordeeld", footerstatus) wordt één statusregel met vier toestanden: klaar, bezig, tekst is veranderd, er ging iets mis.
+- **Uitkomstmeldingen**: egress-melding en knopstaat in `ResultActions` worden één zin onder de knop, in de vorm "Gekopieerd zonder persoonsgegevens".
+- **Verouderde uitkomst** wordt expliciet: na een wijziging dimt de uitkomst met "Je tekst is veranderd, kijk hem opnieuw na".
 - **Footer** houdt alleen versie, lokale modus, Instellingen en Diagnostiek; geen bevindingen.
-- **Scheiding blijft zichtbaar**: bij schrijven ligt de nadruk op markeringen in de tekst en de lijst ernaast, bij controleren op oordeel en veilige versie. Zelfde componenten, andere volgorde, dezelfde woorden.
+- **Scheiding blijft zichtbaar**: in Zelf schrijven ligt de nadruk op kleuren in de tekst en de lijst ernaast, in Tekst nakijken op de uitspraak en de tekst zonder persoonsgegevens. Zelfde componenten, andere volgorde, dezelfde woorden.
 
 ## Fase 6, restopruiming
 
