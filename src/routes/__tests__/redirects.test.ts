@@ -36,13 +36,15 @@ describe("Slice B, redirects", () => {
     expect(r.options.replace).toBe(true);
   });
 
-  it("redirect target route (/app) accepteert alle drie modi zonder terug te wijzen", async () => {
+  it("redirect target route (/app) accepteert beide modi zonder terug te wijzen", async () => {
     const { validateAppSearch } = await import("@/routes/app.search");
-    for (const mode of ["quick", "start", "write"] as const) {
+    for (const mode of ["check", "write"] as const) {
       expect(validateAppSearch({ mode }).mode).toBe(mode);
     }
-    // Onbekende mode valt terug op quick (default doel van /try),
-    // dus /try → /app?mode=check → validator → quick. Geen redirect-loop.
-    expect(validateAppSearch({ mode: "bogus" }).mode).toBe("quick");
+    // Oude links blijven werken en landen in het nakijkscherm.
+    expect(validateAppSearch({ mode: "quick" }).mode).toBe("check");
+    expect(validateAppSearch({ mode: "start" }).mode).toBe("check");
+    // Onbekende mode valt terug op check. Geen redirect-loop.
+    expect(validateAppSearch({ mode: "bogus" }).mode).toBe("check");
   });
 });
