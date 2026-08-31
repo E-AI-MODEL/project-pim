@@ -37,7 +37,18 @@ De toggle staat op één plek zichtbaar (kop van het werkvlak), de knop **Contro
 ## 3. Eén instellingenplek, twee niveaus
 
 - In de werkbalk blijven alleen de twee dagelijkse keuzes staan, met duidelijke labels: **Anonimiseren als** (anoniem / pseudoniem) en **Wat ga je ermee doen** (kopiëren, exporteren, externe AI, ...). Het woord "modus" wordt daar niet meer gebruikt, dat is voortaan alleen Checken/Schrijven.
-- Al het andere (detectielagen, drempels, categorieën, strict, BERT laden/testen, auto-vervangen per categorie) zit in één paneel **Instellingen**, te openen vanuit één knop in de footer. Het tandwiel in de invoerbalk en het losse menu-item verdwijnen; het burgermenu krijgt hooguit een verwijzing naar diezelfde knop.
+
+### Instellingen per functie nagelopen op dubbeling
+
+Het paneel bevat nu vier soorten knoppen die deels hetzelfde doen. Ordening en samenvoeging:
+
+- **Detectielagen** (Regex, Lexicon, Context, BERT): dit zijn vier bronnen die dezelfde categorieën kunnen vinden. Ze worden één blok **Waar PiM op zoekt** met per laag één zin in gewone taal ("Lexicon: bekende namen en plaatsen uit een lokale lijst"). Ze blijven apart, want ze hebben echt verschillende kosten en risico's, maar de UI toont voortaan welke laag welke categorie dekt, zodat "Lexicon uit" begrijpelijk is.
+- **Categorieën aan/uit** versus **drempels** versus **strict mode**: drie plekken die alle drie bepalen of iets een hit wordt. Dat wordt één blok **Wat PiM markeert**, met de categorielijst als hoofdvorm en drempel plus strict als geavanceerde regel eronder in dezelfde rij, niet in losse secties.
+- **Categorie uitzetten** versus **niet automatisch vervangen**: nu twee losse categorielijsten (detectie en writer auto-redact) die op elkaar lijken maar iets anders doen. Ze worden één lijst met per categorie twee duidelijke schakelaars: *markeren* en *automatisch vervangen*.
+- **Strenge cijfercontrole** (writer) versus **strict mode**: overlappende namen; ze worden één instelling **Streng met cijfers en codes**, geldig in beide modi.
+- **BERT-varianten (Uit / 100 MB / 180 MB)**: blijft één keuze, maar met verwachtingszinnen (download, snelheid, wat het extra vindt) en de bestaande laad-/testknop en voortgangsbalk op dezelfde plek.
+- **Modelintegriteit en diagnostiek** verdwijnen uit het instellingenpaneel en staan alleen nog in het diagnostiekpaneel, zodat instellingen alleen keuzes bevat en geen status.
+
 
 ## 4. Dubbele en onduidelijke functies opruimen
 
