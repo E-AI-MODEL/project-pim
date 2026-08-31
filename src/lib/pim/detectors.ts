@@ -180,8 +180,10 @@ const RULES: RuleDef[] = [
   {
     id: "rule.name_lower_list",
     category: "name",
+    // Alleen kleine letters na de trigger: hoofdletterwoorden zoals "BSN" of
+    // "IBAN" zijn geen namen en horen hier niet in.
     regex:
-      /(?<=\b(?:met|en|onder\s?andere|namelijk|zoals|waaronder|tussen)\s+)(?!(?:de|het|een|die|dat|deze|dit|hun|onze|jullie|zijn|haar|mijn|jouw|ouders?|leerling(?:en)?|docent(?:en)?|mentor|meester|juf|meneer|mevrouw|kinderen|leraren|klasgenoten|jongens|meisjes|team|groep|school|klas)\b)[a-zà-ÿ]{3,}(?:\s+en\s+(?!(?:de|het|een|zijn|haar)\b)[a-zà-ÿ]{3,})?/gi,
+      /(?<=\b(?:[Mm]et|[Ee]n|[Oo]nder\s?andere|[Nn]amelijk|[Zz]oals|[Ww]aaronder|[Tt]ussen)\s+)(?!(?:de|het|een|die|dat|deze|dit|hun|onze|jullie|zijn|haar|mijn|jouw|ouders?|leerling(?:en)?|docent(?:en)?|mentor|meester|juf|meneer|mevrouw|kinderen|leraren|klasgenoten|jongens|meisjes|team|groep|school|klas|bsn|iban|tel|mail|email|nummer|adres|datum)\b)[a-zà-ÿ]{3,}(?:\s+en\s+(?!(?:de|het|een|zijn|haar)\b)[a-zà-ÿ]{3,})?/g,
     confidence: 0.55,
     contextual: true,
   },
