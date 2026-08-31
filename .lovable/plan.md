@@ -10,6 +10,13 @@ Het burgermenu bevat twee items die 1-op-1 hetzelfde doen als de modetoggle bove
 - Menu "Begin met een lege tekst" → `pim:reset` event + navigatie naar `/app?mode=check`. De navigatie is identiek aan toggle "Tekst nakijken"; het resetten (lege tekst + bevestiging) is de enige extra functie.
 
 ## Wijzigingen
+
+### 1. In-screen resetknop (nieuw, vervangt het menupunt)
+- `CheckMode.tsx`: knop "Nieuwe tekst" rechtsboven het tekstvlak (naast de status "Nog niet nagekeken"). Actie = bestaande `pim:reset` event, met dezelfde bevestigingsdialoog als er schrijfinhoud aanwezig is (hergebruik van de bestaande `data-pim-writer-has-content` flag).
+- `WriteMode.tsx`: dezelfde knop in de schrijfruimte, zodat resetten vanuit beide schermen kan.
+- Gedrag identiek aan het oude menupunt: reset engine + invoer, focushint op het tekstveld.
+
+### 2. Burgermenu ontdubbelen
 `src/components/pim/start-go/BurgerMenu.tsx`:
 - Verwijder item "Begin met een lege tekst" (kind `new-text`) uit PRIMARY.
 - Verwijder item "Zelf schrijven" uit PRIMARY.
@@ -17,8 +24,8 @@ Het burgermenu bevat twee items die 1-op-1 hetzelfde doen als de modetoggle bove
 - Groep "Expert & diagnostiek" (ingeklapt) blijft volledig ongewijzigd.
 - Opruimen wat daardoor ongebruikt wordt: `handleNewText`, het `new-text` itemtype, `_LEGACY_GROUPS` (al ongebruikt), en ongebruikte icon-imports (`FilePlus2`, `PenLine`).
 
-## Gevolg om te accepteren
-- "Begin met een lege tekst" (reset met bevestigingsdialoog) is daarna nergens meer bereikbaar. Wissen van tekst kan nog via de bestaande "Live wissen"-knop in het tekstvlak. Als je de reset-functie wilt behouden, zeg het, dan blijft alleen "Zelf schrijven" verdwijnen.
+## Gevolg
+- Resetten blijft volledig behouden, nu als zichtbare knop in het scherm in plaats van verstopt in het menu.
 - `handleClearStorage`, Escape-handler en portal blijven onaangeraakt.
 
 ## Verificatie
