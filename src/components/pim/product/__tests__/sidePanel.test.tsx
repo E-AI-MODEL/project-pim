@@ -3,13 +3,14 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+const navigateMock = vi.fn();
 vi.mock("@tanstack/react-router", () => ({
   Link: ({ children, to, ...rest }: { children: React.ReactNode; to: string }) => (
     <a href={to} {...rest}>
       {children}
     </a>
   ),
-  useNavigate: () => vi.fn(),
+  useNavigate: () => navigateMock,
   useRouterState: () => ({ location: { pathname: "/app" } }),
 }));
 vi.mock("@/components/pim/writer/WriterWorkspace", () => ({
