@@ -6,6 +6,15 @@ import { act, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 // Zware editor/monitor-modules mocken zodat we puur de shell-structuur toetsen.
+vi.mock("@tanstack/react-router", () => ({
+  Link: ({ children, to, ...rest }: { children: React.ReactNode; to: string }) => (
+    <a href={to} {...rest}>
+      {children}
+    </a>
+  ),
+  useNavigate: () => vi.fn(),
+  useRouterState: () => ({ location: { pathname: "/app" } }),
+}));
 vi.mock("@/components/pim/product/AppHeader", () => ({
   AppHeader: () => <div data-testid="app-header" />,
 }));
@@ -58,6 +67,11 @@ describe("Slice C, consolidatie", () => {
     await act(async () => {
       window.dispatchEvent(new Event("pim:open-menu"));
     });
+    // Het menu is de startpagina van het paneel; instellingen zit erin.
+    expect(screen.queryAllByTestId("advanced-panel")).toHaveLength(0);
+    await act(async () => {
+      screen.getByTestId("menu-item-settings").click();
+    });
     expect(screen.getAllByTestId("advanced-panel")).toHaveLength(1);
     // In non-writer-mode geen writer-sub-paneel.
     expect(screen.getByTestId("advanced-panel").getAttribute("data-writer")).toBe("0");
@@ -66,7 +80,7 @@ describe("Slice C, consolidatie", () => {
   it("In write-mode toont het instellingen-tabblad de writer-instellingen", async () => {
     render(<ProductShell mode="write" />);
     await act(async () => {
-      window.dispatchEvent(new Event("pim:open-menu"));
+      window.dispatchEvent(new Event("pim:open-settings"));
     });
     expect(screen.getByTestId("advanced-panel").getAttribute("data-writer")).toBe("1");
   });

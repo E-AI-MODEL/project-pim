@@ -1,4 +1,5 @@
-// Eén zijbalk voor alles wat geen tekstwerk is: instellingen, diagnostiek, over.
+// Eén zijbalk voor alles wat geen tekstwerk is: het menu zelf, met
+// instellingen en diagnostiek als onderdelen daarvan.
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
@@ -27,26 +28,41 @@ vi.mock("@/components/pim/start-go/AdvancedPanel", () => ({
 import { ProductShell } from "@/components/pim/product/ProductShell";
 
 describe("Gedeeld zijpaneel", () => {
-  it("de menuknop opent het paneel met drie tabbladen", async () => {
+  it("de menuknop opent het menu met instellingen, diagnostiek en achtergrond", async () => {
     render(<ProductShell mode="check" />);
     expect(screen.queryAllByTestId("side-panel")).toHaveLength(0);
     await act(async () => {
       screen.getByTestId("open-menu").click();
     });
     expect(screen.getAllByTestId("side-panel")).toHaveLength(1);
-    expect(screen.getByTestId("tab-settings")).toBeTruthy();
-    expect(screen.getByTestId("tab-diagnostics")).toBeTruthy();
-    expect(screen.getByTestId("tab-about")).toBeTruthy();
-    // Standaard staat het paneel op Instellingen.
-    expect(screen.getAllByTestId("advanced-panel")).toHaveLength(1);
+    expect(screen.getByTestId("panel-menu")).toBeTruthy();
+    expect(screen.getByTestId("menu-item-settings")).toBeTruthy();
+    expect(screen.getByTestId("menu-item-diagnostics")).toBeTruthy();
+    expect(screen.getByTestId("about-tab")).toBeTruthy();
+    expect(screen.getByTestId("clear-storage")).toBeTruthy();
   });
 
-  it("pim:open-diagnostics opent hetzelfde paneel op het tabblad Diagnostiek", async () => {
+  it("instellingen openen binnen hetzelfde paneel, met een weg terug", async () => {
+    render(<ProductShell mode="check" />);
+    await act(async () => {
+      screen.getByTestId("open-menu").click();
+    });
+    await act(async () => {
+      screen.getByTestId("menu-item-settings").click();
+    });
+    expect(screen.getAllByTestId("advanced-panel")).toHaveLength(1);
+    expect(screen.queryAllByTestId("panel-menu")).toHaveLength(0);
+    await act(async () => {
+      screen.getByTestId("panel-back").click();
+    });
+    expect(screen.getByTestId("panel-menu")).toBeTruthy();
+  });
+
+  it("pim:open-diagnostics springt direct naar diagnostiek", async () => {
     render(<ProductShell mode="check" />);
     await act(async () => {
       window.dispatchEvent(new Event("pim:open-diagnostics"));
     });
-    expect(screen.getAllByTestId("side-panel")).toHaveLength(1);
     expect(screen.getAllByTestId("diagnostics-body")).toHaveLength(1);
     expect(screen.queryAllByTestId("advanced-panel")).toHaveLength(0);
   });
