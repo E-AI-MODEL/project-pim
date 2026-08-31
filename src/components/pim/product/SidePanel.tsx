@@ -66,9 +66,8 @@ export function SidePanel({ settings }: { settings?: React.ReactNode }) {
       if (v === "settings" && !settings) {
         // Zonder eigen instellingencontext (achtergrondpagina's): ga naar het
         // nakijkscherm; het daar gemonteerde paneel opent direct de settings.
-        void navigate({ to: "/app", search: { mode: "check" } }).then(() => {
-          setTimeout(() => window.dispatchEvent(new CustomEvent("pim:open-settings")), 50);
-        });
+        void navigate({ to: "/app", search: { mode: "check" } });
+        setTimeout(() => window.dispatchEvent(new CustomEvent("pim:open-settings")), 80);
         return;
       }
       setView(v);
