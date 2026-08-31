@@ -505,11 +505,7 @@ function CompactComposer({
           {COPY.monitorEmptyHint} Gebruik <span className="text-[#334155]">+</span> voor een
           voorbeeld of document.
         </p>
-      ) : (
-        <p className="text-[11px] text-[#0f172a]/45 leading-relaxed px-1 font-plex-mono truncate">
-          Bestemming: {activeTarget}
-        </p>
-      )}
+      ) : null}
     </section>
   );
 }

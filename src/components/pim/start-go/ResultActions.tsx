@@ -129,14 +129,19 @@ export function ResultActions({
           </button>
         )}
 
-        <button
-          type="button"
-          onClick={newCheck}
-          className="inline-flex items-center gap-2 px-3 py-2.5 rounded-lg border border-[#e5e7ef] bg-white text-[#334155] hover:bg-[#f6f7fb] text-sm font-medium transition-colors"
-        >
-          <RotateCcw className="h-4 w-4" />
-          Nieuwe controle
-        </button>
+        {/* Bij BLOCK is de primaire knop al "tekst aanpassen"; een tweede
+            herstart-knop zou hetzelfde beloven. Daarom alleen tonen als de
+            primaire knop iets anders doet. */}
+        {verdict !== "BLOCK" && (
+          <button
+            type="button"
+            onClick={newCheck}
+            className="inline-flex items-center gap-2 px-3 py-2.5 rounded-lg border border-[#e5e7ef] bg-white text-[#334155] hover:bg-[#f6f7fb] text-sm font-medium transition-colors"
+          >
+            <RotateCcw className="h-4 w-4" />
+            Begin met een lege tekst
+          </button>
+        )}
       </div>
       {shortMsg && <div className="text-[11px] text-rose-600 px-1">{shortMsg}</div>}
     </div>
