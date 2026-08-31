@@ -35,12 +35,13 @@ export function ProductShell({ mode }: { mode: ProductMode }) {
   const isMobile = useIsMobile();
 
   // Eén analysemodel voor beide schermen.
-  const [analysisMode, setAnalysisModeRaw] = useState<AnalysisMode>(
+  const [desktopAnalysisMode, setAnalysisMode] = useState<AnalysisMode>(
     mode === "write" ? "manual" : "live",
   );
   // Op mobiel kijkt PiM nooit live mee: dat spaart accu en houdt het moment
   // van nakijken voorspelbaar (één knop onderaan het scherm).
-  const analysisMode: AnalysisMode = isMobile ? "manual" : analysisMode_;
+  const analysisMode: AnalysisMode = isMobile ? "manual" : desktopAnalysisMode;
+
   const [analysisTick, setAnalysisTick] = useState(0);
   const [isStale, setIsStale] = useState(false);
 
