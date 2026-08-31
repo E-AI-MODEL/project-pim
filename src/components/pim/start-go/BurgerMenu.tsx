@@ -79,104 +79,12 @@ const MORE: Group = {
 };
 
 const GROUPS: Group[] = [PRIMARY, MORE];
-// Legacy const kept for downstream reference; unused elsewhere.
-const _LEGACY_GROUPS: Group[] = [
-  {
-    label: "Werken met tekst",
-    items: [
-      {
-        kind: "event",
-        event: "pim:reset",
-        label: COPY.menuNewTest,
-        icon: <FilePlus2 className="h-4 w-4" />,
-      },
-      {
-        kind: "link",
-        to: "/schrijven",
-        label: COPY.menuWriter,
-        icon: <PenLine className="h-4 w-4" />,
-      },
-    ],
-  },
-  {
-    label: "Tech-expert",
-    items: [
-      {
-        kind: "link",
-        to: "/try",
-        label: COPY.menuExpertLab,
-        icon: <FlaskConical className="h-4 w-4" />,
-      },
-      {
-        kind: "link",
-        to: "/pipeline",
-        label: COPY.menuPipeline,
-        icon: <Workflow className="h-4 w-4" />,
-      },
-      { kind: "link", to: "/modes", label: COPY.menuModes, icon: <Layers className="h-4 w-4" /> },
-      { kind: "link", to: "/flags", label: COPY.menuFlags, icon: <Flag className="h-4 w-4" /> },
-    ],
-  },
-  {
-    label: "Vertrouwen & beleid",
-    items: [
-      {
-        kind: "link",
-        to: "/trust",
-        label: COPY.menuTrust,
-        icon: <ShieldCheck className="h-4 w-4" />,
-      },
-      {
-        kind: "link",
-        to: "/compliance",
-        label: COPY.menuCompliance,
-        icon: <CheckCircle className="h-4 w-4" />,
-      },
-    ],
-  },
-  {
-    label: "Systeem",
-    items: [
-      {
-        kind: "event",
-        event: "pim:open-settings",
-        label: COPY.menuSettings,
-        icon: <Settings className="h-4 w-4" />,
-      },
-      { kind: "clear-storage", label: COPY.menuClearStorage, icon: <Trash2 className="h-4 w-4" /> },
-      { kind: "link", to: "/over", label: COPY.menuAbout, icon: <Info className="h-4 w-4" /> },
-    ],
-  },
-];
 
 export function BurgerMenu() {
   const [open, setOpen] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const navigate = useNavigate();
-
-  const handleNewText = () => {
-    // Bevestig alleen wanneer de writer echt tekstinhoud heeft.
-    const cached =
-      typeof document !== "undefined"
-        ? document.body.getAttribute("data-pim-writer-has-content") === "1"
-        : false;
-    if (cached) {
-      const ok = window.confirm(
-        "Er staat tekst in de schrijfmodus. Weet je zeker dat je alles wilt " +
-          "wissen en met een nieuwe tekst wilt beginnen?",
-      );
-      if (!ok) return;
-    }
-    setOpen(false);
-    // Reset engine + invoer via bestaande handler in ProductShell.
-    window.dispatchEvent(new CustomEvent("pim:reset"));
-    // Navigeer naar Controleren-modus.
-    navigate({ to: "/app", search: { mode: "check" } });
-    // Focushint voor het hoofdtekstveld.
-    setTimeout(() => window.dispatchEvent(new CustomEvent("pim:focus-primary")), 80);
-  };
 
   const handleClearStorage = async () => {
     if (clearing) return;
