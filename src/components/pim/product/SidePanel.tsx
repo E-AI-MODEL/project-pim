@@ -59,10 +59,19 @@ export function MenuButton() {
 export function SidePanel({ settings }: { settings?: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<SidePanelView>("menu");
+  const navigate = useNavigate();
 
   useEffect(() => {
     const openWith = (v: SidePanelView) => () => {
-      setView(v === "settings" && !settings ? "menu" : v);
+      if (v === "settings" && !settings) {
+        // Zonder eigen instellingencontext (achtergrondpagina's): ga naar het
+        // nakijkscherm; het daar gemonteerde paneel opent direct de settings.
+        void navigate({ to: "/app", search: { mode: "check" } }).then(() => {
+          setTimeout(() => window.dispatchEvent(new CustomEvent("pim:open-settings")), 50);
+        });
+        return;
+      }
+      setView(v);
       setOpen(true);
     };
     const onMenu = openWith("menu");
