@@ -454,44 +454,9 @@ export function WriterWorkspace() {
           </div>
         </section>
 
-        {/* RIGHT, privacy panel */}
-        <aside className="space-y-3">
-          <FindingsCard
-            spans={foundSpans}
-            score={riskScore}
-            analyzed={hasAnalyzed}
-            stale={analysisStale}
-          />
-          <SafeVersionCard
-            safeText={safeText}
-            hasFindings={totalFindings > 0}
-            onCopy={async () => {
-              try {
-                await navigator.clipboard.writeText(safeText);
-                setEgressMsg("De tekst zonder persoonsgegevens staat op je klembord.");
-              } catch {
-                setEgressMsg("Kopiëren lukte niet, probeer het opnieuw.");
-              }
-            }}
-            onDownload={() => {
-              const blob = new Blob([safeText], { type: "text/plain;charset=utf-8" });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.href = url;
-              a.download = `pim-veilige-versie-${new Date().toISOString().slice(0, 10)}.txt`;
-              a.click();
-              URL.revokeObjectURL(url);
-            }}
-            onSendAI={async () => {
-              const r = await requestAction({ action: "send_external_ai", payloadText: safeText });
-              setEgressMsg(r.executed ? `✓ ${r.reason}` : `✗ ${r.reason}`);
-            }}
-          />
-          {egressMsg && (
-            <div className="rounded-lg border border-[#e5e7ef] bg-white px-3 py-2 text-[12px] text-[#334155]">
-              {egressMsg}
-            </div>
-          )}
+        {/* RIGHT, privacy panel. Op mobiel zit dit in een uitschuifblad. */}
+        <aside className="hidden space-y-3 lg:block">
+          {privacyPanel}
           <div className="flex items-center justify-between gap-2 px-1 text-[11px] text-[#94a3b8]">
             <span className="inline-flex items-center gap-1.5">
               <ShieldCheck className="h-3 w-3 text-emerald-600" />
@@ -505,6 +470,43 @@ export function WriterWorkspace() {
           </div>
         </aside>
       </div>
+
+      {/* Mobiel: bevindingen in een uitschuifblad, plus één vaste actiebalk. */}
+      <div className="lg:hidden">
+        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+          <SheetContent
+            side="bottom"
+            className="max-h-[85vh] overflow-y-auto rounded-t-2xl border-[#e5e7ef] bg-[#f6f7fb] p-4"
+            data-testid="writer-findings-sheet"
+          >
+            <SheetHeader className="pb-2 text-left">
+              <SheetTitle className="text-[15px] text-[#0f172a]">Wat PiM vond</SheetTitle>
+            </SheetHeader>
+            <div className="space-y-3">{privacyPanel}</div>
+          </SheetContent>
+        </Sheet>
+        <div className="sticky bottom-0 z-30 -mx-4 border-t border-[#e5e7ef] bg-white/95 px-4 py-2.5 backdrop-blur">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+            <button
+              type="button"
+              data-testid="open-findings-sheet"
+              onClick={() => setSheetOpen(true)}
+              className="min-w-0 truncate rounded-lg border border-[#e5e7ef] px-3 py-2 text-left text-[13px] text-[#334155]"
+            >
+              {hasAnalyzed ? `${totalFindings} gevonden` : "Nog niet nagekeken"}
+            </button>
+            <button
+              type="button"
+              data-testid="run-analysis-mobile"
+              onClick={runAnalysis}
+              className="shrink-0 rounded-lg bg-[#6d4aff] px-4 py-2 text-[13px] font-semibold text-white"
+            >
+              Kijk mijn tekst na
+            </button>
+          </div>
+        </div>
+      </div>
+
 
       <input
         ref={fileInputRef}
