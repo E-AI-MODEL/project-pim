@@ -429,7 +429,7 @@ function WriterActions({ writer }: { writer: NonNullable<AdvancedPanelProps["wri
                     <span className="min-w-0 flex-1 text-xs font-medium text-[#0f172a]">
                       {CATEGORY_LABELS[cat] ?? cat}
                     </span>
-                    <div className="inline-flex rounded-lg border border-[#e2e8f0] bg-black/12 p-0.5 gap-0.5">
+                    <div className="inline-flex shrink-0 rounded-lg border border-[#e2e8f0] bg-black/12 p-0.5 gap-0.5">
                       <button
                         type="button"
                         onClick={() => writer.onAutoRedactChange(cat, true)}
