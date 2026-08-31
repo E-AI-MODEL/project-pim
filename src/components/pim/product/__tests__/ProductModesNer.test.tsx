@@ -1,4 +1,4 @@
-// Verifieert dat QuickMode en StartMode de centrale nerSpans uit de
+// Verifieert dat CheckMode de centrale nerSpans uit de
 // ProductShellContext meesturen als `extraSpans` naar de engine, zodat er
 // geen tweede NER-flow per modus meer nodig is.
 
@@ -6,8 +6,7 @@ import { render, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PiiSpan } from "@/lib/pim/types";
-import { QuickMode } from "../modes/QuickMode";
-import { StartMode } from "../modes/StartMode";
+import { CheckMode } from "../modes/CheckMode";
 
 const evaluateMock = vi.fn(() => ({
   signals: null,
@@ -51,6 +50,13 @@ function buildCtx() {
     setMode: vi.fn(),
     action: "send_external_ai" as const,
     setAction: vi.fn(),
+    analysisMode: "live" as const,
+    setAnalysisMode: vi.fn(),
+    analysisTick: 0,
+    runAnalysis: vi.fn(),
+    isStale: false,
+    markStale: vi.fn(),
+    clearStale: vi.fn(),
     writerContent: null,
     setWriterContent: vi.fn(),
     writerAutoRedact: new Set(),
@@ -93,21 +99,8 @@ describe("Product modes, centrale NER-spans", () => {
     ctx = buildCtx();
   });
 
-  it("QuickMode geeft centrale nerSpans mee als extraSpans", async () => {
-    render(<QuickMode />);
-    await waitFor(() => {
-      expect(evaluateMock).toHaveBeenCalledWith(
-        expect.objectContaining({
-          text: "John mailt vandaag.",
-          extraSpans: [nerSpan],
-          autoRepair: false,
-        }),
-      );
-    });
-  });
-
-  it("StartMode geeft centrale nerSpans mee als extraSpans", async () => {
-    render(<StartMode />);
+  it("CheckMode geeft centrale nerSpans mee als extraSpans", async () => {
+    render(<CheckMode />);
     await waitFor(() => {
       expect(evaluateMock).toHaveBeenCalledWith(
         expect.objectContaining({
