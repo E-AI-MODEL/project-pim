@@ -1,28 +1,23 @@
-# Instellingen overal bewerkbaar in de zijbalk
+# Zijbalk: Instellingen alleen waar hij werkt, overal dezelfde plek
+
+## Principe
+
+Nul functionaliteitswijziging. Alles wat de engine, opslag of detectie aanraakt blijft 1-op-1 zoals het is. Er worden alleen UI-elementen verplaatst, geen logica gekopieerd of verdubbeld.
 
 ## Probleem (bevestigd in code)
 
-`StartHeader.tsx` (gebruikt op de landing en de achtergrondpagina's Over, Pipeline, Modi, Vlaggen, Trust, Compliance) rendert `<SidePanel />` zonder `settings`-prop. In `SidePanel.tsx` wordt het menu-item "Instellingen" alleen getoond als `settings` aanwezig is. Daardoor zie je op die pagina's wel "Diagnostiek" maar niet "Instellingen". Op /app en /schrijven (`ProductShell` + `AppHeader`) staat hij er wel.
+- `StartHeader.tsx` (landing + achtergrondpagina's) rendert `<SidePanel />` zonder `settings`-prop; het item "Instellingen" verdwijnt daar en "Diagnostiek" blijft. Dat leest alsof iets weg is of anders werkt.
+- `usePimSettings.ts` houdt instellingen alleen in React-state binnen `ProductShell`. Een instellingenscherm op info-pagina's zou een tweede, niet-gekoppelde instantie zijn: wijzigen daar doet niets voor /app en /schrijven. Die route nemen we dus niet.
 
-## Oplossing: één instellingenscherm dat zonder engine werkt
+## Aanpassing (alleen verplaatsing)
 
-De gekozen richting: Instellingen is op elke pagina volledig bewerkbaar. De instellingen slaan sowieso op in lokale opslag (`usePimSettings`); de engine leest ze zodra een werkscherm opent.
-
-Technisch knelpunt: `SettingsTab.tsx` haalt alles uit `ProductShellContext` (engine, NER-status, writer-state). Die context bestaat niet op achtergrondpagina's. Daarom:
-
-- `SettingsTab.tsx` wordt herschreven tot een component dat stand-alone werkt: het leest de instellingen direct uit `usePimSettings()` (dezelfde hook die `ProductShell` gebruikt, dus dezelfde bron en opslag) en `readDeviceCapability()`. De props voor `AdvancedPanel` (`settings.advancedPanelProps`) zijn engine-onafhankelijk; die komen rechtstreeks uit de settings-hook.
-- De onderdelen die wél engine-context nodig hebben, worden conditioneel:
-  - Writer-opties (auto-redactie, streng) alleen als de writer-state beschikbaar is (alleen op /schrijven, zoals nu).
-  - NER/SLM-blok (status, startknop) alleen als NER draait in een werkscherm. Zonder context: toon het model-blok als informatief met melding "Starten kan in Tekst nakijken" of start via de gedeelde NER-runtime als die beschikbaar is. Beperking wordt in één korte regel vermeld.
-- Implementatie: `SettingsTab` accepteert optionele context-waarden; `ProductShell` levert ze via de bestaande context (met een veilige `useProductShell`-variant of een expliciete prop-passthrough). Op achtergrondpagina's rendert `StartHeader` `<SidePanel settings={<SettingsTab mode="check" />} />` zodat hetzelfde scherm verschijnt.
-- `SidePanel.tsx`: de `{settings && ...}` conditie blijft als vangrail, maar krijgt voortaan overal inhoud; de drill-down (menu -> Instellingen -> terug) werkt identiek.
-
-## Wat verandert niet
-
-Diagnostiek, achtergrondlinks, "Lokale opslag wissen", de compacte lichte stijl en het sluit-gedrag van het paneel blijven exact zoals nu. Gedrag op /app en /schrijven blijft ongewijzigd.
+1. Op info-pagina's blijft het zijbalk-menu zichtbaar met Diagnostiek, achtergrondlinks en "Lokale opslag wissen" (ongewijzigd).
+2. Het item "Instellingen" wordt op info-pagina's geen verborgen item meer, maar een gewone rij met subtekst "In Tekst nakijken". Klik = navigatie naar `/app` en daarna het bestaande event `pim:open-settings` dispatchen, zodat de daar al gemonteerde `SidePanel` direct op het instellingenscherm opent. Dezelfde component, dezelfde state, dezelfde functionaliteit; alleen de ingang verhuist.
+3. Op /app en /schrijven verandert er helemaal niets: menu -> Instellingen opent zoals nu de bestaande `SettingsTab` binnen dezelfde `ProductShell`-context, inclusief writer-opties en NER-blok.
+4. Geen nieuwe settings-instantie, geen extra opslag, geen wijzigingen aan `usePimSettings`, `SettingsTab`, `AdvancedPanel` of de engine.
 
 ## Tests en verificatie
 
-- `sidePanel.test.tsx`: nieuwe test: `SidePanel` met settings op een scherm zonder ProductShell-context toont Instellingen, drempels/categorieën aanpassen schrijft naar dezelfde opslag.
-- Bestaande tests (`sliceC`, `twoModes`, `sidePanel`) blijven groen.
-- Typecheck + volledige testsuite; Playwright-check op /over (Instellingen openen, drempel aanpassen, daarna /app openen en zien dat de waarde meegenomen is) en /app (ongewijzigd).
+- `sidePanel.test.tsx`: aanpassen/nieuwe test: zonder `settings`-prop toont het menu "Instellingen" als link die naar `/app` navigeert en daarna `pim:open-settings` dispatchet; mét settings blijft de drill-down zoals nu.
+- Bestaande suites (`sliceC`, `twoModes`, `ProductShell`, `routeChrome`, `mobileLight`) blijven ongewijzigd groen; geen assertion over functionaliteit wordt afgezwakt.
+- Typecheck + volledige testsuite. Playwright op 390px en 1280px: op /over klik op Instellingen -> landt op /app met geopend instellingenpaneel; op /app gedrag ongewijzigd; footer en paneel verder identiek.
