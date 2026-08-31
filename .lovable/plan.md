@@ -87,9 +87,9 @@ Dubbelingen die verdwijnen:
 
 ## Fase 6, restopruiming
 
-- Twee resets in `BurgerMenu` ("Nieuwe tekst" en "Lokale opslag wissen") krijgen elk een expliciet label met één zin uitleg, in één sectie.
+- Twee resets in `BurgerMenu` worden "Begin met een lege tekst" en "Wis alles wat op dit apparaat is onthouden", elk met één zin uitleg, in één sectie.
 - De ongebruikte niet-compacte hero-variant van `InputPanel` verwijderen als die nergens meer gerenderd wordt; hetzelfde geldt voor `UspGrid` en `PipelineTimeline` als die na fase 1 nergens meer voorkomen.
-- Elke overgebleven knop krijgt een korte uitlegzin of tooltip in gewone taal.
+- Elke overgebleven knop krijgt een korte uitlegzin of tooltip in gewone taal; een copy-review loopt alle zichtbare teksten na op achtergebleven motor-woorden.
 
 ## Betrokken bestanden
 
