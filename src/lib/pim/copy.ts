@@ -48,12 +48,12 @@ export const COPY = {
   // Headlines op de verdict-kaart
   resultHeadGreen: "Klaar om te delen",
   resultHeadOrange: "Bijna klaar, nog even nalezen",
-  resultHeadRed: "Geblokkeerd",
+  resultHeadRed: "Nog niet delen",
 
   // Verdict → primaire actie
   buttonAllow: "Voer de gekozen actie uit",
   buttonAllowWarning: "Ik heb het nagelezen, ga door",
-  buttonBlock: "Tekst aanpassen en opnieuw proberen",
+  buttonBlock: "Tekst aanpassen en opnieuw nakijken",
 
   // Drie-lagen uitleg per verdict (docent · bestuurder · tech)
   layerTeacherAllow:
@@ -70,11 +70,11 @@ export const COPY = {
     "PiM blokkeert standaard bij twijfel: zodra er herleidbare persoonsgegevens aanwezig zijn, of het profiel alleen vaste regels toelaat, gaat er niets naar buiten.",
 
   // Mode/doel
-  modeAnonymous: "Anoniem",
-  modeAnonymousHint: "Namen worden vervangen door rollen. Niet terug te draaien.",
-  modePseudonymous: "Pseudoniem (lokaal)",
-  modePseudonymousHint: "Namen worden vervangen door codes. De koppeling blijft op dit apparaat.",
-  targetLabel: "Bestemming",
+  modeAnonymous: "Namen weghalen",
+  modeAnonymousHint: "Namen worden rollen, zoals leerling. Dit kun je niet terugdraaien.",
+  modePseudonymous: "Codenamen gebruiken",
+  modePseudonymousHint: "Namen worden codes, zoals L-1. Wie welke code heeft, blijft op dit apparaat.",
+  targetLabel: "Wat wil je hierna doen?",
   targetExternalAi: "Externe AI (ChatGPT, Claude…)",
   targetCopy: "Naar het klembord",
   targetExport: "Opslaan als bestand",
@@ -89,9 +89,9 @@ export const COPY = {
   pillTagline: "De privacy-engine draait in je browser",
 
   // Burgermenu (§7.2)
-  menuNewTest: "Nieuwe tekst",
+  menuNewTest: "Begin met een lege tekst",
   menuExamples: "Voorbeelden",
-  menuWriter: "Schrijven",
+  menuWriter: "Zelf schrijven",
   menuExpertLab: "Tech-expert lab",
   menuTrust: "Vertrouwensdashboard",
   menuPipeline: "Hoe de pipeline werkt",
