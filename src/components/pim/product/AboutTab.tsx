@@ -1,32 +1,13 @@
 import { useState } from "react";
-import { Link } from "@tanstack/react-router";
-import {
-  Info,
-  Workflow,
-  Layers,
-  Flag,
-  ShieldCheck,
-  CheckCircle,
-  Trash2,
-  Loader2,
-} from "lucide-react";
+import { Trash2, Loader2 } from "lucide-react";
 import { COPY } from "@/lib/pim/copy";
 import { clearAllLocalData } from "@/lib/pim";
 
-const LINKS = [
-  { to: "/over", label: COPY.menuAbout, icon: <Info className="h-4 w-4" /> },
-  { to: "/pipeline", label: COPY.menuPipeline, icon: <Workflow className="h-4 w-4" /> },
-  { to: "/modes", label: COPY.menuModes, icon: <Layers className="h-4 w-4" /> },
-  { to: "/flags", label: COPY.menuFlags, icon: <Flag className="h-4 w-4" /> },
-  { to: "/trust", label: COPY.menuTrust, icon: <ShieldCheck className="h-4 w-4" /> },
-  { to: "/compliance", label: COPY.menuCompliance, icon: <CheckCircle className="h-4 w-4" /> },
-];
-
 /**
- * Tabblad "Over": korte uitleg, achtergrondpagina's en lokale opslag wissen.
- * Vervangt het losse burgermenu-overlay.
+ * Lokale opslag wissen. Zit als los item in het gedeelde zijpaneel, zodat het
+ * menu compact blijft en er maar één plek is waar je opruimt.
  */
-export function AboutTab({ onNavigate }: { onNavigate?: () => void }) {
+export function ClearStorageButton({ className }: { className?: string }) {
   const [clearing, setClearing] = useState(false);
 
   const handleClearStorage = async () => {
@@ -62,44 +43,19 @@ export function AboutTab({ onNavigate }: { onNavigate?: () => void }) {
   };
 
   return (
-    <div className="space-y-3" data-testid="about-tab">
-      <div className="rounded-2xl border border-[#e2e8f0] bg-white p-3">
-        <div className="text-[13px] font-semibold text-[#0f172a]">Privacy Integrity Monitor</div>
-        <p className="mt-1 text-[12px] leading-relaxed text-[#475569]">
-          PiM kijkt mee met je tekst en markeert persoonsgegevens. Alles gebeurt op dit apparaat; je
-          tekst wordt niet verstuurd.
-        </p>
-      </div>
-
-      <nav className="rounded-2xl border border-[#e2e8f0] bg-white p-1.5">
-        <ul>
-          {LINKS.map((l) => (
-            <li key={l.to}>
-              <Link
-                to={l.to}
-                onClick={onNavigate}
-                className="flex items-center gap-3 rounded-xl px-2.5 py-2 text-[13px] font-medium text-[#334155] hover:bg-[#f1f2f7] hover:text-[#0f172a]"
-              >
-                <span className="text-[#94a3b8]">{l.icon}</span>
-                {l.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
-
-      <button
-        type="button"
-        onClick={handleClearStorage}
-        disabled={clearing}
-        data-testid="clear-storage"
-        className="flex w-full items-center gap-3 rounded-2xl border border-[#e2e8f0] bg-white px-3 py-2.5 text-left text-[13px] font-medium text-[#334155] hover:bg-rose-50 hover:text-rose-700 disabled:opacity-50"
-      >
-        <span className="text-[#94a3b8]">
-          {clearing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-        </span>
-        {clearing ? "Bezig met wissen…" : COPY.menuClearStorage}
-      </button>
-    </div>
+    <button
+      type="button"
+      onClick={handleClearStorage}
+      disabled={clearing}
+      data-testid="clear-storage"
+      className={[className ?? "", "hover:bg-rose-50 hover:text-rose-700 disabled:opacity-50"].join(
+        " ",
+      )}
+    >
+      <span className="text-[#94a3b8]">
+        {clearing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+      </span>
+      {clearing ? "Bezig met wissen…" : COPY.menuClearStorage}
+    </button>
   );
 }

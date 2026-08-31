@@ -56,6 +56,9 @@ describe("Twee schermen met heldere verwachting", () => {
     await act(async () => {
       screen.getByTestId("open-menu").click();
     });
+    await act(async () => {
+      screen.getByTestId("menu-item-settings").click();
+    });
     expect(screen.getAllByTestId("advanced-panel")).toHaveLength(1);
   });
 });
