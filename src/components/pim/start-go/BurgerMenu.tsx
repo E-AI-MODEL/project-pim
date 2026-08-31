@@ -228,16 +228,6 @@ export function BurgerMenu() {
                               </span>
                               {clearing ? "Bezig met wissen…" : item.label}
                             </button>
-                          ) : item.kind === "new-text" ? (
-                            <button
-                              type="button"
-                              data-testid="menu-new-text"
-                              onClick={handleNewText}
-                              className="w-full text-left flex items-center gap-3 px-4 py-2 text-[13px] font-medium rounded-md mx-2 my-0.5 text-foreground/80 hover:bg-accent/40 hover:text-foreground transition-colors"
-                            >
-                              <span className="text-muted-foreground">{item.icon}</span>
-                              {item.label}
-                            </button>
                           ) : (
                             <button
                               type="button"
