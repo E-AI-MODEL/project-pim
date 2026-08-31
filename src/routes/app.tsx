@@ -1,29 +1,26 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ProductShell } from "@/components/pim/product/ProductShell";
 import type { ProductMode } from "@/components/pim/product/types";
+import { normalizeProductMode } from "@/components/pim/product/types";
 import { validateAppSearch } from "./app.search";
 
 const HEAD_BY_MODE: Record<ProductMode, { title: string; description: string }> = {
-  quick: {
-    title: "PiM App, Snel proberen",
+  check: {
+    title: "PiM App, Tekst nakijken",
     description:
-      "Plak tekst en zie meteen welke persoonsgegevens erin zitten. Alles blijft lokaal in je browser.",
-  },
-  start: {
-    title: "PiM App, Start & Go",
-    description:
-      "Begeleide zes-stappen pipeline: detectie, anonimisatie, draft-check, beleid en egress, lokaal.",
+      "Plak of upload je tekst. Je hoort of je hem mag delen en krijgt een versie zonder persoonsgegevens. Alles blijft op je eigen apparaat.",
   },
   write: {
-    title: "PiM App, Schrijven",
-    description: "Schrijf met privacy als vangnet. Live controle terwijl je typt.",
+    title: "PiM App, Zelf schrijven",
+    description:
+      "Schrijf je tekst en zie meteen welke persoonsgegevens erin staan. PiM haalt ze op verzoek weg, lokaal in je browser.",
   },
 };
 
 export const Route = createFileRoute("/app")({
   validateSearch: validateAppSearch,
   head: ({ match }) => {
-    const mode = (match.search as { mode?: ProductMode }).mode ?? "quick";
+    const mode = normalizeProductMode((match.search as { mode?: unknown }).mode);
     const h = HEAD_BY_MODE[mode];
     return {
       meta: [
