@@ -205,11 +205,15 @@ export function ProductShell({ mode }: { mode: ProductMode }) {
       <div className="min-h-screen flex flex-col bg-[#f6f7fb] text-[#0f172a]">
         <AppHeader mode={mode} />
         <main className="flex-1">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6 sm:py-8">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 py-4 sm:py-8 space-y-4">
+            <div className="sm:hidden">
+              <MobileModePicker active={mode} />
+            </div>
             {mode === "check" && <CheckMode />}
             {mode === "write" && <WriteMode />}
           </div>
         </main>
+
         <StatusFooter />
         <SettingsPanel mode={mode} />
       </div>
