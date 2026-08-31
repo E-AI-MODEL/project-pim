@@ -10,6 +10,8 @@ import { AdvancedPanel } from "@/components/pim/start-go/AdvancedPanel";
 import { useProductShell } from "./ProductShellContext";
 import type { ProductMode } from "./types";
 import type { PiiCategory } from "@/lib/pim";
+import { readDeviceCapability, type DeviceCapability } from "@/lib/pim/deviceCapability";
+
 
 /**
  * Eén instellingenplek voor beide schermen: waar PiM op let, hoe streng hij
