@@ -45,8 +45,10 @@ export const Route = createRootRoute({
           "worker-src 'self' blob:; " +
           "object-src 'none'; " +
           "base-uri 'self'; " +
-          "form-action 'self'; " +
-          "frame-ancestors 'none'",
+          // frame-ancestors werkt alleen via een HTTP-header (staat in
+          // public/_headers); via <meta> negeert de browser het en logt een
+          // console-fout, daarom hier bewust weggelaten.
+          "form-action 'self'",
       },
       { title: "Project PiM" },
       {
