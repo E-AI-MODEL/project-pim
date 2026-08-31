@@ -1,24 +1,43 @@
 # Gebruiksgemak: één model, geen dubbele functies of feedback
 
-## Eerst je vraag: wat is het verschil tussen controleren en schrijven?
+## Eerst je punt: de woorden moeten uit de wereld van de gebruiker komen
 
-- **Tekst controleren** (nu "Snel checken" + "Stap voor stap"): je plakt bestaande tekst of laadt een document, PiM geeft een oordeel, een veilige versie en een bestemming (kopiëren, exporteren, naar externe AI). Het is een doorlaatpoort.
-- **Zelf schrijven**: je stelt tekst op in een editor, met markeringen in de tekst zelf, automatisch vervangen per categorie en docx in en uit. Het is een werkruimte.
+"Veilige versie", "vervangen", "bestemming" en "verdict" zijn woorden die kloppen als je weet hoe de motor werkt. Een leerkracht of begeleider denkt niet in versies en vervangingen, maar in: kan ik dit zo doorsturen, en wat staat er nog in dat niet naar buiten mag. De taal wordt dus omgedraaid naar wat de gebruiker wil bereiken.
 
-Ze delen dezelfde engine en dezelfde NER/BERT-runtime, maar de interactie verschilt echt. Daarom blijft Schrijven apart en gaan Snel checken en Stap voor stap samen: die twee delen invoerveld, engine en resultaat, alleen de stappenbalk verschilt.
+| Nu (motor-taal) | Straks (gebruikerstaal) |
+| --- | --- |
+| Tekst controleren / scan | **Kan dit naar buiten?** |
+| Verdict veilig / block | **Klaar om te delen** / **Nog niet delen** |
+| Veilige versie | **Tekst zonder persoonsgegevens** |
+| Anonimiseren / pseudonimiseren | **Namen weghalen** / **Namen door codenamen vervangen** (bijv. Leerling 1) |
+| Vervangen / redactie / live wipe | **Gegevens weghalen** (automatisch of per stuk) |
+| Bestemming | **Waar gaat de tekst heen** (kopiëren, downloaden, naar een AI-chat) |
+| Findings / markeringen | **Wat PiM gevonden heeft**, per soort: namen, adressen, geboortedata, leerlingnummers |
+| Risicoscore | verdwijnt als getal, wordt één zin: "Nog 3 namen en 1 leerlingnummer in de tekst" |
+| Detectielagen / BERT | **Hoe streng PiM meekijkt** (basis, uitgebreid, slim taalmodel) |
 
-Resultaat: twee modi, één analysemodel, één instellingenplek, één feedbackverhaal.
+Regel voor alle teksten: benoem het gegeven en de gevolgen, niet de bewerking. Dus niet "2 entiteiten vervangen" maar "2 namen weggehaald, deze tekst kun je delen".
 
-## Fase 1, taal en modi vastzetten
+## Wat is het verschil tussen de twee schermen?
+
+- **Tekst nakijken** (nu "Snel checken" + "Stap voor stap"): je plakt tekst of laadt een document en je hoort of het weg mag, met een versie zonder persoonsgegevens erbij. Poortwachter.
+- **Zelf schrijven**: je typt in een schrijfscherm en PiM kleurt persoonsgegevens terwijl je bezig bent, en kan ze meteen weghalen. Werkruimte.
+
+Ze delen dezelfde motor, maar het gebruik verschilt echt. Daarom blijft Zelf schrijven apart en gaan Snel checken en Stap voor stap samen: die twee delen invoerveld, motor en uitkomst, alleen de stappenbalk verschilt.
+
+Resultaat: twee schermen, één manier van analyseren, één instellingenplek, één terugkoppeling.
+
+## Fase 1, taal en schermen vastzetten
 
 Eerst de woorden, want alle latere schermen gebruiken ze.
 
-- Woordenlijst vastleggen in `src/lib/pim/copy.ts` en overal toepassen: "controleren" (analyse), "veilige versie" (resultaat), "vervangen" (redactie), "bestemming" (wat je met de tekst doet), "markeren" (gevonden gegeven). Synoniemen zoals scan, check, anonimiseren, scrubben en verwerken verdwijnen uit de UI.
-- Twee modi met een resultaatzin, zodat de verwachting vooraf klopt:
-  - **Tekst controleren**, "Plak of upload tekst. PiM geeft een oordeel en een veilige versie die je kunt kopiëren, exporteren of naar een AI sturen."
-  - **Zelf schrijven**, "Schrijf in de editor. PiM markeert persoonsgegevens terwijl je werkt en kan ze vervangen. Opslaan als docx."
-- `ModeSwitcher`: twee tabs met die labels, de resultaatzin als tooltip. Bij lege staat staan beide modi als twee kaarten met dezelfde zinnen.
-- Publieke pagina's die nog drie modi uitleggen (`_site.modes.tsx`, `_site.index.tsx`, `_site.pipeline.tsx`, `_site.scenarios.tsx`, `_site.architecture.tsx`) worden gelijkgetrokken met deze twee namen.
+- Woordenlijst uit de tabel hierboven vastleggen in `src/lib/pim/copy.ts` en overal toepassen. Programmeerwoorden (verdict, entity, redactie, sanitize, scan, egress, pipeline) verdwijnen uit alles wat de gebruiker ziet; ze mogen in code en in Diagnostiek blijven staan.
+- Twee schermen met een verwachtingszin, zodat vooraf duidelijk is wat je terugkrijgt:
+  - **Tekst nakijken**, "Plak of upload je tekst. Je hoort of je hem mag delen en krijgt een versie zonder persoonsgegevens."
+  - **Zelf schrijven**, "Schrijf hier je tekst. PiM kleurt persoonsgegevens terwijl je typt en haalt ze op verzoek weg. Opslaan als Word-bestand."
+- `ModeSwitcher`: twee tabs met die namen, de verwachtingszin eronder of als tooltip. Bij een leeg scherm staan beide als twee kaarten met dezelfde zinnen.
+- Publieke pagina's die nog drie modi uitleggen (`_site.modes.tsx`, `_site.index.tsx`, `_site.pipeline.tsx`, `_site.scenarios.tsx`, `_site.architecture.tsx`) worden gelijkgetrokken met deze twee namen en deze woordenlijst.
+
 
 ## Fase 2, routes en modes samenvoegen
 
