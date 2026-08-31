@@ -459,24 +459,28 @@ export function WriterWorkspace() {
         </section>
 
         {/* RIGHT, privacy panel. Op mobiel zit dit in een uitschuifblad. */}
-        <aside className="hidden space-y-3 lg:block">
-          {privacyPanel}
-          <div className="flex items-center justify-between gap-2 px-1 text-[11px] text-[#94a3b8]">
-            <span className="inline-flex items-center gap-1.5">
-              <ShieldCheck className="h-3 w-3 text-emerald-600" />
-              Lokaal · {stats.scrubbed} gewist · {stats.marked} gemarkeerd
-            </span>
-            <WriterStatusBar
-              nerStatus={nerStatus}
-              onStartNer={startNer}
-              detectionSettings={detectionSettings}
-            />
-          </div>
-        </aside>
+        {!isMobile && (
+          <aside className="space-y-3">
+            {privacyPanel}
+            <div className="flex items-center justify-between gap-2 px-1 text-[11px] text-[#94a3b8]">
+              <span className="inline-flex items-center gap-1.5">
+                <ShieldCheck className="h-3 w-3 text-emerald-600" />
+                Lokaal · {stats.scrubbed} gewist · {stats.marked} gemarkeerd
+              </span>
+              <WriterStatusBar
+                nerStatus={nerStatus}
+                onStartNer={startNer}
+                detectionSettings={detectionSettings}
+              />
+            </div>
+          </aside>
+        )}
       </div>
 
       {/* Mobiel: bevindingen in een uitschuifblad, plus één vaste actiebalk. */}
-      <div className="lg:hidden">
+      {isMobile && (
+        <div>
+
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <SheetContent
             side="bottom"
