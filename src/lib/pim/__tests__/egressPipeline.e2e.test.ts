@@ -24,6 +24,9 @@ const certified = (
   payloadType: "draft_anonymous_certified",
   profileId: "education-nl-rules-only",
   guardStatus: "pass",
+  // Gebruiker draait bewust zonder BERT: de re-consult mag dan lokaal
+  // kopieren/printen/delen toestaan met waarschuwing, maar niet exporteren.
+  detectionSettings: { regex: true, lexicon: true, context: true, bert: "off" },
 });
 
 function installBrowserStubs() {
@@ -57,11 +60,20 @@ beforeEach(() => {
 });
 
 describe("egress pipeline e2e", () => {
-  it.each(["copy", "export_file", "print", "share", "send_external_ai"] as const)(
+  it.each(["copy", "print", "share"] as const)(
     "%s only executes a clean certified anonymous payload",
     async (action) => {
       const result = await executeAction(allowDecision(action), certified());
       expect(result.executed).toBe(true);
+    },
+  );
+
+  it.each(["export_file", "send_external_ai"] as const)(
+    "%s is fail-closed when a detection layer did not run",
+    async (action) => {
+      const result = await executeAction(allowDecision(action), certified());
+      expect(result.executed).toBe(false);
+      expect(result.reason).toMatch(/re-consult BLOCK/i);
     },
   );
 
@@ -82,8 +94,7 @@ describe("egress pipeline e2e", () => {
 
     const result = await executeAction(allowDecision("send_external_ai"), certified());
 
-    expect(result.executed).toBe(true);
     expect(fetchSpy).not.toHaveBeenCalled();
-    expect(result.reason).toMatch(/Geen endpoint geconfigureerd/i);
+    expect(result.executed).toBe(false);
   });
 });
