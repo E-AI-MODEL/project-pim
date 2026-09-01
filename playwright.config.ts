@@ -13,7 +13,19 @@ export default defineConfig({
     viewport: { width: 1280, height: 1000 },
     trace: "off",
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    {
+      name: "chromium",
+      use: {
+        ...devices["Desktop Chrome"],
+        // Zo kan de test ook draaien op een machine met een al aanwezige
+        // Chromium (CI-cache of sandbox) zonder extra download.
+        launchOptions: process.env["PIM_E2E_CHROMIUM"]
+          ? { executablePath: process.env["PIM_E2E_CHROMIUM"] }
+          : {},
+      },
+    },
+  ],
   webServer: process.env["PIM_E2E_BASE_URL"]
     ? undefined
     : {

@@ -89,7 +89,7 @@ export function SidePanel({ settings }: { settings?: React.ReactNode }) {
       window.removeEventListener("pim:open-advanced", onSettings);
       window.removeEventListener("pim:open-diagnostics", onDiagnostics);
     };
-  }, [settings]);
+  }, [settings, navigate]);
 
   const title =
     view === "settings" ? "Instellingen" : view === "diagnostics" ? "Diagnostiek" : "Menu";

@@ -10,6 +10,7 @@ import {
   useLayoutEffect,
   useRef,
   useState,
+  useMemo,
   type TextareaHTMLAttributes,
 } from "react";
 import { X } from "lucide-react";
@@ -74,15 +75,20 @@ export const HighlightedTextArea = forwardRef<HTMLTextAreaElement, Props>(
     // Bubbel sluit zodra de tekst of de bevindingen wijzigen.
     useEffect(() => setPicked(null), [value, spans]);
 
-    const merged = mergeSpans(spans);
-    const parts: Array<{ kind: "text" | "span"; text: string; span?: PiiSpan }> = [];
-    let cursor = 0;
-    for (const s of merged) {
-      if (s.start > cursor) parts.push({ kind: "text", text: value.slice(cursor, s.start) });
-      parts.push({ kind: "span", text: value.slice(s.start, s.end), span: s });
-      cursor = s.end;
-    }
-    if (cursor < value.length) parts.push({ kind: "text", text: value.slice(cursor) });
+    // Stabiele referenties: anders verandert `parts` elke render en daarmee
+    // ook elke callback die ervan afhangt.
+    const { merged, parts } = useMemo(() => {
+      const m = mergeSpans(spans);
+      const p: Array<{ kind: "text" | "span"; text: string; span?: PiiSpan }> = [];
+      let cursor = 0;
+      for (const s of m) {
+        if (s.start > cursor) p.push({ kind: "text", text: value.slice(cursor, s.start) });
+        p.push({ kind: "span", text: value.slice(s.start, s.end), span: s });
+        cursor = s.end;
+      }
+      if (cursor < value.length) p.push({ kind: "text", text: value.slice(cursor) });
+      return { merged: m, parts: p };
+    }, [spans, value]);
 
     const openBubble = useCallback(() => {
       if (!onSpanAction) return;
