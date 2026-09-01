@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { Mode, Action, PiiSpan } from "@/lib/pim/types";
-import { HighlightedTextArea } from "./HighlightedTextArea";
+import { HighlightedTextArea, type SpanAction } from "./HighlightedTextArea";
 import {
   extractDocument,
   formatBytes,
@@ -53,6 +53,7 @@ interface Props {
   onTabChange?: (t: TextTab) => void;
   safeDisabled?: boolean;
   safeNote?: string;
+  onSpanAction?: (span: PiiSpan, action: SpanAction) => void;
 }
 
 export type TextTab = "original" | "safe";
@@ -150,6 +151,7 @@ function CompactComposer({
   onTabChange,
   safeDisabled,
   safeNote,
+  onSpanAction,
 }: Omit<Props, "compact">) {
 
   const canSend = text.trim().length > 0 && !busy;
@@ -329,6 +331,7 @@ function CompactComposer({
             value={text}
             onValueChange={onTextChange}
             spans={spans}
+            onSpanAction={onSpanAction}
             onKeyDown={(e) => {
               if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && canSend) {
                 e.preventDefault();
