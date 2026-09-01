@@ -16,6 +16,8 @@ gaat. Alle verwerking is client-side; er is geen server.
 
 Live: https://project-pim.lovable.app
 
+Zie [CHANGELOG.md](./CHANGELOG.md) voor de wijzigingsgeschiedenis.
+
 ## Lokale privacygrens
 
 Project PiM heeft geen backend. Ruwe invoer, drafts, mappings, auditinhoud en detectoruitkomsten blijven in de browser. Alleen publieke modelbestanden en publieke `config.json`-metadata worden gedownload wanneer de gebruiker de NER-SLM bewust activeert.
