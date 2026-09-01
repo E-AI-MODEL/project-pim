@@ -12,7 +12,7 @@ describe("dbg", () => {
   it("dump", async () => {
     render(<ProductShell mode="check" />);
     const editor = screen.getAllByRole("textbox")[0];
-    await act(async () => { fireEvent.change(editor, { target: { value: "Mail van Jan Jansen via jan.jansen@voorbeeld.nl over de toets." } }); });
+    await act(async () => { fireEvent.change(editor, { target: { value: "Emma de Vries doet volgende week mee aan het project." } }); });
     await waitFor(() => expect(screen.getByTestId("analysis-status").getAttribute("data-state")).toBe("ready"), { timeout: 5000 });
     console.log(screen.getAllByRole("button").map((b) => b.textContent).join(" | "));
   }, 20000);
