@@ -4,7 +4,7 @@ import { act, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
 import { MappingViewer } from "@/components/pim/start-go/MappingViewer";
-import { getEgressReconsultLog } from "@/lib/pim/egressGuard";
+import { getEgressReconsultLog } from "@/lib/pim/engine";
 
 const mapping = new Map([["[NAME_001]", "Emma de Vries"]]);
 
