@@ -450,7 +450,8 @@ export function DiagnosticsBody() {
           </div>
         </TabsContent>
 
-        <TabsContent value="env" className="mt-3">
+        <TabsContent value="env" className="mt-3 space-y-3">
+          <PerfBenchmark />
           <div className="rounded border border-[#e5e7ef] p-3 space-y-1 text-xs">
             {Object.entries(env).map(([k, v]) => (
               <div key={k} className="flex justify-between gap-3 font-plex-mono text-[11px]">
@@ -460,6 +461,7 @@ export function DiagnosticsBody() {
             ))}
           </div>
         </TabsContent>
+
 
         <TabsContent value="log" className="mt-3">
           <div className="flex justify-between items-center mb-2">
