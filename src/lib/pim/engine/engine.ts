@@ -28,6 +28,14 @@ export interface PimEngine {
    */
   previewDecision(action: Parameters<typeof modelGateFor>[0]): import("../types").PimDecision;
   requestAction(req: RequestedAction): Promise<ActionOutcome>;
+  /**
+   * Voer een actie uit op een andere tekst dan de laatst geëvalueerde, zonder
+   * de gedeelde state te overschrijven. De engine draait de volledige
+   * pipeline (detectie, anonimisering, guard, policy) op die tekst en leidt
+   * payload en payload-type zelf af. Zo hoeft geen enkele UI nog ruwe tekst
+   * als "gecertificeerd" aan te bieden.
+   */
+  requestActionForText(text: string, action: RequestedAction["action"]): Promise<ActionOutcome>;
   reset(): EngineState;
   subscribe(listener: (state: EngineState) => void): () => void;
   updateConfig(patch: Partial<EngineConfig>): void;
@@ -170,14 +178,27 @@ export function createEngine(initial: EngineConfig): PimEngine {
       strictMode: config.strictMode,
     });
 
+    // De engine leidt payload en payload-type zelf af. Een meegegeven
+    // payloadText is alleen een controle: wijkt hij af, dan geen egress.
     const certified: CertifiedPayload = {
-      text: req.payloadText ?? state.draft.text,
+      text: state.draft.text,
       mode: state.input.mode,
-      payloadType: req.payloadType ?? state.payloadType,
+      payloadType: state.payloadType,
       detectionSettings: config.detectionSettings,
       profileId: config.profileId,
       guardStatus: state.guard.status,
     };
+
+    if (req.payloadText != null && req.payloadText !== state.draft.text) {
+      return {
+        decision,
+        certified,
+        executed: false,
+        reason:
+          "Geblokkeerd: de aangeboden tekst komt niet overeen met de door PiM gecertificeerde tekst.",
+        verdict: decision.verdict,
+      };
+    }
 
     const result = await executeAction(decision, certified);
     return {
@@ -187,6 +208,23 @@ export function createEngine(initial: EngineConfig): PimEngine {
       reason: result.reason,
       verdict: decision.verdict,
     };
+  }
+
+  async function requestActionForText(
+    text: string,
+    action: RequestedAction["action"],
+  ): Promise<ActionOutcome> {
+    if (state.phase !== "ready" || !state.input) {
+      throw new Error("PimEngine.requestActionForText called before evaluate()");
+    }
+    const prev = state;
+    try {
+      evaluate({ ...(prev.input as EngineInput), text, llmDraftText: undefined });
+      return await requestAction({ action });
+    } finally {
+      state = prev;
+      emit();
+    }
   }
 
   function reset(): EngineState {
@@ -219,6 +257,7 @@ export function createEngine(initial: EngineConfig): PimEngine {
     evaluate,
     previewDecision,
     requestAction,
+    requestActionForText,
     reset,
     subscribe(listener) {
       listeners.add(listener);

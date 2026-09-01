@@ -318,9 +318,31 @@ export function getNerLastError(): string | null {
   return lastError;
 }
 
+/**
+ * Uitkomst van een NER-run inclusief expliciete status. `failed` betekent:
+ * de laag hoorde te draaien en kon niet (model niet geladen of inference stuk).
+ * Egress-paden moeten daarop fail-closed reageren; UI-paden mogen fail-open zijn.
+ */
+export interface NerRunResult {
+  status: "ran" | "failed";
+  spans: PiiSpan[];
+  error?: string;
+}
+
+/** Fail-open variant voor UI-paden (live markeren tijdens typen). */
 export async function detectPersonsSlm(text: string): Promise<PiiSpan[]> {
+  return (await detectPersonsSlmDetailed(text)).spans;
+}
+
+export async function detectPersonsSlmDetailed(text: string): Promise<NerRunResult> {
   const pipe = await loadNerSlm();
-  if (!pipe) return [];
+  if (!pipe) {
+    return {
+      status: "failed",
+      spans: [],
+      error: lastError ?? "BERT-model kon niet geladen worden.",
+    };
+  }
   try {
     const out = (await pipe(text, { aggregation_strategy: "simple" } as Record<
       string,
@@ -394,7 +416,7 @@ export async function detectPersonsSlm(text: string): Promise<PiiSpan[]> {
         });
       }
     }
-    return spans;
+    return { status: "ran", spans };
   } catch (e) {
     const msg = (e as Error).message;
     lastError = msg;
@@ -407,7 +429,7 @@ export async function detectPersonsSlm(text: string): Promise<PiiSpan[]> {
       lastCheckedAt: new Date().toISOString(),
     });
     console.warn("[PIM BERT] inference failed:", msg);
-    return [];
+    return { status: "failed", spans: [], error: msg };
   }
 }
 

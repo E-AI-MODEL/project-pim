@@ -80,10 +80,13 @@ export interface EngineState {
 
 export interface RequestedAction {
   action: Action;
-  /** Text that will actually leave (defaults to draft.text). */
+  /**
+   * Optioneel: de tekst die volgens de aanroeper naar buiten gaat. Dit is
+   * geen instructie maar een controle: wijkt hij af van de gecertificeerde
+   * draft, dan blokkeert de engine. Payload-type leidt de engine altijd zelf
+   * af; de aanroeper kan dat label niet meegeven.
+   */
   payloadText?: string;
-  /** Override payload-type (e.g. 'restored' for the restore action). */
-  payloadType?: PayloadType;
 }
 
 export interface ActionOutcome {

@@ -1,10 +1,23 @@
 // Production Egress Guard, handhaaft PIM-besluit op echte browser-egress.
+//
+// De re-consult is bewust onafhankelijk van de gebruikersinstellingen:
+// hij draait altijd op maximale sterkte en negeert uitgezette categorieën.
+// Een tweede mening die dezelfde configuratie erft, is geen tweede mening.
+//
+// De re-consult is ook fail-closed: een laag die hoorde te draaien en faalde
+// blokkeert de actie. Een laag die de gebruiker bewust uit heeft gezet volgt
+// het degrade_no_export-precedent: lokaal kopiëren/printen/delen mag met een
+// zichtbare waarschuwing, exporteren en versturen niet.
 
 import type { PimDecision, CertifiedPayload } from "./types";
 import { draftCheckWithRegistry } from "./processing";
-import { runRegistry } from "./detectorRegistry";
-import { DEFAULT_DETECTION_SETTINGS } from "./detectionSettings";
-import type { RiskLevel } from "./types";
+import { runRegistryDetailed } from "./detectorRegistry";
+import { computeSignals } from "./risk";
+import {
+  MAX_STRENGTH_DETECTION_SETTINGS,
+  coerceDetectionSettings,
+  usesBert,
+} from "./detectionSettings";
 
 const reconsultLog: string[] = [];
 const reconsultListeners = new Set<(v: string[]) => void>();
@@ -23,50 +36,87 @@ export function getEgressReconsultLog(): string[] {
   return [...reconsultLog];
 }
 
-async function reconsultPayload(
-  payload: CertifiedPayload,
-): Promise<{ ok: true } | { ok: false; reason: string }> {
-  const text = payload.text;
-  const detectionSettings = payload.detectionSettings ?? DEFAULT_DETECTION_SETTINGS;
-  const spans = await runRegistry(text, { detectionSettings, enableAsync: true });
-  const directPii = spans.filter((s) => !s.contextual);
-  const HIGH: ReadonlySet<string> = new Set([
-    "bsn",
-    "iban",
-    "email",
-    "phone",
-    "address",
-    "student_id",
-  ]);
-  let score = 0;
-  for (const s of directPii) score += HIGH.has(s.category) ? 0.18 : 0.1;
-  for (const s of spans.filter((s) => s.contextual)) score += s.confidence * 0.12;
-  score = Math.min(1, score);
-  const riskLevel: RiskLevel =
-    score >= 0.65 ? "critical" : score >= 0.4 ? "high" : score >= 0.18 ? "medium" : "low";
+/** Acties waarbij een bewust uitgezette laag alsnog hard blokkeert. */
+const STRICT_ACTIONS: ReadonlySet<string> = new Set(["export_file", "send_external_ai"]);
 
-  if (directPii.length > 0) {
+export interface ReconsultResult {
+  ok: boolean;
+  reason: string;
+  /** Zichtbare waarschuwing bij een gedegradeerde, maar toegestane actie. */
+  warning?: string;
+}
+
+/**
+ * Tweede mening op de exacte payload. Altijd maximale sterkte, altijd alle
+ * categorieën, ongeacht wat de gebruiker heeft ingesteld.
+ */
+export async function reconsultPayload(
+  payload: CertifiedPayload,
+  action: PimDecision["action"] = "copy",
+): Promise<ReconsultResult> {
+  const text = payload.text;
+  const userSettings = coerceDetectionSettings(payload.detectionSettings);
+  const userBertOff = !usesBert(userSettings);
+  const settings = {
+    ...MAX_STRENGTH_DETECTION_SETTINGS,
+    bert: userBertOff ? MAX_STRENGTH_DETECTION_SETTINGS.bert : userSettings.bert,
+  };
+  const strict = STRICT_ACTIONS.has(action);
+
+  const { spans, layers } = await runRegistryDetailed(text, {
+    detectionSettings: settings,
+    enableAsync: true,
+  });
+
+  // Fail-closed: elke verwachte laag die niet gedraaid heeft, blokkeert.
+  const failed = layers.filter((l) => l.status === "failed");
+  const bertFailedWhileUserDisabled = failed.filter((l) => l.kind === "nerSlm" && userBertOff);
+  const hardFailed = failed.filter((l) => !(l.kind === "nerSlm" && userBertOff));
+
+  if (hardFailed.length > 0) {
+    const ids = hardFailed.map((l) => `${l.id}${l.error ? ` (${l.error})` : ""}`).join("; ");
     return {
       ok: false,
-      reason: `Egress re-consult BLOCK: ${directPii.length} directe PII in payload`,
+      reason: `Egress re-consult BLOCK: controlelaag draaide niet, dus geen zekerheid: ${ids}`,
     };
   }
-  if (riskLevel === "high" || riskLevel === "critical") {
-    return { ok: false, reason: `Egress re-consult BLOCK: risk=${riskLevel}` };
+
+  let warning: string | undefined;
+  if (bertFailedWhileUserDisabled.length > 0) {
+    if (strict) {
+      return {
+        ok: false,
+        reason:
+          "Egress re-consult BLOCK: BERT staat uit, dus exporteren en versturen zijn niet toegestaan.",
+      };
+    }
+    warning = "Let op: BERT stond uit. PiM controleerde alleen met regels en woordenlijsten.";
   }
-  const check = await draftCheckWithRegistry(
-    { mode: "anonymous", text, rawHadPii: false },
-    "anonymous",
-    detectionSettings,
-    { async: true },
-  );
+
+  // Scoring via de centrale risicofunctie; geen tweede set gewichten hier.
+  const nerSpans = spans.filter((s) => s.ruleId.startsWith("slm."));
+  const signals = computeSignals(text, nerSpans, settings);
+
+  if (signals.directPii.length > 0) {
+    return {
+      ok: false,
+      reason: `Egress re-consult BLOCK: ${signals.directPii.length} directe PII in payload`,
+    };
+  }
+  if (signals.riskLevel === "high" || signals.riskLevel === "critical") {
+    return { ok: false, reason: `Egress re-consult BLOCK: risk=${signals.riskLevel}` };
+  }
+
+  const check = await draftCheckWithRegistry({ mode: "anonymous", text, rawHadPii: false }, "anonymous", settings, {
+    async: true,
+  });
   if (check.status === "fail") {
     return {
       ok: false,
       reason: `Egress re-consult BLOCK: draftCheck fail (${check.issues.join("; ")})`,
     };
   }
-  return { ok: true };
+  return { ok: true, reason: "Egress re-consult PASS", warning };
 }
 
 export interface EgressResult {
@@ -112,21 +162,24 @@ export async function executeAction(
       try {
         if (!navigator.clipboard)
           return { executed: false, reason: "Clipboard API niet beschikbaar." };
-        const reconsult = await reconsultPayload(payload);
+        const reconsult = await reconsultPayload(payload, decision.action);
         if (!reconsult.ok) {
           emitReconsult(reconsult.reason);
           return { executed: false, reason: reconsult.reason };
         }
         emitReconsult(`Egress copy re-consult PASS (${payload.text.length} chars).`);
         await navigator.clipboard.writeText(payload.text);
-        return { executed: true, reason: "Anonymous tekst gekopieerd naar klembord." };
+        return {
+          executed: true,
+          reason: withWarning("Anonymous tekst gekopieerd naar klembord.", reconsult.warning),
+        };
       } catch (e) {
         return { executed: false, reason: `Clipboard write faalde: ${(e as Error).message}` };
       }
     }
 
     case "print": {
-      const reconsult = await reconsultPayload(payload);
+      const reconsult = await reconsultPayload(payload, decision.action);
       if (!reconsult.ok) {
         emitReconsult(reconsult.reason);
         return { executed: false, reason: reconsult.reason };
@@ -140,11 +193,14 @@ export async function executeAction(
       w.document.close();
       w.focus();
       w.print();
-      return { executed: true, reason: "Print-dialog geopend met anonymous tekst." };
+      return {
+        executed: true,
+        reason: withWarning("Print-dialog geopend met anonymous tekst.", reconsult.warning),
+      };
     }
 
     case "share": {
-      const reconsult = await reconsultPayload(payload);
+      const reconsult = await reconsultPayload(payload, decision.action);
       if (!reconsult.ok) {
         emitReconsult(reconsult.reason);
         return { executed: false, reason: reconsult.reason };
@@ -167,14 +223,17 @@ export async function executeAction(
       }
       try {
         await navAny.share({ text: payload.text });
-        return { executed: true, reason: "Anonymous tekst gedeeld via Web Share API." };
+        return {
+          executed: true,
+          reason: withWarning("Anonymous tekst gedeeld via Web Share API.", reconsult.warning),
+        };
       } catch (e) {
         return { executed: false, reason: `Share geannuleerd of faalde: ${(e as Error).message}` };
       }
     }
 
     case "export_file": {
-      const reconsult = await reconsultPayload(payload);
+      const reconsult = await reconsultPayload(payload, decision.action);
       if (!reconsult.ok) {
         emitReconsult(reconsult.reason);
         return { executed: false, reason: reconsult.reason };
@@ -189,11 +248,17 @@ export async function executeAction(
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-      return { executed: true, reason: "Anonymous bestand gedownload (geen mapping bijgesloten)." };
+      return {
+        executed: true,
+        reason: withWarning(
+          "Anonymous bestand gedownload (geen mapping bijgesloten).",
+          reconsult.warning,
+        ),
+      };
     }
 
     case "send_external_ai": {
-      const reconsult = await reconsultPayload(payload);
+      const reconsult = await reconsultPayload(payload, decision.action);
       if (!reconsult.ok) {
         emitReconsult(reconsult.reason);
         return { executed: false, reason: reconsult.reason };
@@ -211,6 +276,10 @@ export async function executeAction(
     default:
       return { executed: false, reason: "Onbekende actie." };
   }
+}
+
+function withWarning(reason: string, warning?: string): string {
+  return warning ? `${reason} ${warning}` : reason;
 }
 
 function escapeHtml(s: string): string {
