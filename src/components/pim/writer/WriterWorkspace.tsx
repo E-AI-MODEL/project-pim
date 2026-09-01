@@ -46,6 +46,7 @@ import {
 import { useProductShell } from "@/components/pim/product/ProductShellContext";
 import { AnalysisModeToggle } from "@/components/pim/product/AnalysisModeToggle";
 import { AnalysisStatus } from "@/components/pim/product/AnalysisStatus";
+import { LocalAiOffer } from "@/components/pim/product/LocalAiOffer";
 import { GENERALIZATIONS } from "./pimGeneralizations";
 import {
   createPimPlugin,
@@ -460,6 +461,7 @@ export function WriterWorkspace() {
         {/* RIGHT, privacy panel. Op mobiel zit dit in een uitschuifblad. */}
         {!isMobile && (
           <aside className="space-y-3">
+            <LocalAiOffer />
             {privacyPanel}
             <div className="flex items-center justify-between gap-2 px-1 text-[11px] text-[#94a3b8]">
               <span className="inline-flex items-center gap-1.5">
@@ -488,7 +490,10 @@ export function WriterWorkspace() {
               <SheetHeader className="pb-2 text-left">
                 <SheetTitle className="text-[15px] text-[#0f172a]">Wat PiM vond</SheetTitle>
               </SheetHeader>
-              <div className="space-y-3">{privacyPanel}</div>
+              <div className="space-y-3">
+                <LocalAiOffer />
+                {privacyPanel}
+              </div>
             </SheetContent>
           </Sheet>
           <div className="sticky bottom-0 z-30 -mx-4 border-t border-[#e5e7ef] bg-white/95 px-4 py-2.5 backdrop-blur">
@@ -650,19 +655,13 @@ function WriterStatusBar({
       : nerStatus?.error
         ? "bg-rose-500"
         : "bg-slate-300";
-  const canStart = detectionSettings.bert !== "off" && !nerStatus?.working && !nerStatus?.loading;
+  // Activeren gebeurt via de gedeelde uitnodigingskaart of via Instellingen,
+  // deze balk toont alleen de doorlopende status.
+  void onStartNer;
   return (
     <div className="inline-flex items-center gap-1.5 text-[11px] text-[#64748b]">
       <span className={`h-2 w-2 rounded-full ${tone}`} />
       <span>{label}</span>
-      {canStart && (
-        <button
-          onClick={onStartNer}
-          className="font-medium text-[#6d4aff] underline underline-offset-2 hover:text-[#5b3dea]"
-        >
-          Zet aan
-        </button>
-      )}
     </div>
   );
 }
