@@ -24,7 +24,7 @@ export function CheckMode() {
     engineState,
     evaluate,
     previewDecision,
-    requestAction,
+    requestActionForText,
     settings,
     text,
     setText,
@@ -136,8 +136,10 @@ export function CheckMode() {
     { label: "Delen mag", done: result?.decision.verdict === "ALLOW" },
   ];
 
+  // De gebruiker mag de veilige versie bewerken. Die bewerkte tekst wordt
+  // opnieuw gecertificeerd voordat er iets naar buiten gaat.
   const runCheckAction = async (payload: string, act: typeof action) => {
-    const outcome = await requestAction({ action: act, payloadText: payload });
+    const outcome = await requestActionForText(payload, act);
     return { executed: outcome.executed, reason: outcome.reason };
   };
 

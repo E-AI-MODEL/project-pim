@@ -72,7 +72,7 @@ export function WriterWorkspace() {
   const {
     evaluate,
     settings,
-    requestAction,
+    requestActionForText,
     writerContent,
     setWriterContent,
     writerAutoRedact: autoRedact,
@@ -368,6 +368,18 @@ export function WriterWorkspace() {
   if (!mounted || !editor) return null;
   const totalFindings = foundSpans.length;
   const riskScore = Math.min(9, totalFindings);
+  // Elk egress-pad in dit scherm loopt hierlangs: eerst opnieuw certificeren,
+  // pas daarna uitvoeren. Nog niet nagekeken tekst wordt geweigerd.
+  const runEgress = async (action: "copy" | "export_file" | "send_external_ai") => {
+    try {
+      return await requestActionForText(safeText, action);
+    } catch {
+      return {
+        executed: false,
+        reason: "Kijk de tekst eerst na, dan pas kan PiM hem vrijgeven.",
+      } as const;
+    }
+  };
   const privacyPanel = (
     <>
       <FindingsCard
@@ -378,14 +390,25 @@ export function WriterWorkspace() {
       />
       <ActionRow
         onCopy={async () => {
+          // Ook hier eerst door de poort: pas na goedkeuring naar het klembord.
+          const r = await runEgress("copy");
+          if (!r.executed) {
+            setEgressMsg(`✗ ${r.reason}`);
+            return;
+          }
           try {
             await navigator.clipboard.writeText(safeText);
-            setEgressMsg("De tekst zonder persoonsgegevens staat op je klembord.");
+            setEgressMsg(`✓ ${r.reason}`);
           } catch {
             setEgressMsg("Kopiëren lukte niet, probeer het opnieuw.");
           }
         }}
-        onDownload={() => {
+        onDownload={async () => {
+          const r = await runEgress("export_file");
+          if (!r.executed) {
+            setEgressMsg(`✗ ${r.reason}`);
+            return;
+          }
           const blob = new Blob([safeText], { type: "text/plain;charset=utf-8" });
           const url = URL.createObjectURL(blob);
           const a = document.createElement("a");
@@ -393,9 +416,10 @@ export function WriterWorkspace() {
           a.download = `pim-veilige-versie-${new Date().toISOString().slice(0, 10)}.txt`;
           a.click();
           URL.revokeObjectURL(url);
+          setEgressMsg(`✓ ${r.reason}`);
         }}
         onSendAI={async () => {
-          const r = await requestAction({ action: "send_external_ai", payloadText: safeText });
+          const r = await runEgress("send_external_ai");
           setEgressMsg(r.executed ? `✓ ${r.reason}` : `✗ ${r.reason}`);
         }}
       />

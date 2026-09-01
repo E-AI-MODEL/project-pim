@@ -1,5 +1,6 @@
 // Pseudoniem token → origineel mapping viewer. Lokaal, geen egress.
 import { useState, useMemo } from "react";
+import { logLocalKeyAccess } from "@/lib/pim/engine";
 import { ChevronDown, ChevronRight, Copy, KeyRound, Search } from "lucide-react";
 
 interface Props {
@@ -10,6 +11,7 @@ export function MappingViewer({ mapping }: Props) {
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState("");
   const [copied, setCopied] = useState(false);
+  const [confirming, setConfirming] = useState(false);
 
   const rows = useMemo(() => {
     const arr = Array.from(mapping.entries()).map(([token, original]) => {
@@ -29,12 +31,18 @@ export function MappingViewer({ mapping }: Props) {
 
   if (mapping.size === 0) return null;
 
+  // De mapping is de her-identificatiesleutel en bevat per definitie ruwe
+  // persoonsgegevens. Hij gaat daarom nooit door de egress-poort (die
+  // certificeert anonieme tekst), maar alleen achter een expliciete
+  // bevestiging, met een notitie in de egress-log.
   async function copyAsJson() {
     const obj: Record<string, string> = {};
     for (const [k, v] of mapping.entries()) obj[k] = v;
     try {
       await navigator.clipboard.writeText(JSON.stringify(obj, null, 2));
+      logLocalKeyAccess(`mapping handmatig gekopieerd (${mapping.size} tokens), blijft lokaal`);
       setCopied(true);
+      setConfirming(false);
       setTimeout(() => setCopied(false), 1500);
     } catch {
       /* ignore */
@@ -76,13 +84,41 @@ export function MappingViewer({ mapping }: Props) {
             </div>
             <button
               type="button"
-              onClick={copyAsJson}
+              onClick={() => setConfirming(true)}
               className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium border border-violet-400/40 bg-violet-500/10 text-violet-100 hover:bg-violet-500/20 transition-colors"
             >
               <Copy className="h-3 w-3" />
               {copied ? "Gekopieerd" : "Kopieer als JSON"}
             </button>
           </div>
+          {confirming && (
+            <div
+              data-testid="mapping-copy-confirm"
+              className="rounded-md border border-amber-400/50 bg-amber-500/10 px-3 py-2 text-[11px] text-amber-100 space-y-2"
+            >
+              <p>
+                Deze koppeling bevat ruwe persoonsgegevens. Het is een sleutel, geen anonieme tekst:
+                hij mag je eigen apparaat niet verlaten en gaat dus ook niet door de controle van
+                PiM.
+              </p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={copyAsJson}
+                  className="rounded-md border border-amber-400/50 bg-amber-500/20 px-2 py-1 font-medium"
+                >
+                  Ja, kopieer lokaal
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirming(false)}
+                  className="rounded-md border border-border/50 px-2 py-1"
+                >
+                  Annuleren
+                </button>
+              </div>
+            </div>
+          )}
           <div className="max-h-[40vh] overflow-auto rounded-md border border-border/40">
             <table className="w-full text-xs">
               <thead className="bg-muted/20 sticky top-0">
@@ -126,8 +162,8 @@ export function MappingViewer({ mapping }: Props) {
           </div>
           <p className="text-[10px] text-muted-foreground leading-relaxed">
             Deze koppeling blijft op dit apparaat. Egress is fail-closed: de mapping verlaat je
-            browser nooit, ook niet via copy/share/export. JSON-kopie is alleen voor lokale
-            handmatige acties.
+            browser nooit, ook niet via copy/share/export. Een JSON-kopie kan alleen na bevestiging
+            en blijft een lokale sleutel.
           </p>
         </div>
       )}
