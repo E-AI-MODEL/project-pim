@@ -72,7 +72,7 @@ export function WriterWorkspace() {
   const {
     evaluate,
     settings,
-    requestAction,
+    requestActionForText,
     writerContent,
     setWriterContent,
     writerAutoRedact: autoRedact,
