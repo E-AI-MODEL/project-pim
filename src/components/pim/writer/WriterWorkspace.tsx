@@ -368,6 +368,18 @@ export function WriterWorkspace() {
   if (!mounted || !editor) return null;
   const totalFindings = foundSpans.length;
   const riskScore = Math.min(9, totalFindings);
+  // Elk egress-pad in dit scherm loopt hierlangs: eerst opnieuw certificeren,
+  // pas daarna uitvoeren. Nog niet nagekeken tekst wordt geweigerd.
+  const runEgress = async (action: "copy" | "export_file" | "send_external_ai") => {
+    try {
+      return await requestActionForText(safeText, action);
+    } catch {
+      return {
+        executed: false,
+        reason: "Kijk de tekst eerst na, dan pas kan PiM hem vrijgeven.",
+      } as const;
+    }
+  };
   const privacyPanel = (
     <>
       <FindingsCard
