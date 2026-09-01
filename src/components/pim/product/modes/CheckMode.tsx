@@ -9,6 +9,9 @@ import { NewTextButton } from "../NewTextButton";
 import { InputPanel, type TextTab } from "@/components/pim/start-go/InputPanel";
 import { ResultPanel } from "@/components/pim/start-go/ResultPanel";
 import type { Example } from "@/components/pim/start-go/ExamplePicker";
+import type { SpanAction } from "@/components/pim/start-go/HighlightedTextArea";
+import { GENERALIZATIONS } from "@/components/pim/writer/pimGeneralizations";
+import type { PiiSpan } from "@/lib/pim/types";
 
 /**
  * Tekst nakijken. Eén scherm voor wat vroeger "Snel checken" en
@@ -154,11 +157,14 @@ export function CheckMode() {
         text={text}
         onTextChange={(v) => {
           setText(v);
+          setIgnored(new Set());
           setEgressMsg(null);
         }}
+        onSpanAction={handleSpanAction}
         onStart={runAnalysis}
         onExample={(e: Example) => {
           setText(e.text);
+          setIgnored(new Set());
           setEgressMsg(null);
         }}
         compact
