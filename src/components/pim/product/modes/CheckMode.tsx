@@ -24,7 +24,7 @@ export function CheckMode() {
     engineState,
     evaluate,
     previewDecision,
-    requestAction,
+    requestActionForText,
     settings,
     text,
     setText,
