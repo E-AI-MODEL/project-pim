@@ -48,7 +48,9 @@ export const CONTENT_SECURITY_POLICY = [
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
   "style-src 'self' 'unsafe-inline'",
-  "script-src 'self' 'wasm-unsafe-eval' blob:",
+  // 'unsafe-inline' is nodig: TanStack Start hydrateert via inline scripts
+  // zonder nonce. Zonder dit blijft de app dood staan in productie.
+  "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob:",
   "worker-src 'self' blob:",
   `connect-src 'self' ${MODEL_CONNECT_SRC}`,
   "form-action 'self'",

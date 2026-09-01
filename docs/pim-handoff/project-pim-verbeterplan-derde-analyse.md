@@ -13,16 +13,16 @@ Belangrijkste reden: de code bevat goede privacyregels, maar de live UI-route ge
 
 Mijn aangepaste oordeel:
 
-| Onderdeel | Nieuwe score | Oordeel |
-|---|---:|---|
-| Idee en onderwijswaarde | 8/10 | Sterk. De casus past goed bij onderwijs en AI-gebruik. |
-| PIM-core | 6/10 | Goede modules, maar enkele gates worden in de UI nog te los gebruikt. |
-| Privacy-architectuur | 6/10 | De opzet klopt, maar productieclaims moeten voorzichtiger. |
-| UI/UX | 4/10 | Te veel uitleg vóór actie. De landingspagina moet de testtool worden. |
-| Bouwbaarheid | 3/10 | `npm ci` faalt door lockfile-mismatch. Dit moet eerst recht. |
-| Testbaarheid | 2/10 | Geen testscript, geen Vitest, geen CI-privacygate. |
-| Productierijpheid | 3/10 | Sterke demo, nog geen productierijpe release. |
-| Haalbaarheid verbetering | 8/10 | Hoog. De reparaties zijn duidelijk en afgebakend. |
+| Onderdeel                | Nieuwe score | Oordeel                                                               |
+| ------------------------ | -----------: | --------------------------------------------------------------------- |
+| Idee en onderwijswaarde  |         8/10 | Sterk. De casus past goed bij onderwijs en AI-gebruik.                |
+| PIM-core                 |         6/10 | Goede modules, maar enkele gates worden in de UI nog te los gebruikt. |
+| Privacy-architectuur     |         6/10 | De opzet klopt, maar productieclaims moeten voorzichtiger.            |
+| UI/UX                    |         4/10 | Te veel uitleg vóór actie. De landingspagina moet de testtool worden. |
+| Bouwbaarheid             |         3/10 | `npm ci` faalt door lockfile-mismatch. Dit moet eerst recht.          |
+| Testbaarheid             |         2/10 | Geen testscript, geen Vitest, geen CI-privacygate.                    |
+| Productierijpheid        |         3/10 | Sterke demo, nog geen productierijpe release.                         |
+| Haalbaarheid verbetering |         8/10 | Hoog. De reparaties zijn duidelijk en afgebakend.                     |
 
 Advies: niet opnieuw beginnen. Wel eerst de basis rechtzetten, daarna de UI radicaal versimpelen.
 
@@ -190,7 +190,7 @@ Dit moet vóór de UI-slag, anders is niet vast te stellen of de privacyregels b
 In `/try.tsx` wordt de beslissing aangeroepen met:
 
 ```ts
-modelVerified: true
+modelVerified: true;
 ```
 
 Daarmee wordt de modelintegriteit in de live beslisroute niet echt meegenomen.
@@ -206,7 +206,7 @@ Actie:
 Maak een functie:
 
 ```ts
-function modelGateFor(profileId, action, integrity): boolean
+function modelGateFor(profileId, action, integrity): boolean;
 ```
 
 Regels:
@@ -271,7 +271,7 @@ Actie:
 Voeg toe:
 
 ```ts
-async function draftCheckWithRegistry(draft, mode, profileId, options)
+async function draftCheckWithRegistry(draft, mode, profileId, options);
 ```
 
 En gebruik die voor:
@@ -561,11 +561,11 @@ Project PiM        lokaal actief        ☰
 
 De statuspill heeft drie toestanden:
 
-| Status | Tekst | Betekenis |
-|---|---|---|
-| groen | lokaal actief | basisdetectoren werken |
-| oranje | beperkte detectie | model of profiel beperkt |
-| rood | niet klaar | self-test, modelgate of lockstatus fout |
+| Status | Tekst             | Betekenis                               |
+| ------ | ----------------- | --------------------------------------- |
+| groen  | lokaal actief     | basisdetectoren werken                  |
+| oranje | beperkte detectie | model of profiel beperkt                |
+| rood   | niet klaar        | self-test, modelgate of lockstatus fout |
 
 ## 7.2 Burger menu
 
@@ -707,19 +707,19 @@ Een resultaatkaart moet altijd tonen:
 
 Teksten:
 
-| Status | Tekst |
-|---|---|
-| groen | Deze draft lijkt veilig genoeg voor de gekozen actie. |
+| Status | Tekst                                                                                |
+| ------ | ------------------------------------------------------------------------------------ |
+| groen  | Deze draft lijkt veilig genoeg voor de gekozen actie.                                |
 | oranje | Deze draft is bruikbaar, maar de context kan herkenbaar zijn. Controleer de details. |
-| rood | Niet delen. PiM vond nog directe persoonsgegevens of een verboden route. |
+| rood   | Niet delen. PiM vond nog directe persoonsgegevens of een verboden route.             |
 
 Knoppen:
 
-| Verdict | Primaire knop |
-|---|---|
-| ALLOW | Kopieer veilige tekst |
+| Verdict            | Primaire knop         |
+| ------------------ | --------------------- |
+| ALLOW              | Kopieer veilige tekst |
 | ALLOW_WITH_WARNING | Controleer en kopieer |
-| BLOCK | Maak opnieuw veilig |
+| BLOCK              | Maak opnieuw veilig   |
 
 ## 11. Testing first
 
@@ -901,12 +901,12 @@ Doel: geen verwarring tussen productnaam en beslislaag.
 
 Nieuwe taal:
 
-| Term | Betekenis |
-|---|---|
-| Project PiM | productnaam |
-| Privacy Integrity Monitor | volledige naam |
-| PIM | deterministische beslislaag |
-| PiM engine | vermijden of expliciet uitleggen |
+| Term                        | Betekenis                                  |
+| --------------------------- | ------------------------------------------ |
+| Project PiM                 | productnaam                                |
+| Privacy Integrity Monitor   | volledige naam                             |
+| PIM                         | deterministische beslislaag                |
+| PiM engine                  | vermijden of expliciet uitleggen           |
 | Privacy Intelligence Module | oude term, verwijderen of markeren als oud |
 
 Aanpassen:

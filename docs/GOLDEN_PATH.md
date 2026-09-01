@@ -71,9 +71,6 @@ is zwaarder. WebGPU wordt gebruikt indien beschikbaar, anders WASM-fallback.
 Dit zijn geen doelhardware-cijfers; de uitrol-partij moet op de doelhardware
 meten voor P1-3.
 
-
-
-
 Toegestaan (persistent):
 
 - browser-cache voor publieke modelbestanden;

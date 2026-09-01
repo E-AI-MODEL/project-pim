@@ -4,7 +4,6 @@
 
 "Veilige versie", "vervangen", "bestemming" en "verdict" zijn woorden die kloppen als je weet hoe de motor werkt. Een leerkracht of begeleider denkt niet in versies en vervangingen, maar in: kan ik dit zo doorsturen, en wat staat er nog in dat niet naar buiten mag. De taal wordt dus omgedraaid naar wat de gebruiker wil bereiken.
 
-
 | Nu (motor-taal)                  | Straks (gebruikerstaal)                                                               |
 | -------------------------------- | ------------------------------------------------------------------------------------- |
 | Tekst controleren / scan         | **Tekst controleren**                                                                 |
@@ -16,7 +15,6 @@
 | Findings / markeringen           | **Wat PiM gevonden heeft**, per soort: namen, adressen, geboortedata, leerlingnummers |
 | Risicoscore                      | verdwijnt als getal, wordt één zin: "Nog 3 namen en 1 leerlingnummer in de tekst"     |
 | Detectielagen / BERT             | **Hoe streng PiM meekijkt** (basis, uitgebreid, slim taalmodel)                       |
-
 
 Regel voor alle teksten: benoem het gegeven en de gevolgen, niet de bewerking. Dus niet "2 entiteiten vervangen" maar "2 namen weggehaald, deze tekst kun je delen".
 

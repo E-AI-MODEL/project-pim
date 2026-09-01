@@ -204,4 +204,3 @@ evaluate({ text: plain, mode: "anonymous", extraSpans: nerSpans });
 - Writer zet de writer-tekst als centrale NER-bron.
 - Wissel Quick -> Write -> Quick gebruikt juiste bron per modus.
 - Expertpaneel toont BERT-status en laad/testknop.
-

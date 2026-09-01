@@ -14,6 +14,8 @@ export interface CatalogEntry {
   preferredDevice: ModelDevice;
   fallbackDevice: ModelDevice | null;
   expectedConfigSha256: string;
+  /** Alleen gezet voor modellen waarvan ook het tokenizerbestand gepind is. */
+  expectedTokenizerSha256?: string;
   releaseStatus: "release-1" | "design-only";
   notes: string;
 }
@@ -27,6 +29,7 @@ export const MODEL_CATALOG = {
     preferredDevice: "webgpu",
     fallbackDevice: "wasm",
     expectedConfigSha256: "38847be4dc6699b1218a749ed69f888c2ccc7b4deba98e3c4a1cac8cb34d54c8",
+    expectedTokenizerSha256: "bf1b59b7b11c95f194f51708d918eea378e09d05f84c0e1656dc5180e8117088",
     releaseStatus: "release-1",
     notes:
       "Multilingual DistilBERT NER (PER/ORG/LOC). Immutable revision + vaste config-hash, ~100 MB.",
@@ -66,6 +69,7 @@ export interface NerVariant {
   modelId: string;
   revision: string;
   expectedConfigSha256: string;
+  expectedTokenizerSha256: string;
   label: string;
   sizeLabel: string;
   notes: string;
@@ -77,16 +81,17 @@ export const NER_VARIANTS: Record<NerVariantKey, NerVariant> = {
     modelId: "Xenova/distilbert-base-multilingual-cased-ner-hrl",
     revision: "c2a4dbf593c57f47004c5bc2d3770d311aee9c43",
     expectedConfigSha256: "38847be4dc6699b1218a749ed69f888c2ccc7b4deba98e3c4a1cac8cb34d54c8",
+    expectedTokenizerSha256: "bf1b59b7b11c95f194f51708d918eea378e09d05f84c0e1656dc5180e8117088",
     label: "Compact (DistilBERT)",
     sizeLabel: "~100 MB",
-    notes:
-      "Lichter en sneller. Recall niet extern gevalideerd op een onafhankelijk corpus.",
+    notes: "Lichter en sneller. Recall niet extern gevalideerd op een onafhankelijk corpus.",
   },
   large: {
     key: "large",
     modelId: "Xenova/bert-base-multilingual-cased-ner-hrl",
     revision: "263e82c06569c8c2ac46238a7ae5107598934234",
     expectedConfigSha256: "7aa891abae067f95a40f5e2005b3de44824a083f256802934a993d301ec25076",
+    expectedTokenizerSha256: "bf1b59b7b11c95f194f51708d918eea378e09d05f84c0e1656dc5180e8117088",
     label: "Volledig (mBERT)",
     sizeLabel: "~180 MB",
     notes:

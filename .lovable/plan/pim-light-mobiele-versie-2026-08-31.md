@@ -15,26 +15,32 @@ Concreet gedrag: bij het openen van de instellingen op mobiel toont PiM welke la
 ## Wat er verandert per scherm
 
 ### Header
+
 Een regel: logo, "Lokale modus", menuknop. De uitlegzin en de modus-tabs verhuizen naar de inhoud, zodat de header niet twee lagen hoog is.
 
 ### Modekeuze
+
 Twee volledig breedte kaarten boven de inhoud, elk met een titel en een verwachtingsregel:
 
 - Tekst nakijken: "Plak een tekst, PiM zegt of je hem kunt delen."
 - Zelf schrijven: "Schrijf zelf, PiM markeert gegevens in je tekst."
 
 ### Tekst nakijken (mobiel)
+
 Gestapeld in vaste volgorde: invoerveld, dan een vaste knop onderaan het scherm "Kijk mijn tekst na", dan de uitkomst. Analyse start altijd handmatig, ook bij nakijken; live meelezen blijft desktop-gedrag. Bij wijziging van de tekst wordt de oude uitkomst gedimd met "Tekst gewijzigd, kijk opnieuw na".
 
 Uitkomst: eerst de uitspraak (Klaar om te delen / Nog niet delen), dan de gevonden gegevens als chips, dan een schakelaar Origineel/Zonder gegevens, dan kopieer- en downloadknoppen. Details en stappen blijven ingeklapt.
 
 ### Zelf schrijven (mobiel)
+
 De editor krijgt de volle breedte. De zijbalk met bevindingen wordt een uitschuifblad onderaan met een teller ("3 gevonden"), zodat de tekst nooit wordt weggedrukt. Analyseren gebeurt met dezelfde vaste knop onderaan.
 
 ### Instellingen
+
 Eén vol scherm in plaats van een zijpaneel, met dezelfde twee groepen als op desktop ("Waar PiM op zoekt", "Wat PiM markeert") plus het mobiele modelblok hierboven.
 
 ### Voettekst
+
 Op mobiel teruggebracht tot één regel met de lokale-modus-status; de technische regels blijven achter "Technische details".
 
 ## Technisch

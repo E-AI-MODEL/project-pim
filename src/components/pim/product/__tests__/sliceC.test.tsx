@@ -59,7 +59,6 @@ describe("Slice C, consolidatie", () => {
     expect(screen.getAllByTestId("diagnostics-body")).toHaveLength(1);
   });
 
-
   it("Instellingen openen via het zijpaneel; slechts één AdvancedPanel", async () => {
     render(<ProductShell mode="check" />);
     // Vóór openen nog geen AdvancedPanel in de DOM.
@@ -84,7 +83,6 @@ describe("Slice C, consolidatie", () => {
     });
     expect(screen.getByTestId("advanced-panel").getAttribute("data-writer")).toBe("1");
   });
-
 
   it("WriterWorkspace bevat geen lokaal AdvancedPanel", () => {
     render(<ProductShell mode="write" />);

@@ -635,7 +635,7 @@ const RULES: RuleDef[] = [
   {
     id: "rule.phone_loose",
     category: "phone",
-    regex: /(?<!\d)(?:\+31|0031|\(0\)|0)[\s.()\-]{0,4}6(?:[\s.\-]{0,2}\d){8}(?!\d)/g,
+    regex: /(?<!\d)(?:\+31|0031|\(0\)|0)[\s.()-]{0,4}6(?:[\s.-]{0,2}\d){8}(?!\d)/g,
     confidence: 0.9,
   },
   // Telefoonnummer na een trefwoord, ook als de notatie afwijkt.
@@ -682,7 +682,7 @@ const RULES: RuleDef[] = [
     id: "rule.reference_number",
     category: "id_document",
     regex:
-      /(?<=\b(?:polis(?:nummer)?|verzekerings(?:nummer)?|uzovi|zorgverzekering(?:snummer)?|brin(?:[-\s]?nummer)?|duo[-\s]?nummer|dossier(?:nummer)?|zaak(?:nummer)?|v[-\s]?nummer|klantnummer|debiteurennummer)\b[\s:.#]{0,4})[A-Z0-9][A-Z0-9.\-]{3,15}\b/gi,
+      /(?<=\b(?:polis(?:nummer)?|verzekerings(?:nummer)?|uzovi|zorgverzekering(?:snummer)?|brin(?:[-\s]?nummer)?|duo[-\s]?nummer|dossier(?:nummer)?|zaak(?:nummer)?|v[-\s]?nummer|klantnummer|debiteurennummer)\b[\s:.#]{0,4})[A-Z0-9][A-Z0-9.-]{3,15}\b/gi,
     confidence: 0.75,
   },
   // Leerlingnummer: meer trefwoorden en slordige notatie (nr., #, dubbele punt).

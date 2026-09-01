@@ -5,7 +5,6 @@ import { onRewriteStatus, loadRewriteLlm, type RewriteStatus } from "@/lib/pim/r
 import { onModelIntegrity, type ModelIntegrityRecord } from "@/lib/pim/modelCatalog";
 import { subscribeDebug, clearDebug, type DebugEvent } from "@/lib/pim/debugBus";
 
-
 function useEnv() {
   const [env, setEnv] = useState<Record<string, unknown>>({});
   useEffect(() => {
@@ -174,7 +173,6 @@ export function DiagnosticsBody() {
     return () => clearInterval(id);
   }, []);
 
-
   const nerStatus: "ready" | "loading" | "idle" | "error" = ner?.error
     ? "error"
     : ner?.ready
@@ -218,291 +216,285 @@ export function DiagnosticsBody() {
       </p>
 
       <Tabs defaultValue="live" className="mt-3">
+        <TabsList className="grid grid-cols-4 bg-[#f1f2f7]">
+          <TabsTrigger value="live" className="text-xs">
+            Live
+          </TabsTrigger>
+          <TabsTrigger value="models" className="text-xs">
+            Modellen
+          </TabsTrigger>
+          <TabsTrigger value="env" className="text-xs">
+            Omgeving
+          </TabsTrigger>
+          <TabsTrigger value="log" className="text-xs">
+            Log
+          </TabsTrigger>
+        </TabsList>
 
-          <TabsList className="grid grid-cols-4 bg-[#f1f2f7]">
-            <TabsTrigger value="live" className="text-xs">
-              Live
-            </TabsTrigger>
-            <TabsTrigger value="models" className="text-xs">
-              Modellen
-            </TabsTrigger>
-            <TabsTrigger value="env" className="text-xs">
-              Omgeving
-            </TabsTrigger>
-            <TabsTrigger value="log" className="text-xs">
-              Log
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="live" className="mt-3 space-y-3">
-            {/* Nu actief */}
-            <div className="rounded border border-[#e5e7ef] p-3 space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <StatusDot tone={isActive ? "amber" : "gray"} />
-                  <span className="font-serif-display text-sm">
-                    {isActive ? "PiM rekent…" : "Wacht op invoer"}
-                  </span>
-                </div>
-                <span className="font-plex-mono text-[10px] text-[#94a3b8]">
-                  {live.recent
-                    ? ageMs < 1000
-                      ? `${Math.round(ageMs)} ms geleden`
-                      : `${Math.round(ageMs / 1000)} s geleden`
-                    : "-"}
-                </span>
-              </div>
-              <div className="text-[11px] text-[#64748b] font-plex-mono break-all">
-                {live.recent ? `${live.recent.kind} · ${live.recent.msg}` : "Nog geen activiteit."}
-              </div>
-            </div>
-
-            {/* Laatste beslissing */}
-            {live.lastRun && (
-              <div className="rounded border border-[#e5e7ef] p-3 space-y-2 text-xs">
-                <div className="flex items-center justify-between">
-                  <div className="font-plex-mono text-[10px] uppercase tracking-wider text-[#94a3b8]">
-                    Laatste run
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <StatusDot tone={verdictTone(String(live.lastRun.data?.verdict ?? ""))} />
-                    <span className="font-plex-mono text-[11px] text-[#0f172a]">
-                      {String(live.lastRun.data?.verdict ?? "-")}
-                    </span>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-x-3 gap-y-1 font-plex-mono text-[11px]">
-                  <span className="text-[#64748b]">duur</span>
-                  <span className="text-right">{String(live.lastRun.data?.ms ?? "-")} ms</span>
-                  <span className="text-[#64748b]">input-lengte</span>
-                  <span className="text-right">
-                    {String(live.lastRun.data?.inputLen ?? "-")} chars
-                  </span>
-                  <span className="text-[#64748b]">directe hits</span>
-                  <span className="text-right">{String(live.lastRun.data?.directHits ?? 0)}</span>
-                  <span className="text-[#64748b]">contextuele hits</span>
-                  <span className="text-right">
-                    {String(live.lastRun.data?.contextualHits ?? 0)}
-                  </span>
-                  <span className="text-[#64748b]">modus</span>
-                  <span className="text-right">{String(live.lastRun.data?.mode ?? "-")}</span>
-                  <span className="text-[#64748b]">actie</span>
-                  <span className="text-right">{String(live.lastRun.data?.action ?? "-")}</span>
-                  <span className="text-[#64748b]">profiel</span>
-                  <span className="text-right truncate">
-                    {String(live.lastRun.data?.profile ?? "-")}
-                  </span>
-                  <span className="text-[#64748b]">draftCheck</span>
-                  <span className="text-right">{String(live.lastRun.data?.draftCheck ?? "-")}</span>
-                  <span className="text-[#64748b]">modelGate</span>
-                  <span className="text-right truncate">
-                    {String(live.lastRun.data?.modelGate ?? "-")}
-                  </span>
-                  <span className="text-[#64748b]">payload</span>
-                  <span className="text-right truncate">
-                    {String(live.lastRun.data?.payloadType ?? "-")}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {/* Egress-poort */}
-            {live.lastExec && (
-              <div className="rounded border border-[#e5e7ef] p-3 space-y-1 text-xs">
-                <div className="flex items-center justify-between">
-                  <div className="font-plex-mono text-[10px] uppercase tracking-wider text-[#94a3b8]">
-                    Egress-poort
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <StatusDot tone={live.lastExec.data?.executed ? "green" : "red"} />
-                    <span className="font-plex-mono text-[11px]">
-                      {live.lastExec.data?.executed ? "toegestaan" : "geblokt"}
-                    </span>
-                  </div>
-                </div>
-                <div className="font-plex-mono text-[11px] text-[#64748b] break-words">
-                  {String(live.lastExec.data?.action ?? "-")} ·{" "}
-                  {String(live.lastExec.data?.reason ?? "-")}
-                </div>
-              </div>
-            )}
-
-            {/* Activiteitstellers */}
-            <div className="rounded border border-[#e5e7ef] p-3 space-y-1 text-xs">
-              <div className="font-plex-mono text-[10px] uppercase tracking-wider text-[#94a3b8]">
-                Sessietellers
-              </div>
-              {Object.keys(live.counts).length === 0 && (
-                <div className="text-[#94a3b8] italic">Nog geen activiteit.</div>
-              )}
-              {Object.entries(live.counts).map(([k, n]) => (
-                <div key={k} className="flex justify-between font-plex-mono text-[11px]">
-                  <span className="text-[#64748b]">{k}</span>
-                  <span>{n}×</span>
-                </div>
-              ))}
-            </div>
-
-            {/* Modellen-mini */}
-            <div className="rounded border border-[#e5e7ef] p-3 space-y-1 text-xs">
-              <div className="font-plex-mono text-[10px] uppercase tracking-wider text-[#94a3b8]">
-                Modellen
-              </div>
-              <div className="flex items-center justify-between font-plex-mono text-[11px]">
-                <span className="flex items-center gap-2">
-                  <StatusDot tone={modelTone(ner)} /> NER-SLM
-                </span>
-                <span className="text-[#64748b]">
-                  {ner?.runtime ?? (ner?.loading ? "laden…" : "uit")}
-                </span>
-              </div>
-              <div className="flex items-center justify-between font-plex-mono text-[11px]">
-                <span className="flex items-center gap-2">
-                  <StatusDot tone={modelTone(llm)} /> Generalisatie-LLM
-                </span>
-                <span className="text-[#64748b]">
-                  {llm?.ready ? "actief" : llm?.loading ? "laden…" : "uit"}
-                </span>
-              </div>
-            </div>
-
-            {/* Ruwe data (inklap) */}
-            {live.lastRun && (
-              <div className="rounded border border-[#e5e7ef] p-3">
-                <button
-                  onClick={() => setShowRaw((v) => !v)}
-                  className="w-full text-left font-plex-mono text-[10px] uppercase tracking-wider text-[#94a3b8] hover:text-[#64748b]"
-                >
-                  {showRaw ? "− Ruwe data verbergen" : "+ Ruwe data tonen"}
-                </button>
-                {showRaw && (
-                  <pre className="mt-2 text-[10px] text-[#64748b] font-plex-mono break-all whitespace-pre-wrap">
-                    {JSON.stringify(live.lastRun.data, null, 2)}
-                  </pre>
-                )}
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="models" className="mt-3 space-y-3">
-            {/* De 3 stap-kaarten die voorheen op de startpagina stonden. */}
-            <div className="grid grid-cols-1 gap-2">
-              <StepPill
-                num={1}
-                title="Regex & regels"
-                sub="Lokale patroon-detectie, altijd aan, geen download."
-                status="ready"
-              />
-              <StepPill
-                num={2}
-                title="NER-SLM"
-                sub="DistilBERT NER · ~100 MB · WebGPU/WASM"
-                status={nerStatus}
-                pct={nerPct}
-                badge={mobile ? "Mobiel: eerste laad ~20-40s" : undefined}
-                onClick={() => loadNerSlm().catch(() => {})}
-              />
-              <StepPill
-                num={3}
-                title="Generalisatie-LLM"
-                sub="Qwen2.5-0.5B · ~400 MB · WebGPU"
-                status={llmStatus}
-                pct={llmPct}
-                badge={llmDisabled ? "Alleen desktop met ≥4 GB RAM" : undefined}
-                onClick={() => loadRewriteLlm().catch(() => {})}
-                disabled={llmDisabled}
-              />
-            </div>
-
-            <div className="rounded border border-[#e5e7ef] p-3 space-y-2">
+        <TabsContent value="live" className="mt-3 space-y-3">
+          {/* Nu actief */}
+          <div className="rounded border border-[#e5e7ef] p-3 space-y-2">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <StatusDot tone={modelTone(ner)} />
-                <span className="font-serif-display text-sm">NER-SLM details</span>
+                <StatusDot tone={isActive ? "amber" : "gray"} />
+                <span className="font-serif-display text-sm">
+                  {isActive ? "PiM rekent…" : "Wacht op invoer"}
+                </span>
               </div>
-              <div className="font-plex-mono text-[10px] text-[#64748b] break-all">
-                {ner?.modelId}
-              </div>
-              <div className="text-xs text-[#64748b]">
-                runtime: <strong>{ner?.runtime ?? "-"}</strong> · verified:{" "}
-                <strong>{ner?.verified ? "ja" : "nee"}</strong>
-              </div>
-              {ner?.error && <div className="text-xs text-red-300">{ner.error}</div>}
-            </div>
-
-            <div className="rounded border border-[#e5e7ef] p-3 space-y-1">
-              <div className="font-plex-mono text-[10px] uppercase tracking-wider text-[#94a3b8]">
-                Integrity
-              </div>
-              {integrity.length === 0 && (
-                <div className="text-xs text-[#94a3b8] italic">Nog geen verificatie.</div>
-              )}
-              {integrity.map((r) => (
-                <div key={r.key} className="flex justify-between gap-2 font-plex-mono text-[11px]">
-                  <span className="text-[#64748b]">{r.key}</span>
-                  <span
-                    className={
-                      r.status === "verified"
-                        ? "text-emerald-700"
-                        : r.status === "mismatch"
-                          ? "text-red-300"
-                          : "text-amber-300"
-                    }
-                  >
-                    {r.status}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="env" className="mt-3">
-            <div className="rounded border border-[#e5e7ef] p-3 space-y-1 text-xs">
-              {Object.entries(env).map(([k, v]) => (
-                <div key={k} className="flex justify-between gap-3 font-plex-mono text-[11px]">
-                  <span className="text-[#64748b]">{k}</span>
-                  <span className="text-[#0f172a] truncate max-w-[60%] text-right">
-                    {String(v)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="log" className="mt-3">
-            <div className="flex justify-between items-center mb-2">
-              <span className="font-plex-mono text-[10px] uppercase tracking-wider text-[#94a3b8]">
-                {events.length} events
+              <span className="font-plex-mono text-[10px] text-[#94a3b8]">
+                {live.recent
+                  ? ageMs < 1000
+                    ? `${Math.round(ageMs)} ms geleden`
+                    : `${Math.round(ageMs / 1000)} s geleden`
+                  : "-"}
               </span>
+            </div>
+            <div className="text-[11px] text-[#64748b] font-plex-mono break-all">
+              {live.recent ? `${live.recent.kind} · ${live.recent.msg}` : "Nog geen activiteit."}
+            </div>
+          </div>
+
+          {/* Laatste beslissing */}
+          {live.lastRun && (
+            <div className="rounded border border-[#e5e7ef] p-3 space-y-2 text-xs">
+              <div className="flex items-center justify-between">
+                <div className="font-plex-mono text-[10px] uppercase tracking-wider text-[#94a3b8]">
+                  Laatste run
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <StatusDot tone={verdictTone(String(live.lastRun.data?.verdict ?? ""))} />
+                  <span className="font-plex-mono text-[11px] text-[#0f172a]">
+                    {String(live.lastRun.data?.verdict ?? "-")}
+                  </span>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-x-3 gap-y-1 font-plex-mono text-[11px]">
+                <span className="text-[#64748b]">duur</span>
+                <span className="text-right">{String(live.lastRun.data?.ms ?? "-")} ms</span>
+                <span className="text-[#64748b]">input-lengte</span>
+                <span className="text-right">
+                  {String(live.lastRun.data?.inputLen ?? "-")} chars
+                </span>
+                <span className="text-[#64748b]">directe hits</span>
+                <span className="text-right">{String(live.lastRun.data?.directHits ?? 0)}</span>
+                <span className="text-[#64748b]">contextuele hits</span>
+                <span className="text-right">{String(live.lastRun.data?.contextualHits ?? 0)}</span>
+                <span className="text-[#64748b]">modus</span>
+                <span className="text-right">{String(live.lastRun.data?.mode ?? "-")}</span>
+                <span className="text-[#64748b]">actie</span>
+                <span className="text-right">{String(live.lastRun.data?.action ?? "-")}</span>
+                <span className="text-[#64748b]">profiel</span>
+                <span className="text-right truncate">
+                  {String(live.lastRun.data?.profile ?? "-")}
+                </span>
+                <span className="text-[#64748b]">draftCheck</span>
+                <span className="text-right">{String(live.lastRun.data?.draftCheck ?? "-")}</span>
+                <span className="text-[#64748b]">modelGate</span>
+                <span className="text-right truncate">
+                  {String(live.lastRun.data?.modelGate ?? "-")}
+                </span>
+                <span className="text-[#64748b]">payload</span>
+                <span className="text-right truncate">
+                  {String(live.lastRun.data?.payloadType ?? "-")}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Egress-poort */}
+          {live.lastExec && (
+            <div className="rounded border border-[#e5e7ef] p-3 space-y-1 text-xs">
+              <div className="flex items-center justify-between">
+                <div className="font-plex-mono text-[10px] uppercase tracking-wider text-[#94a3b8]">
+                  Egress-poort
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <StatusDot tone={live.lastExec.data?.executed ? "green" : "red"} />
+                  <span className="font-plex-mono text-[11px]">
+                    {live.lastExec.data?.executed ? "toegestaan" : "geblokt"}
+                  </span>
+                </div>
+              </div>
+              <div className="font-plex-mono text-[11px] text-[#64748b] break-words">
+                {String(live.lastExec.data?.action ?? "-")} ·{" "}
+                {String(live.lastExec.data?.reason ?? "-")}
+              </div>
+            </div>
+          )}
+
+          {/* Activiteitstellers */}
+          <div className="rounded border border-[#e5e7ef] p-3 space-y-1 text-xs">
+            <div className="font-plex-mono text-[10px] uppercase tracking-wider text-[#94a3b8]">
+              Sessietellers
+            </div>
+            {Object.keys(live.counts).length === 0 && (
+              <div className="text-[#94a3b8] italic">Nog geen activiteit.</div>
+            )}
+            {Object.entries(live.counts).map(([k, n]) => (
+              <div key={k} className="flex justify-between font-plex-mono text-[11px]">
+                <span className="text-[#64748b]">{k}</span>
+                <span>{n}×</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Modellen-mini */}
+          <div className="rounded border border-[#e5e7ef] p-3 space-y-1 text-xs">
+            <div className="font-plex-mono text-[10px] uppercase tracking-wider text-[#94a3b8]">
+              Modellen
+            </div>
+            <div className="flex items-center justify-between font-plex-mono text-[11px]">
+              <span className="flex items-center gap-2">
+                <StatusDot tone={modelTone(ner)} /> NER-SLM
+              </span>
+              <span className="text-[#64748b]">
+                {ner?.runtime ?? (ner?.loading ? "laden…" : "uit")}
+              </span>
+            </div>
+            <div className="flex items-center justify-between font-plex-mono text-[11px]">
+              <span className="flex items-center gap-2">
+                <StatusDot tone={modelTone(llm)} /> Generalisatie-LLM
+              </span>
+              <span className="text-[#64748b]">
+                {llm?.ready ? "actief" : llm?.loading ? "laden…" : "uit"}
+              </span>
+            </div>
+          </div>
+
+          {/* Ruwe data (inklap) */}
+          {live.lastRun && (
+            <div className="rounded border border-[#e5e7ef] p-3">
               <button
-                onClick={clearDebug}
-                className="text-[10px] font-plex-mono uppercase tracking-wider px-2 py-1 rounded bg-[#f1f2f7] hover:bg-[#e5e7ef]"
+                onClick={() => setShowRaw((v) => !v)}
+                className="w-full text-left font-plex-mono text-[10px] uppercase tracking-wider text-[#94a3b8] hover:text-[#64748b]"
               >
-                Wissen
+                {showRaw ? "− Ruwe data verbergen" : "+ Ruwe data tonen"}
               </button>
-            </div>
-            <div className="rounded border border-[#e5e7ef] p-2 max-h-[60vh] overflow-y-auto font-plex-mono text-[10px] space-y-1">
-              {events.length === 0 && (
-                <div className="text-[#0f172a]/40 italic p-2">Nog geen events.</div>
+              {showRaw && (
+                <pre className="mt-2 text-[10px] text-[#64748b] font-plex-mono break-all whitespace-pre-wrap">
+                  {JSON.stringify(live.lastRun.data, null, 2)}
+                </pre>
               )}
-              {events
-                .slice()
-                .reverse()
-                .map((e, i) => (
-                  <div key={i} className="border-b border-[#e5e7ef] pb-1">
-                    <div className="flex justify-between text-[#94a3b8]">
-                      <span>{new Date(e.ts).toLocaleTimeString()}</span>
-                      <span>{e.kind}</span>
-                    </div>
-                    <div className="text-[#64748b]">{e.msg}</div>
-                    {e.data && (
-                      <div className="text-[#94a3b8] break-all">{JSON.stringify(e.data)}</div>
-                    )}
-                  </div>
-                ))}
             </div>
-          </TabsContent>
+          )}
+        </TabsContent>
+
+        <TabsContent value="models" className="mt-3 space-y-3">
+          {/* De 3 stap-kaarten die voorheen op de startpagina stonden. */}
+          <div className="grid grid-cols-1 gap-2">
+            <StepPill
+              num={1}
+              title="Regex & regels"
+              sub="Lokale patroon-detectie, altijd aan, geen download."
+              status="ready"
+            />
+            <StepPill
+              num={2}
+              title="NER-SLM"
+              sub="DistilBERT NER · ~100 MB · WebGPU/WASM"
+              status={nerStatus}
+              pct={nerPct}
+              badge={mobile ? "Mobiel: eerste laad ~20-40s" : undefined}
+              onClick={() => loadNerSlm().catch(() => {})}
+            />
+            <StepPill
+              num={3}
+              title="Generalisatie-LLM"
+              sub="Qwen2.5-0.5B · ~400 MB · WebGPU"
+              status={llmStatus}
+              pct={llmPct}
+              badge={llmDisabled ? "Alleen desktop met ≥4 GB RAM" : undefined}
+              onClick={() => loadRewriteLlm().catch(() => {})}
+              disabled={llmDisabled}
+            />
+          </div>
+
+          <div className="rounded border border-[#e5e7ef] p-3 space-y-2">
+            <div className="flex items-center gap-2">
+              <StatusDot tone={modelTone(ner)} />
+              <span className="font-serif-display text-sm">NER-SLM details</span>
+            </div>
+            <div className="font-plex-mono text-[10px] text-[#64748b] break-all">
+              {ner?.modelId}
+            </div>
+            <div className="text-xs text-[#64748b]">
+              runtime: <strong>{ner?.runtime ?? "-"}</strong> · verified:{" "}
+              <strong>{ner?.verified ? "ja" : "nee"}</strong>
+            </div>
+            {ner?.error && <div className="text-xs text-red-300">{ner.error}</div>}
+          </div>
+
+          <div className="rounded border border-[#e5e7ef] p-3 space-y-1">
+            <div className="font-plex-mono text-[10px] uppercase tracking-wider text-[#94a3b8]">
+              Integrity
+            </div>
+            {integrity.length === 0 && (
+              <div className="text-xs text-[#94a3b8] italic">Nog geen verificatie.</div>
+            )}
+            {integrity.map((r) => (
+              <div key={r.key} className="flex justify-between gap-2 font-plex-mono text-[11px]">
+                <span className="text-[#64748b]">{r.key}</span>
+                <span
+                  className={
+                    r.status === "verified"
+                      ? "text-emerald-700"
+                      : r.status === "mismatch"
+                        ? "text-red-300"
+                        : "text-amber-300"
+                  }
+                >
+                  {r.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="env" className="mt-3">
+          <div className="rounded border border-[#e5e7ef] p-3 space-y-1 text-xs">
+            {Object.entries(env).map(([k, v]) => (
+              <div key={k} className="flex justify-between gap-3 font-plex-mono text-[11px]">
+                <span className="text-[#64748b]">{k}</span>
+                <span className="text-[#0f172a] truncate max-w-[60%] text-right">{String(v)}</span>
+              </div>
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="log" className="mt-3">
+          <div className="flex justify-between items-center mb-2">
+            <span className="font-plex-mono text-[10px] uppercase tracking-wider text-[#94a3b8]">
+              {events.length} events
+            </span>
+            <button
+              onClick={clearDebug}
+              className="text-[10px] font-plex-mono uppercase tracking-wider px-2 py-1 rounded bg-[#f1f2f7] hover:bg-[#e5e7ef]"
+            >
+              Wissen
+            </button>
+          </div>
+          <div className="rounded border border-[#e5e7ef] p-2 max-h-[60vh] overflow-y-auto font-plex-mono text-[10px] space-y-1">
+            {events.length === 0 && (
+              <div className="text-[#0f172a]/40 italic p-2">Nog geen events.</div>
+            )}
+            {events
+              .slice()
+              .reverse()
+              .map((e, i) => (
+                <div key={i} className="border-b border-[#e5e7ef] pb-1">
+                  <div className="flex justify-between text-[#94a3b8]">
+                    <span>{new Date(e.ts).toLocaleTimeString()}</span>
+                    <span>{e.kind}</span>
+                  </div>
+                  <div className="text-[#64748b]">{e.msg}</div>
+                  {e.data && (
+                    <div className="text-[#94a3b8] break-all">{JSON.stringify(e.data)}</div>
+                  )}
+                </div>
+              ))}
+          </div>
+        </TabsContent>
       </Tabs>
     </div>
   );
 }
-

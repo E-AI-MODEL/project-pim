@@ -30,10 +30,10 @@ Gebruik geen losse hardcoded claims zoals `modelVerified: true`.
 Gebruik:
 
 ```ts
-nerStatus.loading
-nerStatus.working
-nerStatus.error ?? nerStatus.healthError
-modelGateFor(action, detectionSettings, integrity)
+nerStatus.loading;
+nerStatus.working;
+nerStatus.error ?? nerStatus.healthError;
+modelGateFor(action, detectionSettings, integrity);
 ```
 
 ## AdvancedPanel
@@ -72,4 +72,3 @@ Moet tonen:
 - Een gebruiker kan vanuit elke modus BERT laden/testen.
 - Een BERT-fout is zichtbaar en herstelbaar met `Opnieuw`.
 - Egress-blokkade noemt of het door PII, payloadType of modelintegriteit komt.
-

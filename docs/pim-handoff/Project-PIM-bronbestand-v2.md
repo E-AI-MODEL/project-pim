@@ -243,7 +243,6 @@ Gebruik bij juridische review minimaal deze actuele primaire bronnen:
 - Regulation (EU) 2024/1689, Artificial Intelligence Act
   https://eur-lex.europa.eu/eli/reg/2024/1689/oj
 
-
 ---
 
 ## 4. Threat model
@@ -380,15 +379,15 @@ Display, Restore, Save, Export, Review or Block
 
 ### 5.2 Rollen
 
-| Laag | Rol | Mag finale toestemming geven? |
-|---|---|---:|
-| Code detectors | Herkennen harde PII-patronen | Nee |
-| Browser SLM | Herkennen contextueel risico | Nee |
-| Browser LLM | Herschrijven en repareren | Nee |
-| Guards | Controleren per stap | Nee |
-| PIM | Beslist per actie | Ja |
-| Egress Guard | Handhaaft PIM-besluit | Nee |
-| Audit | Legt minimale metadata vast | Nee |
+| Laag           | Rol                          | Mag finale toestemming geven? |
+| -------------- | ---------------------------- | ----------------------------: |
+| Code detectors | Herkennen harde PII-patronen |                           Nee |
+| Browser SLM    | Herkennen contextueel risico |                           Nee |
+| Browser LLM    | Herschrijven en repareren    |                           Nee |
+| Guards         | Controleren per stap         |                           Nee |
+| PIM            | Beslist per actie            |                            Ja |
+| Egress Guard   | Handhaaft PIM-besluit        |                           Nee |
+| Audit          | Legt minimale metadata vast  |                           Nee |
 
 ### 5.3 PIM is geen guard
 
@@ -445,17 +444,17 @@ incidenten ontdoen van datum, locatie en unieke combinatie
 
 Mogelijke acties na PIM:
 
-| Actie | Mogelijk? | Voorwaarde |
-|---|---:|---|
-| display | Ja | Draft Check Guard passed |
-| copy | Ja | PIM allow, lage risk |
-| save_local | Ja | PIM allow, geen raw/mapping |
-| export_file | Ja | PIM allow, lage risk, modellen verified |
-| send_external_ai | Ja | PIM allow, lage risk, geen gevoelige context |
-| print | Ja | PIM allow, lage risk |
-| share | Ja | PIM allow, lage risk |
-| restore | Nee | Geen mapping beschikbaar |
-| debug_log | Nee | Inhoud nooit loggen |
+| Actie            | Mogelijk? | Voorwaarde                                   |
+| ---------------- | --------: | -------------------------------------------- |
+| display          |        Ja | Draft Check Guard passed                     |
+| copy             |        Ja | PIM allow, lage risk                         |
+| save_local       |        Ja | PIM allow, geen raw/mapping                  |
+| export_file      |        Ja | PIM allow, lage risk, modellen verified      |
+| send_external_ai |        Ja | PIM allow, lage risk, geen gevoelige context |
+| print            |        Ja | PIM allow, lage risk                         |
+| share            |        Ja | PIM allow, lage risk                         |
+| restore          |       Nee | Geen mapping beschikbaar                     |
+| debug_log        |       Nee | Inhoud nooit loggen                          |
 
 ### 6.2 Mode: pseudonymous
 
@@ -480,17 +479,17 @@ pseudonieme output niet exporteren in deze specificatie
 
 Mogelijke acties na PIM:
 
-| Actie | Mogelijk? | Voorwaarde |
-|---|---:|---|
-| display | Ja | Draft Check Guard passed |
-| restore | Ja | Alleen lokaal, bevoegde sessie, mapping beschikbaar |
-| copy | Nee | Te groot risico op egress |
-| save_local | Alleen encrypted session package | Geen plain text opslag |
-| export_file | Nee | Pseudoniem blijft persoonsgegevens |
-| send_external_ai | Nee | Altijd block |
-| print | Nee | Egress-risico |
-| share | Nee | Egress-risico |
-| debug_log | Nee | Inhoud nooit loggen |
+| Actie            |                        Mogelijk? | Voorwaarde                                          |
+| ---------------- | -------------------------------: | --------------------------------------------------- |
+| display          |                               Ja | Draft Check Guard passed                            |
+| restore          |                               Ja | Alleen lokaal, bevoegde sessie, mapping beschikbaar |
+| copy             |                              Nee | Te groot risico op egress                           |
+| save_local       | Alleen encrypted session package | Geen plain text opslag                              |
+| export_file      |                              Nee | Pseudoniem blijft persoonsgegevens                  |
+| send_external_ai |                              Nee | Altijd block                                        |
+| print            |                              Nee | Egress-risico                                       |
+| share            |                              Nee | Egress-risico                                       |
+| debug_log        |                              Nee | Inhoud nooit loggen                                 |
 
 ### 6.3 Geen stille mode-switch
 
@@ -608,6 +607,7 @@ De SLM mag deze signalen vullen. PIM beslist in code wat ermee gebeurt.
 ---
 
 ## 8. Verdeling tussen code en SLM
+
 ### 8.0 Waarom Project PIM twee detectielagen gebruikt
 
 Regex en NER vangen de gestructureerde PII. Denk aan namen, e-mailadressen, telefoonnummers, leerlingnummers, BSN-achtige nummers, geboortedatums, adressen, klascodes en schoolnamen. Dit is de relatief makkelijke laag. Een lokale browsertool kan deze laag goed uitvoeren met vaste patronen, woordenlijsten en lokale NER.
@@ -632,7 +632,6 @@ PIM-code: per actie allow, allow_with_warning of block beslissen.
 ```
 
 De SLM mag nooit beslissen of export, copy, share, print, restore of externe AI is toegestaan. De SLM levert alleen labels en confidence. PIM beslist deterministisch in code.
-
 
 ### 8.1 Code detecteert harde patronen
 
@@ -810,17 +809,17 @@ Cache kan door de browser worden gewist.
 
 ```ts
 export type ModelPurpose =
-  | 'ner_detection'
-  | 'education_context_detection'
-  | 'contextual_generalization'
-  | 'draft_repair';
+  | "ner_detection"
+  | "education_context_detection"
+  | "contextual_generalization"
+  | "draft_repair";
 
-export type ModelRuntime = 'transformers.js' | 'webllm';
+export type ModelRuntime = "transformers.js" | "webllm";
 
 export type ModelFailPolicy =
-  | 'fail_closed'
-  | 'degrade_no_export'
-  | 'fallback_to_rule_generalization';
+  | "fail_closed"
+  | "degrade_no_export"
+  | "fallback_to_rule_generalization";
 
 export interface PrivacyModelRegistryEntry {
   id: string;
@@ -829,9 +828,9 @@ export interface PrivacyModelRegistryEntry {
   task: string;
   purpose: ModelPurpose;
   requiredForActions: IntendedAction[];
-  devicePreference: Array<'webgpu' | 'wasm'>;
+  devicePreference: Array<"webgpu" | "wasm">;
   failPolicy: ModelFailPolicy;
-  source: 'huggingface' | 'mlc' | 'internal_mirror';
+  source: "huggingface" | "mlc" | "internal_mirror";
   expectedSha256: string;
   expectedSizeBytes?: number;
   modelCardUrl?: string;
@@ -840,57 +839,43 @@ export interface PrivacyModelRegistryEntry {
 
 export const PRIVACY_MODEL_REGISTRY: Record<string, PrivacyModelRegistryEntry> = {
   slmNer: {
-    id: 'jdp8/wikineural-multilingual-ner',
-    version: 'pinned-v2',
-    runtime: 'transformers.js',
-    task: 'token-classification',
-    purpose: 'ner_detection',
-    requiredForActions: [
-      'copy',
-      'save_local',
-      'export_file',
-      'print',
-      'share',
-      'send_external_ai',
-    ],
-    devicePreference: ['webgpu', 'wasm'],
-    failPolicy: 'fail_closed',
-    source: 'huggingface',
-    expectedSha256: 'REPLACE_WITH_PINNED_SHA256_BEFORE_PRODUCTION',
-    notes: 'Productie vereist hashcontrole of eigen mirror.',
+    id: "jdp8/wikineural-multilingual-ner",
+    version: "pinned-v2",
+    runtime: "transformers.js",
+    task: "token-classification",
+    purpose: "ner_detection",
+    requiredForActions: ["copy", "save_local", "export_file", "print", "share", "send_external_ai"],
+    devicePreference: ["webgpu", "wasm"],
+    failPolicy: "fail_closed",
+    source: "huggingface",
+    expectedSha256: "REPLACE_WITH_PINNED_SHA256_BEFORE_PRODUCTION",
+    notes: "Productie vereist hashcontrole of eigen mirror.",
   },
 
   educationContext: {
-    id: 'pim-education-privacy-context-v2',
-    version: 'v2.0.0',
-    runtime: 'transformers.js',
-    task: 'text-classification',
-    purpose: 'education_context_detection',
-    requiredForActions: [
-      'copy',
-      'save_local',
-      'export_file',
-      'print',
-      'share',
-      'send_external_ai',
-    ],
-    devicePreference: ['webgpu', 'wasm'],
-    failPolicy: 'degrade_no_export',
-    source: 'internal_mirror',
-    expectedSha256: 'REPLACE_WITH_PINNED_SHA256_BEFORE_PRODUCTION',
+    id: "pim-education-privacy-context-v2",
+    version: "v2.0.0",
+    runtime: "transformers.js",
+    task: "text-classification",
+    purpose: "education_context_detection",
+    requiredForActions: ["copy", "save_local", "export_file", "print", "share", "send_external_ai"],
+    devicePreference: ["webgpu", "wasm"],
+    failPolicy: "degrade_no_export",
+    source: "internal_mirror",
+    expectedSha256: "REPLACE_WITH_PINNED_SHA256_BEFORE_PRODUCTION",
   },
 
   contextualRewrite: {
-    id: 'mlc-ai/Qwen2.5-1.5B-Instruct-q4f16_1-MLC',
-    version: 'pinned-v2',
-    runtime: 'webllm',
-    task: 'text-generation',
-    purpose: 'contextual_generalization',
+    id: "mlc-ai/Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+    version: "pinned-v2",
+    runtime: "webllm",
+    task: "text-generation",
+    purpose: "contextual_generalization",
     requiredForActions: [],
-    devicePreference: ['webgpu'],
-    failPolicy: 'fallback_to_rule_generalization',
-    source: 'mlc',
-    expectedSha256: 'REPLACE_WITH_PINNED_SHA256_BEFORE_PRODUCTION',
+    devicePreference: ["webgpu"],
+    failPolicy: "fallback_to_rule_generalization",
+    source: "mlc",
+    expectedSha256: "REPLACE_WITH_PINNED_SHA256_BEFORE_PRODUCTION",
   },
 };
 ```
@@ -915,13 +900,13 @@ Geen externe AI bij registry mismatch.
 
 ```ts
 export type ModelLoadStatus =
-  | 'not_loaded'
-  | 'loading'
-  | 'loaded'
-  | 'failed'
-  | 'degraded'
-  | 'hash_mismatch'
-  | 'unverified';
+  | "not_loaded"
+  | "loading"
+  | "loaded"
+  | "failed"
+  | "degraded"
+  | "hash_mismatch"
+  | "unverified";
 
 export interface ModelIntegrityRecord {
   modelKey: string;
@@ -929,7 +914,7 @@ export interface ModelIntegrityRecord {
   version: string;
   runtime: ModelRuntime;
   task: string;
-  device: 'webgpu' | 'wasm' | 'cpu' | 'unknown';
+  device: "webgpu" | "wasm" | "cpu" | "unknown";
   status: ModelLoadStatus;
   expectedSha256: string;
   actualSha256?: string;
@@ -954,15 +939,18 @@ export function assertModelGate(params: {
     if (!record.requiredForActions.includes(intendedAction)) continue;
 
     const hashConfigured =
-      record.expectedSha256 &&
-      !record.expectedSha256.includes('REPLACE_WITH_PINNED_SHA256');
+      record.expectedSha256 && !record.expectedSha256.includes("REPLACE_WITH_PINNED_SHA256");
 
     if (!hashConfigured) {
-      throw new Error(`Model gate blocked ${intendedAction}: missing pinned hash for ${record.modelId}.`);
+      throw new Error(
+        `Model gate blocked ${intendedAction}: missing pinned hash for ${record.modelId}.`,
+      );
     }
 
-    if (record.status !== 'loaded') {
-      throw new Error(`Model gate blocked ${intendedAction}: ${record.modelId} is ${record.status}.`);
+    if (record.status !== "loaded") {
+      throw new Error(
+        `Model gate blocked ${intendedAction}: ${record.modelId} is ${record.status}.`,
+      );
     }
 
     if (record.actualSha256 && record.actualSha256 !== record.expectedSha256) {
@@ -1125,62 +1113,62 @@ PIM zit in core als TypeScript-code.
 ## 14. types.ts
 
 ```ts
-export type PrivacyMode = 'anonymous' | 'pseudonymous';
+export type PrivacyMode = "anonymous" | "pseudonymous";
 
 export type IntendedAction =
-  | 'display'
-  | 'copy'
-  | 'save_local'
-  | 'restore'
-  | 'send_external_ai'
-  | 'export_file'
-  | 'print'
-  | 'share'
-  | 'debug_log';
+  | "display"
+  | "copy"
+  | "save_local"
+  | "restore"
+  | "send_external_ai"
+  | "export_file"
+  | "print"
+  | "share"
+  | "debug_log";
 
-export type RiskLevel = 'low' | 'medium' | 'high' | 'blocked';
+export type RiskLevel = "low" | "medium" | "high" | "blocked";
 
 export type DraftStatus =
-  | 'draft_unchecked'
-  | 'draft_blocked'
-  | 'draft_repair_needed'
-  | 'draft_certified_anonymous'
-  | 'draft_certified_pseudonymous';
+  | "draft_unchecked"
+  | "draft_blocked"
+  | "draft_repair_needed"
+  | "draft_certified_anonymous"
+  | "draft_certified_pseudonymous";
 
-export type DetectionSource = 'rule' | 'slm_ner' | 'slm_education_context' | 'draft_guard';
+export type DetectionSource = "rule" | "slm_ner" | "slm_education_context" | "draft_guard";
 
 export type DirectPiiType =
-  | 'name_like'
-  | 'email'
-  | 'phone'
-  | 'address'
-  | 'postal_address'
-  | 'student_id'
-  | 'staff_id'
-  | 'national_id_like'
-  | 'iban'
-  | 'ip_address'
-  | 'personal_url'
-  | 'date_of_birth'
-  | 'exact_date'
-  | 'school_name'
-  | 'class_code'
-  | 'location';
+  | "name_like"
+  | "email"
+  | "phone"
+  | "address"
+  | "postal_address"
+  | "student_id"
+  | "staff_id"
+  | "national_id_like"
+  | "iban"
+  | "ip_address"
+  | "personal_url"
+  | "date_of_birth"
+  | "exact_date"
+  | "school_name"
+  | "class_code"
+  | "location";
 
 export type ContextualPiiType =
-  | 'small_group_risk'
-  | 'unique_role_risk'
-  | 'support_need_context'
-  | 'health_context'
-  | 'family_context'
-  | 'migration_context'
-  | 'performance_context'
-  | 'behavioral_incident'
-  | 'safeguarding_context'
-  | 'temporal_specificity'
-  | 'location_specificity'
-  | 'school_specificity'
-  | 'rare_combination_risk';
+  | "small_group_risk"
+  | "unique_role_risk"
+  | "support_need_context"
+  | "health_context"
+  | "family_context"
+  | "migration_context"
+  | "performance_context"
+  | "behavioral_incident"
+  | "safeguarding_context"
+  | "temporal_specificity"
+  | "location_specificity"
+  | "school_specificity"
+  | "rare_combination_risk";
 
 export interface DetectionSpan {
   start: number;
@@ -1193,7 +1181,7 @@ export interface DetectionSpan {
 
 export interface PrivacySignals {
   directPii: Partial<Record<DirectPiiType, boolean>>;
-  contextualPii: Partial<Record<ContextualPiiType, boolean | 'low' | 'medium' | 'high'>>;
+  contextualPii: Partial<Record<ContextualPiiType, boolean | "low" | "medium" | "high">>;
   outputState: {
     containsRawPersonalData: boolean;
     containsPseudonymTokens: boolean;
@@ -1207,7 +1195,7 @@ export interface PrivacySignals {
     educationContextVerified: boolean;
     rewriteModelVerified: boolean;
   };
-  mappingState: 'none' | 'local_only' | 'encrypted_local' | 'unsafe_present';
+  mappingState: "none" | "local_only" | "encrypted_local" | "unsafe_present";
 }
 
 export interface MappingEntry {
@@ -1218,7 +1206,7 @@ export interface MappingEntry {
 
 export interface MappingHandle {
   id: string;
-  mode: 'memory_only' | 'encrypted_local';
+  mode: "memory_only" | "encrypted_local";
 }
 
 export interface ProcessResult {
@@ -1233,7 +1221,7 @@ export interface ProcessResult {
   policyVersion: string;
 }
 
-export type PimDecisionValue = 'allow' | 'allow_with_warning' | 'block';
+export type PimDecisionValue = "allow" | "allow_with_warning" | "block";
 
 export interface PimDecision {
   decision: PimDecisionValue;
@@ -1241,7 +1229,7 @@ export interface PimDecision {
   mode: PrivacyMode;
   ruleId: string;
   reasonCode: string;
-  severity: 'info' | 'warning' | 'critical';
+  severity: "info" | "warning" | "critical";
   policyVersion: string;
   modelVersion?: string;
   timestamp: string;
@@ -1252,7 +1240,7 @@ export interface GuardResult {
   guard: string;
   ruleId: string;
   reasonCode: string;
-  severity: 'info' | 'warning' | 'critical';
+  severity: "info" | "warning" | "critical";
 }
 ```
 
@@ -1268,7 +1256,7 @@ Alleen een MappingHandle mag terugkomen.
 ## 15. privacy.config.ts
 
 ```ts
-export const PRIVACY_POLICY_VERSION = 'project-pim-v2.0.0';
+export const PRIVACY_POLICY_VERSION = "project-pim-v2.0.0";
 
 export const PRIVACY_THRESHOLDS = {
   anonymousExportMaxRisk: 0.25,
@@ -1283,25 +1271,25 @@ export const PRIVACY_THRESHOLDS = {
 } as const;
 
 export const TOKEN_PREFIXES = [
-  'STUDENT',
-  'TEACHER',
-  'PARENT',
-  'SCHOOL',
-  'CLASS',
-  'LOCATION',
-  'DATE',
-  'SUPPORT_NEED',
-  'INCIDENT',
+  "STUDENT",
+  "TEACHER",
+  "PARENT",
+  "SCHOOL",
+  "CLASS",
+  "LOCATION",
+  "DATE",
+  "SUPPORT_NEED",
+  "INCIDENT",
 ] as const;
 
-export const BLOCKED_ACTIONS_ALWAYS = ['debug_log'] as const;
+export const BLOCKED_ACTIONS_ALWAYS = ["debug_log"] as const;
 
 export const PSEUDONYMOUS_BLOCKED_EGRESS_ACTIONS = [
-  'copy',
-  'export_file',
-  'print',
-  'share',
-  'send_external_ai',
+  "copy",
+  "export_file",
+  "print",
+  "share",
+  "send_external_ai",
 ] as const;
 ```
 
@@ -1310,7 +1298,7 @@ export const PSEUDONYMOUS_BLOCKED_EGRESS_ACTIONS = [
 ## 16. detectRules.ts
 
 ```ts
-import type { DetectionSpan, DirectPiiType, ContextualPiiType } from './types';
+import type { DetectionSpan, DirectPiiType, ContextualPiiType } from "./types";
 
 interface RulePattern {
   label: DirectPiiType | ContextualPiiType;
@@ -1321,103 +1309,112 @@ interface RulePattern {
 
 const DIRECT_PII_PATTERNS: RulePattern[] = [
   {
-    label: 'email',
+    label: "email",
     regex: /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi,
     confidence: 0.99,
-    replacementHint: 'EMAIL',
+    replacementHint: "EMAIL",
   },
   {
-    label: 'phone',
+    label: "phone",
     regex: /\b(?:\+31|0031|0)\s?6[\s-]?\d{8}\b|\b(?:\+31|0031|0)\s?\d{2,3}[\s-]?\d{6,7}\b/g,
     confidence: 0.95,
-    replacementHint: 'PHONE',
+    replacementHint: "PHONE",
   },
   {
-    label: 'postal_address',
+    label: "postal_address",
     regex: /\b[1-9][0-9]{3}\s?[A-Z]{2}\s*(?:\d+[A-Z]?)?\b/g,
     confidence: 0.9,
-    replacementHint: 'ADDRESS',
+    replacementHint: "ADDRESS",
   },
   {
-    label: 'iban',
+    label: "iban",
     regex: /\bNL\d{2}\s?[A-Z]{4}\s?\d{4}\s?\d{4}\s?\d{2}\b/gi,
     confidence: 0.99,
-    replacementHint: 'IBAN',
+    replacementHint: "IBAN",
   },
   {
-    label: 'ip_address',
+    label: "ip_address",
     regex: /\b(?:\d{1,3}\.){3}\d{1,3}\b/g,
     confidence: 0.8,
-    replacementHint: 'IP',
+    replacementHint: "IP",
   },
   {
-    label: 'student_id',
+    label: "student_id",
     regex: /\b(?:leerlingnummer|studentnummer|lnr|sid)[:\s-]*[A-Z0-9-]{4,}\b/gi,
     confidence: 0.95,
-    replacementHint: 'STUDENT_ID',
+    replacementHint: "STUDENT_ID",
   },
   {
-    label: 'national_id_like',
+    label: "national_id_like",
     regex: /\b(?:bsn|burgerservicenummer|persoonsnummer)[:\s-]*(?:\d[\s-]?){8,9}\b/gi,
     confidence: 0.95,
-    replacementHint: 'NATIONAL_ID',
+    replacementHint: "NATIONAL_ID",
   },
   {
-    label: 'date_of_birth',
-    regex: /\b(?:geboren op|geboortedatum|dob)[:\s-]*(?:\d{1,2}[-/ ]\d{1,2}[-/ ]\d{2,4}|\d{1,2}\s+(?:januari|februari|maart|april|mei|juni|juli|augustus|september|oktober|november|december)\s+\d{4})\b/gi,
+    label: "date_of_birth",
+    regex:
+      /\b(?:geboren op|geboortedatum|dob)[:\s-]*(?:\d{1,2}[-/ ]\d{1,2}[-/ ]\d{2,4}|\d{1,2}\s+(?:januari|februari|maart|april|mei|juni|juli|augustus|september|oktober|november|december)\s+\d{4})\b/gi,
     confidence: 0.95,
-    replacementHint: 'DATE_OF_BIRTH',
+    replacementHint: "DATE_OF_BIRTH",
   },
   {
-    label: 'class_code',
-    regex: /\b(?:groep|klas|leerjaar)\s?[1-8][A-Z]?\b|\b[1-6]\s?(?:havo|vwo|vmbo|mavo|atheneum|gymnasium)[A-Z]?\b/gi,
+    label: "class_code",
+    regex:
+      /\b(?:groep|klas|leerjaar)\s?[1-8][A-Z]?\b|\b[1-6]\s?(?:havo|vwo|vmbo|mavo|atheneum|gymnasium)[A-Z]?\b/gi,
     confidence: 0.75,
-    replacementHint: 'CLASS',
+    replacementHint: "CLASS",
   },
   {
-    label: 'exact_date',
-    regex: /\b(?:\d{1,2}[-/ ]\d{1,2}[-/ ]\d{2,4}|\d{1,2}\s+(?:januari|februari|maart|april|mei|juni|juli|augustus|september|oktober|november|december)\s+\d{4})\b/gi,
+    label: "exact_date",
+    regex:
+      /\b(?:\d{1,2}[-/ ]\d{1,2}[-/ ]\d{2,4}|\d{1,2}\s+(?:januari|februari|maart|april|mei|juni|juli|augustus|september|oktober|november|december)\s+\d{4})\b/gi,
     confidence: 0.8,
-    replacementHint: 'DATE',
+    replacementHint: "DATE",
   },
 ];
 
 const EDUCATION_CONTEXT_PATTERNS: RulePattern[] = [
   {
-    label: 'support_need_context',
-    regex: /\b(?:dyslexie|dyscalculie|adhd|autisme|ASS|hoogbegaafd|arrangement|extra ondersteuning|ondersteuningsbehoefte|iep|opp)\b/gi,
+    label: "support_need_context",
+    regex:
+      /\b(?:dyslexie|dyscalculie|adhd|autisme|ASS|hoogbegaafd|arrangement|extra ondersteuning|ondersteuningsbehoefte|iep|opp)\b/gi,
     confidence: 0.85,
-    replacementHint: 'SUPPORT_NEED',
+    replacementHint: "SUPPORT_NEED",
   },
   {
-    label: 'health_context',
-    regex: /\b(?:diabetes|epilepsie|medicatie|therapie|diagnose|angststoornis|depressie|ziekenhuis|psycholoog)\b/gi,
+    label: "health_context",
+    regex:
+      /\b(?:diabetes|epilepsie|medicatie|therapie|diagnose|angststoornis|depressie|ziekenhuis|psycholoog)\b/gi,
     confidence: 0.85,
-    replacementHint: 'HEALTH_CONTEXT',
+    replacementHint: "HEALTH_CONTEXT",
   },
   {
-    label: 'family_context',
-    regex: /\b(?:pleegzorg|voogd|scheiding|thuisloos|oudergesprek|vader|moeder|stiefouder|gezinssituatie)\b/gi,
+    label: "family_context",
+    regex:
+      /\b(?:pleegzorg|voogd|scheiding|thuisloos|oudergesprek|vader|moeder|stiefouder|gezinssituatie)\b/gi,
     confidence: 0.75,
-    replacementHint: 'FAMILY_CONTEXT',
+    replacementHint: "FAMILY_CONTEXT",
   },
   {
-    label: 'safeguarding_context',
-    regex: /\b(?:veilig thuis|meldcode|jeugdzorg|raad voor de kinderbescherming|ondertoezichtstelling|uithuisplaatsing)\b/gi,
+    label: "safeguarding_context",
+    regex:
+      /\b(?:veilig thuis|meldcode|jeugdzorg|raad voor de kinderbescherming|ondertoezichtstelling|uithuisplaatsing)\b/gi,
     confidence: 0.95,
-    replacementHint: 'SAFEGUARDING_CONTEXT',
+    replacementHint: "SAFEGUARDING_CONTEXT",
   },
   {
-    label: 'behavioral_incident',
-    regex: /\b(?:geschorst|schorsing|incident|vechtpartij|pesten|grensoverschrijdend|time-out|verwijdering)\b/gi,
+    label: "behavioral_incident",
+    regex:
+      /\b(?:geschorst|schorsing|incident|vechtpartij|pesten|grensoverschrijdend|time-out|verwijdering)\b/gi,
     confidence: 0.8,
-    replacementHint: 'INCIDENT',
+    replacementHint: "INCIDENT",
   },
   {
-    label: 'migration_context',
-    regex: /\b(?:nieuwkomer|oekraïne|vluchteling|asiel|statushouder|inburgering|anderstalig|ISK)\b/gi,
+    label: "migration_context",
+    regex:
+      /\b(?:nieuwkomer|oekraïne|vluchteling|asiel|statushouder|inburgering|anderstalig|ISK)\b/gi,
     confidence: 0.75,
-    replacementHint: 'MIGRATION_CONTEXT',
+    replacementHint: "MIGRATION_CONTEXT",
   },
 ];
 
@@ -1431,7 +1428,7 @@ export function detectWithRules(text: string): DetectionSpan[] {
         start: match.index,
         end: match.index + match[0].length,
         label: pattern.label,
-        source: 'rule',
+        source: "rule",
         confidence: pattern.confidence,
         replacementHint: pattern.replacementHint,
       });
@@ -1447,27 +1444,27 @@ export function detectWithRules(text: string): DetectionSpan[] {
 ## 17. browserSlmDetector.ts
 
 ```ts
-import type { DetectionSpan, PrivacySignals } from './types';
+import type { DetectionSpan, PrivacySignals } from "./types";
 
 export interface SlmContextOutput {
   labels: Array<{
     label:
-      | 'small_group_risk'
-      | 'unique_role_risk'
-      | 'support_need_context'
-      | 'health_context'
-      | 'family_context'
-      | 'migration_context'
-      | 'performance_context'
-      | 'behavioral_incident'
-      | 'safeguarding_context'
-      | 'temporal_specificity'
-      | 'location_specificity'
-      | 'school_specificity'
-      | 'rare_combination_risk'
-      | 'safe_general_text';
+      | "small_group_risk"
+      | "unique_role_risk"
+      | "support_need_context"
+      | "health_context"
+      | "family_context"
+      | "migration_context"
+      | "performance_context"
+      | "behavioral_incident"
+      | "safeguarding_context"
+      | "temporal_specificity"
+      | "location_specificity"
+      | "school_specificity"
+      | "rare_combination_risk"
+      | "safe_general_text";
     confidence: number;
-    level?: 'low' | 'medium' | 'high';
+    level?: "low" | "medium" | "high";
   }>;
   modelId: string;
   modelVersion: string;
@@ -1480,14 +1477,16 @@ export async function detectWithBrowserSlm(text: string): Promise<{
   // Implementatie gebruikt @huggingface/transformers in de browser.
   // Productieregel: geen raw tekst loggen, geen raw evidence opslaan.
   // De output bestaat uit labels, confidence en optioneel offsets.
-  throw new Error('Implement browser SLM runtime.');
+  throw new Error("Implement browser SLM runtime.");
 }
 
-export function slmOutputToSignals(output: SlmContextOutput): Partial<PrivacySignals['contextualPii']> {
-  const result: Partial<PrivacySignals['contextualPii']> = {};
+export function slmOutputToSignals(
+  output: SlmContextOutput,
+): Partial<PrivacySignals["contextualPii"]> {
+  const result: Partial<PrivacySignals["contextualPii"]> = {};
 
   for (const item of output.labels) {
-    if (item.label === 'safe_general_text') continue;
+    if (item.label === "safe_general_text") continue;
     result[item.label] = item.level ?? true;
   }
 
@@ -1508,7 +1507,7 @@ SLM-onzekerheid verhoogt risico.
 ## 18. mergeDetections.ts
 
 ```ts
-import type { DetectionSpan } from './types';
+import type { DetectionSpan } from "./types";
 
 function overlaps(a: DetectionSpan, b: DetectionSpan): boolean {
   return a.start < b.end && b.start < a.end;
@@ -1524,7 +1523,7 @@ export function mergeDetections(spans: DetectionSpan[]): DetectionSpan[] {
   const merged: DetectionSpan[] = [];
 
   for (const span of sorted) {
-    const existing = merged.find(item => overlaps(item, span));
+    const existing = merged.find((item) => overlaps(item, span));
     if (!existing) {
       merged.push(span);
       continue;
@@ -1549,16 +1548,16 @@ export function mergeDetections(spans: DetectionSpan[]): DetectionSpan[] {
 ## 19. risk.ts
 
 ```ts
-import { PRIVACY_THRESHOLDS } from './privacy.config';
-import type { DetectionSpan, PrivacySignals, RiskLevel } from './types';
+import { PRIVACY_THRESHOLDS } from "./privacy.config";
+import type { DetectionSpan, PrivacySignals, RiskLevel } from "./types";
 
 const SPECIAL_CONTEXT_LABELS = new Set([
-  'support_need_context',
-  'health_context',
-  'family_context',
-  'migration_context',
-  'behavioral_incident',
-  'safeguarding_context',
+  "support_need_context",
+  "health_context",
+  "family_context",
+  "migration_context",
+  "behavioral_incident",
+  "safeguarding_context",
 ]);
 
 export function calculateRiskScore(params: {
@@ -1580,10 +1579,11 @@ export function calculateRiskScore(params: {
   }
 
   if (signals.contextualPii.small_group_risk) score += PRIVACY_THRESHOLDS.smallGroupRiskBoost;
-  if (signals.contextualPii.rare_combination_risk) score += PRIVACY_THRESHOLDS.rareCombinationRiskBoost;
-  if (signals.contextualPii.school_specificity === 'high') score += 0.15;
-  if (signals.contextualPii.location_specificity === 'high') score += 0.12;
-  if (signals.contextualPii.temporal_specificity === 'high') score += 0.12;
+  if (signals.contextualPii.rare_combination_risk)
+    score += PRIVACY_THRESHOLDS.rareCombinationRiskBoost;
+  if (signals.contextualPii.school_specificity === "high") score += 0.15;
+  if (signals.contextualPii.location_specificity === "high") score += 0.12;
+  if (signals.contextualPii.temporal_specificity === "high") score += 0.12;
   if (slmUncertain) score += PRIVACY_THRESHOLDS.slmUncertaintyRiskBoost;
 
   if (signals.outputState.containsRawPersonalData) score = Math.max(score, 0.8);
@@ -1593,10 +1593,10 @@ export function calculateRiskScore(params: {
 }
 
 export function toRiskLevel(score: number): RiskLevel {
-  if (score >= PRIVACY_THRESHOLDS.blockRisk) return 'blocked';
-  if (score >= PRIVACY_THRESHOLDS.reviewRequiredRisk) return 'high';
-  if (score >= PRIVACY_THRESHOLDS.anonymousExportMaxRisk) return 'medium';
-  return 'low';
+  if (score >= PRIVACY_THRESHOLDS.blockRisk) return "blocked";
+  if (score >= PRIVACY_THRESHOLDS.reviewRequiredRisk) return "high";
+  if (score >= PRIVACY_THRESHOLDS.anonymousExportMaxRisk) return "medium";
+  return "low";
 }
 ```
 
@@ -1630,23 +1630,23 @@ alleen MappingHandle naar UI
 ### 20.2 TypeScript API
 
 ```ts
-import type { MappingEntry, MappingHandle } from './types';
+import type { MappingEntry, MappingHandle } from "./types";
 
 const memoryMappingStore = new Map<string, MappingEntry[]>();
 
 export function createMappingHandle(entries: MappingEntry[]): MappingHandle {
   const id = crypto.randomUUID();
   memoryMappingStore.set(id, structuredClone(entries));
-  return { id, mode: 'memory_only' };
+  return { id, mode: "memory_only" };
 }
 
 export function resolveMappingHandle(handle: MappingHandle): MappingEntry[] {
-  if (handle.mode !== 'memory_only') {
-    throw new Error('Encrypted mapping must be decrypted through secure flow.');
+  if (handle.mode !== "memory_only") {
+    throw new Error("Encrypted mapping must be decrypted through secure flow.");
   }
 
   const entries = memoryMappingStore.get(handle.id);
-  if (!entries) throw new Error('Mapping not found or expired.');
+  if (!entries) throw new Error("Mapping not found or expired.");
 
   return structuredClone(entries);
 }
@@ -1659,30 +1659,36 @@ export function destroyMappingHandle(handle: MappingHandle): void {
 ### 20.3 AES-GCM persistentie
 
 ```ts
-export async function encryptMapping(entries: MappingEntry[], key: CryptoKey): Promise<{
+export async function encryptMapping(
+  entries: MappingEntry[],
+  key: CryptoKey,
+): Promise<{
   iv: string;
   ciphertext: string;
-  algorithm: 'AES-GCM';
+  algorithm: "AES-GCM";
 }> {
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const encoded = new TextEncoder().encode(JSON.stringify(entries));
-  const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, encoded);
+  const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, encoded);
 
   return {
     iv: btoa(String.fromCharCode(...iv)),
     ciphertext: btoa(String.fromCharCode(...new Uint8Array(encrypted))),
-    algorithm: 'AES-GCM',
+    algorithm: "AES-GCM",
   };
 }
 
-export async function decryptMapping(payload: {
-  iv: string;
-  ciphertext: string;
-  algorithm: 'AES-GCM';
-}, key: CryptoKey): Promise<MappingEntry[]> {
-  const iv = Uint8Array.from(atob(payload.iv), char => char.charCodeAt(0));
-  const data = Uint8Array.from(atob(payload.ciphertext), char => char.charCodeAt(0));
-  const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, data);
+export async function decryptMapping(
+  payload: {
+    iv: string;
+    ciphertext: string;
+    algorithm: "AES-GCM";
+  },
+  key: CryptoKey,
+): Promise<MappingEntry[]> {
+  const iv = Uint8Array.from(atob(payload.iv), (char) => char.charCodeAt(0));
+  const data = Uint8Array.from(atob(payload.ciphertext), (char) => char.charCodeAt(0));
+  const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, data);
   return JSON.parse(new TextDecoder().decode(decrypted)) as MappingEntry[];
 }
 ```
@@ -1700,29 +1706,32 @@ Alle persistent mapping vereist AES-GCM of wordt verboden.
 ## 21. pseudonymize.ts
 
 ```ts
-import type { DetectionSpan, MappingEntry, MappingHandle } from './types';
-import { createMappingHandle } from './secureMapping';
+import type { DetectionSpan, MappingEntry, MappingHandle } from "./types";
+import { createMappingHandle } from "./secureMapping";
 
 const TOKEN_LABEL_MAP: Record<string, string> = {
-  name_like: 'STUDENT',
-  email: 'EMAIL',
-  phone: 'PHONE',
-  address: 'ADDRESS',
-  postal_address: 'ADDRESS',
-  student_id: 'STUDENT_ID',
-  staff_id: 'STAFF_ID',
-  national_id_like: 'ID',
-  iban: 'IBAN',
-  ip_address: 'IP',
-  personal_url: 'URL',
-  date_of_birth: 'DATE',
-  exact_date: 'DATE',
-  school_name: 'SCHOOL',
-  class_code: 'CLASS',
-  location: 'LOCATION',
+  name_like: "STUDENT",
+  email: "EMAIL",
+  phone: "PHONE",
+  address: "ADDRESS",
+  postal_address: "ADDRESS",
+  student_id: "STUDENT_ID",
+  staff_id: "STAFF_ID",
+  national_id_like: "ID",
+  iban: "IBAN",
+  ip_address: "IP",
+  personal_url: "URL",
+  date_of_birth: "DATE",
+  exact_date: "DATE",
+  school_name: "SCHOOL",
+  class_code: "CLASS",
+  location: "LOCATION",
 };
 
-export function pseudonymizeText(text: string, detections: DetectionSpan[]): {
+export function pseudonymizeText(
+  text: string,
+  detections: DetectionSpan[],
+): {
   draft: string;
   mappingHandle: MappingHandle;
   expectedTokens: string[];
@@ -1732,16 +1741,16 @@ export function pseudonymizeText(text: string, detections: DetectionSpan[]): {
   const mapping: MappingEntry[] = [];
   const expectedTokens: string[] = [];
   let cursor = 0;
-  let output = '';
+  let output = "";
 
   for (const detection of sorted) {
     if (detection.start < cursor) continue;
 
     const original = text.slice(detection.start, detection.end);
-    const prefix = TOKEN_LABEL_MAP[detection.label] ?? detection.replacementHint ?? 'ENTITY';
+    const prefix = TOKEN_LABEL_MAP[detection.label] ?? detection.replacementHint ?? "ENTITY";
     const next = (counters.get(prefix) ?? 0) + 1;
     counters.set(prefix, next);
-    const token = `${prefix}_${String(next).padStart(3, '0')}`;
+    const token = `${prefix}_${String(next).padStart(3, "0")}`;
 
     output += text.slice(cursor, detection.start);
     output += token;
@@ -1772,42 +1781,42 @@ Deze functie retourneert nooit mapping zelf. Een tokenlijst mag wel terugkomen, 
 ## 22. anonymize.ts
 
 ```ts
-import type { DetectionSpan } from './types';
+import type { DetectionSpan } from "./types";
 
 const GENERALIZATION_MAP: Record<string, string> = {
-  name_like: 'een leerling',
-  email: 'een contactgegeven',
-  phone: 'een contactgegeven',
-  address: 'een adresgegeven',
-  postal_address: 'een regio',
-  student_id: 'een leerlingnummer',
-  staff_id: 'een medewerkerkenmerk',
-  national_id_like: 'een identificatiegegeven',
-  iban: 'een betalingsgegeven',
-  ip_address: 'een technisch identificatiegegeven',
-  personal_url: 'een persoonlijke link',
-  date_of_birth: 'een geboortedatum',
-  exact_date: 'een periode',
-  school_name: 'een school',
-  class_code: 'een klas of groep',
-  location: 'een plaats',
-  support_need_context: 'een ondersteuningsbehoefte',
-  health_context: 'een gezondheidscontext',
-  family_context: 'een thuissituatie',
-  migration_context: 'een achtergrondcontext',
-  behavioral_incident: 'een incident',
-  safeguarding_context: 'een beschermingscontext',
+  name_like: "een leerling",
+  email: "een contactgegeven",
+  phone: "een contactgegeven",
+  address: "een adresgegeven",
+  postal_address: "een regio",
+  student_id: "een leerlingnummer",
+  staff_id: "een medewerkerkenmerk",
+  national_id_like: "een identificatiegegeven",
+  iban: "een betalingsgegeven",
+  ip_address: "een technisch identificatiegegeven",
+  personal_url: "een persoonlijke link",
+  date_of_birth: "een geboortedatum",
+  exact_date: "een periode",
+  school_name: "een school",
+  class_code: "een klas of groep",
+  location: "een plaats",
+  support_need_context: "een ondersteuningsbehoefte",
+  health_context: "een gezondheidscontext",
+  family_context: "een thuissituatie",
+  migration_context: "een achtergrondcontext",
+  behavioral_incident: "een incident",
+  safeguarding_context: "een beschermingscontext",
 };
 
 export function anonymizeText(text: string, detections: DetectionSpan[]): string {
   const sorted = [...detections].sort((a, b) => a.start - b.start);
   let cursor = 0;
-  let output = '';
+  let output = "";
 
   for (const detection of sorted) {
     if (detection.start < cursor) continue;
     output += text.slice(cursor, detection.start);
-    output += GENERALIZATION_MAP[detection.label] ?? 'een algemeen kenmerk';
+    output += GENERALIZATION_MAP[detection.label] ?? "een algemeen kenmerk";
     cursor = detection.end;
   }
 
@@ -1821,26 +1830,29 @@ export function anonymizeText(text: string, detections: DetectionSpan[]): string
 ## 23. contextualGeneralization.ts
 
 ```ts
-import type { PrivacySignals } from './types';
+import type { PrivacySignals } from "./types";
 
 export function applyContextualGeneralization(text: string, signals: PrivacySignals): string {
   let output = text;
 
   if (signals.contextualPii.small_group_risk) {
-    output = output.replace(/\b(?:groep|klas)\s?[1-8][A-Z]?\b/gi, 'een kleine groep');
-    output = output.replace(/\b[1-6]\s?(?:havo|vwo|vmbo|mavo)[A-Z]?\b/gi, 'een onderwijsniveau');
+    output = output.replace(/\b(?:groep|klas)\s?[1-8][A-Z]?\b/gi, "een kleine groep");
+    output = output.replace(/\b[1-6]\s?(?:havo|vwo|vmbo|mavo)[A-Z]?\b/gi, "een onderwijsniveau");
   }
 
-  if (signals.contextualPii.temporal_specificity === 'high') {
-    output = output.replace(/\b(?:gisteren|vandaag|vorige week|afgelopen maandag|afgelopen dinsdag)\b/gi, 'in een recente periode');
+  if (signals.contextualPii.temporal_specificity === "high") {
+    output = output.replace(
+      /\b(?:gisteren|vandaag|vorige week|afgelopen maandag|afgelopen dinsdag)\b/gi,
+      "in een recente periode",
+    );
   }
 
-  if (signals.contextualPii.location_specificity === 'high') {
-    output = output.replace(/\bin\s+[A-Z][a-z]+\b/g, 'in een regio');
+  if (signals.contextualPii.location_specificity === "high") {
+    output = output.replace(/\bin\s+[A-Z][a-z]+\b/g, "in een regio");
   }
 
   if (signals.contextualPii.safeguarding_context || signals.contextualPii.health_context) {
-    output = output.replace(/\b(?:hij|zij|hem|haar)\b/gi, 'de leerling');
+    output = output.replace(/\b(?:hij|zij|hem|haar)\b/gi, "de leerling");
   }
 
   return output;
@@ -1854,7 +1866,7 @@ export function applyContextualGeneralization(text: string, signals: PrivacySign
 ```ts
 export async function rewriteAnonymousDraftLocally(params: {
   sanitizedDraft: string;
-  language?: 'nl' | 'en';
+  language?: "nl" | "en";
 }): Promise<string> {
   const { sanitizedDraft } = params;
 
@@ -1866,16 +1878,16 @@ export async function rewriteAnonymousDraftLocally(params: {
   // - Output altijd opnieuw door Draft Check Guard.
 
   const prompt = [
-    'Herschrijf de tekst in helder Nederlands.',
-    'Behoud onderwijsbetekenis.',
-    'Voeg geen namen, datums, plaatsen, schoolnamen of tokens toe.',
-    'Maak specifieke context algemener als dat nodig is.',
-    '',
+    "Herschrijf de tekst in helder Nederlands.",
+    "Behoud onderwijsbetekenis.",
+    "Voeg geen namen, datums, plaatsen, schoolnamen of tokens toe.",
+    "Maak specifieke context algemener als dat nodig is.",
+    "",
     sanitizedDraft,
-  ].join('\n');
+  ].join("\n");
 
   void prompt;
-  throw new Error('Implement WebLLM local rewrite.');
+  throw new Error("Implement WebLLM local rewrite.");
 }
 ```
 
@@ -1911,10 +1923,12 @@ mode-mix
 ### 25.3 TypeScript
 
 ```ts
-import type { DraftStatus, GuardResult, PrivacyMode } from './types';
+import type { DraftStatus, GuardResult, PrivacyMode } from "./types";
 
-const TOKEN_PATTERN = /\b(?:STUDENT|TEACHER|PARENT|SCHOOL|CLASS|LOCATION|DATE|SUPPORT_NEED|INCIDENT|EMAIL|PHONE|ADDRESS|IBAN|IP|URL)_\d{3}\b/g;
-const MAPPING_PATTERN = /\b(?:original|mapping|token|ciphertext|plaintext|student_id|leerlingnummer)\b\s*[:=]/i;
+const TOKEN_PATTERN =
+  /\b(?:STUDENT|TEACHER|PARENT|SCHOOL|CLASS|LOCATION|DATE|SUPPORT_NEED|INCIDENT|EMAIL|PHONE|ADDRESS|IBAN|IP|URL)_\d{3}\b/g;
+const MAPPING_PATTERN =
+  /\b(?:original|mapping|token|ciphertext|plaintext|student_id|leerlingnummer)\b\s*[:=]/i;
 const RAW_EMAIL_PATTERN = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i;
 const RAW_PHONE_PATTERN = /\b(?:\+31|0031|0)\s?6[\s-]?\d{8}\b/;
 
@@ -1933,48 +1947,48 @@ export function runDraftCheckGuard(params: {
   function block(ruleId: string, reasonCode: string): void {
     guardResults.push({
       passed: false,
-      guard: 'DraftCheckGuard',
+      guard: "DraftCheckGuard",
       ruleId,
       reasonCode,
-      severity: 'critical',
+      severity: "critical",
     });
   }
 
-  if (RAW_EMAIL_PATTERN.test(draft)) block('DCG_RAW_EMAIL', 'raw_email_detected');
-  if (RAW_PHONE_PATTERN.test(draft)) block('DCG_RAW_PHONE', 'raw_phone_detected');
-  if (MAPPING_PATTERN.test(draft)) block('DCG_MAPPING_PATTERN', 'mapping_like_content_detected');
+  if (RAW_EMAIL_PATTERN.test(draft)) block("DCG_RAW_EMAIL", "raw_email_detected");
+  if (RAW_PHONE_PATTERN.test(draft)) block("DCG_RAW_PHONE", "raw_phone_detected");
+  if (MAPPING_PATTERN.test(draft)) block("DCG_MAPPING_PATTERN", "mapping_like_content_detected");
 
-  const tokens = [...draft.matchAll(TOKEN_PATTERN)].map(match => match[0]);
+  const tokens = [...draft.matchAll(TOKEN_PATTERN)].map((match) => match[0]);
 
-  if (mode === 'anonymous' && tokens.length > 0) {
-    block('DCG_TOKEN_IN_ANONYMOUS', 'pseudonym_token_in_anonymous_output');
+  if (mode === "anonymous" && tokens.length > 0) {
+    block("DCG_TOKEN_IN_ANONYMOUS", "pseudonym_token_in_anonymous_output");
   }
 
-  if (mode === 'pseudonymous') {
-    const unknownTokens = tokens.filter(token => !expectedTokens.includes(token));
+  if (mode === "pseudonymous") {
+    const unknownTokens = tokens.filter((token) => !expectedTokens.includes(token));
     if (unknownTokens.length > 0) {
-      block('DCG_HALLUCINATED_TOKEN', 'unknown_pseudonym_token_detected');
+      block("DCG_HALLUCINATED_TOKEN", "unknown_pseudonym_token_detected");
     }
   }
 
   if (riskScore >= 0.7) {
-    block('DCG_RISK_BLOCK', 'risk_score_too_high');
+    block("DCG_RISK_BLOCK", "risk_score_too_high");
   }
 
-  if (guardResults.some(result => !result.passed)) {
-    return { status: 'draft_blocked', guardResults };
+  if (guardResults.some((result) => !result.passed)) {
+    return { status: "draft_blocked", guardResults };
   }
 
   guardResults.push({
     passed: true,
-    guard: 'DraftCheckGuard',
-    ruleId: 'DCG_PASS',
-    reasonCode: 'draft_passed',
-    severity: 'info',
+    guard: "DraftCheckGuard",
+    ruleId: "DCG_PASS",
+    reasonCode: "draft_passed",
+    severity: "info",
   });
 
   return {
-    status: mode === 'anonymous' ? 'draft_certified_anonymous' : 'draft_certified_pseudonymous',
+    status: mode === "anonymous" ? "draft_certified_anonymous" : "draft_certified_pseudonymous",
     guardResults,
   };
 }
@@ -1985,7 +1999,7 @@ export function runDraftCheckGuard(params: {
 ## 26. repairAnonymousDraft.ts
 
 ```ts
-import { runDraftCheckGuard } from './draftCheckGuard';
+import { runDraftCheckGuard } from "./draftCheckGuard";
 
 export async function repairAnonymousDraft(params: {
   draft: string;
@@ -1999,11 +2013,11 @@ export async function repairAnonymousDraft(params: {
   for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
     const check = runDraftCheckGuard({
       draft,
-      mode: 'anonymous',
+      mode: "anonymous",
       riskScore: params.riskScore,
     });
 
-    if (check.status === 'draft_certified_anonymous') {
+    if (check.status === "draft_certified_anonymous") {
       return { draft, repaired: attempt > 0, blocked: false };
     }
 
@@ -2033,7 +2047,7 @@ PIM neemt per concrete actie een allow/block-besluit.
 ### 27.2 PIM-input
 
 ```ts
-import { PRIVACY_POLICY_VERSION, PRIVACY_THRESHOLDS } from './privacy.config';
+import { PRIVACY_POLICY_VERSION, PRIVACY_THRESHOLDS } from "./privacy.config";
 import type {
   DraftStatus,
   GuardResult,
@@ -2041,7 +2055,7 @@ import type {
   PimDecision,
   PrivacyMode,
   PrivacySignals,
-} from './types';
+} from "./types";
 
 export interface PimInput {
   mode: PrivacyMode;
@@ -2054,12 +2068,12 @@ export interface PimInput {
 }
 
 function decision(params: {
-  value: PimDecision['decision'];
+  value: PimDecision["decision"];
   mode: PrivacyMode;
   action: IntendedAction;
   ruleId: string;
   reasonCode: string;
-  severity: PimDecision['severity'];
+  severity: PimDecision["severity"];
   policyVersion?: string;
 }): PimDecision {
   return {
@@ -2077,91 +2091,258 @@ function decision(params: {
 export function evaluatePim(input: PimInput): PimDecision {
   const { mode, action, draftStatus, guardResults, signals, modelIntegrityPassed } = input;
 
-  if (action === 'debug_log') {
-    return decision({ value: 'block', mode, action, ruleId: 'PIM_DEBUG_LOG_BLOCK', reasonCode: 'content_debug_logging_forbidden', severity: 'critical' });
+  if (action === "debug_log") {
+    return decision({
+      value: "block",
+      mode,
+      action,
+      ruleId: "PIM_DEBUG_LOG_BLOCK",
+      reasonCode: "content_debug_logging_forbidden",
+      severity: "critical",
+    });
   }
 
-  if (!modelIntegrityPassed && action !== 'display') {
-    return decision({ value: 'block', mode, action, ruleId: 'PIM_MODEL_INTEGRITY_BLOCK', reasonCode: 'model_integrity_not_verified', severity: 'critical' });
+  if (!modelIntegrityPassed && action !== "display") {
+    return decision({
+      value: "block",
+      mode,
+      action,
+      ruleId: "PIM_MODEL_INTEGRITY_BLOCK",
+      reasonCode: "model_integrity_not_verified",
+      severity: "critical",
+    });
   }
 
-  if (guardResults.some(result => !result.passed)) {
-    return decision({ value: 'block', mode, action, ruleId: 'PIM_GUARD_FAILURE_BLOCK', reasonCode: 'guard_result_failed', severity: 'critical' });
+  if (guardResults.some((result) => !result.passed)) {
+    return decision({
+      value: "block",
+      mode,
+      action,
+      ruleId: "PIM_GUARD_FAILURE_BLOCK",
+      reasonCode: "guard_result_failed",
+      severity: "critical",
+    });
   }
 
-  if (signals.outputState.containsMapping || signals.mappingState === 'unsafe_present') {
-    return decision({ value: 'block', mode, action, ruleId: 'PIM_MAPPING_BLOCK', reasonCode: 'mapping_present_or_exposed', severity: 'critical' });
+  if (signals.outputState.containsMapping || signals.mappingState === "unsafe_present") {
+    return decision({
+      value: "block",
+      mode,
+      action,
+      ruleId: "PIM_MAPPING_BLOCK",
+      reasonCode: "mapping_present_or_exposed",
+      severity: "critical",
+    });
   }
 
   if (signals.outputState.containsRawPersonalData) {
-    return decision({ value: 'block', mode, action, ruleId: 'PIM_RAW_PII_BLOCK', reasonCode: 'raw_personal_data_detected', severity: 'critical' });
+    return decision({
+      value: "block",
+      mode,
+      action,
+      ruleId: "PIM_RAW_PII_BLOCK",
+      reasonCode: "raw_personal_data_detected",
+      severity: "critical",
+    });
   }
 
-  if (draftStatus === 'draft_unchecked' || draftStatus === 'draft_repair_needed' || draftStatus === 'draft_blocked') {
-    return decision({ value: 'block', mode, action, ruleId: 'PIM_DRAFT_NOT_CERTIFIED', reasonCode: 'draft_not_certified', severity: 'critical' });
+  if (
+    draftStatus === "draft_unchecked" ||
+    draftStatus === "draft_repair_needed" ||
+    draftStatus === "draft_blocked"
+  ) {
+    return decision({
+      value: "block",
+      mode,
+      action,
+      ruleId: "PIM_DRAFT_NOT_CERTIFIED",
+      reasonCode: "draft_not_certified",
+      severity: "critical",
+    });
   }
 
-  if (mode === 'anonymous' && draftStatus !== 'draft_certified_anonymous') {
-    return decision({ value: 'block', mode, action, ruleId: 'PIM_MODE_STATUS_MISMATCH', reasonCode: 'anonymous_mode_requires_anonymous_certification', severity: 'critical' });
+  if (mode === "anonymous" && draftStatus !== "draft_certified_anonymous") {
+    return decision({
+      value: "block",
+      mode,
+      action,
+      ruleId: "PIM_MODE_STATUS_MISMATCH",
+      reasonCode: "anonymous_mode_requires_anonymous_certification",
+      severity: "critical",
+    });
   }
 
-  if (mode === 'pseudonymous' && draftStatus !== 'draft_certified_pseudonymous') {
-    return decision({ value: 'block', mode, action, ruleId: 'PIM_MODE_STATUS_MISMATCH', reasonCode: 'pseudonymous_mode_requires_pseudonymous_certification', severity: 'critical' });
+  if (mode === "pseudonymous" && draftStatus !== "draft_certified_pseudonymous") {
+    return decision({
+      value: "block",
+      mode,
+      action,
+      ruleId: "PIM_MODE_STATUS_MISMATCH",
+      reasonCode: "pseudonymous_mode_requires_pseudonymous_certification",
+      severity: "critical",
+    });
   }
 
-  if (mode === 'pseudonymous') {
-    if (action === 'send_external_ai') {
-      return decision({ value: 'block', mode, action, ruleId: 'PIM_PSEUDONYM_EXTERNAL_AI_BLOCK', reasonCode: 'pseudonymous_external_ai_forbidden', severity: 'critical' });
+  if (mode === "pseudonymous") {
+    if (action === "send_external_ai") {
+      return decision({
+        value: "block",
+        mode,
+        action,
+        ruleId: "PIM_PSEUDONYM_EXTERNAL_AI_BLOCK",
+        reasonCode: "pseudonymous_external_ai_forbidden",
+        severity: "critical",
+      });
     }
 
-    if (action === 'export_file' || action === 'copy' || action === 'print' || action === 'share') {
-      return decision({ value: 'block', mode, action, ruleId: 'PIM_PSEUDONYM_EGRESS_BLOCK', reasonCode: 'pseudonymous_egress_forbidden', severity: 'critical' });
+    if (action === "export_file" || action === "copy" || action === "print" || action === "share") {
+      return decision({
+        value: "block",
+        mode,
+        action,
+        ruleId: "PIM_PSEUDONYM_EGRESS_BLOCK",
+        reasonCode: "pseudonymous_egress_forbidden",
+        severity: "critical",
+      });
     }
 
-    if (action === 'save_local') {
-      if (signals.mappingState !== 'encrypted_local') {
-        return decision({ value: 'block', mode, action, ruleId: 'PIM_PSEUDONYM_SAVE_REQUIRES_ENCRYPTION', reasonCode: 'encrypted_local_mapping_required', severity: 'critical' });
+    if (action === "save_local") {
+      if (signals.mappingState !== "encrypted_local") {
+        return decision({
+          value: "block",
+          mode,
+          action,
+          ruleId: "PIM_PSEUDONYM_SAVE_REQUIRES_ENCRYPTION",
+          reasonCode: "encrypted_local_mapping_required",
+          severity: "critical",
+        });
       }
-      return decision({ value: 'allow_with_warning', mode, action, ruleId: 'PIM_PSEUDONYM_SAVE_LOCAL_ONLY', reasonCode: 'encrypted_local_save_only', severity: 'warning' });
+      return decision({
+        value: "allow_with_warning",
+        mode,
+        action,
+        ruleId: "PIM_PSEUDONYM_SAVE_LOCAL_ONLY",
+        reasonCode: "encrypted_local_save_only",
+        severity: "warning",
+      });
     }
 
-    if (action === 'display' || action === 'restore') {
-      return decision({ value: 'allow_with_warning', mode, action, ruleId: 'PIM_PSEUDONYM_LOCAL_ALLOW', reasonCode: 'local_pseudonymous_action_only', severity: 'warning' });
+    if (action === "display" || action === "restore") {
+      return decision({
+        value: "allow_with_warning",
+        mode,
+        action,
+        ruleId: "PIM_PSEUDONYM_LOCAL_ALLOW",
+        reasonCode: "local_pseudonymous_action_only",
+        severity: "warning",
+      });
     }
   }
 
-  if (mode === 'anonymous') {
+  if (mode === "anonymous") {
     if (signals.outputState.containsPseudonymTokens) {
-      return decision({ value: 'block', mode, action, ruleId: 'PIM_TOKEN_IN_ANONYMOUS_BLOCK', reasonCode: 'pseudonym_token_in_anonymous_output', severity: 'critical' });
+      return decision({
+        value: "block",
+        mode,
+        action,
+        ruleId: "PIM_TOKEN_IN_ANONYMOUS_BLOCK",
+        reasonCode: "pseudonym_token_in_anonymous_output",
+        severity: "critical",
+      });
     }
 
-    if (action === 'restore') {
-      return decision({ value: 'block', mode, action, ruleId: 'PIM_ANONYMOUS_RESTORE_BLOCK', reasonCode: 'anonymous_mode_has_no_mapping', severity: 'critical' });
+    if (action === "restore") {
+      return decision({
+        value: "block",
+        mode,
+        action,
+        ruleId: "PIM_ANONYMOUS_RESTORE_BLOCK",
+        reasonCode: "anonymous_mode_has_no_mapping",
+        severity: "critical",
+      });
     }
 
-    if (action === 'send_external_ai' && signals.outputState.riskScore > PRIVACY_THRESHOLDS.anonymousExternalAiMaxRisk) {
-      return decision({ value: 'block', mode, action, ruleId: 'PIM_EXTERNAL_AI_RISK_BLOCK', reasonCode: 'anonymous_external_ai_risk_too_high', severity: 'critical' });
+    if (
+      action === "send_external_ai" &&
+      signals.outputState.riskScore > PRIVACY_THRESHOLDS.anonymousExternalAiMaxRisk
+    ) {
+      return decision({
+        value: "block",
+        mode,
+        action,
+        ruleId: "PIM_EXTERNAL_AI_RISK_BLOCK",
+        reasonCode: "anonymous_external_ai_risk_too_high",
+        severity: "critical",
+      });
     }
 
-    if (action === 'export_file' && signals.outputState.riskScore > PRIVACY_THRESHOLDS.anonymousExportMaxRisk) {
-      return decision({ value: 'block', mode, action, ruleId: 'PIM_EXPORT_RISK_BLOCK', reasonCode: 'anonymous_export_risk_too_high', severity: 'critical' });
+    if (
+      action === "export_file" &&
+      signals.outputState.riskScore > PRIVACY_THRESHOLDS.anonymousExportMaxRisk
+    ) {
+      return decision({
+        value: "block",
+        mode,
+        action,
+        ruleId: "PIM_EXPORT_RISK_BLOCK",
+        reasonCode: "anonymous_export_risk_too_high",
+        severity: "critical",
+      });
     }
 
-    if ((action === 'copy' || action === 'print' || action === 'share') && signals.outputState.riskScore > PRIVACY_THRESHOLDS.anonymousCopyMaxRisk) {
-      return decision({ value: 'block', mode, action, ruleId: 'PIM_COPY_SHARE_RISK_BLOCK', reasonCode: 'anonymous_copy_share_risk_too_high', severity: 'critical' });
+    if (
+      (action === "copy" || action === "print" || action === "share") &&
+      signals.outputState.riskScore > PRIVACY_THRESHOLDS.anonymousCopyMaxRisk
+    ) {
+      return decision({
+        value: "block",
+        mode,
+        action,
+        ruleId: "PIM_COPY_SHARE_RISK_BLOCK",
+        reasonCode: "anonymous_copy_share_risk_too_high",
+        severity: "critical",
+      });
     }
 
     if (signals.contextualPii.safeguarding_context || signals.contextualPii.health_context) {
-      if (action !== 'display' && action !== 'save_local') {
-        return decision({ value: 'block', mode, action, ruleId: 'PIM_SPECIAL_CONTEXT_EGRESS_BLOCK', reasonCode: 'special_context_requires_review', severity: 'critical' });
+      if (action !== "display" && action !== "save_local") {
+        return decision({
+          value: "block",
+          mode,
+          action,
+          ruleId: "PIM_SPECIAL_CONTEXT_EGRESS_BLOCK",
+          reasonCode: "special_context_requires_review",
+          severity: "critical",
+        });
       }
-      return decision({ value: 'allow_with_warning', mode, action, ruleId: 'PIM_SPECIAL_CONTEXT_LOCAL_WARNING', reasonCode: 'special_context_local_only_warning', severity: 'warning' });
+      return decision({
+        value: "allow_with_warning",
+        mode,
+        action,
+        ruleId: "PIM_SPECIAL_CONTEXT_LOCAL_WARNING",
+        reasonCode: "special_context_local_only_warning",
+        severity: "warning",
+      });
     }
 
-    return decision({ value: 'allow', mode, action, ruleId: 'PIM_ANONYMOUS_ALLOW', reasonCode: 'anonymous_action_allowed', severity: 'info' });
+    return decision({
+      value: "allow",
+      mode,
+      action,
+      ruleId: "PIM_ANONYMOUS_ALLOW",
+      reasonCode: "anonymous_action_allowed",
+      severity: "info",
+    });
   }
 
-  return decision({ value: 'block', mode, action, ruleId: 'PIM_DEFAULT_BLOCK', reasonCode: 'no_allow_rule_matched', severity: 'critical' });
+  return decision({
+    value: "block",
+    mode,
+    action,
+    ruleId: "PIM_DEFAULT_BLOCK",
+    reasonCode: "no_allow_rule_matched",
+    severity: "critical",
+  });
 }
 ```
 
@@ -2188,7 +2369,7 @@ Production Egress Guard is de technische uitvoerpoort. Deze guard beslist niet z
 ### 28.2 TypeScript
 
 ```ts
-import type { IntendedAction, PimDecision } from './types';
+import type { IntendedAction, PimDecision } from "./types";
 
 export function enforceProductionEgress(params: {
   action: IntendedAction;
@@ -2198,19 +2379,21 @@ export function enforceProductionEgress(params: {
   const { action, pimDecision, payload } = params;
 
   if (pimDecision.action !== action) {
-    throw new Error(`Egress blocked: PIM decision action mismatch. Expected ${action}, got ${pimDecision.action}.`);
+    throw new Error(
+      `Egress blocked: PIM decision action mismatch. Expected ${action}, got ${pimDecision.action}.`,
+    );
   }
 
-  if (pimDecision.decision === 'block') {
+  if (pimDecision.decision === "block") {
     throw new Error(`Egress blocked by PIM: ${pimDecision.ruleId} ${pimDecision.reasonCode}`);
   }
 
-  if (action === 'debug_log') {
-    throw new Error('Egress blocked: debug logging content is forbidden.');
+  if (action === "debug_log") {
+    throw new Error("Egress blocked: debug logging content is forbidden.");
   }
 
   if (/\b(?:original|mapping|token)\b\s*[:=]/i.test(payload)) {
-    throw new Error('Egress blocked: mapping-like payload detected.');
+    throw new Error("Egress blocked: mapping-like payload detected.");
   }
 
   return payload;
@@ -2237,16 +2420,16 @@ PIM allow
 ## 29. restoreGuard.ts
 
 ```ts
-import type { MappingHandle, PimDecision } from './types';
-import { resolveMappingHandle } from './secureMapping';
+import type { MappingHandle, PimDecision } from "./types";
+import { resolveMappingHandle } from "./secureMapping";
 
 export function restorePseudonyms(params: {
   pseudonymousDraft: string;
   mappingHandle: MappingHandle;
   pimDecision: PimDecision;
 }): string {
-  if (params.pimDecision.action !== 'restore' || params.pimDecision.decision === 'block') {
-    throw new Error('Restore blocked: missing PIM allow.');
+  if (params.pimDecision.action !== "restore" || params.pimDecision.decision === "block") {
+    throw new Error("Restore blocked: missing PIM allow.");
   }
 
   const mapping = resolveMappingHandle(params.mappingHandle);
@@ -2275,16 +2458,16 @@ herstelde tekst nooit in audit
 ## 30. processEducationalText.ts
 
 ```ts
-import type { PrivacyMode, ProcessResult, PrivacySignals } from './types';
-import { detectWithRules } from './detectRules';
-import { detectWithBrowserSlm, slmOutputToSignals } from './browserSlmDetector';
-import { mergeDetections } from './mergeDetections';
-import { anonymizeText } from './anonymize';
-import { pseudonymizeText } from './pseudonymize';
-import { applyContextualGeneralization } from './contextualGeneralization';
-import { calculateRiskScore, toRiskLevel } from './risk';
-import { runDraftCheckGuard } from './draftCheckGuard';
-import { PRIVACY_POLICY_VERSION } from './privacy.config';
+import type { PrivacyMode, ProcessResult, PrivacySignals } from "./types";
+import { detectWithRules } from "./detectRules";
+import { detectWithBrowserSlm, slmOutputToSignals } from "./browserSlmDetector";
+import { mergeDetections } from "./mergeDetections";
+import { anonymizeText } from "./anonymize";
+import { pseudonymizeText } from "./pseudonymize";
+import { applyContextualGeneralization } from "./contextualGeneralization";
+import { calculateRiskScore, toRiskLevel } from "./risk";
+import { runDraftCheckGuard } from "./draftCheckGuard";
+import { PRIVACY_POLICY_VERSION } from "./privacy.config";
 
 function buildBaseSignals(mode: PrivacyMode): PrivacySignals {
   return {
@@ -2296,14 +2479,14 @@ function buildBaseSignals(mode: PrivacyMode): PrivacySignals {
       containsMapping: false,
       anonymizationMode: mode,
       riskScore: 0,
-      riskLevel: 'low',
+      riskLevel: "low",
     },
     modelState: {
       nerVerified: false,
       educationContextVerified: false,
       rewriteModelVerified: false,
     },
-    mappingState: 'none',
+    mappingState: "none",
   };
 }
 
@@ -2314,13 +2497,13 @@ export async function processEducationalText(params: {
   const { rawText, mode } = params;
 
   if (!rawText.trim()) {
-    throw new Error('Input is empty.');
+    throw new Error("Input is empty.");
   }
 
   const ruleDetections = detectWithRules(rawText);
 
-  let slmDetections = [] as Awaited<ReturnType<typeof detectWithBrowserSlm>>['spans'];
-  let slmContext: Awaited<ReturnType<typeof detectWithBrowserSlm>>['context'] | undefined;
+  let slmDetections = [] as Awaited<ReturnType<typeof detectWithBrowserSlm>>["spans"];
+  let slmContext: Awaited<ReturnType<typeof detectWithBrowserSlm>>["context"] | undefined;
 
   try {
     const slm = await detectWithBrowserSlm(rawText);
@@ -2334,22 +2517,22 @@ export async function processEducationalText(params: {
   const signals = buildBaseSignals(mode);
 
   const directLabels = new Set([
-    'name_like',
-    'email',
-    'phone',
-    'address',
-    'postal_address',
-    'student_id',
-    'staff_id',
-    'national_id_like',
-    'iban',
-    'ip_address',
-    'personal_url',
-    'date_of_birth',
-    'exact_date',
-    'school_name',
-    'class_code',
-    'location',
+    "name_like",
+    "email",
+    "phone",
+    "address",
+    "postal_address",
+    "student_id",
+    "staff_id",
+    "national_id_like",
+    "iban",
+    "ip_address",
+    "personal_url",
+    "date_of_birth",
+    "exact_date",
+    "school_name",
+    "class_code",
+    "location",
   ]);
 
   for (const detection of detections) {
@@ -2369,16 +2552,16 @@ export async function processEducationalText(params: {
   let mappingHandle = undefined;
   let expectedTokens: string[] = [];
 
-  if (mode === 'anonymous') {
+  if (mode === "anonymous") {
     draft = anonymizeText(rawText, detections);
     draft = applyContextualGeneralization(draft, signals);
-    signals.mappingState = 'none';
+    signals.mappingState = "none";
   } else {
     const result = pseudonymizeText(rawText, detections);
     draft = result.draft;
     mappingHandle = result.mappingHandle;
     expectedTokens = result.expectedTokens;
-    signals.mappingState = 'local_only';
+    signals.mappingState = "local_only";
   }
 
   const riskScore = calculateRiskScore({ detections, signals, slmUncertain: !slmContext });
@@ -2419,10 +2602,10 @@ Deze orchestratie toont de contracten. Implementatie moet model integrity en tok
 ## 31. minimalAudit.ts
 
 ```ts
-import type { PimDecision } from './types';
+import type { PimDecision } from "./types";
 
 export interface MinimalAuditEvent {
-  eventType: 'pim_decision' | 'guard_result' | 'model_gate' | 'egress_attempt';
+  eventType: "pim_decision" | "guard_result" | "model_gate" | "egress_attempt";
   action?: string;
   mode?: string;
   decision?: string;
@@ -2437,7 +2620,7 @@ export interface MinimalAuditEvent {
 
 export function pimDecisionToAuditEvent(decision: PimDecision): MinimalAuditEvent {
   return {
-    eventType: 'pim_decision',
+    eventType: "pim_decision",
     action: decision.action,
     mode: decision.mode,
     decision: decision.decision,
@@ -2483,7 +2666,7 @@ export function detectAbuseAttempt(text: string): boolean {
     /debug\s+met\s+input/i,
   ];
 
-  return patterns.some(pattern => pattern.test(text));
+  return patterns.some((pattern) => pattern.test(text));
 }
 ```
 
@@ -2500,18 +2683,20 @@ geen inhoud loggen
 ## 33. reviewQueue.ts
 
 ```ts
-import type { RiskLevel } from './types';
+import type { RiskLevel } from "./types";
 
 export interface ReviewQueueItem {
   id: string;
-  mode: 'anonymous' | 'pseudonymous';
+  mode: "anonymous" | "pseudonymous";
   riskLevel: RiskLevel;
   reasonCodes: string[];
   createdAt: string;
   nonIdentifyingSummary: string;
 }
 
-export function createReviewQueueItem(params: Omit<ReviewQueueItem, 'id' | 'createdAt'>): ReviewQueueItem {
+export function createReviewQueueItem(
+  params: Omit<ReviewQueueItem, "id" | "createdAt">,
+): ReviewQueueItem {
   return {
     id: crypto.randomUUID(),
     createdAt: new Date().toISOString(),
@@ -2551,7 +2736,7 @@ export function laplaceNoise(scale: number): number {
 }
 
 export function differentiallyPrivateCount(count: number, epsilon: number): number {
-  if (epsilon <= 0) throw new Error('epsilon must be positive');
+  if (epsilon <= 0) throw new Error("epsilon must be positive");
   return count + laplaceNoise(1 / epsilon);
 }
 ```
@@ -2607,26 +2792,26 @@ pseudonimisering via naam, score en timestamp
 
 ## 36. PIM action matrix
 
-| Mode | Action | Default | Reden |
-|---|---|---:|---|
-| anonymous | display | allow | Alleen na certified draft |
-| anonymous | copy | allow bij laag risico | Egress, dus drempel |
-| anonymous | save_local | allow bij laag/middel risico | Geen raw of mapping |
-| anonymous | export_file | allow bij laag risico | Productiegate vereist |
-| anonymous | send_external_ai | allow bij zeer laag risico | Strengste drempel |
-| anonymous | print | allow bij laag risico | Egress |
-| anonymous | share | allow bij laag risico | Egress |
-| anonymous | restore | block | Geen mapping |
-| anonymous | debug_log | block | Geen inhoud loggen |
-| pseudonymous | display | allow_with_warning | Lokaal |
-| pseudonymous | restore | allow_with_warning | Alleen lokaal |
-| pseudonymous | save_local | allow_with_warning | Alleen encrypted package |
-| pseudonymous | copy | block | Egress |
-| pseudonymous | export_file | block | Pseudoniem blijft persoonsgegevens |
-| pseudonymous | send_external_ai | block | Altijd verboden |
-| pseudonymous | print | block | Egress |
-| pseudonymous | share | block | Egress |
-| pseudonymous | debug_log | block | Geen inhoud loggen |
+| Mode         | Action           |                      Default | Reden                              |
+| ------------ | ---------------- | ---------------------------: | ---------------------------------- |
+| anonymous    | display          |                        allow | Alleen na certified draft          |
+| anonymous    | copy             |        allow bij laag risico | Egress, dus drempel                |
+| anonymous    | save_local       | allow bij laag/middel risico | Geen raw of mapping                |
+| anonymous    | export_file      |        allow bij laag risico | Productiegate vereist              |
+| anonymous    | send_external_ai |   allow bij zeer laag risico | Strengste drempel                  |
+| anonymous    | print            |        allow bij laag risico | Egress                             |
+| anonymous    | share            |        allow bij laag risico | Egress                             |
+| anonymous    | restore          |                        block | Geen mapping                       |
+| anonymous    | debug_log        |                        block | Geen inhoud loggen                 |
+| pseudonymous | display          |           allow_with_warning | Lokaal                             |
+| pseudonymous | restore          |           allow_with_warning | Alleen lokaal                      |
+| pseudonymous | save_local       |           allow_with_warning | Alleen encrypted package           |
+| pseudonymous | copy             |                        block | Egress                             |
+| pseudonymous | export_file      |                        block | Pseudoniem blijft persoonsgegevens |
+| pseudonymous | send_external_ai |                        block | Altijd verboden                    |
+| pseudonymous | print            |                        block | Egress                             |
+| pseudonymous | share            |                        block | Egress                             |
+| pseudonymous | debug_log        |                        block | Geen inhoud loggen                 |
 
 ## 37. PIM flags
 
@@ -2791,7 +2976,7 @@ export function sanitizeError(error: unknown): { name: string; message: string }
   if (error instanceof Error) {
     return { name: error.name, message: error.message.slice(0, 200) };
   }
-  return { name: 'UnknownError', message: 'Unknown error' };
+  return { name: "UnknownError", message: "Unknown error" };
 }
 ```
 
@@ -2806,29 +2991,29 @@ Minimale validatieset:
 ```ts
 export const PRIVACY_FIXTURES = [
   {
-    id: 'direct_email_phone',
-    text: 'Mail Lisa op lisa.jansen@example.nl of bel 0612345678.',
-    expected: ['email', 'phone'],
+    id: "direct_email_phone",
+    text: "Mail Lisa op lisa.jansen@example.nl of bel 0612345678.",
+    expected: ["email", "phone"],
   },
   {
-    id: 'small_group_support',
-    text: 'De enige leerling met dyscalculie in groep 7B had vorige week een incident.',
-    expected: ['support_need_context', 'class_code', 'behavioral_incident'],
+    id: "small_group_support",
+    text: "De enige leerling met dyscalculie in groep 7B had vorige week een incident.",
+    expected: ["support_need_context", "class_code", "behavioral_incident"],
   },
   {
-    id: 'family_unique_role',
-    text: 'De zoon van de conciërge uit klas 2 havo heeft extra begeleiding nodig.',
-    expected: ['family_context', 'unique_role_risk', 'class_code'],
+    id: "family_unique_role",
+    text: "De zoon van de conciërge uit klas 2 havo heeft extra begeleiding nodig.",
+    expected: ["family_context", "unique_role_risk", "class_code"],
   },
   {
-    id: 'safeguarding',
-    text: 'Er is contact geweest met Veilig Thuis rond een leerling uit groep 6.',
-    expected: ['safeguarding_context', 'class_code'],
+    id: "safeguarding",
+    text: "Er is contact geweest met Veilig Thuis rond een leerling uit groep 6.",
+    expected: ["safeguarding_context", "class_code"],
   },
   {
-    id: 'migration_context',
-    text: 'Een nieuwkomer uit Oekraïne is vorige maand gestart in de klas.',
-    expected: ['migration_context', 'temporal_specificity'],
+    id: "migration_context",
+    text: "Een nieuwkomer uit Oekraïne is vorige maand gestart in de klas.",
+    expected: ["migration_context", "temporal_specificity"],
   },
 ];
 ```
@@ -2836,8 +3021,8 @@ export const PRIVACY_FIXTURES = [
 ## 43. PIM unit tests
 
 ```ts
-import { describe, expect, it } from 'vitest';
-import { evaluatePim } from '../src/pimPolicy';
+import { describe, expect, it } from "vitest";
+import { evaluatePim } from "../src/pimPolicy";
 
 const baseSignals = {
   directPii: {},
@@ -2846,55 +3031,67 @@ const baseSignals = {
     containsRawPersonalData: false,
     containsPseudonymTokens: false,
     containsMapping: false,
-    anonymizationMode: 'anonymous' as const,
+    anonymizationMode: "anonymous" as const,
     riskScore: 0.1,
-    riskLevel: 'low' as const,
+    riskLevel: "low" as const,
   },
   modelState: {
     nerVerified: true,
     educationContextVerified: true,
     rewriteModelVerified: true,
   },
-  mappingState: 'none' as const,
+  mappingState: "none" as const,
 };
 
-const passGuard = [{ passed: true, guard: 'DraftCheckGuard', ruleId: 'DCG_PASS', reasonCode: 'draft_passed', severity: 'info' as const }];
+const passGuard = [
+  {
+    passed: true,
+    guard: "DraftCheckGuard",
+    ruleId: "DCG_PASS",
+    reasonCode: "draft_passed",
+    severity: "info" as const,
+  },
+];
 
-describe('PIM policy', () => {
-  it('blocks pseudonymous external AI', () => {
+describe("PIM policy", () => {
+  it("blocks pseudonymous external AI", () => {
     const decision = evaluatePim({
-      mode: 'pseudonymous',
-      action: 'send_external_ai',
-      draftStatus: 'draft_certified_pseudonymous',
+      mode: "pseudonymous",
+      action: "send_external_ai",
+      draftStatus: "draft_certified_pseudonymous",
       guardResults: passGuard,
       modelIntegrityPassed: true,
       signals: {
         ...baseSignals,
-        outputState: { ...baseSignals.outputState, anonymizationMode: 'pseudonymous', containsPseudonymTokens: true },
-        mappingState: 'local_only',
+        outputState: {
+          ...baseSignals.outputState,
+          anonymizationMode: "pseudonymous",
+          containsPseudonymTokens: true,
+        },
+        mappingState: "local_only",
       },
     });
 
-    expect(decision.decision).toBe('block');
-    expect(decision.ruleId).toBe('PIM_PSEUDONYM_EXTERNAL_AI_BLOCK');
+    expect(decision.decision).toBe("block");
+    expect(decision.ruleId).toBe("PIM_PSEUDONYM_EXTERNAL_AI_BLOCK");
   });
 
-  it('blocks mapping presence', () => {
+  it("blocks mapping presence", () => {
     const decision = evaluatePim({
-      mode: 'anonymous',
-      action: 'export_file',
-      draftStatus: 'draft_certified_anonymous',
+      mode: "anonymous",
+      action: "export_file",
+      draftStatus: "draft_certified_anonymous",
       guardResults: passGuard,
       modelIntegrityPassed: true,
       signals: {
         ...baseSignals,
         outputState: { ...baseSignals.outputState, containsMapping: true },
-        mappingState: 'unsafe_present',
+        mappingState: "unsafe_present",
       },
     });
 
-    expect(decision.decision).toBe('block');
-    expect(decision.ruleId).toBe('PIM_MAPPING_BLOCK');
+    expect(decision.decision).toBe("block");
+    expect(decision.ruleId).toBe("PIM_MAPPING_BLOCK");
   });
 });
 ```
@@ -2919,17 +3116,25 @@ model hash mismatch betekent block voor egress
 Voorbeeld:
 
 ```ts
-import fc from 'fast-check';
-import { evaluatePim } from '../src/pimPolicy';
+import fc from "fast-check";
+import { evaluatePim } from "../src/pimPolicy";
 
-it('always blocks pseudonymous external AI', () => {
+it("always blocks pseudonymous external AI", () => {
   fc.assert(
-    fc.property(fc.float({ min: 0, max: 1 }), riskScore => {
+    fc.property(fc.float({ min: 0, max: 1 }), (riskScore) => {
       const decision = evaluatePim({
-        mode: 'pseudonymous',
-        action: 'send_external_ai',
-        draftStatus: 'draft_certified_pseudonymous',
-        guardResults: [{ passed: true, guard: 'DraftCheckGuard', ruleId: 'pass', reasonCode: 'pass', severity: 'info' }],
+        mode: "pseudonymous",
+        action: "send_external_ai",
+        draftStatus: "draft_certified_pseudonymous",
+        guardResults: [
+          {
+            passed: true,
+            guard: "DraftCheckGuard",
+            ruleId: "pass",
+            reasonCode: "pass",
+            severity: "info",
+          },
+        ],
         modelIntegrityPassed: true,
         signals: {
           directPii: {},
@@ -2938,17 +3143,21 @@ it('always blocks pseudonymous external AI', () => {
             containsRawPersonalData: false,
             containsPseudonymTokens: true,
             containsMapping: false,
-            anonymizationMode: 'pseudonymous',
+            anonymizationMode: "pseudonymous",
             riskScore,
-            riskLevel: riskScore > 0.7 ? 'blocked' : 'low',
+            riskLevel: riskScore > 0.7 ? "blocked" : "low",
           },
-          modelState: { nerVerified: true, educationContextVerified: true, rewriteModelVerified: true },
-          mappingState: 'local_only',
+          modelState: {
+            nerVerified: true,
+            educationContextVerified: true,
+            rewriteModelVerified: true,
+          },
+          mappingState: "local_only",
         },
       });
 
-      expect(decision.decision).toBe('block');
-    })
+      expect(decision.decision).toBe("block");
+    }),
   );
 });
 ```
@@ -3039,11 +3248,11 @@ export async function guardedExternalAiCall(params: {
   pimDecision: PimDecision;
   send: (text: string) => Promise<unknown>;
 }) {
-  if (params.pimDecision.action !== 'send_external_ai') {
-    throw new Error('External AI blocked: wrong PIM action.');
+  if (params.pimDecision.action !== "send_external_ai") {
+    throw new Error("External AI blocked: wrong PIM action.");
   }
 
-  if (params.pimDecision.decision !== 'allow') {
+  if (params.pimDecision.decision !== "allow") {
     throw new Error(`External AI blocked by PIM: ${params.pimDecision.ruleId}`);
   }
 

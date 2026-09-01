@@ -31,10 +31,10 @@ Gebruik dit voor beide NER-varianten:
 
 ```ts
 // small, Xenova/distilbert-base-multilingual-cased-ner-hrl
-revision: "c2a4dbf593c57f47004c5bc2d3770d311aee9c43"
+revision: "c2a4dbf593c57f47004c5bc2d3770d311aee9c43";
 
 // large, Xenova/bert-base-multilingual-cased-ner-hrl
-revision: "263e82c06569c8c2ac46238a7ae5107598934234"
+revision: "263e82c06569c8c2ac46238a7ae5107598934234";
 ```
 
 Laat CI/Lovable de hashes ophalen:
@@ -85,4 +85,3 @@ it("release NER variants use immutable revisions and static hashes", () => {
 - Geen NER-releasevariant gebruikt `main`.
 - Geen NER-releasevariant gebruikt `LOCAL_PIN`.
 - Egress faalt als modelintegriteit niet `verified` is.
-

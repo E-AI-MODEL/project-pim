@@ -65,4 +65,3 @@ Let op: de Lovable-export kan bestaande route/testfile- of Fast Refresh-waarschu
 - Egress onmogelijk zonder certified anonymous payload.
 - Productie-egress vereist statisch geverifieerde modelconfig.
 - Build bevat benodigde ONNX WASM assets of CSP staat gepinde CDN toe.
-

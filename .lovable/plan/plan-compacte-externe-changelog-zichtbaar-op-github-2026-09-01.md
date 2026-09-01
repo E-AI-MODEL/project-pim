@@ -19,6 +19,7 @@ Er is een `CHANGELOG.md` in de repo, maar hij is niet extern zichtbaar (geen Git
 De daadwerkelijke koppeling gebeurt in de Lovable UI: Plus (+) menu → GitHub → Connect project → autoriseer de Lovable GitHub App → kies account/org → Create Repository. Dit is een autorisatiestap die ik niet zelf kan uitvoeren; ik begeleid en bereid voor.
 
 Voorbereiding die ik wel doe:
+
 - Controleren dat `.gitignore` voldoende is (node_modules, dist, .dev.vars, .wrangler staan erin — OK).
 - Bevestigen dat geen secrets meegaan (al geverifieerd).
 - `README.md` een verwijzing naar de changelog laten bevatten (zie stap 3), zodat externe bezoekers op GitHub de changelog vinden.

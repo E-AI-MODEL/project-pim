@@ -19,11 +19,13 @@ Een rapport (`/mnt/documents/PiM-productie-fiattering.md` plus PDF) met:
 ## Verificatie die eerst wordt uitgevoerd
 
 **Geautomatiseerd**
+
 - `bun run typecheck`, `bun run lint`, `bun run test`, `bun run build`
 - Testtelling per domein (detectie, policy, egress, storagegrens, routes, modes)
 - Bundle-inspectie: aanwezigheid ONNX WASM-assets
 
 **Browser (Playwright, desktop + mobiel viewport)**
+
 - Alle publieke routes: consolefouten, pageerrors, hydration
 - Snel checken, Stap voor stap, Schrijven: invoer, analyse, gewijzigd-status, hernieuwde analyse
 - Menu, instellingen, reset, redirects (`/try`, `/schrijven`), onbekende mode, 404
@@ -33,6 +35,7 @@ Een rapport (`/mnt/documents/PiM-productie-fiattering.md` plus PDF) met:
 - Screenshots per scherm, elk visueel gecontroleerd
 
 **Detectiekwaliteit**
+
 - Vaste schoolcorpus: recall per categorie, false positives op schone tekst
 - Zonder BERT en met BERT, resultaten los gerapporteerd
 
@@ -49,7 +52,6 @@ Prioriteitsdefinitie:
 De lijst wordt gevuld met alles wat de audit vindt, plus de al bekende punten hieronder en de openstaande punten uit `ROADMAP.md` en de handoff-blokken, zodat er één bron van waarheid is.
 
 ## Bekende punten die het rapport expliciet moet adresseren
-
 
 - Modelintegriteit: `NER_VARIANTS` gebruikt nu `revision: "main"` met `LOCAL_PIN:` hashes, geen immutable commit + statische SHA-256. Volgens de handoff (blok 2) is dat geen productie-verificatie. Het rapport benoemt dit als vrijgavevoorwaarde en beschrijft de impact: lokale analyse blijft werken, maar egress met modelafhankelijk profiel steunt op trust-on-first-use.
 - Contextmodel `PLACEHOLDER:context-nl-education-v2-not-yet-published`: niet-gepubliceerd model in de catalogus.

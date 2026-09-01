@@ -4,13 +4,13 @@ Doel: maak van de Lovable-export een productiegeschikte PiM-versie. Dit document
 
 ## Status
 
-| Blok | Status in deze workspace | Productiedoel |
-| --- | --- | --- |
-| 1. NER/BERT centraliseren | Geimplementeerd | Een runtime, een tekstbron, alle modi delen dezelfde NER-spans |
-| 2. Modelintegriteit hard maken | Uit te voeren | Geen `main`/trust-on-first-use voor productie-egress |
-| 3. Egress/policy sluiten | Uit te voeren | Alle uitgaande acties door dezelfde async hercontrole en gate |
-| 4. Runtime/browser hardening | Uit te voeren | CSP/WASM/WebGPU/headers geschikt voor deployment |
-| 5. UX/status consistent maken | Uit te voeren | Overal dezelfde modelstatus en herstelactie |
+| Blok                           | Status in deze workspace | Productiedoel                                                  |
+| ------------------------------ | ------------------------ | -------------------------------------------------------------- |
+| 1. NER/BERT centraliseren      | Geimplementeerd          | Een runtime, een tekstbron, alle modi delen dezelfde NER-spans |
+| 2. Modelintegriteit hard maken | Uit te voeren            | Geen `main`/trust-on-first-use voor productie-egress           |
+| 3. Egress/policy sluiten       | Uit te voeren            | Alle uitgaande acties door dezelfde async hercontrole en gate  |
+| 4. Runtime/browser hardening   | Uit te voeren            | CSP/WASM/WebGPU/headers geschikt voor deployment               |
+| 5. UX/status consistent maken  | Uit te voeren            | Overal dezelfde modelstatus en herstelactie                    |
 
 ## Blok 1, NER/BERT Centraliseren
 
@@ -216,10 +216,10 @@ Huidige Hugging Face commits, vastgesteld via response header:
 
 ```ts
 // small, Xenova/distilbert-base-multilingual-cased-ner-hrl
-revision: "c2a4dbf593c57f47004c5bc2d3770d311aee9c43"
+revision: "c2a4dbf593c57f47004c5bc2d3770d311aee9c43";
 
 // large, Xenova/bert-base-multilingual-cased-ner-hrl
-revision: "263e82c06569c8c2ac46238a7ae5107598934234"
+revision: "263e82c06569c8c2ac46238a7ae5107598934234";
 ```
 
 Laat Lovable/CI de hashes ophalen met:
@@ -275,7 +275,7 @@ Alle uitgaande acties (`copy`, `export_file`, `print`, `share`, `send_external_a
 1. Egress accepteert alleen:
 
 ```ts
-payload.payloadType === "draft_anonymous_certified"
+payload.payloadType === "draft_anonymous_certified";
 ```
 
 2. Egress draait altijd:
@@ -384,10 +384,10 @@ Gebruiker moet altijd hetzelfde statusmodel zien:
 Gebruik dezelfde bron voor labels:
 
 ```ts
-nerStatus.loading
-nerStatus.working
-nerStatus.error ?? nerStatus.healthError
-modelGateFor(action, detectionSettings, integrity)
+nerStatus.loading;
+nerStatus.working;
+nerStatus.error ?? nerStatus.healthError;
+modelGateFor(action, detectionSettings, integrity);
 ```
 
 Geen losse hardcoded claims zoals `modelVerified: true` in UI of resultpanels.

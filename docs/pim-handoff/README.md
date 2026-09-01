@@ -21,4 +21,3 @@ Belangrijk:
 - Geef Lovable bij voorkeur steeds een blok tegelijk.
 - Laat na elk blok `npm run typecheck`, `npm run test` en `npm run build` draaien.
 - Laat Lovable geen brede formattering/refactor uitvoeren buiten de genoemde bestanden.
-
