@@ -73,6 +73,61 @@ const CORPUS: Sample[] = [
       { category: "email", text: "j.vandenberg@school-voorbeeld.nl" },
     ],
   },
+  {
+    text: "Fatima Ouahbi (leerlingnummer 771204) uit klas 2A woont op Kerkweg 8.",
+    labels: [
+      { category: "name", text: "Fatima Ouahbi" },
+      { category: "student_id", text: "771204" },
+      { category: "class_code", text: "2A" },
+      { category: "address", text: "Kerkweg 8" },
+    ],
+  },
+  {
+    text: "De intern begeleider mailde n.dewit@ib-voorbeeld.nl over lars smit uit groep 5.",
+    labels: [
+      { category: "email", text: "n.dewit@ib-voorbeeld.nl" },
+      { category: "name", text: "lars smit" },
+      { category: "class_code", text: "groep 5" },
+    ],
+  },
+  {
+    text: "Ouders van Tim van der Meer zijn bereikbaar op 010-1234567, postcode 3011 AA.",
+    labels: [
+      { category: "name", text: "Tim van der Meer" },
+      { category: "phone", text: "010-1234567" },
+      { category: "postcode", text: "3011 AA" },
+    ],
+  },
+  {
+    text: "Aanvraag ouderbijdrage: IBAN NL44RABO0123456789, BSN 111222333, datum 12-09-2025.",
+    labels: [
+      { category: "iban", text: "NL44RABO0123456789" },
+      { category: "bsn", text: "111222333" },
+      { category: "date", text: "12-09-2025" },
+    ],
+  },
+  {
+    text: "aisha benali en Jeroen Kuipers zitten allebei in groep 8C dit schooljaar.",
+    labels: [
+      { category: "name", text: "aisha benali" },
+      { category: "name", text: "Jeroen Kuipers" },
+      { category: "class_code", text: "groep 8C" },
+    ],
+  },
+];
+
+/**
+ * Teksten zonder persoonsgegevens. Hier hoort niets gemarkeerd te worden;
+ * de test bewaakt een bovengrens aan valse positieven, zodat "liever te veel
+ * arceren" niet stilletjes verandert in "alles arceren".
+ */
+const CLEAN_CORPUS: string[] = [
+  "De rekenmethode wordt volgend jaar vervangen door een nieuwe versie.",
+  "In de teamvergadering bespraken we het rooster en de surveillance op het plein.",
+  "Het schoolplein wordt in de zomervakantie opnieuw bestraat.",
+  "Wij werken met een leerlingvolgsysteem en bespreken de resultaten per groep.",
+  "De ouderavond gaat over huiswerkbegeleiding en mediawijsheid.",
+  "Er is meer aandacht nodig voor begrijpend lezen in de bovenbouw.",
 ];
 
 /** Ondergrens per categorie. Bewust conservatief: liever te veel arceren. */
@@ -89,10 +144,18 @@ const THRESHOLDS: Partial<Record<PiiCategory, number>> = {
   name: 0.8,
 };
 
+/** Hoogste toegestane aandeel schone zinnen met een markering. */
+const MAX_FALSE_POSITIVE_RATE = 0.34;
+
+function spansFor(text: string) {
+  const signals = computeSignals(text, [], DEFAULT_DETECTION_SETTINGS, new Set());
+  return [...signals.directPii, ...signals.contextualPii];
+}
+
 function overlapsFound(sample: Sample, label: { category: PiiCategory; text: string }): boolean {
-  const signals = computeSignals(sample.text, [], DEFAULT_DETECTION_SETTINGS, new Set());
-  const spans = [...signals.directPii, ...signals.contextualPii];
-  return spans.some((s) => s.text.includes(label.text) || label.text.includes(s.text));
+  return spansFor(sample.text).some(
+    (s) => s.text.includes(label.text) || label.text.includes(s.text),
+  );
 }
 
 describe("detectie-ondergrens, synthetisch NL-onderwijscorpus", () => {
@@ -116,4 +179,22 @@ describe("detectie-ondergrens, synthetisch NL-onderwijscorpus", () => {
       expect(recall, `gemist: ${bucket!.missed.join(", ")}`).toBeGreaterThanOrEqual(threshold);
     });
   }
+
+  it("markeert bijna niets in teksten zonder persoonsgegevens", () => {
+    const flagged = CLEAN_CORPUS.filter((t) => spansFor(t).length > 0);
+    const rate = flagged.length / CLEAN_CORPUS.length;
+    expect(rate, `onterecht gemarkeerd: ${flagged.join(" | ")}`).toBeLessThanOrEqual(
+      MAX_FALSE_POSITIVE_RATE,
+    );
+  });
+
+  it("haalt over het hele corpus een totale recall van minstens 0,9", () => {
+    let found = 0;
+    let total = 0;
+    for (const bucket of perCategory.values()) {
+      found += bucket.found;
+      total += bucket.total;
+    }
+    expect(found / total).toBeGreaterThanOrEqual(0.9);
+  });
 });

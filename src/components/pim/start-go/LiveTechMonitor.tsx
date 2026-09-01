@@ -4,6 +4,7 @@ import { onNerStatus, loadNerSlm, type NerStatus } from "@/lib/pim/nerSlm";
 import { onRewriteStatus, loadRewriteLlm, type RewriteStatus } from "@/lib/pim/rewriteLlm";
 import { onModelIntegrity, type ModelIntegrityRecord } from "@/lib/pim/modelCatalog";
 import { subscribeDebug, clearDebug, type DebugEvent } from "@/lib/pim/debugBus";
+import { PerfBenchmark } from "@/components/pim/product/PerfBenchmark";
 
 function useEnv() {
   const [env, setEnv] = useState<Record<string, unknown>>({});
@@ -450,7 +451,8 @@ export function DiagnosticsBody() {
           </div>
         </TabsContent>
 
-        <TabsContent value="env" className="mt-3">
+        <TabsContent value="env" className="mt-3 space-y-3">
+          <PerfBenchmark />
           <div className="rounded border border-[#e5e7ef] p-3 space-y-1 text-xs">
             {Object.entries(env).map(([k, v]) => (
               <div key={k} className="flex justify-between gap-3 font-plex-mono text-[11px]">

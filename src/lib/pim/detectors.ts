@@ -885,9 +885,11 @@ export function detectPii(text: string, disabledCategories?: ReadonlySet<PiiCate
     if (s.category === "bsn") return bsnElfproefValid(s.text);
     if (s.category === "credit_card") return luhnValid(s.text);
     if (s.category === "iban") return ibanMod97Valid(s.text);
+    if (s.category === "name") return !isNonNameWord(s.text);
 
     return true;
   });
+
   // Deduplicate overlapping spans, keep highest confidence
   filtered.sort((a, b) => a.start - b.start || b.confidence - a.confidence);
   const merged: PiiSpan[] = [];
@@ -1006,3 +1008,19 @@ function luhnValid(raw: string): boolean {
 export const ALL_CATEGORIES: readonly PiiCategory[] = Array.from(
   new Set(RULES.map((r) => r.category)),
 );
+
+/**
+ * Woorden die grammaticaal geen Nederlandse naam kunnen zijn. De kleine-letter
+ * naamregels staan bewust ruim, maar zelfstandige naamwoorden op -heid/-ing en
+ * werkwoorden in de infinitief zijn nooit namen; die filteren we er weer uit
+ * zodat "liever te veel arceren" niet verwordt tot "alles arceren".
+ * Geldt alleen voor losse woorden: woordparen ("jan jansen") blijven staan.
+ */
+function isNonNameWord(text: string): boolean {
+  const word = text.trim();
+  if (/\s/.test(word)) return false;
+  if (word !== word.toLowerCase()) return false;
+  return /(?:heid|ing|ingen|teit|isme|schap|nis|dom|tie|sel|baar|lijk|eken|elen|eren|aken|open|iden)$/.test(
+    word,
+  );
+}
