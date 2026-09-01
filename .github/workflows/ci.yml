@@ -54,11 +54,61 @@ jobs:
       - name: Build
         run: bun run build
 
+      - name: Advisory dependency audit
+        run: bun audit || echo "Dependency audit advisory failed; review audit output before release."
+
+  e2e:
+    name: Browsertest privacybelofte
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.3
+
+      - name: Normalize Bun lockfile registry
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          lockfile = Path('bun.lock')
+          text = lockfile.read_text()
+          text = text.replace(
+              'https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/',
+              'https://registry.npmjs.org/',
+          )
+          lockfile.write_text(text)
+          PY
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      # Sleutel bevat de gepinde modelrevisies uit MODEL_CATALOG: verandert een
+      # revisie, dan is de cache ongeldig en wordt het model opnieuw opgehaald.
+      - name: Cache transformers.js modelbestanden
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/huggingface
+            node_modules/.cache/transformers
+          key: pim-models-c2a4dbf5-263e82c0-${{ runner.os }}
+
       - name: Install Playwright Chromium
         run: bunx playwright install --with-deps chromium
 
-      - name: Browsertest privacybelofte
-        run: bun run test:e2e
+      - name: Build productiebundel
+        run: bun run build
 
-      - name: Advisory dependency audit
-        run: bun audit || echo "Dependency audit advisory failed; review audit output before release."
+      - name: Browsertest tegen de productiebuild
+        env:
+          PIM_E2E_BASE_URL: http://localhost:4173
+        run: |
+          bun run preview --port 4173 --strictPort &
+          for i in $(seq 1 60); do
+            curl -sf -o /dev/null "$PIM_E2E_BASE_URL/app" && break
+            sleep 1
+          done
+          bun run test:e2e

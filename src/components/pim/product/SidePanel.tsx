@@ -147,10 +147,12 @@ export function SidePanel({ settings }: { settings?: React.ReactNode }) {
                           // nakijkscherm; navigeer en open ze daar.
                           setOpen(false);
                           void navigate({ to: "/app", search: { mode: "check" } });
-                          setTimeout(
-                            () => window.dispatchEvent(new CustomEvent("pim:open-settings")),
-                            80,
-                          );
+                          setTimeout(() => {
+                            // De timer kan afgaan nadat het venster weg is
+                            // (navigatie of testteardown); dan niets doen.
+                            if (typeof window === "undefined") return;
+                            window.dispatchEvent(new CustomEvent("pim:open-settings"));
+                          }, 80);
                         }
                       }}
                       className={ROW}

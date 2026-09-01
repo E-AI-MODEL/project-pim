@@ -4,6 +4,10 @@
 
 Geen productie-egress op basis van `revision: "main"` of `LOCAL_PIN:*`. Gebruik immutable Hugging Face commits en vaste SHA-256 hashes van publieke modelconfiguratie.
 
+## Reikwijdte van de claim
+
+De immutable revision plus de hash over `config.json` en `tokenizer.json` sluiten uit dat een ander model of een andere tokenizer geladen wordt dan de gepinde revision. Zij sluiten niet uit dat het gewichtenbestand op diezelfde revision gemanipuleerd is; daarover wordt nog geen hash berekend. Openstaande post in `ISSUES.md`: streaming hash over het gewichtenbestand bij de eerste download, resultaat pinnen.
+
 ## Bestanden
 
 - `src/lib/pim/modelCatalog.ts`
