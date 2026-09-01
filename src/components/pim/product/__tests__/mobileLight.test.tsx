@@ -22,7 +22,6 @@ vi.mock("@/components/pim/start-go/AdvancedPanel", () => ({
 
 import { ProductShell } from "../ProductShell";
 
-
 function setViewport(width: number) {
   Object.defineProperty(window, "innerWidth", { value: width, configurable: true });
   window.matchMedia = ((query: string) => ({

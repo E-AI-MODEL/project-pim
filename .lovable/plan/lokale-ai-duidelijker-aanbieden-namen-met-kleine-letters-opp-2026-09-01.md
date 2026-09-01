@@ -33,6 +33,7 @@ Omdat er een arceerstap tussen zit (jij beslist per markering) mag de detectie r
 - Namen die al elders in de tekst mét hoofdletter zijn gevonden, worden ook in kleine-letter-vorm gemarkeerd in de rest van de tekst.
 
 Deze ruime regels krijgen een lagere zekerheid en tellen als contextsignaal, zodat:
+
 - ze wel gearceerd worden en in de bevindingen komen,
 - ze het eindoordeel niet onterecht op "niet delen" zetten,
 - de drempels in Instellingen blijven werken.

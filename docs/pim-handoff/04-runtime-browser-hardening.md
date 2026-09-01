@@ -73,4 +73,3 @@ Gebruik geen brede `connect-src *`.
 - Geen CSP-fouten voor modelconfig/modelweights/WASM/worker.
 - WebGPU-fout breekt app niet; WASM fallback start.
 - Modeldownload is expliciet via gebruikerstart of duidelijke status.
-

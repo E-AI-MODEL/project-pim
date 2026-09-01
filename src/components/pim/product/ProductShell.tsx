@@ -50,7 +50,6 @@ export function ProductShell({ mode }: { mode: ProductMode }) {
   const [analysisTick, setAnalysisTick] = useState(0);
   const [isStale, setIsStale] = useState(false);
 
-
   const runAnalysis = useCallback(() => {
     setAnalysisTick((t) => t + 1);
     setIsStale(false);
@@ -215,7 +214,6 @@ export function ProductShell({ mode }: { mode: ProductMode }) {
             {mode === "check" && <CheckMode />}
             {mode === "write" && <WriteMode />}
           </div>
-
         </main>
 
         <StatusFooter />

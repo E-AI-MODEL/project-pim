@@ -3,7 +3,6 @@ import { Link } from "@tanstack/react-router";
 import { ShieldCheck } from "lucide-react";
 import { MenuButton, SidePanel } from "@/components/pim/product/SidePanel";
 
-
 export function StartHeader() {
   return (
     <header className="sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-[#e5e7ef]">
@@ -28,7 +27,6 @@ export function StartHeader() {
         </span>
         <MenuButton />
         <SidePanel />
-
       </div>
     </header>
   );

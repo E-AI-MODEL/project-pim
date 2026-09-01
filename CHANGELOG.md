@@ -4,6 +4,25 @@ Alle noemenswaardige wijzigingen aan Project PiM.
 
 ## [Unreleased]
 
+### Added
+
+- Fail-closed re-consult: detectoren rapporteren `ran`/`failed`/`skipped`; een niet aantoonbaar gedraaide laag blokkeert export en externe AI.
+- Onafhankelijke tweede mening: de re-consult draait altijd op maximale sterkte, los van gebruikersinstellingen.
+- `e2e/privacy.spec.ts` (Playwright): echte browsertest op 0 verzoeken naar derden en gemaskeerde klembordinhoud. Draaien met `bun run test:e2e`.
+- `detectionRecall.test.ts`: blokkerende recall-ondergrens per PII-categorie op een synthetisch NL-onderwijscorpus.
+- Modelintegriteit dekt nu ook `tokenizer.json`, naast `config.json`.
+
+### Changed
+
+- Eén bron voor CSP en modelhost-allowlist (`src/lib/security/headers.ts`), uitgeserveerd door de server (`src/start.ts`) in plaats van alleen `public/_headers`.
+- Risico-scoring alleen nog uit `risk.ts`; dubbele gewichten in `egressGuard.ts` verwijderd.
+- Engine vertrouwt de aanroeper niet meer: afwijkende `payloadText` wordt geweigerd.
+- CI pint Bun 1.3.3, draait `prettier --check` en maakt lint blokkerend; overtollige lockfiles (`bun.lockb`, `package-lock.json`) verwijderd; `package.json` heet nu `project-pim` met versie.
+
+### Fixed
+
+- CSP blokkeerde de SSR-hydratatiescripts, waardoor de app in productie niet reageerde.
+
 ## [0.2.0] - 2026-09-01
 
 ### Added

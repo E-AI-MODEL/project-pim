@@ -23,7 +23,6 @@ export function MobileActionBar({
       data-testid="mobile-action-bar"
       className="sticky bottom-0 z-30 -mx-4 mt-4 border-t border-[#e5e7ef] bg-white/95 px-4 py-2.5 backdrop-blur"
     >
-
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
         <div className="min-w-0 truncate">
           <AnalysisStatus state={state} />

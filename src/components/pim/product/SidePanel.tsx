@@ -189,7 +189,10 @@ export function SidePanel({ settings }: { settings?: React.ReactNode }) {
               <div className="px-1 pt-1 text-[10px] font-semibold uppercase tracking-widest text-[#94a3b8]">
                 Achtergrond
               </div>
-              <nav className="rounded-xl border border-[#e2e8f0] bg-white p-1" data-testid="about-tab">
+              <nav
+                className="rounded-xl border border-[#e2e8f0] bg-white p-1"
+                data-testid="about-tab"
+              >
                 <ul>
                   {LINKS.map((l) => (
                     <li key={l.to}>
@@ -212,9 +215,7 @@ export function SidePanel({ settings }: { settings?: React.ReactNode }) {
             </div>
           )}
 
-          {view === "settings" && settings && (
-            <div data-testid="settings-panel">{settings}</div>
-          )}
+          {view === "settings" && settings && <div data-testid="settings-panel">{settings}</div>}
 
           {view === "diagnostics" && <DiagnosticsBody />}
         </div>

@@ -23,13 +23,7 @@ Alle uitgaande acties gebruiken dezelfde beveiliging:
 Deze acties zijn uitgaand:
 
 ```ts
-const egressActions = [
-  "copy",
-  "export_file",
-  "print",
-  "share",
-  "send_external_ai",
-] as const;
+const egressActions = ["copy", "export_file", "print", "share", "send_external_ai"] as const;
 ```
 
 ## Regels
@@ -37,7 +31,7 @@ const egressActions = [
 Egress accepteert alleen:
 
 ```ts
-payload.payloadType === "draft_anonymous_certified"
+payload.payloadType === "draft_anonymous_certified";
 ```
 
 Elke egress-actie draait:
@@ -99,4 +93,3 @@ it("blocks certified-looking payloads when re-consult finds direct PII", async (
 - Geen egress zonder re-consult pass.
 - `send_external_ai` is nooit een echte netwerkcall zonder expliciete endpointconfig en veilige payload.
 - Pseudonymous payloads blijven local-only.
-

@@ -18,14 +18,14 @@ is, zodat de eindbelofte één is die standhoudt.
 
 ## Wat nog écht open is
 
-| Punt | Sluitbaar in sessie? | Waarom |
-|------|----------------------|--------|
-| P1-3 WebGPU/WASM performance op doelhardware | Deels | Meting in preview kan ik draaien; doelhardware-meting ligt bij de uitrol. |
-| P1-4 Externe detectievalidatie op onafhankelijk corpus | Nee | Vereist extern Nederlands onderwijscorpus; alleen contractueel af te dekken. |
-| context_education model heeft `PLACEHOLDER`-hash | Ja, mits model niet gepubliceerd is | `releaseStatus: design-only`; gate blokkeert al egress bij placeholder. Vervangen door een echte mirror-hash of expliciet uitschakelen in release-1. |
-| rewrite_qwen: `revision: "main"` + `LOCAL_PIN` | Ja (beslissing) | Beslissen: release-1 uitsluiten (design-only) óf immutable revision + statische hash zetten. `main` mag niet in productie-egress. |
-| CSP op definitieve hosting | Deels | Headers en `public/_headers` staan er, maar niet elke host leest `_headers`; moet op de echte host gemeten worden. |
-| Recall-claims richting scholen | Ja | Formuleringen conservatiever maken zolang P1-4 open is. |
+| Punt                                                   | Sluitbaar in sessie?                | Waarom                                                                                                                                               |
+| ------------------------------------------------------ | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P1-3 WebGPU/WASM performance op doelhardware           | Deels                               | Meting in preview kan ik draaien; doelhardware-meting ligt bij de uitrol.                                                                            |
+| P1-4 Externe detectievalidatie op onafhankelijk corpus | Nee                                 | Vereist extern Nederlands onderwijscorpus; alleen contractueel af te dekken.                                                                         |
+| context_education model heeft `PLACEHOLDER`-hash       | Ja, mits model niet gepubliceerd is | `releaseStatus: design-only`; gate blokkeert al egress bij placeholder. Vervangen door een echte mirror-hash of expliciet uitschakelen in release-1. |
+| rewrite_qwen: `revision: "main"` + `LOCAL_PIN`         | Ja (beslissing)                     | Beslissen: release-1 uitsluiten (design-only) óf immutable revision + statische hash zetten. `main` mag niet in productie-egress.                    |
+| CSP op definitieve hosting                             | Deels                               | Headers en `public/_headers` staan er, maar niet elke host leest `_headers`; moet op de echte host gemeten worden.                                   |
+| Recall-claims richting scholen                         | Ja                                  | Formuleringen conservatiever maken zolang P1-4 open is.                                                                                              |
 
 ## Aanpak
 

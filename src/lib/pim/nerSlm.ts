@@ -94,13 +94,17 @@ export function isNerVerified(): boolean {
   return modelVerified;
 }
 
-function hfConfigUrl(modelId: string, revision: string): string {
-  return `https://huggingface.co/${modelId}/resolve/${encodeURIComponent(revision)}/config.json`;
+function hfFileUrl(modelId: string, revision: string, file: string): string {
+  return `https://huggingface.co/${modelId}/resolve/${encodeURIComponent(revision)}/${file}`;
 }
 
-async function fetchModelConfig(modelId: string, revision: string): Promise<string | null> {
+async function fetchModelFile(
+  modelId: string,
+  revision: string,
+  file: string,
+): Promise<string | null> {
   try {
-    const res = await fetch(hfConfigUrl(modelId, revision), {
+    const res = await fetch(hfFileUrl(modelId, revision, file), {
       method: "GET",
       cache: "force-cache",
       credentials: "omit",
@@ -126,10 +130,15 @@ async function runIntegrityCheck(pipe: unknown): Promise<void> {
     /* swallow */
   }
 
-  const configText = await fetchModelConfig(variant.modelId, variant.revision);
+  const [configText, tokenizerText] = await Promise.all([
+    fetchModelFile(variant.modelId, variant.revision, "config.json"),
+    fetchModelFile(variant.modelId, variant.revision, "tokenizer.json"),
+  ]);
   const rec = await verifyModel(CATALOG_KEY, configText, {
     modelId: variant.modelId,
     expected: variant.expectedConfigSha256,
+    tokenizerText,
+    expectedTokenizer: variant.expectedTokenizerSha256,
   });
   modelVerified = rec.status === "verified";
 }

@@ -21,7 +21,6 @@ Project PiM is nu een browser-native proof of concept met lokale fail-closed pri
 Afgehandeld: NER-releasevarianten staan op immutable Hugging Face revisions met
 statische SHA-256 config-hashes; `LOCAL_PIN` bestaat alleen nog voor dev/demo.
 
-
 ## Release 1 hardening
 
 - Breid detector-tests uit met property-based tests voor brede nummer- en naamregels.

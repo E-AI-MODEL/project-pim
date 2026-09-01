@@ -107,9 +107,14 @@ export async function reconsultPayload(
     return { ok: false, reason: `Egress re-consult BLOCK: risk=${signals.riskLevel}` };
   }
 
-  const check = await draftCheckWithRegistry({ mode: "anonymous", text, rawHadPii: false }, "anonymous", settings, {
-    async: true,
-  });
+  const check = await draftCheckWithRegistry(
+    { mode: "anonymous", text, rawHadPii: false },
+    "anonymous",
+    settings,
+    {
+      async: true,
+    },
+  );
   if (check.status === "fail") {
     return {
       ok: false,

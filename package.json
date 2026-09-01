@@ -1,5 +1,6 @@
 {
-  "name": "tanstack_start_ts",
+  "name": "project-pim",
+  "version": "0.2.0",
   "private": true,
   "sideEffects": false,
   "type": "module",
@@ -13,7 +14,9 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check": "bun run typecheck && bun run lint && bun run test && bun run build"
+    "check": "bun run typecheck && bun run lint && bun run test && bun run build",
+    "test:e2e": "playwright test",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@cloudflare/vite-plugin": "^1.25.5",
@@ -87,6 +90,7 @@
   "devDependencies": {
     "@eslint/js": "^9.32.0",
     "@lovable.dev/vite-tanstack-config": "2.13.1",
+    "@playwright/test": "^1.62.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^22.16.5",
