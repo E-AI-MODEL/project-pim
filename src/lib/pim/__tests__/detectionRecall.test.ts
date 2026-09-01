@@ -127,9 +127,9 @@ const CORPUS: Sample[] = [
     labels: [{ category: "name", text: "sofie de groot" }],
   },
   {
-    text: "Rekeningnummer NL18 INGB 0002 4456 89 staat op naam van Karin Vos.",
+    text: "Rekeningnummer NL91 ABNA 0417 1643 00 staat op naam van Karin Vos.",
     labels: [
-      { category: "iban", text: "NL18 INGB 0002 4456 89" },
+      { category: "iban", text: "NL91 ABNA 0417 1643 00" },
       { category: "name", text: "Karin Vos" },
     ],
   },
