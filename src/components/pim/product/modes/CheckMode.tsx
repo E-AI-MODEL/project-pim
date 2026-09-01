@@ -117,7 +117,6 @@ export function CheckMode() {
     setEgressMsg(null);
   };
 
-
   const [tab, setTab] = useState<TextTab>("original");
   const [editedSafe, setEditedSafe] = useState("");
   useEffect(() => {
@@ -235,4 +234,3 @@ export function CheckMode() {
     </div>
   );
 }
-

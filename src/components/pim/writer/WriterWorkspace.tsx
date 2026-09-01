@@ -110,7 +110,6 @@ export function WriterWorkspace() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-
   // Writer-tekst is de NER-bron zolang de writer gemount is. Cleanup zit in
   // een aparte effect: als je hem in de plainText-effect zet, vuurt hij bij
   // elke toetsaanslag en wordt de bron kort leeg (waardoor NER opnieuw start).
@@ -413,7 +412,6 @@ export function WriterWorkspace() {
         <AnalysisModeToggle />
       </div>
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-
         {/* LEFT, editor card */}
         <section className="rounded-2xl border border-[#e5e7ef] bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] overflow-hidden flex flex-col">
           <div className="flex items-center justify-between gap-3 border-b border-[#eef0f5] px-4 py-2.5">
@@ -481,43 +479,40 @@ export function WriterWorkspace() {
       {/* Mobiel: bevindingen in een uitschuifblad, plus één vaste actiebalk. */}
       {isMobile && (
         <div>
-
-        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-          <SheetContent
-            side="bottom"
-            className="max-h-[85vh] overflow-y-auto rounded-t-2xl border-[#e5e7ef] bg-[#f6f7fb] p-4"
-            data-testid="writer-findings-sheet"
-          >
-            <SheetHeader className="pb-2 text-left">
-              <SheetTitle className="text-[15px] text-[#0f172a]">Wat PiM vond</SheetTitle>
-            </SheetHeader>
-            <div className="space-y-3">{privacyPanel}</div>
-          </SheetContent>
-        </Sheet>
-        <div className="sticky bottom-0 z-30 -mx-4 border-t border-[#e5e7ef] bg-white/95 px-4 py-2.5 backdrop-blur">
-          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
-            <button
-              type="button"
-              data-testid="open-findings-sheet"
-              onClick={() => setSheetOpen(true)}
-              className="min-w-0 truncate rounded-lg border border-[#e5e7ef] px-3 py-2 text-left text-[13px] text-[#334155]"
+          <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+            <SheetContent
+              side="bottom"
+              className="max-h-[85vh] overflow-y-auto rounded-t-2xl border-[#e5e7ef] bg-[#f6f7fb] p-4"
+              data-testid="writer-findings-sheet"
             >
-              {hasAnalyzed ? `${totalFindings} gevonden` : "Nog niet nagekeken"}
-            </button>
-            <button
-              type="button"
-              data-testid="run-analysis-mobile"
-              onClick={runAnalysis}
-              className="shrink-0 rounded-lg bg-[#6d4aff] px-4 py-2 text-[13px] font-semibold text-white"
-            >
-              Kijk mijn tekst na
-            </button>
+              <SheetHeader className="pb-2 text-left">
+                <SheetTitle className="text-[15px] text-[#0f172a]">Wat PiM vond</SheetTitle>
+              </SheetHeader>
+              <div className="space-y-3">{privacyPanel}</div>
+            </SheetContent>
+          </Sheet>
+          <div className="sticky bottom-0 z-30 -mx-4 border-t border-[#e5e7ef] bg-white/95 px-4 py-2.5 backdrop-blur">
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+              <button
+                type="button"
+                data-testid="open-findings-sheet"
+                onClick={() => setSheetOpen(true)}
+                className="min-w-0 truncate rounded-lg border border-[#e5e7ef] px-3 py-2 text-left text-[13px] text-[#334155]"
+              >
+                {hasAnalyzed ? `${totalFindings} gevonden` : "Nog niet nagekeken"}
+              </button>
+              <button
+                type="button"
+                data-testid="run-analysis-mobile"
+                onClick={runAnalysis}
+                className="shrink-0 rounded-lg bg-[#6d4aff] px-4 py-2 text-[13px] font-semibold text-white"
+              >
+                Kijk mijn tekst na
+              </button>
+            </div>
           </div>
         </div>
-        </div>
       )}
-
-
 
       <input
         ref={fileInputRef}
@@ -880,7 +875,6 @@ function ActionRow({
     </div>
   );
 }
-
 
 function buildSafeText(plain: string, spans: PiiSpan[]): string {
   if (!plain) return "";

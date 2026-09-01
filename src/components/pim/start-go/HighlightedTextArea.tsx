@@ -43,15 +43,7 @@ function mergeSpans(spans: PiiSpan[]): PiiSpan[] {
 
 export const HighlightedTextArea = forwardRef<HTMLTextAreaElement, Props>(
   function HighlightedTextArea(
-    {
-      value,
-      onValueChange,
-      spans = [],
-      boxClassName = "",
-      className = "",
-      onSpanAction,
-      ...rest
-    },
+    { value, onValueChange, spans = [], boxClassName = "", className = "", onSpanAction, ...rest },
     ref,
   ) {
     const overlayRef = useRef<HTMLDivElement>(null);

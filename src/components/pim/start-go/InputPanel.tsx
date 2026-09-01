@@ -58,7 +58,6 @@ interface Props {
 
 export type TextTab = "original" | "safe";
 
-
 const TARGETS: { id: Action; label: string }[] = [
   { id: "send_external_ai", label: COPY.targetExternalAi },
   { id: "copy", label: COPY.targetCopy },
@@ -153,7 +152,6 @@ function CompactComposer({
   safeNote,
   onSpanAction,
 }: Omit<Props, "compact">) {
-
   const canSend = text.trim().length > 0 && !busy;
   const activeTarget = TARGETS.find((t) => t.id === action)?.label ?? "";
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -344,7 +342,6 @@ function CompactComposer({
             className="text-[#0f172a] placeholder:text-[#94a3b8] resize-y focus:outline-none"
           />
         )}
-
 
         {/* Toolbar */}
         <div className="flex items-center gap-1.5 px-2 py-2 border-t border-[#eef0f5]">
