@@ -198,4 +198,3 @@ describe("detectie-ondergrens, synthetisch NL-onderwijscorpus", () => {
     expect(found / total).toBeGreaterThanOrEqual(0.9);
   });
 });
-

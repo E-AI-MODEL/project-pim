@@ -6,7 +6,6 @@ import { onModelIntegrity, type ModelIntegrityRecord } from "@/lib/pim/modelCata
 import { subscribeDebug, clearDebug, type DebugEvent } from "@/lib/pim/debugBus";
 import { PerfBenchmark } from "@/components/pim/product/PerfBenchmark";
 
-
 function useEnv() {
   const [env, setEnv] = useState<Record<string, unknown>>({});
   useEffect(() => {
@@ -463,7 +462,6 @@ export function DiagnosticsBody() {
             ))}
           </div>
         </TabsContent>
-
 
         <TabsContent value="log" className="mt-3">
           <div className="flex justify-between items-center mb-2">
