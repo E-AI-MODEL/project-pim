@@ -91,12 +91,29 @@ export function CheckMode() {
 
   const status: AnalysisState = busy ? "busy" : isStale ? "stale" : result ? "ready" : "idle";
 
+  // Genegeerde markeringen, per tekststuk. Leegt zodra de tekst wijzigt.
+  const [ignored, setIgnored] = useState<Set<string>>(new Set());
+
   // Markeringen in het tekstvlak zelf, zoals in het schrijfscherm.
   const liveSpans = useMemo(() => {
     const sig = engineState.signals;
     if (!sig) return [];
-    return [...sig.directPii, ...sig.contextualPii];
-  }, [engineState.signals]);
+    return [...sig.directPii, ...sig.contextualPii].filter(
+      (s) => !ignored.has(`${s.start}:${s.end}:${s.category}`),
+    );
+  }, [engineState.signals, ignored]);
+
+  const handleSpanAction = (span: PiiSpan, act: SpanAction) => {
+    if (act === "ignore") {
+      setIgnored((prev) => new Set(prev).add(`${span.start}:${span.end}:${span.category}`));
+      return;
+    }
+    const label = GENERALIZATIONS[span.category] ?? "[…]";
+    setText(text.slice(0, span.start) + label + text.slice(span.end));
+    setIgnored(new Set());
+    setEgressMsg(null);
+  };
+
 
   const [tab, setTab] = useState<TextTab>("original");
   const [editedSafe, setEditedSafe] = useState("");
