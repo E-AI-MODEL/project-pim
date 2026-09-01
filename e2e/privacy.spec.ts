@@ -63,6 +63,42 @@ async function kiesBestemmingKopieren(page: Page): Promise<void> {
   await page.keyboard.press("Escape");
 }
 
+/**
+ * Zet de lokale AI-laag uit. Staat BERT aan zonder geverifieerd model, dan
+ * blokkeert de modelpoort iedere uitgaande actie (fail-closed). Deze test wil
+ * juist het toegestane pad meten; het geblokkeerde pad heeft een eigen test.
+ */
+async function zetLokaleAiUit(page: Page): Promise<void> {
+  const uit = page.getByRole("button", { name: /^Uit\b/ }).first();
+  await expect
+    .poll(
+      async () => {
+        if (!(await uit.isVisible().catch(() => false))) {
+          await page
+            .getByRole("button", { name: /^menu$/i })
+            .first()
+            .click()
+            .catch(() => {});
+          await page.waitForTimeout(300);
+          await page
+            .getByRole("button", { name: /instellingen/i })
+            .first()
+            .click()
+            .catch(() => {});
+          await page.waitForTimeout(400);
+        }
+        return await uit.isVisible().catch(() => false);
+      },
+      { timeout: 40_000, message: "de instellingen met de AI-keuze gingen niet open" },
+    )
+    .toBe(true);
+  await uit.click();
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(300);
+}
+
+
+
 
 /**
  * Typt de tekst en wacht tot de analyse echt klaar is. Vóór hydratatie gaan
