@@ -171,9 +171,22 @@ test("houdt alle verkeer binnen en zet alleen gemaskeerde tekst op het klembord"
     timeout: 20_000,
   });
   await kopieer.click();
-  await page.waitForTimeout(500);
+
+  // De egress-gate doet een onafhankelijke her-controle op volle sterkte en
+  // haalt daarvoor eenmalig het model op. Dat duurt; wachten tot het klembord
+  // echt beschreven is, met een harde bovengrens.
+  await expect
+    .poll(
+      async () => await page.evaluate(() => navigator.clipboard.readText().catch(() => "")),
+      {
+        timeout: 150_000,
+        message: "de kopieeractie schreef niets naar het klembord",
+      },
+    )
+    .not.toBe(BEGINWAARDE);
 
   const klembord = await page.evaluate(() => navigator.clipboard.readText().catch(() => ""));
+
 
   expect(overtredingen, `verzoeken naar derden: ${overtredingen.join(", ")}`).toEqual([]);
   expect(klembord, "klembord is niet beschreven: de kopieeractie deed niets").not.toBe(BEGINWAARDE);
