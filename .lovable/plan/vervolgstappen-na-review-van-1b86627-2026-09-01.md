@@ -53,12 +53,12 @@ Precisiedrempel per categorie op teksten die er alleen op lijken (negencijferige
 
 ## Verificatie per blok
 
-| Stap | Draai daarna |
-| --- | --- |
-| 1–3 | `bun run typecheck && bun run test` |
-| 4 | `bun run test` |
-| 5–7 | `bun run test:e2e` |
-| 8–10 | `bun run check` |
+| Stap | Draai daarna                        |
+| ---- | ----------------------------------- |
+| 1–3  | `bun run typecheck && bun run test` |
+| 4    | `bun run test`                      |
+| 5–7  | `bun run test:e2e`                  |
+| 8–10 | `bun run check`                     |
 
 ## Buiten scope
 

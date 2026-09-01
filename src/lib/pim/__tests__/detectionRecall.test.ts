@@ -159,7 +159,6 @@ const CORPUS: Sample[] = [
   },
 ];
 
-
 /**
  * Teksten zonder persoonsgegevens. Hier hoort niets gemarkeerd te worden;
  * de test bewaakt een bovengrens aan valse positieven, zodat "liever te veel

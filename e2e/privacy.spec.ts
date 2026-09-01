@@ -81,7 +81,6 @@ test("houdt alle verkeer binnen en zet geen ruwe persoonsgegevens op het klembor
     )
     .toEqual({ tekst: GEVOELIGE_TEKST, staat: "ready" });
 
-
   // PiM heeft de gegevens gevonden en gearceerd. Zonder dit bewijs is de
   // rest van de test betekenisloos.
   await expect(page.getByText("naam", { exact: true }).first()).toBeVisible();

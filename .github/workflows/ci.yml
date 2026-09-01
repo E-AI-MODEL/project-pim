@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   check:
-    name: Typecheck, advisory lint, test and build
+    name: Typecheck, lint, test and build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -53,6 +53,12 @@ jobs:
 
       - name: Build
         run: bun run build
+
+      - name: Install Playwright Chromium
+        run: bunx playwright install --with-deps chromium
+
+      - name: Browsertest privacybelofte
+        run: bun run test:e2e
 
       - name: Advisory dependency audit
         run: bun audit || echo "Dependency audit advisory failed; review audit output before release."
