@@ -36,6 +36,15 @@ export function getEgressReconsultLog(): string[] {
   return [...reconsultLog];
 }
 
+/**
+ * De pseudoniem-mapping is geen egress-payload maar een lokale sleutel.
+ * Hij wordt daarom nooit gecertificeerd, maar elke handmatige kopie wordt
+ * wel in dezelfde log genoteerd zodat de actie zichtbaar blijft.
+ */
+export function logLocalKeyAccess(msg: string): void {
+  emitReconsult(`LOKALE SLEUTEL ${msg}`);
+}
+
 /** Acties waarbij een bewust uitgezette laag alsnog hard blokkeert. */
 const STRICT_ACTIONS: ReadonlySet<string> = new Set(["export_file", "send_external_ai"]);
 
