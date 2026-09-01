@@ -1009,18 +1009,57 @@ export const ALL_CATEGORIES: readonly PiiCategory[] = Array.from(
   new Set(RULES.map((r) => r.category)),
 );
 
+/** Tussenvoegsels tellen niet mee bij het beoordelen van een woordpaar. */
+const NAME_INFIXES = new Set([
+  "van",
+  "de",
+  "der",
+  "den",
+  "het",
+  "ten",
+  "ter",
+  "el",
+  "al",
+  "bin",
+  "di",
+  "da",
+  "del",
+]);
+
+/**
+ * Veelgebruikte school- en werkwoorden die in kleine letters op een naam
+ * lijken ("bespreken de resultaten", "staat de studiedag"). Kort gehouden:
+ * de suffixregel hieronder vangt het meeste al af.
+ */
+const NON_NAME_TOKENS = new Set([
+  "staat", "stond", "gaat", "ging", "komt", "kwam", "wordt", "werd", "blijft", "bleef",
+  "heeft", "hadden", "maakt", "maken", "geeft", "geven", "neemt", "nemen", "vraagt",
+  "vragen", "zegt", "zeggen", "kijkt", "kijken", "werkt", "werken", "bespreken",
+  "bespreekt", "volgt", "volgen", "start", "starten", "plant", "plannen", "gepland",
+  "resultaten", "resultaat", "studiedag", "week", "weken", "dag", "dagen", "jaar",
+  "jaren", "school", "scholen", "groep", "groepen", "klas", "klassen", "ouders",
+  "ouder", "leerling", "leerlingen", "docent", "docenten", "mentor", "juf", "meester",
+  "toets", "toetsen", "cijfer", "cijfers", "rooster", "plein", "vakantie", "overleg",
+  "vergadering", "huiswerk", "gedrag", "zorg", "plan", "verslag", "notitie", "mail",
+  "bericht", "aandacht", "gesprek", "gesprekken", "afspraak", "afspraken", "methode",
+]);
+
+const NON_NAME_SUFFIX =
+  /(?:heid|ing|ingen|teit|isme|schap|nis|dom|tie|sel|baar|lijk|eken|elen|eren|aken|open|iden)$/;
+
 /**
  * Woorden die grammaticaal geen Nederlandse naam kunnen zijn. De kleine-letter
- * naamregels staan bewust ruim, maar zelfstandige naamwoorden op -heid/-ing en
- * werkwoorden in de infinitief zijn nooit namen; die filteren we er weer uit
+ * naamregels staan bewust ruim, maar zelfstandige naamwoorden op -heid/-ing,
+ * werkwoorden en schoolwoorden zijn nooit namen; die filteren we er weer uit
  * zodat "liever te veel arceren" niet verwordt tot "alles arceren".
- * Geldt alleen voor losse woorden: woordparen ("jan jansen") blijven staan.
  */
 function isNonNameWord(text: string): boolean {
-  const word = text.trim();
-  if (/\s/.test(word)) return false;
-  if (word !== word.toLowerCase()) return false;
-  return /(?:heid|ing|ingen|teit|isme|schap|nis|dom|tie|sel|baar|lijk|eken|elen|eren|aken|open|iden)$/.test(
-    word,
-  );
+  const trimmed = text.trim();
+  if (trimmed !== trimmed.toLowerCase()) return false;
+  const tokens = trimmed.split(/\s+/).filter(Boolean);
+  if (tokens.length === 0) return true;
+  // Een span die alleen uit tussenvoegsels bestaat, is nooit een naam.
+  if (tokens.every((t) => NAME_INFIXES.has(t))) return true;
+  return tokens.some((t) => !NAME_INFIXES.has(t) && (NON_NAME_TOKENS.has(t) || NON_NAME_SUFFIX.test(t)));
 }
+
