@@ -219,7 +219,14 @@ export function createEngine(initial: EngineConfig): PimEngine {
     }
     const prev = state;
     try {
-      evaluate({ ...(prev.input as EngineInput), text, llmDraftText: undefined });
+      evaluate({
+        ...(prev.input as EngineInput),
+        text,
+        // Posities uit een eerdere tekst mogen niet blind op nieuwe tekst
+        // worden toegepast; anders knipt de anonimisering er middenin.
+        extraSpans: remapSpans(prev.input.extraSpans ?? [], text),
+        llmDraftText: undefined,
+      });
       return await requestAction({ action });
     } finally {
       state = prev;
