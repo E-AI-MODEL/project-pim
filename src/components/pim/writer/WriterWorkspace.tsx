@@ -377,9 +377,7 @@ export function WriterWorkspace() {
         analyzed={hasAnalyzed}
         stale={analysisStale}
       />
-      <SafeVersionCard
-        safeText={safeText}
-        hasFindings={totalFindings > 0}
+      <ActionRow
         onCopy={async () => {
           try {
             await navigator.clipboard.writeText(safeText);
