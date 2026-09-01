@@ -1008,3 +1008,19 @@ function luhnValid(raw: string): boolean {
 export const ALL_CATEGORIES: readonly PiiCategory[] = Array.from(
   new Set(RULES.map((r) => r.category)),
 );
+
+/**
+ * Woorden die grammaticaal geen Nederlandse naam kunnen zijn. De kleine-letter
+ * naamregels staan bewust ruim, maar zelfstandige naamwoorden op -heid/-ing en
+ * werkwoorden in de infinitief zijn nooit namen; die filteren we er weer uit
+ * zodat "liever te veel arceren" niet verwordt tot "alles arceren".
+ * Geldt alleen voor losse woorden: woordparen ("jan jansen") blijven staan.
+ */
+function isNonNameWord(text: string): boolean {
+  const word = text.trim();
+  if (/\s/.test(word)) return false;
+  if (word !== word.toLowerCase()) return false;
+  return /(?:heid|ing|ingen|teit|isme|schap|nis|dom|tie|sel|baar|lijk|eken|elen|eren|aken|open|iden)$/.test(
+    word,
+  );
+}
