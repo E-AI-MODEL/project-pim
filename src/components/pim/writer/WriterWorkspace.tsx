@@ -391,7 +391,7 @@ export function WriterWorkspace() {
       <ActionRow
         onCopy={async () => {
           // Ook hier eerst door de poort: pas na goedkeuring naar het klembord.
-          const r = await requestActionForText(safeText, "copy");
+          const r = await runEgress("copy");
           if (!r.executed) {
             setEgressMsg(`✗ ${r.reason}`);
             return;
@@ -404,7 +404,7 @@ export function WriterWorkspace() {
           }
         }}
         onDownload={async () => {
-          const r = await requestActionForText(safeText, "export_file");
+          const r = await runEgress("export_file");
           if (!r.executed) {
             setEgressMsg(`✗ ${r.reason}`);
             return;
@@ -419,7 +419,7 @@ export function WriterWorkspace() {
           setEgressMsg(`✓ ${r.reason}`);
         }}
         onSendAI={async () => {
-          const r = await requestActionForText(safeText, "send_external_ai");
+          const r = await runEgress("send_external_ai");
           setEgressMsg(r.executed ? `✓ ${r.reason}` : `✗ ${r.reason}`);
         }}
       />
