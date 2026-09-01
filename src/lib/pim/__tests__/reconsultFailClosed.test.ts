@@ -35,7 +35,7 @@ describe("egress re-consult, fail-closed en onafhankelijk", () => {
     const r = await reconsultPayload(
       payload({
         text: `Neem contact op via ${contact}.`,
-        detectionSettings: { regex: false, lexicon: false, context: false, bert: "off" },
+        detectionSettings: { regex: true, lexicon: false, context: false, bert: "off" },
       }),
       "copy",
     );
