@@ -36,7 +36,6 @@ import {
   MapPin,
   Copy as CopyIcon,
   Send,
-  Eye,
 } from "lucide-react";
 import {
   type DetectionLayerSettings,
