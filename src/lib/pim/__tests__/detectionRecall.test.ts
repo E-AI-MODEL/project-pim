@@ -99,9 +99,9 @@ const CORPUS: Sample[] = [
     ],
   },
   {
-    text: "Aanvraag ouderbijdrage: IBAN NL02RABO0123456789, BSN 111222333, datum 12-09-2025.",
+    text: "Aanvraag ouderbijdrage: IBAN NL44RABO0123456789, BSN 111222333, datum 12-09-2025.",
     labels: [
-      { category: "iban", text: "NL02RABO0123456789" },
+      { category: "iban", text: "NL44RABO0123456789" },
       { category: "bsn", text: "111222333" },
       { category: "date", text: "12-09-2025" },
     ],
