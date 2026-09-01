@@ -13,6 +13,7 @@ export interface UsePimEngineResult {
   evaluate: PimEngine["evaluate"];
   previewDecision: PimEngine["previewDecision"];
   requestAction: PimEngine["requestAction"];
+  requestActionForText: PimEngine["requestActionForText"];
   reset: PimEngine["reset"];
 }
 
