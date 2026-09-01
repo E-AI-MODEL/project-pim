@@ -153,6 +153,7 @@ test("houdt alle verkeer binnen en zet alleen gemaskeerde tekst op het klembord"
   // verschil zien tussen "geblokkeerd" en "er is niets gebeurd".
   await page.evaluate((v) => navigator.clipboard.writeText(v), BEGINWAARDE);
 
+  await zetLokaleAiUit(page);
   await kiesBestemmingKopieren(page);
   await analyseerGevoeligeTekst(page);
 
@@ -194,6 +195,7 @@ test("blokkeert kopiëren zodra persoonsgegevens terugkomen in de veilige versie
   await page.goto(`${base}/app`, { waitUntil: "domcontentloaded" });
   await page.evaluate((v) => navigator.clipboard.writeText(v), BEGINWAARDE);
 
+  await zetLokaleAiUit(page);
   await kiesBestemmingKopieren(page);
   await analyseerGevoeligeTekst(page);
 
