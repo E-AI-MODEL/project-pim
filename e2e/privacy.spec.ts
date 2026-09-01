@@ -77,20 +77,20 @@ async function zetLokaleAiUit(page: Page): Promise<void> {
           await page
             .getByRole("button", { name: /^menu$/i })
             .first()
-            .click()
+            .click({ timeout: 3000 })
             .catch(() => {});
           await page.waitForTimeout(300);
           await page
             .getByRole("button", { name: /instellingen/i })
             .first()
-            .click()
+            .click({ timeout: 3000 })
             .catch(() => {});
           await page.waitForTimeout(400);
           // De zoeklagen zitten in een uitklapbaar blok.
           await page
             .getByRole("button", { name: /BERT/ })
             .first()
-            .click()
+            .click({ timeout: 3000 })
             .catch(() => {});
           await page.waitForTimeout(400);
 
