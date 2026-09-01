@@ -885,9 +885,11 @@ export function detectPii(text: string, disabledCategories?: ReadonlySet<PiiCate
     if (s.category === "bsn") return bsnElfproefValid(s.text);
     if (s.category === "credit_card") return luhnValid(s.text);
     if (s.category === "iban") return ibanMod97Valid(s.text);
+    if (s.category === "name") return !isNonNameWord(s.text);
 
     return true;
   });
+
   // Deduplicate overlapping spans, keep highest confidence
   filtered.sort((a, b) => a.start - b.start || b.confidence - a.confidence);
   const merged: PiiSpan[] = [];
