@@ -11,6 +11,11 @@ export interface ProductShellContextValue {
   evaluate: PimEngine["evaluate"];
   previewDecision: PimEngine["previewDecision"];
   requestAction: PimEngine["requestAction"];
+  /**
+   * Certificeert de meegegeven tekst opnieuw en voert daarna pas de actie uit.
+   * Alle egress-paden in de UI lopen hierlangs, ook bewerkte veilige tekst.
+   */
+  requestActionForText: PimEngine["requestActionForText"];
   reset: PimEngine["reset"];
   settings: PimSettings;
   text: string;
