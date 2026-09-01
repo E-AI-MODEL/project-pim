@@ -378,14 +378,25 @@ export function WriterWorkspace() {
       />
       <ActionRow
         onCopy={async () => {
+          // Ook hier eerst door de poort: pas na goedkeuring naar het klembord.
+          const r = await requestActionForText(safeText, "copy");
+          if (!r.executed) {
+            setEgressMsg(`✗ ${r.reason}`);
+            return;
+          }
           try {
             await navigator.clipboard.writeText(safeText);
-            setEgressMsg("De tekst zonder persoonsgegevens staat op je klembord.");
+            setEgressMsg(`✓ ${r.reason}`);
           } catch {
             setEgressMsg("Kopiëren lukte niet, probeer het opnieuw.");
           }
         }}
-        onDownload={() => {
+        onDownload={async () => {
+          const r = await requestActionForText(safeText, "export_file");
+          if (!r.executed) {
+            setEgressMsg(`✗ ${r.reason}`);
+            return;
+          }
           const blob = new Blob([safeText], { type: "text/plain;charset=utf-8" });
           const url = URL.createObjectURL(blob);
           const a = document.createElement("a");
@@ -393,9 +404,10 @@ export function WriterWorkspace() {
           a.download = `pim-veilige-versie-${new Date().toISOString().slice(0, 10)}.txt`;
           a.click();
           URL.revokeObjectURL(url);
+          setEgressMsg(`✓ ${r.reason}`);
         }}
         onSendAI={async () => {
-          const r = await requestAction({ action: "send_external_ai", payloadText: safeText });
+          const r = await requestActionForText(safeText, "send_external_ai");
           setEgressMsg(r.executed ? `✓ ${r.reason}` : `✗ ${r.reason}`);
         }}
       />
