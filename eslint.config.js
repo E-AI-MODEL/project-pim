@@ -48,5 +48,18 @@ export default tseslint.config(
       ],
     },
   },
+  {
+    // Deze bestanden exporteren bewust ook varianten, context of routers
+    // naast een component. Fast refresh is een dev-comfort, geen kwaliteits-
+    // of veiligheidsregel; door hem hier uit te zetten kan de rest van de
+    // lint blokkerend zijn (--max-warnings=0).
+    files: [
+      "src/components/ui/**/*.{ts,tsx}",
+      "src/router.tsx",
+      "src/components/pim/product/ProductShellContext.tsx",
+      "src/components/pim/start-go/ExamplePicker.tsx",
+    ],
+    rules: { "react-refresh/only-export-components": "off" },
+  },
   eslintPluginPrettier,
 );

@@ -114,6 +114,49 @@ const CORPUS: Sample[] = [
       { category: "class_code", text: "groep 8C" },
     ],
   },
+  // Lastigere gevallen: afwijkende notaties en namen zonder hoofdletter.
+  {
+    text: "Bel gerust naar +31 6 1234 5678 of naar 06 87 65 43 21 na schooltijd.",
+    labels: [
+      { category: "phone", text: "+31 6 1234 5678" },
+      { category: "phone", text: "06 87 65 43 21" },
+    ],
+  },
+  {
+    text: "de moeder van sofie de groot mailde vanochtend naar de leerkracht.",
+    labels: [{ category: "name", text: "sofie de groot" }],
+  },
+  {
+    text: "Rekeningnummer NL91 ABNA 0417 1643 00 staat op naam van Karin Vos.",
+    labels: [
+      { category: "iban", text: "NL91 ABNA 0417 1643 00" },
+      { category: "name", text: "Karin Vos" },
+    ],
+  },
+  {
+    text: "Zie dossier 20-03-2013, adres Van Goghlaan 145A, 1234 ZZ Amersfoort.",
+    labels: [
+      { category: "date", text: "20-03-2013" },
+      { category: "address", text: "Van Goghlaan 145A" },
+      { category: "postcode", text: "1234 ZZ" },
+    ],
+  },
+  {
+    text: "Leerlingnr. 90211 van noah van dijk uit groep 6a is gewijzigd.",
+    labels: [
+      { category: "student_id", text: "90211" },
+      { category: "name", text: "noah van dijk" },
+      { category: "class_code", text: "groep 6a" },
+    ],
+  },
+  {
+    text: "Contact: L.M. de Boer, telefoon 020 123 45 67, mail lm.deboer@voorbeeld.nl.",
+    labels: [
+      { category: "name", text: "L.M. de Boer" },
+      { category: "phone", text: "020 123 45 67" },
+      { category: "email", text: "lm.deboer@voorbeeld.nl" },
+    ],
+  },
 ];
 
 /**
@@ -128,6 +171,8 @@ const CLEAN_CORPUS: string[] = [
   "Wij werken met een leerlingvolgsysteem en bespreken de resultaten per groep.",
   "De ouderavond gaat over huiswerkbegeleiding en mediawijsheid.",
   "Er is meer aandacht nodig voor begrijpend lezen in de bovenbouw.",
+  "De methode voor spelling sluit aan bij de referentieniveaus.",
+  "Volgende week staat de studiedag over formatief evalueren gepland.",
 ];
 
 /** Ondergrens per categorie. Bewust conservatief: liever te veel arceren. */
@@ -152,10 +197,16 @@ function spansFor(text: string) {
   return [...signals.directPii, ...signals.contextualPii];
 }
 
+/**
+ * Een label telt pas als gevonden wanneer de markering het label grotendeels
+ * dekt. Zo kan een losse letter of cijfer de recall niet kunstmatig ophogen.
+ */
 function overlapsFound(sample: Sample, label: { category: PiiCategory; text: string }): boolean {
-  return spansFor(sample.text).some(
-    (s) => s.text.includes(label.text) || label.text.includes(s.text),
-  );
+  return spansFor(sample.text).some((s) => {
+    if (s.text.includes(label.text)) return true;
+    if (!label.text.includes(s.text)) return false;
+    return s.text.length >= label.text.length * 0.6;
+  });
 }
 
 describe("detectie-ondergrens, synthetisch NL-onderwijscorpus", () => {

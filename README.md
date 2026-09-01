@@ -37,16 +37,15 @@ De browser mag niet opslaan of versturen:
 
 ## Modelintegriteit
 
-`modelCatalog.ts` pint modellen op `modelId`, `revision` en een verwachte integriteitsstrategie.
-Voor de NER-releasevarianten gebruikt PiM nu browser-local config pins:
+`modelCatalog.ts` pint modellen op `modelId`, een immutable `revision` en verwachte hashes.
+Zo werkt de gate voor de NER-modellen die PiM in release-1 gebruikt:
 
-1. De browser haalt alleen publieke `config.json` op voor het gekozen model.
-2. PiM berekent lokaal `SHA-256(config.json)`.
-3. Bij de eerste succesvolle load wordt die hash lokaal in `localStorage` gepind.
-4. Latere loads moeten exact dezelfde hash opleveren.
-5. Een afwijkende hash geeft `mismatch` en blokkeert egress.
+1. De browser haalt alleen de publieke `config.json` en `tokenizer.json` van de gepinde revision op.
+2. PiM berekent lokaal `SHA-256` over beide bestanden.
+3. Die hashes moeten exact overeenkomen met de statische waarden in `modelCatalog.ts` en `NER_VARIANTS`.
+4. Een afwijking geeft `mismatch` en blokkeert egress.
 
-Dit vervangt de oude descriptor-hash. Het is bewust browser-lokaal en stuurt geen invoer naar Hugging Face. Voor distributies die volledig reproduceerbaar moeten zijn, kan `LOCAL_PIN:*` later worden vervangen door een statische SHA-256 over een immutable modelrevision.
+Er gaat geen invoer naar Hugging Face; alleen publieke modelbestanden worden opgehaald. `LOCAL_PIN:*` bestaat alleen nog voor de experimentele rewrite-LLM (`rewrite_qwen`, design-only): die pint bij de eerste load browser-lokaal en is daarom niet reproduceerbaar. Egress via dat model is geblokkeerd.
 
 Catalog-entries met `PLACEHOLDER:*` blijven productie-egress blokkeren. Modeldownload via Hugging Face en Qwen-download via `@mlc-ai/web-llm` zijn aparte trust-bronnen. Beide draaien lokaal na download; alleen de download raakt het netwerk.
 
@@ -112,7 +111,7 @@ Project PiM gebruikt de MIT-licentie.
 
 ## Bekende grenzen
 
-- `LOCAL_PIN:*` is browser-lokaal. Voor strikt reproduceerbare builds kan later een statische hash op een immutable modelrevision worden gebruikt.
+- `LOCAL_PIN:*` geldt alleen voor de design-only rewrite-LLM en is browser-lokaal; de NER-modellen gebruiken statische hashes op een immutable revision.
 - `context_education` en `rewrite_qwen` hebben nog `PLACEHOLDER:*` in de catalogus en zijn design-only.
 - De Qwen rewrite-LLM staat in de catalog maar wordt niet auto-geladen.
 - `contextSlm` is nu heuristisch. Een echte context-SLM staat nog op de roadmap.
