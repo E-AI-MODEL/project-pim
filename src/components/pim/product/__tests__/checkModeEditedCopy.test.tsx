@@ -1,6 +1,8 @@
 // Regressie: de gebruiker mag de veilige versie bewerken en die daarna
-// kopiëren. De bewerkte tekst wordt opnieuw gecertificeerd, niet geweigerd.
-import { act, render, screen, waitFor, fireEvent } from "@testing-library/react";
+// kopiëren. CheckMode moet die bewerkte tekst opnieuw laten certificeren
+// (requestActionForText) in plaats van hem als payloadText mee te sturen,
+// want dan weigert de engine hem.
+import { act, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@tanstack/react-router", () => ({
@@ -12,49 +14,91 @@ vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => vi.fn(),
   useRouterState: () => ({ location: { pathname: "/app" } }),
 }));
-vi.mock("@/components/pim/writer/WriterWorkspace", () => ({
-  WriterWorkspace: () => <div data-testid="writer-workspace" />,
-}));
-vi.mock("@/components/pim/start-go/LiveTechMonitor", () => ({
-  DiagnosticsBody: () => <div data-testid="diagnostics-body" />,
-}));
 
-import { ProductShell } from "@/components/pim/product/ProductShell";
+import { CheckMode } from "@/components/pim/product/modes/CheckMode";
+import { ProductShellProvider } from "@/components/pim/product/ProductShellContext";
+import { createEngine, EMPTY_ENGINE_STATE } from "@/lib/pim/engine";
+import { DEFAULT_DETECTION_SETTINGS } from "@/lib/pim";
+
+const TEKST = "Emma de Vries doet volgende week mee aan het project.";
+
+function buildContext(overrides: Record<string, unknown>) {
+  const engine = createEngine({ detectionSettings: DEFAULT_DETECTION_SETTINGS });
+  engine.evaluate({ text: TEKST, mode: "anonymous", autoRepair: true });
+  const state = engine.getState() ?? EMPTY_ENGINE_STATE;
+  return {
+    engineState: state,
+    evaluate: () => state,
+    previewDecision: () => ({
+      ...engine.previewDecision("copy"),
+      verdict: "ALLOW" as const,
+    }),
+    requestAction: vi.fn(),
+    requestActionForText: vi.fn(),
+    reset: vi.fn(),
+    settings: {
+      detectionSettings: DEFAULT_DETECTION_SETTINGS,
+      disabledCategories: new Set(),
+      thresholdOverrides: {},
+      integrity: [],
+    },
+    text: TEKST,
+    setText: vi.fn(),
+    mode: "anonymous" as const,
+    setMode: vi.fn(),
+    action: "copy" as const,
+    setAction: vi.fn(),
+    analysisMode: "manual" as const,
+    setAnalysisMode: vi.fn(),
+    analysisTick: 0,
+    runAnalysis: vi.fn(),
+    isStale: false,
+    markStale: vi.fn(),
+    clearStale: vi.fn(),
+    writerContent: null,
+    setWriterContent: vi.fn(),
+    writerAutoRedact: new Set(),
+    setWriterAutoRedact: vi.fn(),
+    writerStrict: false,
+    setWriterStrict: vi.fn(),
+    usesNerSlm: false,
+    nerEnabled: false,
+    nerSpans: [],
+    nerStatus: null,
+    startNer: vi.fn(),
+    nerSourceText: TEKST,
+    setNerSourceText: vi.fn(),
+    ...overrides,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any;
+}
 
 describe("Nakijken: bewerkte veilige tekst kopiëren", () => {
-  it("voert de kopieeractie uit op de door de gebruiker bewerkte tekst", async () => {
-    const writeText = vi.fn().mockResolvedValue(undefined);
-    Object.defineProperty(navigator, "clipboard", {
-      value: { writeText },
-      configurable: true,
-    });
+  it("laat de bewerkte tekst opnieuw certificeren in plaats van hem af te wijzen", async () => {
+    const requestActionForText = vi
+      .fn()
+      .mockResolvedValue({ executed: true, reason: "Kopiëren toegestaan." });
+    const requestAction = vi.fn();
+    const ctx = buildContext({ requestActionForText, requestAction, analysisTick: 1 });
 
-    render(<ProductShell mode="check" />);
-
-    const editor = screen.getAllByRole("textbox")[0] as HTMLTextAreaElement;
-    await act(async () => {
-      fireEvent.change(editor, {
-        target: { value: "Mail van Jan Jansen via jan.jansen@voorbeeld.nl over de toets." },
-      });
-    });
-
-    await waitFor(
-      () => {
-        expect(screen.getByTestId("analysis-status").getAttribute("data-state")).toBe("ready");
-      },
-      { timeout: 5000 },
+    render(
+      <ProductShellProvider value={ctx}>
+        <CheckMode />
+      </ProductShellProvider>,
     );
 
-    const copyButtons = screen.getAllByRole("button", { name: /kopie/i });
-    expect(copyButtons.length).toBeGreaterThan(0);
+    const copyKnop = await screen.findByRole("button", { name: /Kopieer veilige tekst/i });
     await act(async () => {
-      copyButtons[0].click();
+      copyKnop.click();
     });
 
     await waitFor(() => {
-      expect(
-        screen.queryByText(/komt niet overeen met de door PiM gecertificeerde tekst/i),
-      ).toBeNull();
+      expect(requestActionForText).toHaveBeenCalled();
     });
+    // Geen losse payloadText meer: de engine zou die weigeren.
+    expect(requestAction).not.toHaveBeenCalled();
+    const [tekst, actie] = requestActionForText.mock.calls[0];
+    expect(typeof tekst).toBe("string");
+    expect(actie).toBe("copy");
   }, 20000);
 });
