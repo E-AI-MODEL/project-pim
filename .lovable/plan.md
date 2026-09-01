@@ -1,47 +1,65 @@
-# Review verwerken: fail-closed egress, onafhankelijke re-consult en echte browsertest
+# Vervolgstappen na review van `1b86627`
 
-De review klopt op alle zeven punten; ik heb ze in de code nagelopen en bevestigd:
+Tien stappen, in volgorde, elk met eigen verificatie. Stap 1 tot en met 4 zijn correctheid en veiligheid, 5 tot en met 7 maken de belofte meetbaar, 8 tot en met 10 zijn claims en hygiëne.
 
-- `detectPersonsSlm` geeft `[]` terug bij laad- of inferencefout, en `reconsultPayload` leest "geen spans" als schoon.
-- `reconsultPayload` erft `payload.detectionSettings`, dus de tweede mening is precies zo blind als de eerste.
-- `engine.requestAction` accepteert `payloadText` en `payloadType` van de aanroeper.
-- `modelCatalog.ts` pint alleen `config.json`, niet tokenizer of gewichten.
-- `MODEL_HOSTS` bevat `raw.githubusercontent.com`, `github.com`, `cdn-lfs.hf.co` en `cas-bridge.xethub.hf.co`; de CSP `connect-src` kent die niet, en `public/_headers` is een Pages-mechanisme terwijl `wrangler.jsonc` een Worker deployt.
-- De fetch/XHR-wrappers loggen alleen.
-- Risicogewichten staan dubbel: `risk.ts` en hardcoded 0.18/0.1/0.12 in `egressGuard.ts`.
-- Drie lockfiles aanwezig, `package.json` heet `tanstack_start_ts` zonder version, CI pint `bun-version: latest` en draait `format` (write) in de pipeline.
+Bevestigd in de code: `requestActionForText` bestaat wel in de engine maar wordt nergens gebruikt; `WriterWorkspace` schrijft rechtstreeks naar klembord en bouwt zelf een Blob; `MappingViewer.copyAsJson` kopieert de mapping ongecontroleerd; de `bert`-tak in `reconsultPayload` leest een gebruikerswaarde; `lint` is `eslint .` zonder `--max-warnings`.
 
-## Volgorde
+## Stap 1 — Nakijken-modus herstellen
 
-**Blok 1 (de twee die de reviewer als minimum noemt)**
+- `src/hooks/usePimEngine.ts`: `requestActionForText` als stabiele `useCallback` teruggeven; type toevoegen aan `UsePimEngineResult`.
+- `ProductShellContext` doorgeven aan de modi.
+- `CheckMode.tsx`: `runCheckAction` gebruikt `requestActionForText(payload, act)`.
+- Test: bewerkte veilige tekst kopiëren geeft `executed === true`.
 
-1. Fail-closed re-consult: `runRegistry` krijgt een resultaat met per detector een status (`ran` / `failed` / `skipped`) in plaats van alleen spans. `detectPersonsSlm` rapporteert laad- en inferencefouten als `failed` in plaats van stil `[]`. `reconsultPayload` blokkeert zodra een verwachte laag niet aantoonbaar gedraaid heeft, met een leesbare reden in de egress-log en in de UI-melding.
-2. Echte browsertest: één Playwright-test die `/app` doorloopt, met `page.route()` elk verzoek buiten de modelhosts als fout markeert, en de werkelijke klembordinhoud na "Kopieer" leest en assert dat die gemaskeerd is. Draait apart van vitest, met een eigen script.
+## Stap 2 — Schrijven-modus door de guard
 
-**Blok 2 (grens dichttimmeren)**
+`WriterWorkspace.tsx`: `onCopy`, `onDownload` en `onSendAI` lopen alle drie via `requestActionForText(safeText, ...)`. Klembordschrijf en Blob-download gebeuren pas na `executed === true`; anders komt de reden in `egressMsg`. Waarschuwingen bij succes worden ook getoond.
 
-3. Onafhankelijke re-consult: de tweede mening draait altijd op maximale sterkte (alle lagen, alle categorieën), los van gebruikersinstellingen. Gevolg: een uitgezette categorie kan alsnog blokkeren bij kopiëren; daarom tonen we de re-consult-uitkomst al in de preview, zodat de blokkade niet als verrassing komt.
-4. Engine vertrouwt de aanroeper niet meer: `payloadType` wordt intern afgeleid en een `payloadText` die niet gelijk is aan de gecertificeerde draft wordt geweigerd.
-5. CSP en headers: headers verhuizen naar de serverrespons van TanStack Start zodat ze hostonafhankelijk zijn; `_headers` blijft alleen als niet-normatieve kopie of verdwijnt. `MODEL_HOSTS` en `connect-src` worden één gedeelde lijst, zodat ze niet meer uiteen kunnen lopen. Sluit P1-6.
-6. Runtime hardening eerlijk positioneren: de fetch-wrapper gaat throwen voor niet-toegestane hosts (legitiem extern verkeer bestaat hier niet), en README plus docs beschrijven de wrappers als zelftest/telemetrie, niet als blokkade. De CSP is de echte grens.
+Test: falende NER-laag, kopiëren in Schrijven, klembord blijft ongewijzigd en de blokkadereden is zichtbaar.
 
-**Blok 3 (claims en hygiëne)**
+## Stap 3 — Mapping-export (optie A)
 
-7. Modelintegriteit: naast `config.json` ook `tokenizer.json` en het modelbestand hashen. Lukt dat niet betrouwbaar voor alle varianten, dan wordt de grens expliciet in README en `docs/pim-handoff/02-modelintegriteit-productie.md` opgeschreven in plaats van een sterkere claim te laten staan.
-8. Risk-scoring ontdubbelen: `egressGuard.ts` gebruikt de scoringfunctie uit `risk.ts`; geen tweede set gewichten meer.
-9. Detectie-ondergrens in CI: een klein gelabeld synthetisch NL-onderwijscorpus met een recall-drempel per categorie, als blokkerende test. Maakt P1-4 deels zelf-verifieerbaar.
-10. Hygiëne: `bun.lockb` en `package-lock.json` weg (bun.lock blijft), `package.json` krijgt een echte naam en version, CI pint een exacte bun-versie en draait `prettier --check` in plaats van `--write`, lint wordt blokkerend.
+De mapping is een lokale sleutel, geen egress-payload. De kopieerknop in `MappingViewer.tsx` komt achter een expliciete bevestiging met de tekst dat dit ruwe persoonsgegevens bevat en de eigen machine niet mag verlaten; de actie wordt in de egress-log genoteerd. De keuze en de reden komen in de README.
 
-## Technische details
+Test: mapping-JSON passeert nooit de guard als `copy` of `export_file`.
 
-- Nieuw resultaattype in `src/lib/pim/detectorRegistry.ts`: `runRegistryDetailed()` geeft `{ spans, layers: { id, kind, status, error? }[] }`. `runRegistry()` blijft bestaan als dunne wrapper zodat bestaande aanroepers niet breken.
-- `src/lib/pim/nerSlm.ts`: `detectPersonsSlm` krijgt een variant die `{ status, spans }` teruggeeft; de bestaande signature blijft voor UI-paden die fail-open mogen zijn (live markeren tijdens typen).
-- `src/lib/pim/egressGuard.ts`: `reconsultPayload` draait op `MAX_STRENGTH_SETTINGS`, negeert `disabledCategories`, blokkeert bij `status !== "ran"` van een verwachte laag, en gebruikt `computeSignals`/`risk.ts` voor de score.
-- `src/lib/pim/engine/engine.ts`: `requestAction` leidt `payloadType` af uit modus en guardstatus; afwijkende `payloadText` levert een `BLOCK`-uitkomst met reden.
-- Headers: één `SECURITY_HEADERS`-module, gebruikt door `vite.config.ts` (dev/preview) en door de serverrespons in `src/routes/__root.tsx` of de server-entry.
-- Playwright-test onder `e2e/`, script `test:e2e`, met eigen config; niet in de vitest-run.
-- Tests: per punt uitbreiding in `egressGuard.test.ts`, `invariants.test.ts`, `engine.test.ts`, plus een nieuw `detectionRecall.test.ts` voor het corpus.
+## Stap 4 — Opruimen in `egressGuard.ts`
+
+`const settings = MAX_STRENGTH_DETECTION_SETTINGS;`. `userBertOff` blijft voor de waarschuwing en de strict-check. Bestaande uitkomsten in `reconsultFailClosed.test.ts` blijven gelijk.
+
+## Stap 5 — Browsertest laten falen waar hij nu slaagt
+
+In `e2e/privacy.spec.ts`: kopieerknop verplicht zichtbaar, klembord moet niet leeg zijn én het maskeertoken bevatten, `context.route` in plaats van `page.route`, plus een tweede test voor het fail-closed pad (modelhost geblokkeerd, zichtbare blokkademelding, leeg klembord).
+
+## Stap 6 — E2E in CI
+
+Nieuwe job `e2e` in `.github/workflows/ci.yml`: `bunx playwright install --with-deps chromium`, `actions/cache` op de transformers.js-cachemap met de modelrevisie uit `MODEL_CATALOG` in de sleutel, draaien tegen `bun run build && bun run preview` via `PIM_E2E_BASE_URL`. Assertie blijft "geen verzoeken buiten de allowlist".
+
+## Stap 7 — Headers meten
+
+E2E-test leest de responseheaders en vergelijkt met de waarden geïmporteerd uit `src/lib/security/headers.ts`: CSP identiek, `connect-src` bevat elke host uit `MODEL_HOST_PATTERNS`, plus `Referrer-Policy`, `X-Content-Type-Options` en `Permissions-Policy`.
+
+## Stap 8 — Lint blokkerend
+
+`react-refresh/only-export-components` op `off` voor de genoemde shadcn- en dubbelexporterende bestanden, `"lint": "eslint . --max-warnings=0"`, en de CI-jobnaam en lint-stap zonder het woord advisory.
+
+## Stap 9 — Modelintegriteitsclaim gelijktrekken
+
+README en `docs/pim-handoff/02-modelintegriteit-productie.md` schrijven precies op dat de immutable revision plus de config- en tokenizerhash uitsluiten dat een ander model of een andere tokenizer geladen wordt, maar een gemanipuleerd gewichtenbestand op diezelfde revisie niet uitsluiten. `ISSUES.md` krijgt de openstaande post: streaming hash over het gewichtenbestand bij eerste download, resultaat pinnen.
+
+## Stap 10 — Detectiecorpus scherper
+
+Precisiedrempel per categorie op teksten die er alleen op lijken (negencijferige getallen naast postcodes, straatnamen die op achternamen lijken, historische figuren in lesmateriaal). Corpus splitsen in `regressie` en `challenge`, met aparte rapportage. Foutmeldingen noemen de behaalde score naast de gemiste items. De challenge-set moet bij invoering minstens één echt gat blootleggen.
+
+## Verificatie per blok
+
+| Stap | Draai daarna |
+| --- | --- |
+| 1–3 | `bun run typecheck && bun run test` |
+| 4 | `bun run test` |
+| 5–7 | `bun run test:e2e` |
+| 8–10 | `bun run check` |
 
 ## Buiten scope
 
-Externe validatie door een derde partij en performancebenchmarks blijven open P1's in `ISSUES.md`; die lossen we niet op met code.
+Externe validatie door een derde partij en performancebenchmarks op doelhardware blijven open P1's in `ISSUES.md`.
