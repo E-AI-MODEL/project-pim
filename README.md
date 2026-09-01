@@ -45,6 +45,8 @@ Zo werkt de gate voor de NER-modellen die PiM in release-1 gebruikt:
 3. Die hashes moeten exact overeenkomen met de statische waarden in `modelCatalog.ts` en `NER_VARIANTS`.
 4. Een afwijking geeft `mismatch` en blokkeert egress.
 
+Wat deze gate wel uitsluit: dat er een ander model of een andere tokenizer geladen wordt dan de gepinde revision. Wat deze gate niet uitsluit: een gemanipuleerd gewichtenbestand op diezelfde revision. Over de gewichten wordt nog geen hash berekend; die stap staat als openstaande post in `ISSUES.md`.
+
 Er gaat geen invoer naar Hugging Face; alleen publieke modelbestanden worden opgehaald. `LOCAL_PIN:*` bestaat alleen nog voor de experimentele rewrite-LLM (`rewrite_qwen`, design-only): die pint bij de eerste load browser-lokaal en is daarom niet reproduceerbaar. Egress via dat model is geblokkeerd.
 
 Catalog-entries met `PLACEHOLDER:*` blijven productie-egress blokkeren. Modeldownload via Hugging Face en Qwen-download via `@mlc-ai/web-llm` zijn aparte trust-bronnen. Beide draaien lokaal na download; alleen de download raakt het netwerk.

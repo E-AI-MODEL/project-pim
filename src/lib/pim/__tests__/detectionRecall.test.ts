@@ -160,6 +160,33 @@ const CORPUS: Sample[] = [
 ];
 
 /**
+ * Challenge-set: gevallen die de regels vandaag nog niet allemaal halen.
+ * Bewust apart gerapporteerd, met een eigen (lagere) drempel, zodat een
+ * bekend gat zichtbaar blijft in plaats van de regressieset te vertroebelen.
+ */
+const CHALLENGE_CORPUS: Sample[] = [
+  {
+    text: "Bericht van de vader van Anne-Fleur van 't Hoff-Berger over de studiereis.",
+    labels: [{ category: "name", text: "Anne-Fleur van 't Hoff-Berger" }],
+  },
+  {
+    text: "Telefonisch bereikbaar via 0031612345678, of anders via 06.12.34.56.78.",
+    labels: [
+      { category: "phone", text: "0031612345678" },
+      { category: "phone", text: "06.12.34.56.78" },
+    ],
+  },
+  {
+    text: "Zijn e-mailadres is jan (at) voorbeeld punt nl, zo staat het in het dossier.",
+    labels: [{ category: "email", text: "jan (at) voorbeeld punt nl" }],
+  },
+  {
+    text: "De leerling met nummer 88-43-21 zit in de instroomgroep van dit jaar.",
+    labels: [{ category: "student_id", text: "88-43-21" }],
+  },
+];
+
+/**
  * Teksten zonder persoonsgegevens. Hier hoort niets gemarkeerd te worden;
  * de test bewaakt een bovengrens aan valse positieven, zodat "liever te veel
  * arceren" niet stilletjes verandert in "alles arceren".
@@ -175,7 +202,41 @@ const CLEAN_CORPUS: string[] = [
   "Volgende week staat de studiedag over formatief evalueren gepland.",
 ];
 
-/** Ondergrens per categorie. Bewust conservatief: liever te veel arceren. */
+/**
+ * Precisieset: teksten die er alleen op lijken. Elke tekst noemt per
+ * categorie wat er hoogstens gemarkeerd mag worden; alles daarbuiten telt
+ * als valse positief voor die categorie.
+ */
+interface PrecisieSample {
+  text: string;
+  /** Categorieën die in deze tekst nooit terecht zijn. */
+  verboden: PiiCategory[];
+}
+
+const PRECISIE_CORPUS: PrecisieSample[] = [
+  {
+    text: "Het bedrag van 123456789 euro subsidie staat los van postcodegebied 1234 AB.",
+    verboden: ["bsn", "student_id"],
+  },
+  {
+    text: "De school staat aan de Van Goghlaan en werkt samen met de Jansenstraat verderop.",
+    verboden: ["name"],
+  },
+  {
+    text: "In de geschiedenisles behandelen we Willem van Oranje en Anne Frank als lesstof.",
+    verboden: ["student_id", "bsn", "phone"],
+  },
+  {
+    text: "Het artikelnummer 0612345678 uit de methodecatalogus is vervallen per 2025.",
+    verboden: ["bsn", "iban"],
+  },
+  {
+    text: "Rekenopgave: tel 020 op bij 1234567 en noteer de uitkomst in je schrift.",
+    verboden: ["bsn", "iban", "email"],
+  },
+];
+
+/** Ondergrens per categorie op de regressieset. Liever te veel arceren. */
 const THRESHOLDS: Partial<Record<PiiCategory, number>> = {
   email: 1,
   phone: 1,
@@ -189,8 +250,14 @@ const THRESHOLDS: Partial<Record<PiiCategory, number>> = {
   name: 0.8,
 };
 
+/** Ondergrens over de hele challenge-set. Lager: dit is bekend lastig werk. */
+const CHALLENGE_THRESHOLD = 0.4;
+
 /** Hoogste toegestane aandeel schone zinnen met een markering. */
 const MAX_FALSE_POSITIVE_RATE = 0.34;
+
+/** Hoogste toegestane aantal verboden markeringen over de precisieset. */
+const MAX_PRECISIE_FOUTEN = 1;
 
 function spansFor(text: string) {
   const signals = computeSignals(text, [], DEFAULT_DETECTION_SETTINGS, new Set());
@@ -209,43 +276,108 @@ function overlapsFound(sample: Sample, label: { category: PiiCategory; text: str
   });
 }
 
-describe("detectie-ondergrens, synthetisch NL-onderwijscorpus", () => {
-  const perCategory = new Map<PiiCategory, { found: number; total: number; missed: string[] }>();
+function pct(v: number): string {
+  return `${Math.round(v * 100)}%`;
+}
 
-  for (const sample of CORPUS) {
+interface Bucket {
+  found: number;
+  total: number;
+  missed: string[];
+}
+
+function score(corpus: Sample[]): Map<PiiCategory, Bucket> {
+  const per = new Map<PiiCategory, Bucket>();
+  for (const sample of corpus) {
     for (const label of sample.labels) {
-      const bucket = perCategory.get(label.category) ?? { found: 0, total: 0, missed: [] };
+      const bucket = per.get(label.category) ?? { found: 0, total: 0, missed: [] };
       bucket.total += 1;
       if (overlapsFound(sample, label)) bucket.found += 1;
       else bucket.missed.push(label.text);
-      perCategory.set(label.category, bucket);
+      per.set(label.category, bucket);
     }
   }
+  return per;
+}
+
+describe("regressieset, synthetisch NL-onderwijscorpus", () => {
+  const perCategory = score(CORPUS);
 
   for (const [category, threshold] of Object.entries(THRESHOLDS) as [PiiCategory, number][]) {
-    it(`haalt de recall-drempel voor ${category} (>= ${threshold})`, () => {
+    it(`haalt de recall-drempel voor ${category} (>= ${pct(threshold)})`, () => {
       const bucket = perCategory.get(category);
       expect(bucket, `geen corpuslabels voor ${category}`).toBeDefined();
       const recall = bucket!.found / bucket!.total;
-      expect(recall, `gemist: ${bucket!.missed.join(", ")}`).toBeGreaterThanOrEqual(threshold);
+      expect(
+        recall,
+        `behaald ${pct(recall)} (${bucket!.found}/${bucket!.total}), gemist: ${
+          bucket!.missed.join(", ") || "niets"
+        }`,
+      ).toBeGreaterThanOrEqual(threshold);
     });
   }
 
-  it("markeert bijna niets in teksten zonder persoonsgegevens", () => {
-    const flagged = CLEAN_CORPUS.filter((t) => spansFor(t).length > 0);
-    const rate = flagged.length / CLEAN_CORPUS.length;
-    expect(rate, `onterecht gemarkeerd: ${flagged.join(" | ")}`).toBeLessThanOrEqual(
-      MAX_FALSE_POSITIVE_RATE,
-    );
-  });
-
-  it("haalt over het hele corpus een totale recall van minstens 0,9", () => {
+  it("haalt over het hele corpus een totale recall van minstens 90%", () => {
     let found = 0;
     let total = 0;
     for (const bucket of perCategory.values()) {
       found += bucket.found;
       total += bucket.total;
     }
-    expect(found / total).toBeGreaterThanOrEqual(0.9);
+    const recall = found / total;
+    expect(recall, `behaald ${pct(recall)} (${found}/${total})`).toBeGreaterThanOrEqual(0.9);
+  });
+});
+
+describe("challenge-set, bekend lastige notaties", () => {
+  const perCategory = score(CHALLENGE_CORPUS);
+  let found = 0;
+  let total = 0;
+  const gemist: string[] = [];
+  for (const bucket of perCategory.values()) {
+    found += bucket.found;
+    total += bucket.total;
+    gemist.push(...bucket.missed);
+  }
+
+  it(`haalt minstens ${pct(CHALLENGE_THRESHOLD)} recall op de challenge-set`, () => {
+    const recall = found / total;
+    expect(
+      recall,
+      `behaald ${pct(recall)} (${found}/${total}), gemist: ${gemist.join(", ") || "niets"}`,
+    ).toBeGreaterThanOrEqual(CHALLENGE_THRESHOLD);
+  });
+
+  it("legt nog minstens één echt gat bloot: de set is niet volledig opgelost", () => {
+    expect(
+      found,
+      "de challenge-set wordt volledig gehaald; voeg lastigere gevallen toe of promoveer deze naar de regressieset",
+    ).toBeLessThan(total);
+  });
+});
+
+describe("precisie op teksten die er alleen op lijken", () => {
+  it("markeert bijna niets in teksten zonder persoonsgegevens", () => {
+    const flagged = CLEAN_CORPUS.filter((t) => spansFor(t).length > 0);
+    const rate = flagged.length / CLEAN_CORPUS.length;
+    expect(
+      rate,
+      `behaald ${pct(1 - rate)} schoon, onterecht gemarkeerd: ${flagged.join(" | ")}`,
+    ).toBeLessThanOrEqual(MAX_FALSE_POSITIVE_RATE);
+  });
+
+  it("markeert geen verboden categorieën in bijna-treffers", () => {
+    const fouten: string[] = [];
+    for (const sample of PRECISIE_CORPUS) {
+      for (const span of spansFor(sample.text)) {
+        if (sample.verboden.includes(span.category)) {
+          fouten.push(`${span.category}: "${span.text}" in "${sample.text.slice(0, 40)}…"`);
+        }
+      }
+    }
+    expect(
+      fouten.length,
+      `${fouten.length} verboden markeringen: ${fouten.join(" | ")}`,
+    ).toBeLessThanOrEqual(MAX_PRECISIE_FOUTEN);
   });
 });
