@@ -47,7 +47,11 @@ export function usePimEngine(config: EngineConfig): UsePimEngineResult {
     (req) => engine.requestAction(req),
     [engine],
   );
+  const requestActionForText = useCallback<PimEngine["requestActionForText"]>(
+    (text, action) => engine.requestActionForText(text, action),
+    [engine],
+  );
   const reset = useCallback(() => engine.reset(), [engine]);
 
-  return { state, evaluate, previewDecision, requestAction, reset };
+  return { state, evaluate, previewDecision, requestAction, requestActionForText, reset };
 }
