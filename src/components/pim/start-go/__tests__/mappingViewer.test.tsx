@@ -8,6 +8,13 @@ import { getEgressReconsultLog } from "@/lib/pim/egressGuard";
 
 const mapping = new Map([["[NAME_001]", "Emma de Vries"]]);
 
+function open() {
+  render(<MappingViewer mapping={mapping} />);
+  act(() => {
+    screen.getAllByRole("button")[0].click();
+  });
+}
+
 describe("MappingViewer, lokale sleutel", () => {
   let writeText: ReturnType<typeof vi.fn>;
 
@@ -17,7 +24,7 @@ describe("MappingViewer, lokale sleutel", () => {
   });
 
   it("kopieert niet meteen, maar vraagt eerst om bevestiging", async () => {
-    render(<MappingViewer mapping={mapping} />);
+    open();
     await act(async () => {
       screen.getByRole("button", { name: /Kopieer als JSON/i }).click();
     });
@@ -26,7 +33,7 @@ describe("MappingViewer, lokale sleutel", () => {
   });
 
   it("kopieert pas na bevestiging en noteert dat in de log", async () => {
-    render(<MappingViewer mapping={mapping} />);
+    open();
     await act(async () => {
       screen.getByRole("button", { name: /Kopieer als JSON/i }).click();
     });
@@ -39,7 +46,7 @@ describe("MappingViewer, lokale sleutel", () => {
   });
 
   it("annuleren laat het klembord met rust", async () => {
-    render(<MappingViewer mapping={mapping} />);
+    open();
     await act(async () => {
       screen.getByRole("button", { name: /Kopieer als JSON/i }).click();
     });
