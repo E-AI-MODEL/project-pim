@@ -66,10 +66,10 @@ export async function reconsultPayload(
   const text = payload.text;
   const userSettings = coerceDetectionSettings(payload.detectionSettings);
   const userBertOff = !usesBert(userSettings);
-  const settings = {
-    ...MAX_STRENGTH_DETECTION_SETTINGS,
-    bert: userBertOff ? MAX_STRENGTH_DETECTION_SETTINGS.bert : userSettings.bert,
-  };
+  // Onafhankelijk van de gebruiker: altijd maximale sterkte, nooit een
+  // gebruikerswaarde overnemen. `userBertOff` blijft alleen voor de
+  // waarschuwing en de strict-actiecheck.
+  const settings = MAX_STRENGTH_DETECTION_SETTINGS;
   const strict = STRICT_ACTIONS.has(action);
 
   const { spans, layers } = await runRegistryDetailed(text, {
