@@ -172,6 +172,8 @@ const CLEAN_CORPUS: string[] = [
   "Wij werken met een leerlingvolgsysteem en bespreken de resultaten per groep.",
   "De ouderavond gaat over huiswerkbegeleiding en mediawijsheid.",
   "Er is meer aandacht nodig voor begrijpend lezen in de bovenbouw.",
+  "De methode voor spelling sluit aan bij de referentieniveaus.",
+  "Volgende week staat de studiedag over formatief evalueren gepland.",
 ];
 
 /** Ondergrens per categorie. Bewust conservatief: liever te veel arceren. */
@@ -196,10 +198,16 @@ function spansFor(text: string) {
   return [...signals.directPii, ...signals.contextualPii];
 }
 
+/**
+ * Een label telt pas als gevonden wanneer de markering het label grotendeels
+ * dekt. Zo kan een losse letter of cijfer de recall niet kunstmatig ophogen.
+ */
 function overlapsFound(sample: Sample, label: { category: PiiCategory; text: string }): boolean {
-  return spansFor(sample.text).some(
-    (s) => s.text.includes(label.text) || label.text.includes(s.text),
-  );
+  return spansFor(sample.text).some((s) => {
+    if (s.text.includes(label.text)) return true;
+    if (!label.text.includes(s.text)) return false;
+    return s.text.length >= label.text.length * 0.6;
+  });
 }
 
 describe("detectie-ondergrens, synthetisch NL-onderwijscorpus", () => {
