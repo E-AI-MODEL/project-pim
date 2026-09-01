@@ -665,7 +665,9 @@ const RULES: RuleDef[] = [
   {
     id: "rule.iban_loose",
     category: "iban",
-    regex: /\b[A-Za-z]{2}\s?\d{2}(?:[\s.-]?[A-Za-z0-9]{2,4}){3,7}\b/g,
+    // Na de landcode en controlecijfers hoogstens één lettergroep (bankcode)
+    // en daarna alleen cijfergroepen, anders slokt de match het volgende woord op.
+    regex: /\b[A-Za-z]{2}\s?\d{2}(?:[\s.-]?[A-Za-z]{2,4})?(?:[\s.-]?\d{2,4}){2,6}\b/g,
     confidence: 0.75,
   },
   // KvK, btw en andere zakelijke identificatie, alleen met trefwoord ervoor.
