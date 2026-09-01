@@ -112,6 +112,7 @@ export function ProductShell({ mode }: { mode: ProductMode }) {
     evaluate,
     previewDecision,
     requestAction,
+    requestActionForText,
     reset,
   } = usePimEngine(engineConfig);
 
@@ -146,6 +147,7 @@ export function ProductShell({ mode }: { mode: ProductMode }) {
       evaluate,
       previewDecision,
       requestAction,
+      requestActionForText,
       reset,
       settings,
       text,
@@ -180,6 +182,7 @@ export function ProductShell({ mode }: { mode: ProductMode }) {
       evaluate,
       previewDecision,
       requestAction,
+      requestActionForText,
       reset,
       settings,
       text,
