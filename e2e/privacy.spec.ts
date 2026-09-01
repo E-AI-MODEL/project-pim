@@ -86,6 +86,14 @@ async function zetLokaleAiUit(page: Page): Promise<void> {
             .click()
             .catch(() => {});
           await page.waitForTimeout(400);
+          // De zoeklagen zitten in een uitklapbaar blok.
+          await page
+            .getByRole("button", { name: /BERT/ })
+            .first()
+            .click()
+            .catch(() => {});
+          await page.waitForTimeout(400);
+
         }
         return await uit.isVisible().catch(() => false);
       },
