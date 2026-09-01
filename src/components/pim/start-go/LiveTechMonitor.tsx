@@ -4,6 +4,8 @@ import { onNerStatus, loadNerSlm, type NerStatus } from "@/lib/pim/nerSlm";
 import { onRewriteStatus, loadRewriteLlm, type RewriteStatus } from "@/lib/pim/rewriteLlm";
 import { onModelIntegrity, type ModelIntegrityRecord } from "@/lib/pim/modelCatalog";
 import { subscribeDebug, clearDebug, type DebugEvent } from "@/lib/pim/debugBus";
+import { PerfBenchmark } from "@/components/pim/product/PerfBenchmark";
+
 
 function useEnv() {
   const [env, setEnv] = useState<Record<string, unknown>>({});
