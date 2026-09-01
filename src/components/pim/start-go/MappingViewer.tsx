@@ -97,9 +97,9 @@ export function MappingViewer({ mapping }: Props) {
               className="rounded-md border border-amber-400/50 bg-amber-500/10 px-3 py-2 text-[11px] text-amber-100 space-y-2"
             >
               <p>
-                Deze koppeling bevat ruwe persoonsgegevens. Het is een sleutel, geen anonieme
-                tekst: hij mag je eigen apparaat niet verlaten en gaat dus ook niet door de
-                controle van PiM.
+                Deze koppeling bevat ruwe persoonsgegevens. Het is een sleutel, geen anonieme tekst:
+                hij mag je eigen apparaat niet verlaten en gaat dus ook niet door de controle van
+                PiM.
               </p>
               <div className="flex gap-2">
                 <button
@@ -162,8 +162,8 @@ export function MappingViewer({ mapping }: Props) {
           </div>
           <p className="text-[10px] text-muted-foreground leading-relaxed">
             Deze koppeling blijft op dit apparaat. Egress is fail-closed: de mapping verlaat je
-            browser nooit, ook niet via copy/share/export. Een JSON-kopie kan alleen na
-            bevestiging en blijft een lokale sleutel.
+            browser nooit, ook niet via copy/share/export. Een JSON-kopie kan alleen na bevestiging
+            en blijft een lokale sleutel.
           </p>
         </div>
       )}
