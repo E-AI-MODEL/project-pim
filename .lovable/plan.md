@@ -46,3 +46,13 @@ Om ruis beheersbaar te houden gaat de stopwoordenlijst mee omhoog: veelgebruikte
 - `src/lib/pim/detectors.ts`: nieuwe/verruimde `name`-regels (`rule.name_lower_pair`, `rule.name_lower_role`, `rule.name_lower_verb`, casing-tolerante varianten van `name_titled` en `name_initials`), plus een naverwerkingsstap die eerder gevonden namen hoofdletterongevoelig terugzoekt in de tekst. Nieuwe regels `contextual: true` met confidence rond 0.45-0.6.
 - Stopwoordenlijst uit `detectors.ts` centraliseren zodat de nieuwe regels dezelfde lijst delen.
 - Tests: uitbreiding van `detectorsWide.test.ts` en `detectionQuality.test.ts` met kleine-letter-gevallen en negatieve gevallen (neutrale zinnen blijven schoon); UI-test dat de AI-aanbodkaart in beide modi verschijnt en na starten verdwijnt.
+
+## 3. Ook in Tekst nakijken, zonder botsing of dubbeling
+
+De aanbodkaart komt op precies dezelfde plek in Tekst nakijken als in Zelf schrijven: boven de bevindingen, onder de statusregel. Om botsing en dubbele bediening te voorkomen:
+
+- Eén bron van waarheid: de kaart leest en schrijft alleen `nerEnabled` / `startNer` uit de gedeelde shell-context. Geen eigen state, geen tweede laadtraject, dus geen dubbele modeldownload wanneer je van modus wisselt.
+- Eén zichtbaar aanbod tegelijk: staat de AI aan of laadt hij, dan verdwijnt de kaart in beide modi.
+- Geen dubbele status: `AnalysisStatus` in Tekst nakijken en `WriterStatusBar` in Schrijven blijven de doorlopende status tonen; de kaart is alleen de eenmalige uitnodiging. De losse tekstlink "Zet aan" in `WriterStatusBar` verdwijnt, zodat activeren maar op twee plekken kan: de kaart en de schakelaar in Instellingen.
+- Geen botsing met de analyseknop: de kaart heeft alleen "Zet lokale AI aan"; hij start geen analyse. Na activeren draait de normale analyseflow van die modus (live op desktop, knop op mobiel).
+- Geen extra uitleg: de bestaande AI-uitleg in Instellingen blijft kort en verwijst niet nog eens naar dezelfde knop.
