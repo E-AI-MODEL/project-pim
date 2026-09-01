@@ -840,78 +840,48 @@ function FindingsCard({
   );
 }
 
-function SafeVersionCard({
-  safeText,
-  hasFindings,
+function ActionRow({
   onCopy,
   onDownload,
   onSendAI,
 }: {
-  safeText: string;
-  hasFindings: boolean;
   onCopy: () => void;
   onDownload: () => void;
   onSendAI: () => void;
 }) {
-  const [showFull, setShowFull] = useState(false);
-  const preview = safeText.length > 260 && !showFull ? safeText.slice(0, 260) + "…" : safeText;
   return (
-    <div className="rounded-2xl border border-[#e5e7ef] bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] overflow-hidden">
-      <div className="px-4 py-3 border-b border-[#eef0f5] flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-emerald-50 text-emerald-600">
-            <ShieldCheck className="h-4 w-4" />
-          </span>
-          <div className="leading-tight">
-            <div className="text-[13px] font-semibold text-[#0f172a]">
-              Tekst zonder persoonsgegevens
-            </div>
-            <div className="text-[11px] text-[#64748b]">
-              {hasFindings ? "Klaar om te delen" : "Nog niets aangepast"}
-            </div>
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={() => setShowFull((v) => !v)}
-          className="inline-flex items-center gap-1 text-[12px] text-[#64748b] hover:text-[#0f172a]"
-        >
-          <Eye className="h-3.5 w-3.5" />
-          {showFull ? "Vouw in" : "Bekijk"}
-        </button>
-      </div>
-      <div className="px-4 py-3 text-[12.5px] text-[#334155] leading-relaxed whitespace-pre-wrap max-h-56 overflow-y-auto">
-        {preview || <span className="text-[#94a3b8]">Nog geen tekst om te tonen.</span>}
-      </div>
-      <div className="grid grid-cols-3 gap-1.5 border-t border-[#eef0f5] p-2">
-        <button
-          type="button"
-          onClick={onCopy}
-          className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#6d4aff] hover:bg-[#5b3dea] px-2 py-2 text-[12px] font-semibold text-white"
-        >
-          <CopyIcon className="h-3.5 w-3.5" />
-          Kopiëren
-        </button>
-        <button
-          type="button"
-          onClick={onDownload}
-          className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[#e5e7ef] bg-white hover:bg-[#f6f7fb] px-2 py-2 text-[12px] font-medium text-[#334155]"
-        >
-          <Download className="h-3.5 w-3.5" />
-          Downloaden
-        </button>
-        <button
-          type="button"
-          onClick={onSendAI}
-          className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[#e5e7ef] bg-white hover:bg-[#f6f7fb] px-2 py-2 text-[12px] font-medium text-[#334155]"
-        >
-          <Send className="h-3.5 w-3.5" />
-          Naar AI
-        </button>
-      </div>
+    <div
+      data-testid="writer-actions"
+      className="grid grid-cols-3 gap-1.5 rounded-2xl border border-[#e5e7ef] bg-white p-2 shadow-[0_1px_2px_rgba(15,23,42,0.04)]"
+    >
+      <button
+        type="button"
+        onClick={onCopy}
+        className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#6d4aff] hover:bg-[#5b3dea] px-2 py-2 text-[12px] font-semibold text-white"
+      >
+        <CopyIcon className="h-3.5 w-3.5" />
+        Kopiëren
+      </button>
+      <button
+        type="button"
+        onClick={onDownload}
+        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[#e5e7ef] bg-white hover:bg-[#f6f7fb] px-2 py-2 text-[12px] font-medium text-[#334155]"
+      >
+        <Download className="h-3.5 w-3.5" />
+        Downloaden
+      </button>
+      <button
+        type="button"
+        onClick={onSendAI}
+        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[#e5e7ef] bg-white hover:bg-[#f6f7fb] px-2 py-2 text-[12px] font-medium text-[#334155]"
+      >
+        <Send className="h-3.5 w-3.5" />
+        Naar AI
+      </button>
     </div>
   );
 }
+
 
 function buildSafeText(plain: string, spans: PiiSpan[]): string {
   if (!plain) return "";
