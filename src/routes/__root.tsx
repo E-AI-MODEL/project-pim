@@ -1,6 +1,7 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { installRuntimeHardening } from "@/lib/pim/runtimeHardening";
+import { META_CONTENT_SECURITY_POLICY } from "@/lib/security/headers";
 import { runSelfTest } from "@/lib/pim/selfTest";
 
 import appCss from "../styles.css?url";
@@ -35,20 +36,10 @@ export const Route = createRootRoute({
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       {
         httpEquiv: "Content-Security-Policy",
-        content:
-          "default-src 'self'; " +
-          "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob:; " +
-          "style-src 'self' 'unsafe-inline'; " +
-          "img-src 'self' data: blob: https://storage.googleapis.com; " +
-          "font-src 'self' data:; " +
-          "connect-src 'self' https://huggingface.co https://*.huggingface.co https://*.hf.co https://cas-bridge.xethub.hf.co https://cdn.jsdelivr.net https://unpkg.com https://raw.githubusercontent.com https://github.com; " +
-          "worker-src 'self' blob:; " +
-          "object-src 'none'; " +
-          "base-uri 'self'; " +
-          // frame-ancestors werkt alleen via een HTTP-header (staat in
-          // public/_headers); via <meta> negeert de browser het en logt een
-          // console-fout, daarom hier bewust weggelaten.
-          "form-action 'self'",
+        // Afgeleid van src/lib/security/headers.ts, zodat de allowlist voor
+        // modelhosts op één plek staat. De HTTP-header uit src/start.ts is
+        // leidend; deze meta is de fallback voor statisch geserveerde HTML.
+        content: META_CONTENT_SECURITY_POLICY,
       },
       { title: "Project PiM" },
       {

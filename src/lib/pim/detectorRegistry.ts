@@ -5,7 +5,7 @@
 
 import type { PiiSpan } from "./types";
 import { detectPii as runRegexDetectors } from "./detectors";
-import { detectPersonsSlm } from "./nerSlm";
+import { detectPersonsSlmDetailed } from "./nerSlm";
 import { mergeSpans } from "./mergeSpans";
 import {
   coerceDetectionSettings,
@@ -21,6 +21,25 @@ export interface DetectorContext {
   enableAsync: boolean;
 }
 
+/**
+ * `ran`     = laag heeft aantoonbaar gedraaid.
+ * `failed`  = laag hoorde te draaien en kon niet (model stuk, inference-fout).
+ * `skipped` = laag stond bewust uit, of is async terwijl async niet mag.
+ */
+export type DetectorRunStatus = "ran" | "failed" | "skipped";
+
+export interface DetectorLayerResult {
+  id: string;
+  kind: DetectorKind;
+  status: DetectorRunStatus;
+  error?: string;
+}
+
+export interface RegistryRunResult {
+  spans: PiiSpan[];
+  layers: DetectorLayerResult[];
+}
+
 export interface Detector {
   id: string;
   kind: DetectorKind;
@@ -28,6 +47,14 @@ export interface Detector {
   async: boolean;
   /** Returns spans found in `text`. May return [] if not applicable. */
   run(text: string, ctx: DetectorContext): PiiSpan[] | Promise<PiiSpan[]>;
+  /**
+   * Optional fail-closed variant: reports whether the layer actually ran.
+   * Used by the egress re-consult; when absent a thrown error counts as failed.
+   */
+  runDetailed?(
+    text: string,
+    ctx: DetectorContext,
+  ): Promise<{ status: "ran" | "failed"; spans: PiiSpan[]; error?: string }>;
 }
 
 const REGISTRY = new Map<string, Detector>();
@@ -166,7 +193,15 @@ registerDetector({
   kind: "nerSlm",
   async: true,
   run: async (text, ctx) =>
-    ctx.enableAsync && usesBert(ctx.detectionSettings) ? await detectPersonsSlm(text) : [],
+    ctx.enableAsync && usesBert(ctx.detectionSettings)
+      ? (await detectPersonsSlmDetailed(text)).spans
+      : [],
+  runDetailed: async (text, ctx) => {
+    if (!ctx.enableAsync || !usesBert(ctx.detectionSettings)) {
+      return { status: "ran", spans: [] };
+    }
+    return await detectPersonsSlmDetailed(text);
+  },
 });
 
 registerDetector({
@@ -213,20 +248,54 @@ registerDetector({
   },
 });
 
-/** Run all active detectors and merge spans. */
+/**
+ * Run all detectors and report per layer whether it actually ran.
+ * Fail-closed callers (egress re-consult) must use this variant.
+ */
+export async function runRegistryDetailed(
+  text: string,
+  ctx: { detectionSettings?: DetectionLayerSettings | string | null; enableAsync: boolean },
+): Promise<RegistryRunResult> {
+  const detectionSettings = coerceDetectionSettings(ctx.detectionSettings);
+  const active = new Set(activeDetectorsFor(detectionSettings).map((d) => d.id));
+  const all: PiiSpan[] = [];
+  const layers: DetectorLayerResult[] = [];
+
+  for (const d of listDetectors()) {
+    if (!active.has(d.id) || (d.async && !ctx.enableAsync)) {
+      layers.push({ id: d.id, kind: d.kind, status: "skipped" });
+      continue;
+    }
+    const detectorCtx = { detectionSettings, enableAsync: ctx.enableAsync };
+    try {
+      if (d.runDetailed) {
+        const r = await d.runDetailed(text, detectorCtx);
+        all.push(...r.spans);
+        layers.push({ id: d.id, kind: d.kind, status: r.status, error: r.error });
+      } else {
+        const spans = await d.run(text, detectorCtx);
+        all.push(...spans);
+        layers.push({ id: d.id, kind: d.kind, status: "ran" });
+      }
+    } catch (e) {
+      layers.push({
+        id: d.id,
+        kind: d.kind,
+        status: "failed",
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
+  }
+
+  return { spans: mergeSpans(all), layers };
+}
+
+/** Run all active detectors and merge spans (fail-open, voor UI-paden). */
 export async function runRegistry(
   text: string,
   ctx: { detectionSettings?: DetectionLayerSettings | string | null; enableAsync: boolean },
 ): Promise<PiiSpan[]> {
-  const detectionSettings = coerceDetectionSettings(ctx.detectionSettings);
-  const detectors = activeDetectorsFor(detectionSettings);
-  const all: PiiSpan[] = [];
-  for (const d of detectors) {
-    if (d.async && !ctx.enableAsync) continue;
-    const r = await d.run(text, { detectionSettings, enableAsync: ctx.enableAsync });
-    all.push(...r);
-  }
-  return mergeSpans(all);
+  return (await runRegistryDetailed(text, ctx)).spans;
 }
 
 /** Sync path: Regex + Lexicon + Context, depending on detection settings. */

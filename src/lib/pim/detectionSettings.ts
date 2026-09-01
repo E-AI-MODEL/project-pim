@@ -105,3 +105,14 @@ export const DETECTION_LAYER_COPY = {
       "Lokaal LLM dat je tekst opnieuw formuleert. Daarna controleert PiM de uitkomst opnieuw.",
   },
 } as const;
+
+/**
+ * Maximale sterkte: alle lagen aan. Gebruikt door de egress-re-consult, die
+ * bewust onafhankelijk is van wat de gebruiker heeft ingesteld.
+ */
+export const MAX_STRENGTH_DETECTION_SETTINGS: DetectionLayerSettings = {
+  regex: true,
+  lexicon: true,
+  context: true,
+  bert: "100mb",
+};

@@ -1,27 +1,36 @@
 // Runtime hardening, spec hfst 12.3.
-// Detecteert (niet "blokkeert volledig", omdat dat in user-land niet kan):
-//  - fetch/XHR/sendBeacon naar externe origins die PII-payload dragen
-//  - localStorage writes met inhoud-achtige keys
-// Logt naar console en biedt een hook voor de UI-banner.
+//
+// Positionering: dit is zelftest en telemetrie, geen sluitende blokkade.
+// De echte grens is de Content-Security-Policy (zie src/lib/security/headers.ts)
+// plus het feit dat de app geen third-party scripts laadt. Deze wrappers zijn
+// in user-land te omzeilen (new Image().src, <a ping>, EventSource, iframes).
+//
+// Wat ze wél doen:
+//  - fetch/XHR/sendBeacon/WebSocket naar niet-toegestane origins weigeren
+//    (fail-closed, want legitiem extern verkeer bestaat in deze app niet);
+//  - modelhosts doorlaten (read-only publieke modelbestanden);
+//  - elke poging loggen en aan de UI-banner doorgeven.
+
+import { isModelHostname } from "../security/headers";
 
 let installed = false;
-// Spec hfst 13: Modeltoegang naar publieke mirrors mag (read-only, GET).
-// Detecteer wel, maar markeer als "model" in plaats van privacy-violation.
-const MODEL_HOSTS = new Set([
-  "huggingface.co",
-  "cdn-lfs.huggingface.co",
-  "cdn-lfs.hf.co",
-  "cdn-lfs-us-1.huggingface.co",
-  "cdn-lfs-eu-1.huggingface.co",
-  "cas-bridge.xethub.hf.co",
-  "cdn.jsdelivr.net",
-  "unpkg.com",
-  // @mlc-ai/web-llm fetcht weights/wasm vanuit deze hosts.
-  "raw.githubusercontent.com",
-  "github.com",
-]);
 const violations: string[] = [];
 const listeners = new Set<(v: string[]) => void>();
+
+/**
+ * Kill switch. Zet deze op false als een verkeerde allowlist de app breekt;
+ * detectie en logging blijven dan werken, alleen het weigeren stopt.
+ * Ook te zetten via `window.__pimDisableEgressBlock = true` vóór installatie.
+ */
+let enforcement = true;
+
+export function setEgressEnforcement(enabled: boolean): void {
+  enforcement = enabled;
+}
+
+export function isEgressEnforced(): boolean {
+  return enforcement;
+}
 
 // Zelftest-probe: geen echte egress, alleen een gedragstest van de wrapper.
 // We loggen die als info zodat hij niet als fout leest in de console.
@@ -53,6 +62,9 @@ export function installRuntimeHardening() {
   if (installed || typeof window === "undefined") return;
   installed = true;
 
+  const win = window as Window & { __pimDisableEgressBlock?: boolean };
+  if (win.__pimDisableEgressBlock === true) enforcement = false;
+
   const sameOrigin = (url: string) => {
     try {
       return new URL(url, location.href).origin === location.origin;
@@ -62,10 +74,18 @@ export function installRuntimeHardening() {
   };
   const isModelHost = (url: string) => {
     try {
-      return MODEL_HOSTS.has(new URL(url, location.href).host);
+      return isModelHostname(new URL(url, location.href).host);
     } catch {
       return false;
     }
+  };
+  const allowed = (url: string) => sameOrigin(url) || isModelHost(url);
+
+  const record = (msg: string, info = false) => {
+    violations.push(msg);
+    notify();
+    if (info) console.info(msg);
+    else console.warn(msg);
   };
 
   // 1. fetch wrapper
@@ -73,15 +93,17 @@ export function installRuntimeHardening() {
   window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
     const url =
       typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
-    if (!sameOrigin(url) && !isModelHost(url)) {
-      const selfTest = isSelfTestProbe(url);
-      const msg = selfTest
-        ? `[PIM zelftest] uitgaande-verkeerdetectie werkt (${SELFTEST_PROBE_MARKER})`
-        : `[PIM hardening] external fetch detected → ${new URL(url).origin}`;
-      violations.push(msg);
-      notify();
-      if (selfTest) console.info(msg);
-      else console.warn(msg);
+    if (!allowed(url)) {
+      if (isSelfTestProbe(url)) {
+        record(`[PIM zelftest] uitgaande-verkeerdetectie werkt (${SELFTEST_PROBE_MARKER})`, true);
+        return origFetch(input as RequestInfo, init);
+      }
+      const origin = safeOrigin(url);
+      const msg = enforcement
+        ? `[PIM hardening] externe fetch geweigerd → ${origin}`
+        : `[PIM hardening] externe fetch gedetecteerd (handhaving uit) → ${origin}`;
+      record(msg);
+      if (enforcement) throw new Error(msg);
     }
     return origFetch(input as RequestInfo, init);
   };
@@ -91,11 +113,8 @@ export function installRuntimeHardening() {
     const origBeacon = navigator.sendBeacon.bind(navigator);
     navigator.sendBeacon = (url: string | URL, data?: BodyInit | null) => {
       const u = typeof url === "string" ? url : url.toString();
-      if (!sameOrigin(u) && !isModelHost(u)) {
-        const msg = `[PIM hardening] sendBeacon to external origin BLOCKED → ${new URL(u).origin}`;
-        violations.push(msg);
-        notify();
-        console.warn(msg);
+      if (!allowed(u)) {
+        record(`[PIM hardening] sendBeacon naar externe origin geweigerd → ${safeOrigin(u)}`);
         return false;
       }
       return origBeacon(u, data);
@@ -106,11 +125,12 @@ export function installRuntimeHardening() {
   const OrigOpen = XMLHttpRequest.prototype.open;
   XMLHttpRequest.prototype.open = function (method: string, url: string | URL, ...rest: unknown[]) {
     const u = typeof url === "string" ? url : url.toString();
-    if (!sameOrigin(u) && !isModelHost(u)) {
-      const msg = `[PIM hardening] XHR to external origin → ${new URL(u).origin}`;
-      violations.push(msg);
-      notify();
-      console.warn(msg);
+    if (!allowed(u)) {
+      const msg = enforcement
+        ? `[PIM hardening] XHR naar externe origin geweigerd → ${safeOrigin(u)}`
+        : `[PIM hardening] XHR naar externe origin → ${safeOrigin(u)}`;
+      record(msg);
+      if (enforcement) throw new Error(msg);
     }
     // @ts-expect-error pass-through
     return OrigOpen.call(this, method, url, ...rest);
@@ -121,18 +141,20 @@ export function installRuntimeHardening() {
   window.WebSocket = new Proxy(OrigWS, {
     construct(target, args: [string | URL, (string | string[])?]) {
       const u = typeof args[0] === "string" ? args[0] : args[0].toString();
-      try {
-        const origin = new URL(u).host;
-        if (origin !== location.host) {
-          const msg = `[PIM hardening] WebSocket external → ${origin}`;
-          violations.push(msg);
-          notify();
-          console.warn(msg);
-        }
-      } catch {
-        /* ignore URL parse errors */
+      if (!sameOrigin(u)) {
+        const msg = `[PIM hardening] WebSocket extern → ${safeOrigin(u)}`;
+        record(msg);
+        if (enforcement) throw new Error(msg);
       }
       return new target(...args);
     },
   });
+}
+
+function safeOrigin(url: string): string {
+  try {
+    return new URL(url, location.href).origin;
+  } catch {
+    return url;
+  }
 }
