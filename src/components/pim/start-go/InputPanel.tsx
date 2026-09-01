@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { Mode, Action, PiiSpan } from "@/lib/pim/types";
-import { HighlightedTextArea } from "./HighlightedTextArea";
+import { HighlightedTextArea, type SpanAction } from "./HighlightedTextArea";
 import {
   extractDocument,
   formatBytes,
@@ -53,10 +53,10 @@ interface Props {
   onTabChange?: (t: TextTab) => void;
   safeDisabled?: boolean;
   safeNote?: string;
+  onSpanAction?: (span: PiiSpan, action: SpanAction) => void;
 }
 
 export type TextTab = "original" | "safe";
-
 
 const TARGETS: { id: Action; label: string }[] = [
   { id: "send_external_ai", label: COPY.targetExternalAi },
@@ -150,8 +150,8 @@ function CompactComposer({
   onTabChange,
   safeDisabled,
   safeNote,
+  onSpanAction,
 }: Omit<Props, "compact">) {
-
   const canSend = text.trim().length > 0 && !busy;
   const activeTarget = TARGETS.find((t) => t.id === action)?.label ?? "";
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -329,6 +329,7 @@ function CompactComposer({
             value={text}
             onValueChange={onTextChange}
             spans={spans}
+            onSpanAction={onSpanAction}
             onKeyDown={(e) => {
               if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && canSend) {
                 e.preventDefault();
@@ -341,7 +342,6 @@ function CompactComposer({
             className="text-[#0f172a] placeholder:text-[#94a3b8] resize-y focus:outline-none"
           />
         )}
-
 
         {/* Toolbar */}
         <div className="flex items-center gap-1.5 px-2 py-2 border-t border-[#eef0f5]">

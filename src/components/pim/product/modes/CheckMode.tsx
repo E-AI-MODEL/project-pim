@@ -9,6 +9,9 @@ import { NewTextButton } from "../NewTextButton";
 import { InputPanel, type TextTab } from "@/components/pim/start-go/InputPanel";
 import { ResultPanel } from "@/components/pim/start-go/ResultPanel";
 import type { Example } from "@/components/pim/start-go/ExamplePicker";
+import type { SpanAction } from "@/components/pim/start-go/HighlightedTextArea";
+import { GENERALIZATIONS } from "@/components/pim/writer/pimGeneralizations";
+import type { PiiSpan } from "@/lib/pim/types";
 
 /**
  * Tekst nakijken. Eén scherm voor wat vroeger "Snel checken" en
@@ -91,12 +94,28 @@ export function CheckMode() {
 
   const status: AnalysisState = busy ? "busy" : isStale ? "stale" : result ? "ready" : "idle";
 
+  // Genegeerde markeringen, per tekststuk. Leegt zodra de tekst wijzigt.
+  const [ignored, setIgnored] = useState<Set<string>>(new Set());
+
   // Markeringen in het tekstvlak zelf, zoals in het schrijfscherm.
   const liveSpans = useMemo(() => {
     const sig = engineState.signals;
     if (!sig) return [];
-    return [...sig.directPii, ...sig.contextualPii];
-  }, [engineState.signals]);
+    return [...sig.directPii, ...sig.contextualPii].filter(
+      (s) => !ignored.has(`${s.start}:${s.end}:${s.category}`),
+    );
+  }, [engineState.signals, ignored]);
+
+  const handleSpanAction = (span: PiiSpan, act: SpanAction) => {
+    if (act === "ignore") {
+      setIgnored((prev) => new Set(prev).add(`${span.start}:${span.end}:${span.category}`));
+      return;
+    }
+    const label = GENERALIZATIONS[span.category] ?? "[…]";
+    setText(text.slice(0, span.start) + label + text.slice(span.end));
+    setIgnored(new Set());
+    setEgressMsg(null);
+  };
 
   const [tab, setTab] = useState<TextTab>("original");
   const [editedSafe, setEditedSafe] = useState("");
@@ -137,11 +156,14 @@ export function CheckMode() {
         text={text}
         onTextChange={(v) => {
           setText(v);
+          setIgnored(new Set());
           setEgressMsg(null);
         }}
+        onSpanAction={handleSpanAction}
         onStart={runAnalysis}
         onExample={(e: Example) => {
           setText(e.text);
+          setIgnored(new Set());
           setEgressMsg(null);
         }}
         compact
@@ -212,4 +234,3 @@ export function CheckMode() {
     </div>
   );
 }
-
