@@ -5,6 +5,7 @@ import { AnalysisModeToggle } from "../AnalysisModeToggle";
 import { AnalysisStatus, type AnalysisState } from "../AnalysisStatus";
 import { MobileActionBar } from "../MobileActionBar";
 import { NewTextButton } from "../NewTextButton";
+import { LocalAiOffer } from "../LocalAiOffer";
 
 import { InputPanel, type TextTab } from "@/components/pim/start-go/InputPanel";
 import { ResultPanel } from "@/components/pim/start-go/ResultPanel";
@@ -151,6 +152,8 @@ export function CheckMode() {
           <NewTextButton />
         </div>
       </div>
+
+      <LocalAiOffer />
 
       <InputPanel
         text={text}

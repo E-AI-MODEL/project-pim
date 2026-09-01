@@ -87,3 +87,33 @@ describe("detectors, slordige notatie en varianten", () => {
     expect(detectPii(neutraal)).toHaveLength(0);
   });
 });
+
+describe("namen in kleine letters", () => {
+  it("herkent voor- en achternaam met tussenvoegsel", () => {
+    expect(hasCategory("gisteren sprak ik jan de vries hierover", "name")).toBe(true);
+    expect(hasCategory("sanne van den berg belde", "name")).toBe(true);
+  });
+
+  it("herkent een achternaam-vorm zonder tussenvoegsel", () => {
+    expect(hasCategory("ik zag jan jansen op het plein", "name")).toBe(true);
+  });
+
+  it("herkent een enkele naam na een rolwoord of werkwoord", () => {
+    expect(hasCategory("de moeder van youssef belde", "name")).toBe(true);
+    expect(hasCategory("sanne huilde in de klas", "name")).toBe(true);
+  });
+
+  it("markeert een echo van een eerder gevonden naam", () => {
+    const spans = detectPii("Emma de Vries kwam binnen. Later vertrok emma weer.");
+    expect(spans.some((s) => s.text === "emma")).toBe(true);
+  });
+
+  it("laat gewone zinnen met rust", () => {
+    for (const t of [
+      "Vandaag ging het goed in de les en we hebben met plezier gewerkt aan de opdracht.",
+      "We bespreken de planning van volgende week.",
+    ]) {
+      expect(detectPii(t).filter((s) => s.category === "name")).toHaveLength(0);
+    }
+  });
+});

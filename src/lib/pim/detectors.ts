@@ -8,6 +8,249 @@ interface RuleDef {
   confidence?: number;
 }
 
+/**
+ * Gedeelde stopwoordenlijst voor de ruime kleine-letter-naamregels.
+ * Bewust breed: veelgebruikte school-, werk-, tijd- en functiewoorden mogen
+ * nooit als naam worden gemarkeerd. Alle regels die kleine letters toelaten
+ * gebruiken deze lijst, zodat de ruis op één plek beheerd wordt.
+ */
+const NAME_STOP_WORDS = [
+  "de",
+  "het",
+  "een",
+  "die",
+  "dat",
+  "deze",
+  "dit",
+  "daar",
+  "hier",
+  "zijn",
+  "haar",
+  "hun",
+  "onze",
+  "jullie",
+  "mijn",
+  "jouw",
+  "uw",
+  "geen",
+  "elke",
+  "alle",
+  "beide",
+  "ook",
+  "nog",
+  "weer",
+  "toen",
+  "dan",
+  "maar",
+  "want",
+  "omdat",
+  "zodat",
+  "terwijl",
+  "tijdens",
+  "binnen",
+  "buiten",
+  "zonder",
+  "tegen",
+  "door",
+  "over",
+  "onder",
+  "naast",
+  "achter",
+  "voor",
+  "niet",
+  "wel",
+  "heel",
+  "erg",
+  "zeer",
+  "meer",
+  "minder",
+  "veel",
+  "weinig",
+  "iets",
+  "niets",
+  "alles",
+  "iemand",
+  "niemand",
+  "anderen",
+  "elkaar",
+  "hem",
+  "hen",
+  "jou",
+  "mij",
+  "zich",
+  "leerling",
+  "leerlinge",
+  "leerlingen",
+  "kind",
+  "kinderen",
+  "jongen",
+  "jongens",
+  "meisje",
+  "meisjes",
+  "docent",
+  "docenten",
+  "leraar",
+  "leraren",
+  "mentor",
+  "meester",
+  "juf",
+  "meneer",
+  "mevrouw",
+  "ouder",
+  "ouders",
+  "moeder",
+  "vader",
+  "broer",
+  "zus",
+  "verzorger",
+  "collega",
+  "collegas",
+  "team",
+  "school",
+  "klas",
+  "groep",
+  "les",
+  "lessen",
+  "toets",
+  "toetsen",
+  "cijfer",
+  "cijfers",
+  "rapport",
+  "huiswerk",
+  "rekenen",
+  "lezen",
+  "spelling",
+  "taal",
+  "gedrag",
+  "wiskunde",
+  "begrijpend",
+  "technisch",
+  "planning",
+  "motivatie",
+  "concentratie",
+  "aandacht",
+  "zorg",
+  "respect",
+  "succes",
+  "resultaat",
+  "gesprek",
+  "incident",
+  "conflict",
+  "situatie",
+  "afspraak",
+  "plan",
+  "plek",
+  "tijd",
+  "dag",
+  "dagen",
+  "week",
+  "weken",
+  "maand",
+  "jaar",
+  "jaren",
+  "vandaag",
+  "gisteren",
+  "morgen",
+  "vanmiddag",
+  "vanochtend",
+  "vanavond",
+  "maandag",
+  "dinsdag",
+  "woensdag",
+  "donderdag",
+  "vrijdag",
+  "zaterdag",
+  "zondag",
+  "januari",
+  "februari",
+  "maart",
+  "april",
+  "juni",
+  "juli",
+  "augustus",
+  "september",
+  "oktober",
+  "november",
+  "december",
+  "bsn",
+  "iban",
+  "tel",
+  "mail",
+  "email",
+  "nummer",
+  "adres",
+  "datum",
+  "kvk",
+  "aan",
+  "met",
+  "bij",
+  "uit",
+  "naar",
+  "tot",
+  "om",
+  "af",
+  "te",
+  "er",
+  "ze",
+  "we",
+  "je",
+  "ik",
+  "hij",
+  "zij",
+  "was",
+  "waren",
+  "ben",
+  "opdracht",
+  "opdrachten",
+  "later",
+  "eerder",
+  "straks",
+  "daarna",
+  "daarvoor",
+  "hierover",
+  "les",
+  "werk",
+  "werken",
+  "gewerkt",
+  "plezier",
+  "oefening",
+  "oefeningen",
+  "boek",
+  "bord",
+  "plein",
+  "zin",
+  "goed",
+  "beter",
+  "slecht",
+  "prima",
+  "lastig",
+  "moeilijk",
+  "makkelijk",
+  "samen",
+  "steeds",
+  "vaak",
+  "soms",
+  "gaat",
+  "ging",
+  "komt",
+  "kwam",
+  "heeft",
+  "hebben",
+  "werd",
+  "wordt",
+  "kunnen",
+  "moeten",
+  "willen",
+  "zegt",
+] as const;
+
+const STOP = NAME_STOP_WORDS.join("|");
+
+/** Bouwt een regex met `{{STOP}}` als plaatshouder voor de stopwoordenlijst. */
+function nameRe(source: string, flags: string): RegExp {
+  return new RegExp(source.replace(/\{\{STOP\}\}/g, STOP), flags);
+}
+
 const RULES: RuleDef[] = [
   {
     id: "rule.email",
@@ -135,8 +378,7 @@ const RULES: RuleDef[] = [
   {
     id: "rule.ip_address",
     category: "ip_address",
-    regex:
-      /\b(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\b/g,
+    regex: /\b(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\b/g,
 
     confidence: 0.85,
   },
@@ -198,6 +440,69 @@ const RULES: RuleDef[] = [
     regex:
       /\b(?!(?:een|het|die|dat|deze|dit|zijn|haar|onze|hun|jullie|geen|elke|alle|ook|nog|weer|toen|daar|hier|iets|niets|meer|zeer|erg|heel|leerling|leerlingen|kind|kinderen|jongen|meisje|docent|mentor|ouder|ouders|conflict|incident|situatie|gesprek|plek|les|tijd|dag|week|jaar)\b)[a-zà-ÿ]{3,}(?:\s+(?:van|de|der|den|ten|ter))?\s+(?!(?:klas|groep|les|uit|in|van)\b)[a-zà-ÿ]{3,}(?=\s+(?:uit|in|van)\s+(?:klas|groep)\b)/gi,
     confidence: 0.6,
+    contextual: true,
+  },
+  // Voor- en achternaam in kleine letters, overal in de tekst, inclusief
+  // tussenvoegsels ("jan de vries", "sanne van den berg"). Ruim opgezet:
+  // liever iets te veel markeren, want de gebruiker kan per markering
+  // "Negeer" kiezen. Daarom contextueel en met lage zekerheid.
+  {
+    id: "rule.name_lower_pair",
+    category: "name",
+    // Met tussenvoegsel: "jan de vries", "sanne van den berg", "youssef el amrani".
+    regex: nameRe(
+      "\\b(?!(?:{{STOP}})\\b)[a-zà-ÿ]{3,}\\s+(?:van|de|der|den|ten|ter|el|al|bin|di|da|del)(?:\\s+(?:de|der|den|het))?\\s+(?!(?:{{STOP}})\\b)[a-zà-ÿ]{3,}\\b",
+      "g",
+    ),
+    confidence: 0.5,
+    contextual: true,
+  },
+  {
+    id: "rule.name_lower_pair_suffix",
+    category: "name",
+    // Zonder tussenvoegsel, maar met een achternaam-vorm: "jan jansen",
+    // "sanne bakker", "karim hoekstra". De achternaamuitgang houdt gewone
+    // woordparen ("met plezier", "gewerkt aan") buiten de deur.
+    regex: nameRe(
+      "\\b(?!(?:{{STOP}})\\b)[a-zà-ÿ]{3,}\\s+(?!(?:{{STOP}})\\b)[a-zà-ÿ]{2,}(?:sen|zen|sma|stra|inga|ink|berg|bergen|veld|velde|man|mans|huis|dijk|dijks|kamp|broek|meijer|meyer|bakker|smit|smits|vries|boer|horst|laar|hoven|beek|dam|hout|kerk|koning|visser|jansen|hoekstra|willems|peters|kuipers|mulder|graaf|linden|water|hart)\\b",
+      "g",
+    ),
+    confidence: 0.45,
+    contextual: true,
+  },
+  // Enkele naam in kleine letters direct na een rolwoord:
+  // "leerling sanne", "de moeder van youssef", "juf karin".
+  {
+    id: "rule.name_lower_role",
+    category: "name",
+    regex: nameRe(
+      "(?<=\\b(?:leerling|leerlinge|leerlingen|ouder|ouders|moeder|vader|broer|zus|mentor|juf|meester|meneer|mevrouw|collega|verzorger|klasgenoot|klasgenootje)\\s+(?:van\\s+)?)(?!(?:{{STOP}})\\b)[a-zà-ÿ]{3,}(?:\\s+(?:van|de|der|den|ten|ter|el|al)\\s+[a-zà-ÿ]{2,})?",
+      "gi",
+    ),
+    confidence: 0.55,
+    contextual: true,
+  },
+  // Enkele naam in kleine letters vlak voor een persoonlijk werkwoord of bezit:
+  // "sanne huilde", "jan vertelde", "youssefs moeder".
+  {
+    id: "rule.name_lower_verb",
+    category: "name",
+    regex: nameRe(
+      "\\b(?!(?:{{STOP}})\\b)[a-zà-ÿ]{3,}(?='?s?\\s+(?:zei|zegt|vertelde|vertelt|huilde|huilt|reageerde|reageert|weigerde|weigert|sloeg|slaat|schreeuwde|liep|loopt|zat|zit|kwam|moeder|vader|ouders|mentor|gedrag|dossier)\\b)",
+      "g",
+    ),
+    confidence: 0.45,
+    contextual: true,
+  },
+  // Koppelnaam en apostrofnaam in kleine letters: "jan-peter", "'t hart".
+  {
+    id: "rule.name_lower_compound",
+    category: "name",
+    regex: nameRe(
+      "\\b(?!(?:{{STOP}})\\b)[a-zà-ÿ]{3,}-[a-zà-ÿ]{3,}\\b|(?:'|’)t\\s+[a-zà-ÿ]{3,}\\b",
+      "g",
+    ),
+    confidence: 0.45,
     contextual: true,
   },
   // Social handle (@user).
@@ -332,7 +637,6 @@ const RULES: RuleDef[] = [
     category: "phone",
     regex: /(?<!\d)(?:\+31|0031|\(0\)|0)[\s.()\-]{0,4}6(?:[\s.\-]{0,2}\d){8}(?!\d)/g,
     confidence: 0.9,
-
   },
   // Telefoonnummer na een trefwoord, ook als de notatie afwijkt.
   {
@@ -394,7 +698,8 @@ const RULES: RuleDef[] = [
   {
     id: "ctx.group_loose",
     category: "context_small_group",
-    regex: /\b(?:groep|gr\.?|klas|brugklas|mentorgroep|leerjaar|lj\.?)\s*-?\s*\d{1,2}\s*[a-hA-H]?\b/gi,
+    regex:
+      /\b(?:groep|gr\.?|klas|brugklas|mentorgroep|leerjaar|lj\.?)\s*-?\s*\d{1,2}\s*[a-hA-H]?\b/gi,
     contextual: true,
     confidence: 0.7,
   },
@@ -454,8 +759,7 @@ const RULES: RuleDef[] = [
   {
     id: "rule.name_initials_lower",
     category: "name",
-    regex:
-      /\b(?:[a-z]\.\s?){1,3}(?:(?:van|de|der|den|ten|ter|het|op)\s+){0,2}[a-zà-ÿ'’-]{3,}\b/g,
+    regex: /\b(?:[a-z]\.\s?){1,3}(?:(?:van|de|der|den|ten|ter|het|op)\s+){0,2}[a-zà-ÿ'’-]{3,}\b/g,
     contextual: true,
     confidence: 0.6,
   },
@@ -556,7 +860,6 @@ const RULES: RuleDef[] = [
   },
 ];
 
-
 export function detectPii(text: string, disabledCategories?: ReadonlySet<PiiCategory>): PiiSpan[] {
   const spans: PiiSpan[] = [];
   for (const r of RULES) {
@@ -602,7 +905,56 @@ export function detectPii(text: string, disabledCategories?: ReadonlySet<PiiCate
     }
     merged.push(s);
   }
-  return merged;
+  return withNameEchoes(text, merged, disabledCategories);
+}
+
+/**
+ * Naverwerking: namen die ergens mét hoofdletter zijn gevonden, komen in
+ * dezelfde tekst vaak ook in kleine letters voor ("Sanne ... sanne").
+ * Die echo's worden alsnog gemarkeerd, hoofdletterongevoelig en met een
+ * lagere zekerheid, zolang ze niet in een bestaande span vallen.
+ */
+function withNameEchoes(
+  text: string,
+  spans: PiiSpan[],
+  disabledCategories?: ReadonlySet<PiiCategory>,
+): PiiSpan[] {
+  if (disabledCategories?.has("name")) return spans;
+  const words = new Set<string>();
+  for (const s of spans) {
+    if (s.category !== "name") continue;
+    for (const w of s.text.split(/[\s,]+/)) {
+      const clean = w.replace(/[^\p{L}'’-]/gu, "");
+      if (clean.length >= 3 && !NAME_STOP_WORDS.includes(clean.toLowerCase() as never)) {
+        words.add(clean.toLowerCase());
+      }
+    }
+  }
+  if (words.size === 0) return spans;
+
+  const extra: PiiSpan[] = [];
+  const covered = (a: number, b: number) => spans.some((s) => a < s.end && b > s.start);
+  for (const w of words) {
+    const re = new RegExp(`\\b${w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "gi");
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(text)) !== null) {
+      const start = m.index;
+      const end = start + m[0].length;
+      if (covered(start, end)) continue;
+      if (extra.some((s) => start < s.end && end > s.start)) continue;
+      extra.push({
+        start,
+        end,
+        text: m[0],
+        category: "name",
+        ruleId: "rule.name_echo",
+        confidence: 0.5,
+        contextual: true,
+      });
+    }
+  }
+  if (extra.length === 0) return spans;
+  return [...spans, ...extra].sort((a, b) => a.start - b.start);
 }
 
 // IBAN mod-97 (ISO 13616). Tolerant voor spaties, punten, streepjes en
@@ -622,7 +974,6 @@ function ibanMod97Valid(raw: string): boolean {
 }
 
 function bsnElfproefValid(raw: string): boolean {
-
   const digits = raw.replace(/\D/g, "");
   if (!/^\d{9}$/.test(digits)) return false;
   if (/^0+$/.test(digits)) return false;
