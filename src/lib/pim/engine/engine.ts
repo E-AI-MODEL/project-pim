@@ -247,7 +247,7 @@ export function createEngine(initial: EngineConfig): PimEngine {
         text,
         // Posities uit een eerdere tekst mogen niet blind op nieuwe tekst
         // worden toegepast; anders knipt de anonimisering er middenin.
-        extraSpans: remapSpans(prev.input.extraSpans ?? [], text),
+        extraSpans: remapSpans((prev.input as EngineInput).extraSpans ?? [], text),
         llmDraftText: undefined,
       });
       return await requestAction({ action });
