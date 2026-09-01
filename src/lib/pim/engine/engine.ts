@@ -41,6 +41,29 @@ export interface PimEngine {
   updateConfig(patch: Partial<EngineConfig>): void;
 }
 
+/**
+ * Zet spans die op een oudere tekst zijn gemeten om naar de nieuwe tekst.
+ * Klopt de positie niet meer, dan zoeken we het exacte fragment opnieuw op.
+ * Vinden we het niet (of meerdere keren dubbelzinnig), dan valt de span weg:
+ * de reguliere detectie draait toch opnieuw over de nieuwe tekst.
+ */
+function remapSpans(spans: EngineInput["extraSpans"], text: string): EngineInput["extraSpans"] {
+  if (!spans || spans.length === 0) return [];
+  const out: NonNullable<EngineInput["extraSpans"]> = [];
+  for (const span of spans) {
+    if (!span.text) continue;
+    if (text.slice(span.start, span.end) === span.text) {
+      out.push(span);
+      continue;
+    }
+    const idx = text.indexOf(span.text);
+    if (idx === -1) continue;
+    if (text.indexOf(span.text, idx + 1) !== -1) continue;
+    out.push({ ...span, start: idx, end: idx + span.text.length });
+  }
+  return out;
+}
+
 function computePayloadType(
   mode: EngineInput["mode"],
   guardStatus: NonNullable<EngineState["guard"]>["status"],
