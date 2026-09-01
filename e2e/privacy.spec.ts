@@ -51,7 +51,7 @@ async function kiesBestemmingKopieren(page: Page): Promise<void> {
     .poll(
       async () => {
         if (!(await keuze.isVisible().catch(() => false))) {
-          await knop.click({ trial: false }).catch(() => {});
+          await knop.click({ timeout: 3000 }).catch(() => {});
           await page.waitForTimeout(500);
         }
         return await keuze.isVisible().catch(() => false);
@@ -93,7 +93,6 @@ async function zetLokaleAiUit(page: Page): Promise<void> {
             .click({ timeout: 3000 })
             .catch(() => {});
           await page.waitForTimeout(400);
-
         }
         return await uit.isVisible().catch(() => false);
       },
@@ -104,9 +103,6 @@ async function zetLokaleAiUit(page: Page): Promise<void> {
   await page.keyboard.press("Escape");
   await page.waitForTimeout(300);
 }
-
-
-
 
 /**
  * Typt de tekst en wacht tot de analyse echt klaar is. Vóór hydratatie gaan
@@ -133,7 +129,6 @@ async function analyseerGevoeligeTekst(page: Page): Promise<void> {
     )
     .toEqual({ tekst: GEVOELIGE_TEKST, staat: "ready" });
 }
-
 
 test("houdt alle verkeer binnen en zet alleen gemaskeerde tekst op het klembord", async ({
   page,
