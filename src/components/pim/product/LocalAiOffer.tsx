@@ -22,7 +22,9 @@ export function LocalAiOffer() {
       <div className="rounded-xl border border-[#e5e7ef] bg-white px-4 py-3 text-[13px] text-[#475569]">
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-[#6d4aff]" />
-          <span>Lokale AI wordt geladen{typeof pct === "number" ? `, ${Math.round(pct)}%` : ""}</span>
+          <span>
+            Lokale AI wordt geladen{typeof pct === "number" ? `, ${Math.round(pct)}%` : ""}
+          </span>
         </div>
         <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[#eef0f5]">
           <div

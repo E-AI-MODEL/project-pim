@@ -155,7 +155,6 @@ export function CheckMode() {
 
       <LocalAiOffer />
 
-
       <InputPanel
         text={text}
         onTextChange={(v) => {
