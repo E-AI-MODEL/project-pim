@@ -1,7 +1,8 @@
 // Herschrijven is opt-in en nooit toegestaan op pseudonieme tekst.
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { RewritePanel, hasPseudonymTokens } from "../RewritePanel";
+import { RewritePanel } from "../RewritePanel";
+import { hasPseudonymTokens } from "@/lib/pim/pseudonymTokens";
 
 vi.mock("@/lib/pim/rewriteLlm", () => ({
   onRewriteStatus: () => () => {},
