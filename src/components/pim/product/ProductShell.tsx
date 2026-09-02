@@ -6,16 +6,13 @@ import { usePimSettings } from "@/hooks/usePimSettings";
 import { usePimEngine } from "@/hooks/usePimEngine";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AppHeader } from "./AppHeader";
-import { MobileModePicker } from "./MobileModePicker";
 import { StatusFooter } from "./StatusFooter";
 
 import { ProductShellProvider, type AnalysisMode } from "./ProductShellContext";
-import { CheckMode } from "./modes/CheckMode";
 import { WriteMode } from "./modes/WriteMode";
 import { SidePanel } from "./SidePanel";
 import { SettingsTab } from "./SettingsTab";
 
-import type { ProductMode } from "./types";
 import { DEFAULT_AUTO_REDACT } from "@/components/pim/writer/pimGeneralizations";
 
 /**
@@ -23,7 +20,7 @@ import { DEFAULT_AUTO_REDACT } from "@/components/pim/writer/pimGeneralizations"
  * één analysemodel voor beide schermen. De schermen zijn inhoudsvlakken; ze
  * renderen geen eigen header, footer, monitor of instellingenpaneel.
  */
-export function ProductShell({ mode }: { mode: ProductMode }) {
+export function ProductShell() {
   const settings = usePimSettings();
   const [text, setTextRaw] = useState("");
   const [pimMode, setPimMode] = useState<Mode>("anonymous");
@@ -40,9 +37,7 @@ export function ProductShell({ mode }: { mode: ProductMode }) {
   const isMobile = useIsMobile();
 
   // Eén analysemodel voor beide schermen.
-  const [desktopAnalysisMode, setAnalysisMode] = useState<AnalysisMode>(
-    mode === "write" ? "manual" : "live",
-  );
+  const [desktopAnalysisMode, setAnalysisMode] = useState<AnalysisMode>("manual");
   // Op mobiel kijkt PiM nooit live mee: dat spaart accu en houdt het moment
   // van nakijken voorspelbaar (één knop onderaan het scherm).
   const analysisMode: AnalysisMode = isMobile ? "manual" : desktopAnalysisMode;
@@ -70,9 +65,8 @@ export function ProductShell({ mode }: { mode: ProductMode }) {
     if (variant) setNerVariant(variant);
   }, [settings.detectionSettings]);
 
-  // Schermbewuste bron: het schrijfscherm gebruikt de editor-tekst, nakijken
-  // gebruikt de shell-`text`. Zo valt een lege editor niet terug op oude tekst.
-  const activeNerText = mode === "write" ? nerSourceText : text;
+  // Eén werkruimte: de editor-tekst is de bron voor het lokale AI-model.
+  const activeNerText = nerSourceText;
   const {
     nerSpans,
     nerStatus,
@@ -210,17 +204,15 @@ export function ProductShell({ mode }: { mode: ProductMode }) {
   return (
     <ProductShellProvider value={ctx}>
       <div className="min-h-screen flex flex-col bg-[#f6f7fb] text-[#0f172a]">
-        <AppHeader mode={mode} />
+        <AppHeader />
         <main className="flex-1">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 py-4 sm:py-8 space-y-4">
-            {isMobile && <MobileModePicker active={mode} />}
-            {mode === "check" && <CheckMode />}
-            {mode === "write" && <WriteMode />}
+            <WriteMode />
           </div>
         </main>
 
         <StatusFooter />
-        <SidePanel settings={<SettingsTab mode={mode} />} />
+        <SidePanel settings={<SettingsTab />} />
       </div>
     </ProductShellProvider>
   );

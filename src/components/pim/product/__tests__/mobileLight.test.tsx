@@ -41,17 +41,16 @@ describe("PiM light op mobiel", () => {
   beforeEach(() => setViewport(390));
   afterEach(() => setViewport(original));
 
-  it("toont de modekaarten met verwachting en een vaste nakijkknop", () => {
-    render(<ProductShell mode="check" />);
-    expect(screen.getByTestId("mobile-mode-picker")).toBeTruthy();
-    expect(screen.getByText(/PiM zegt of je hem kunt delen/)).toBeTruthy();
-    expect(screen.getByTestId("run-analysis-mobile")).toBeTruthy();
+  it("toont op mobiel één werkruimte zonder modekaarten", () => {
+    render(<ProductShell />);
+    expect(screen.queryByTestId("mobile-mode-picker")).toBeNull();
+    expect(screen.getAllByTestId("writer-workspace")).toHaveLength(1);
   });
 
-  it("toont op desktop geen mobiele kaarten of actiebalk", () => {
+  it("toont op desktop dezelfde ene werkruimte", () => {
     setViewport(1280);
-    render(<ProductShell mode="check" />);
+    render(<ProductShell />);
     expect(screen.queryByTestId("mobile-mode-picker")).toBeNull();
-    expect(screen.queryByTestId("run-analysis-mobile")).toBeNull();
+    expect(screen.getAllByTestId("writer-workspace")).toHaveLength(1);
   });
 });

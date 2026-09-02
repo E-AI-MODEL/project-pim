@@ -24,36 +24,27 @@ vi.mock("@/components/pim/start-go/LiveTechMonitor", () => ({
   DiagnosticsBody: () => <div data-testid="diagnostics-body" />,
 }));
 // Andere modes met content mocken zodat er geen onverwachte overlap is.
-vi.mock("@/components/pim/product/modes/CheckMode", () => ({
-  CheckMode: () => <div data-testid="check-mode" />,
-}));
 
 import { ProductShell } from "@/components/pim/product/ProductShell";
 
 describe("Slice B, WriteMode in ProductShell", () => {
   it("toont de echte WriterWorkspace, geen placeholder-tekst", () => {
-    render(<ProductShell mode="write" />);
+    render(<ProductShell />);
     expect(screen.getByTestId("writer-workspace-real")).toBeTruthy();
     expect(screen.queryByText(/in voorbereiding/i)).toBeNull();
     expect(screen.queryByText(/Open editor/i)).toBeNull();
   });
 
-  it("rendert AppHeader en StatusFooter precies één keer in write-mode", () => {
-    render(<ProductShell mode="write" />);
+  it("rendert AppHeader en StatusFooter precies één keer", () => {
+    render(<ProductShell />);
     expect(screen.getAllByTestId("app-header")).toHaveLength(1);
     expect(screen.getAllByTestId("status-footer")).toHaveLength(1);
   });
 
-  it("mode-switch write → check → write behoudt gedeelde chrome (geen dubbele header)", async () => {
-    const { rerender } = render(<ProductShell mode="write" />);
-    expect(screen.getAllByTestId("app-header")).toHaveLength(1);
+  it("herrenderen houdt de gedeelde chrome enkelvoudig", async () => {
+    const { rerender } = render(<ProductShell />);
     await act(async () => {
-      rerender(<ProductShell mode="check" />);
-    });
-    expect(screen.getAllByTestId("app-header")).toHaveLength(1);
-    expect(screen.getByTestId("check-mode")).toBeTruthy();
-    await act(async () => {
-      rerender(<ProductShell mode="write" />);
+      rerender(<ProductShell />);
     });
     expect(screen.getAllByTestId("app-header")).toHaveLength(1);
     expect(screen.getByTestId("writer-workspace-real")).toBeTruthy();

@@ -19,7 +19,7 @@ export function NewTextButton() {
       if (!ok) return;
     }
     window.dispatchEvent(new CustomEvent("pim:reset"));
-    navigate({ to: "/app", search: { mode: "check" } });
+    navigate({ to: "/app" });
     setTimeout(() => window.dispatchEvent(new CustomEvent("pim:focus-primary")), 80);
   };
 

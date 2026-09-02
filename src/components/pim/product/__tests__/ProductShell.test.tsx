@@ -7,7 +7,7 @@ import { describe, expect, it, vi } from "vitest";
 import { useProductShell } from "@/components/pim/product/ProductShellContext";
 
 vi.mock("@/components/pim/product/AppHeader", () => ({
-  AppHeader: ({ mode }: { mode: string }) => <div data-testid="hdr">{mode}</div>,
+  AppHeader: () => <div data-testid="hdr" />,
 }));
 vi.mock("@/components/pim/product/StatusFooter", () => ({
   StatusFooter: () => <div data-testid="ftr" />,
@@ -24,14 +24,13 @@ function Probe() {
   );
 }
 
-vi.mock("@/components/pim/product/modes/CheckMode", () => ({ CheckMode: () => <Probe /> }));
 vi.mock("@/components/pim/product/modes/WriteMode", () => ({ WriteMode: () => <Probe /> }));
 
 import { ProductShell } from "@/components/pim/product/ProductShell";
 
 describe("ProductShell, slice A.1", () => {
   it("pim:reset wist tekst en zet engine op idle", async () => {
-    render(<ProductShell mode="check" />);
+    render(<ProductShell />);
     await act(async () => {
       screen.getByRole("button", { name: "set" }).click();
     });
@@ -44,17 +43,17 @@ describe("ProductShell, slice A.1", () => {
     expect(screen.getByTestId("phase").textContent).toBe("idle");
   });
 
-  it("modeswitch behoudt gedeelde invoer", async () => {
-    const { rerender } = render(<ProductShell mode="check" />);
+  it("herrenderen behoudt gedeelde invoer", async () => {
+    const { rerender } = render(<ProductShell />);
     await act(async () => {
       screen.getByRole("button", { name: "set" }).click();
     });
     expect(screen.getByTestId("text").textContent).toBe("Hallo wereld");
 
-    rerender(<ProductShell mode="write" />);
+    rerender(<ProductShell />);
     expect(screen.getByTestId("text").textContent).toBe("Hallo wereld");
 
-    rerender(<ProductShell mode="write" />);
+    rerender(<ProductShell />);
     expect(screen.getByTestId("text").textContent).toBe("Hallo wereld");
   });
 });

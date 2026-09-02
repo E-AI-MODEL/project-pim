@@ -1,4 +1,4 @@
-// Gebruiksgemak: twee schermen, één analysemodel, één instellingenplek.
+// Eén werkruimte: geen modewissel meer, één plek voor instellingen.
 import { act, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
@@ -15,9 +15,6 @@ vi.mock("@tanstack/react-router", () => ({
 vi.mock("@/components/pim/writer/WriterWorkspace", () => ({
   WriterWorkspace: () => <div data-testid="writer-workspace" />,
 }));
-vi.mock("@/components/pim/product/modes/CheckMode", () => ({
-  CheckMode: () => <div data-testid="check-mode" />,
-}));
 vi.mock("@/components/pim/start-go/LiveTechMonitor", () => ({
   DiagnosticsBody: () => <div data-testid="diagnostics-body" />,
 }));
@@ -26,31 +23,24 @@ vi.mock("@/components/pim/start-go/AdvancedPanel", () => ({
 }));
 
 import { ProductShell } from "@/components/pim/product/ProductShell";
-import { MODE_LABEL, normalizeProductMode, PRODUCT_MODES } from "@/components/pim/product/types";
+import { validateAppSearch } from "@/routes/app.search";
 
-describe("Twee schermen met heldere verwachting", () => {
-  it("er zijn precies twee schermen met verwachtingstaal", () => {
-    expect(PRODUCT_MODES).toEqual(["check", "write"]);
-    expect(MODE_LABEL.check).toBe("Tekst nakijken");
-    expect(MODE_LABEL.write).toBe("Zelf schrijven");
+describe("Eén werkruimte", () => {
+  it("er is precies één werkvlak, zonder modewissel", () => {
+    render(<ProductShell />);
+    expect(screen.getAllByTestId("writer-workspace")).toHaveLength(1);
+    expect(screen.queryByRole("link", { name: /Tekst nakijken/ })).toBeNull();
+    expect(screen.queryByRole("link", { name: /Zelf schrijven/ })).toBeNull();
   });
 
-  it("oude links (quick/start) landen in het nakijkscherm", () => {
-    expect(normalizeProductMode("quick")).toBe("check");
-    expect(normalizeProductMode("start")).toBe("check");
-    expect(normalizeProductMode("write")).toBe("write");
-    expect(normalizeProductMode(undefined)).toBe("check");
-  });
-
-  it("de modeswitcher toont beide schermen en de verwachting van het actieve scherm", () => {
-    render(<ProductShell mode="check" />);
-    expect(screen.getAllByRole("link", { name: /Tekst nakijken/ })).toHaveLength(1);
-    expect(screen.getAllByRole("link", { name: /Zelf schrijven/ })).toHaveLength(1);
-    expect(screen.getByText(/Plak of upload je tekst/)).toBeTruthy();
+  it("oude links met ?mode= blijven werken en verliezen de parameter", () => {
+    expect(validateAppSearch({ mode: "quick" })).toEqual({});
+    expect(validateAppSearch({ mode: "write" })).toEqual({});
+    expect(validateAppSearch({})).toEqual({});
   });
 
   it("instellingen zitten op één plek en openen via de menuknop rechtsboven", async () => {
-    render(<ProductShell mode="check" />);
+    render(<ProductShell />);
     expect(screen.getAllByTestId("open-menu")).toHaveLength(1);
     expect(screen.queryAllByTestId("advanced-panel")).toHaveLength(0);
     await act(async () => {

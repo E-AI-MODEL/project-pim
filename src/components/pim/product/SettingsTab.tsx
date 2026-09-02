@@ -1,15 +1,14 @@
 import { useEffect, useState } from "react";
 import { AdvancedPanel } from "@/components/pim/start-go/AdvancedPanel";
 import { useProductShell } from "./ProductShellContext";
-import type { ProductMode } from "./types";
 import type { PiiCategory } from "@/lib/pim";
 import { readDeviceCapability, type DeviceCapability } from "@/lib/pim/deviceCapability";
 
 /**
  * Instellingen-inhoud voor het gedeelde zijpaneel: waar PiM op let, hoe streng
- * hij meekijkt en wat hij meteen weghaalt. Geldt voor beide schermen.
+ * hij meekijkt en wat hij meteen weghaalt. Eén werkruimte, dus één set.
  */
-export function SettingsTab({ mode }: { mode: ProductMode }) {
+export function SettingsTab() {
   const {
     settings,
     writerAutoRedact,
@@ -25,21 +24,18 @@ export function SettingsTab({ mode }: { mode: ProductMode }) {
     setDevice(readDeviceCapability());
   }, []);
 
-  const isWriter = mode === "write";
   const props = settings.advancedPanelProps;
-  const writerProps = isWriter
-    ? {
-        autoRedact: writerAutoRedact,
-        onAutoRedactChange: (cat: PiiCategory, scrub: boolean) => {
-          const next = new Set(writerAutoRedact);
-          if (scrub) next.add(cat);
-          else next.delete(cat);
-          setWriterAutoRedact(next);
-        },
-        strict: writerStrict,
-        onStrictChange: setWriterStrict,
-      }
-    : undefined;
+  const writerProps = {
+    autoRedact: writerAutoRedact,
+    onAutoRedactChange: (cat: PiiCategory, scrub: boolean) => {
+      const next = new Set(writerAutoRedact);
+      if (scrub) next.add(cat);
+      else next.delete(cat);
+      setWriterAutoRedact(next);
+    },
+    strict: writerStrict,
+    onStrictChange: setWriterStrict,
+  };
 
   return (
     <div>

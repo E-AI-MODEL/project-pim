@@ -16,9 +16,6 @@ vi.mock("@tanstack/react-router", () => ({
 vi.mock("@/components/pim/writer/WriterWorkspace", () => ({
   WriterWorkspace: () => <div data-testid="writer-workspace" />,
 }));
-vi.mock("@/components/pim/product/modes/CheckMode", () => ({
-  CheckMode: () => <div data-testid="check-mode" />,
-}));
 vi.mock("@/components/pim/start-go/LiveTechMonitor", () => ({
   DiagnosticsBody: () => <div data-testid="diagnostics-body" />,
 }));
@@ -30,7 +27,7 @@ import { ProductShell } from "@/components/pim/product/ProductShell";
 
 describe("Gedeeld zijpaneel", () => {
   it("de menuknop opent het menu met instellingen, diagnostiek en achtergrond", async () => {
-    render(<ProductShell mode="check" />);
+    render(<ProductShell />);
     expect(screen.queryAllByTestId("side-panel")).toHaveLength(0);
     await act(async () => {
       screen.getByTestId("open-menu").click();
@@ -44,7 +41,7 @@ describe("Gedeeld zijpaneel", () => {
   });
 
   it("instellingen openen binnen hetzelfde paneel, met een weg terug", async () => {
-    render(<ProductShell mode="check" />);
+    render(<ProductShell />);
     await act(async () => {
       screen.getByTestId("open-menu").click();
     });
@@ -60,7 +57,7 @@ describe("Gedeeld zijpaneel", () => {
   });
 
   it("pim:open-diagnostics springt direct naar diagnostiek", async () => {
-    render(<ProductShell mode="check" />);
+    render(<ProductShell />);
     await act(async () => {
       window.dispatchEvent(new Event("pim:open-diagnostics"));
     });
@@ -69,7 +66,7 @@ describe("Gedeeld zijpaneel", () => {
   });
 
   it("Escape sluit het paneel", async () => {
-    render(<ProductShell mode="check" />);
+    render(<ProductShell />);
     await act(async () => {
       screen.getByTestId("open-menu").click();
     });
@@ -87,12 +84,12 @@ describe("Gedeeld zijpaneel", () => {
       window.dispatchEvent(new Event("pim:open-menu"));
     });
     const item = screen.getByTestId("menu-item-settings");
-    expect(item.textContent).toContain("In Tekst nakijken");
+    expect(item.textContent).toContain("In de werkruimte");
     await act(async () => {
       item.click();
     });
     // Geen eigen instellingenscherm: navigeren naar /app, geen drill-down.
-    expect(navigateMock).toHaveBeenCalledWith({ to: "/app", search: { mode: "check" } });
+    expect(navigateMock).toHaveBeenCalledWith({ to: "/app" });
     expect(screen.queryAllByTestId("advanced-panel")).toHaveLength(0);
     expect(screen.queryAllByTestId("side-panel")).toHaveLength(0);
   });
