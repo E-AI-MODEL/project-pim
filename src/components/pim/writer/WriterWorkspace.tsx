@@ -192,10 +192,14 @@ export function WriterWorkspace() {
     const cursorFrom = Math.min(sel.from, sel.to);
     const toReplace: { from: number; to: number; label: string }[] = [];
     const toMark: PiiSpan[] = [];
+    // In codemodus mag niets alvast door een algemeen label worden vervangen:
+    // dan zou de originele waarde verdwijnen voordat er een code voor bestaat.
+    const autoRedactActive = pimMode === "anonymous";
     for (const s of all) {
       const r = spanToRange(s, map);
       if (!r) continue;
-      if (autoRedact.has(s.category)) {
+      if (autoRedactActive && autoRedact.has(s.category)) {
+
         if (r.to + 1 <= cursorFrom)
           toReplace.push({ ...r, label: GENERALIZATIONS[s.category] ?? "[geredacteerd]" });
         else toMark.push(s);
