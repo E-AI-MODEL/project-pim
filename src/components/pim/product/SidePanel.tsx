@@ -66,7 +66,7 @@ export function SidePanel({ settings }: { settings?: React.ReactNode }) {
       if (v === "settings" && !settings) {
         // Zonder eigen instellingencontext (achtergrondpagina's): ga naar het
         // nakijkscherm; het daar gemonteerde paneel opent direct de settings.
-        void navigate({ to: "/app", search: { mode: "check" } });
+        void navigate({ to: "/app" });
         setTimeout(() => window.dispatchEvent(new CustomEvent("pim:open-settings")), 80);
         return;
       }
@@ -146,7 +146,7 @@ export function SidePanel({ settings }: { settings?: React.ReactNode }) {
                           // Achtergrondpagina: instellingen wonen in het
                           // nakijkscherm; navigeer en open ze daar.
                           setOpen(false);
-                          void navigate({ to: "/app", search: { mode: "check" } });
+                          void navigate({ to: "/app" });
                           setTimeout(() => {
                             // De timer kan afgaan nadat het venster weg is
                             // (navigatie of testteardown); dan niets doen.
@@ -164,7 +164,7 @@ export function SidePanel({ settings }: { settings?: React.ReactNode }) {
                         Instellingen
                         {!settings && (
                           <span className="block text-[11px] font-normal text-[#94a3b8]">
-                            In Tekst nakijken
+                            In de werkruimte
                           </span>
                         )}
                       </span>

@@ -1,10 +1,12 @@
 import { Link } from "@tanstack/react-router";
 import { ShieldCheck } from "lucide-react";
 import { MenuButton } from "./SidePanel";
-import { ModeSwitcher } from "./ModeSwitcher";
-import { MODE_EXPECTATION, type ProductMode } from "./types";
 
-export function AppHeader({ mode }: { mode: ProductMode }) {
+/**
+ * Eén header voor de hele werkruimte. Geen modewissel meer: PiM heeft nog maar
+ * één scherm waarin je schrijft, plakt of een bestand opent.
+ */
+export function AppHeader() {
   return (
     <header className="sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-[#e5e7ef]">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 h-14 flex items-center gap-3">
@@ -29,11 +31,9 @@ export function AppHeader({ mode }: { mode: ProductMode }) {
         <MenuButton />
       </div>
       <div className="mx-auto hidden max-w-7xl px-4 pb-2 pt-0.5 sm:block sm:px-6">
-        <div className="overflow-x-auto">
-          <ModeSwitcher active={mode} />
-        </div>
-        <p className="mt-1.5 text-[12px] leading-snug text-[#64748b] max-w-2xl">
-          {MODE_EXPECTATION[mode]}
+        <p className="text-[12px] leading-snug text-[#64748b] max-w-2xl">
+          Schrijf hier je tekst, plak hem of open een bestand. PiM kijkt hem lokaal na en geeft pas
+          groen licht als er geen persoonsgegevens meer in staan.
         </p>
       </div>
     </header>

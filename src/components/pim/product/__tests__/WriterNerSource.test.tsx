@@ -35,9 +35,6 @@ vi.mock("@/components/pim/product/SidePanel", () => ({
   MenuButton: () => <button type="button" />,
   SidePanel: () => <div />,
 }));
-vi.mock("@/components/pim/product/modes/CheckMode", () => ({
-  CheckMode: () => <div />,
-}));
 
 // Fake writer: publiceert een vaste plaintext via de centrale
 // setNerSourceText en wist de bron bij unmount, precies zoals de echte
@@ -59,10 +56,10 @@ vi.mock("@/components/pim/writer/WriterWorkspace", () => ({
 import { ProductShell } from "@/components/pim/product/ProductShell";
 
 describe("WriterWorkspace publiceert NER-bron via ProductShell", () => {
-  it("gebruikt de writer-tekst als centrale NER-input in write-mode", async () => {
+  it("gebruikt de werkruimte-tekst als centrale NER-input", async () => {
     nerInputs.length = 0;
     await act(async () => {
-      render(<ProductShell mode="write" />);
+      render(<ProductShell />);
     });
     expect(nerInputs).toContain("John mailt vandaag.");
   });
@@ -72,7 +69,7 @@ describe("WriterWorkspace publiceert NER-bron via ProductShell", () => {
     // Simuleer een lege writer door FakeWriter tijdelijk niet te mounten;
     // in write-mode leest de shell strikt uit nerSourceText, niet uit text.
     await act(async () => {
-      render(<ProductShell mode="write" />);
+      render(<ProductShell />);
     });
     // Alle NER-inputs in write-mode zijn óf "" (initieel), óf de writer-tekst.
     for (const t of nerInputs) {
@@ -80,20 +77,22 @@ describe("WriterWorkspace publiceert NER-bron via ProductShell", () => {
     }
   });
 
-  it("wist de NER-bron wanneer de writer unmount (mode-wissel write → check)", async () => {
+  it("een verse werkruimte start met een lege NER-bron", async () => {
     nerInputs.length = 0;
-    let rerender!: (ui: React.ReactElement) => void;
+    let unmount!: () => void;
     await act(async () => {
-      const r = render(<ProductShell mode="write" />);
-      rerender = r.rerender;
+      const r = render(<ProductShell />);
+      unmount = r.unmount;
     });
+    expect(nerInputs[0]).toBe("");
     expect(nerInputs).toContain("John mailt vandaag.");
+    await act(async () => unmount());
+
+    nerInputs.length = 0;
     await act(async () => {
-      rerender(<ProductShell mode="check" />);
+      render(<ProductShell />);
     });
-    // Na de mode-wissel is de writer unmount, setNerSourceText("") is
-    // aangeroepen en Quick-mode leest weer uit `text` (leeg in deze test),
-    // dus de laatst geobserveerde NER-input mag geen writer-tekst zijn.
-    expect(nerInputs[nerInputs.length - 1]).toBe("");
+    // Geen schrijftekst uit de vorige sessie: de bron begint weer leeg.
+    expect(nerInputs[0]).toBe("");
   });
 });

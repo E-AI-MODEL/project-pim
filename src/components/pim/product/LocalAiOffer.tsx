@@ -4,7 +4,7 @@ import { useProductShell } from "./ProductShellContext";
 
 /**
  * Eenmalige uitnodiging om de lokale AI (NER) aan te zetten.
- * Gedeeld door Tekst nakijken en Zelf schrijven: één bron van waarheid
+ * Eén bron van waarheid voor de werkruimte
  * (`nerEnabled` / `startNer` uit de shell), dus geen dubbele modeldownload
  * en geen tweede activeerknop per scherm.
  */

@@ -36,6 +36,7 @@ import {
   MapPin,
   Copy as CopyIcon,
   Send,
+  Wand2,
 } from "lucide-react";
 import {
   type DetectionLayerSettings,
@@ -56,6 +57,10 @@ import {
   buildDecorations,
 } from "./pimPlugin";
 import { importDocxToEditor, exportEditorToDocx } from "./docxIO";
+import { extractDocument, rejectionReason } from "@/lib/pim/documentReader";
+import { EXAMPLES } from "@/components/pim/start-go/ExamplePicker";
+import { MappingViewer } from "@/components/pim/start-go/MappingViewer";
+import { RewritePanel } from "@/components/pim/product/RewritePanel";
 import { isValidBsn, isValidIban, isValidLicensePlate, hasStudentIdContext } from "./validators";
 
 interface ClickedSpan {
@@ -70,7 +75,10 @@ interface ClickedSpan {
 export function WriterWorkspace() {
   // ProductShell-context is de bron van waarheid voor engine, settings en reset.
   const {
+    engineState,
     evaluate,
+    mode: pimMode,
+    setMode: setPimMode,
     settings,
     requestActionForText,
     writerContent,
@@ -107,6 +115,7 @@ export function WriterWorkspace() {
   const [egressMsg, setEgressMsg] = useState<string | null>(null);
   const [hasAnalyzed, setHasAnalyzed] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [rewriteOpen, setRewriteOpen] = useState(false);
   const isMobile = useIsMobile();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -166,7 +175,7 @@ export function WriterWorkspace() {
     setPlainText(plain);
     setHasAnalyzed(true);
     clearStale();
-    const next = evaluate({ text: plain, mode: "anonymous", extraSpans: nerSpans });
+    const next = evaluate({ text: plain, mode: pimMode, extraSpans: nerSpans });
     const signals = next.signals;
     if (!signals) return;
     let all = [...signals.directPii, ...signals.contextualPii];
@@ -198,7 +207,7 @@ export function WriterWorkspace() {
     // Bereken samengevatte bevindingen + veilige versie voor het rechter paneel.
     const allVisible = [...toMark];
     setFoundSpans(allVisible);
-    setSafeText(buildSafeText(plain, all));
+    setSafeText(next.draft?.text ?? buildSafeText(plain, all));
     if (toReplace.length > 0) {
       toReplace.sort((a, b) => b.from - a.from);
       const tr = editor.state.tr;
@@ -215,7 +224,7 @@ export function WriterWorkspace() {
       }),
     );
     setStats((p) => ({ scrubbed: p.scrubbed, marked: toMark.length }));
-  }, [editor, autoRedact, ignored, strict, nerSpans, evaluate, clearStale]);
+  }, [editor, autoRedact, ignored, strict, nerSpans, evaluate, clearStale, pimMode]);
 
   // Ref zodat effects de laatste scan kunnen aanroepen zonder mee te draaien
   // op elke dependency-wissel.
@@ -305,13 +314,26 @@ export function WriterWorkspace() {
     setImportWarnings([]);
     if (!files || files.length === 0 || !editor) return;
     const file = files[0];
-    if (!/\.docx$/i.test(file.name)) {
-      setImportError("Alleen .docx-bestanden, voor andere formaten gebruik je de homepage.");
+    const reason = rejectionReason(file);
+    if (reason) {
+      setImportError(reason);
+      if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
     try {
-      const { warnings } = await importDocxToEditor(file, editor);
-      if (warnings.length > 0) setImportWarnings(warnings);
+      if (/\.docx$/i.test(file.name)) {
+        const { warnings } = await importDocxToEditor(file, editor);
+        if (warnings.length > 0) setImportWarnings(warnings);
+      } else {
+        const doc = await extractDocument(file);
+        const html = doc.text
+          .split(/\n{2,}/)
+          .map((para) => `<p>${escapeHtml(para).replace(/\n/g, "<br />")}</p>`)
+          .join("");
+        editor.commands.setContent(html || "<p></p>");
+        if (doc.truncated)
+          setImportWarnings(["Het bestand is lang, PiM heeft het begin ingeladen."]);
+      }
     } catch (err) {
       setImportError(err instanceof Error ? err.message : "Kon document niet lezen.");
     }
@@ -320,7 +342,7 @@ export function WriterWorkspace() {
   const onExport = async () => {
     if (!editor) return;
     const { plain } = (await import("./pimPlugin")).extractPlain(editor.state.doc);
-    const next = evaluate({ text: plain, mode: "anonymous", extraSpans: nerSpans });
+    const next = evaluate({ text: plain, mode: pimMode, extraSpans: nerSpans });
     const sig = next.signals ?? { directPii: [], contextualPii: [] };
     const total = sig.directPii.length + sig.contextualPii.length;
     if (total > 0) {
@@ -346,6 +368,17 @@ export function WriterWorkspace() {
     const ts = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 16);
     await exportEditorToDocx(editor, `pim-notitie-${ts}.docx`);
   };
+  const loadExample = (text: string) => {
+    if (!editor) return;
+    const html = text
+      .split(/\n{2,}/)
+      .map((para) => `<p>${escapeHtml(para)}</p>`)
+      .join("");
+    editor.commands.setContent(html);
+    setImportError(null);
+    setImportWarnings([]);
+  };
+
   const onClear = useCallback(() => {
     if (!editor) return;
     editor.commands.setContent("<p></p>");
@@ -380,6 +413,7 @@ export function WriterWorkspace() {
       } as const;
     }
   };
+  const pseudoMapping = engineState.pseudoMapping;
   const privacyPanel = (
     <>
       <FindingsCard
@@ -428,6 +462,35 @@ export function WriterWorkspace() {
           {egressMsg}
         </div>
       )}
+      <div className="rounded-2xl border border-[#e5e7ef] bg-white p-3 space-y-2">
+        <div className="text-[11px] font-semibold uppercase tracking-wider text-[#64748b]">
+          Wat PiM met gevonden gegevens doet
+        </div>
+        <div className="grid grid-cols-2 gap-1.5">
+          <ModeChoice
+            active={pimMode === "anonymous"}
+            title="Weghalen"
+            hint="Vervangen door [persoon]"
+            onClick={() => setPimMode("anonymous")}
+          />
+          <ModeChoice
+            active={pimMode === "pseudonymous"}
+            title="Codes"
+            hint="Terug te lezen met sleutel"
+            onClick={() => setPimMode("pseudonymous")}
+          />
+        </div>
+        <button
+          type="button"
+          data-testid="open-rewrite"
+          onClick={() => setRewriteOpen(true)}
+          className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#e5e7ef] bg-white px-3 py-2 text-[12px] font-medium text-[#334155] hover:bg-[#f6f7fb]"
+        >
+          <Wand2 className="h-3.5 w-3.5" />
+          Tekst laten herschrijven
+        </button>
+      </div>
+      {pseudoMapping && pseudoMapping.size > 0 && <MappingViewer mapping={pseudoMapping} />}
     </>
   );
 
@@ -456,6 +519,20 @@ export function WriterWorkspace() {
               />
               <LightAction icon={<Trash2 className="h-4 w-4" />} label="Leeg" onClick={onClear} />
             </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-1.5 border-b border-[#eef0f5] px-4 py-2 text-[11px] text-[#94a3b8]">
+            <span>Voorbeeldtekst:</span>
+            {EXAMPLES.map((e) => (
+              <button
+                key={e.id}
+                type="button"
+                title={e.hint}
+                onClick={() => loadExample(e.text)}
+                className="rounded-md border border-[#e5e7ef] bg-white px-2 py-0.5 text-[11px] text-[#475569] hover:bg-[#f6f7fb]"
+              >
+                {e.label}
+              </button>
+            ))}
           </div>
           {importError && (
             <div className="mx-4 mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
@@ -546,9 +623,18 @@ export function WriterWorkspace() {
       <input
         ref={fileInputRef}
         type="file"
-        accept=".docx"
+        accept=".docx,.txt,.md,.markdown,.csv,.tsv,.json,.log,.html,.htm,.xml,.rtf"
         hidden
         onChange={(e) => void onFile(e.target.files)}
+      />
+      <RewritePanel
+        open={rewriteOpen}
+        onOpenChange={setRewriteOpen}
+        sourceText={safeText}
+        onAccept={(text) => {
+          loadExample(text);
+          runAnalysis();
+        }}
       />
       {clicked && (
         <div
@@ -896,6 +982,36 @@ function ActionRow({
         Naar AI
       </button>
     </div>
+  );
+}
+
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function ModeChoice({
+  active,
+  title,
+  hint,
+  onClick,
+}: {
+  active: boolean;
+  title: string;
+  hint: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={`rounded-lg border px-2.5 py-1.5 text-left transition-colors ${
+        active ? "border-[#6d4aff] bg-[#6d4aff]/5" : "border-[#e5e7ef] bg-white hover:bg-[#f6f7fb]"
+      }`}
+    >
+      <span className="block text-[12px] font-semibold text-[#0f172a]">{title}</span>
+      <span className="block text-[11px] text-[#64748b]">{hint}</span>
+    </button>
   );
 }
 

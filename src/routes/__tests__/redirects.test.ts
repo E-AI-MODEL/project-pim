@@ -1,6 +1,5 @@
-// Slice B, /try en /schrijven zijn opgegaan in /app. We toetsen dat de
-// route-modules een router-native redirect naar de juiste modus gooien
-// (geen window.location, geen loops).
+// /try en /schrijven zijn opgegaan in de ene werkruimte op /app. We toetsen
+// dat de route-modules een router-native redirect gooien (geen loops).
 
 import { describe, expect, it } from "vitest";
 import { Route as TryRoute } from "@/routes/try";
@@ -17,34 +16,22 @@ function invokeBeforeLoad(route: { options: Record<string, unknown> }): unknown 
   throw new Error("beforeLoad did not throw a redirect");
 }
 
-describe("Slice B, redirects", () => {
-  it("/try → /app?mode=check", () => {
-    const r = invokeBeforeLoad(TryRoute as unknown as { options: Record<string, unknown> }) as {
-      options: { to?: string; search?: { mode?: string }; replace?: boolean };
+describe("Redirects naar de werkruimte", () => {
+  it.each([
+    ["/try", TryRoute],
+    ["/schrijven", SchrijvenRoute],
+  ])("%s → /app", (_path, route) => {
+    const r = invokeBeforeLoad(route as unknown as { options: Record<string, unknown> }) as {
+      options: { to?: string; replace?: boolean; search?: unknown };
     };
     expect(r.options.to).toBe("/app");
-    expect(r.options.search?.mode).toBe("check");
     expect(r.options.replace).toBe(true);
+    expect(r.options.search).toBeUndefined();
   });
 
-  it("/schrijven → /app?mode=write", () => {
-    const r = invokeBeforeLoad(
-      SchrijvenRoute as unknown as { options: Record<string, unknown> },
-    ) as { options: { to?: string; search?: { mode?: string }; replace?: boolean } };
-    expect(r.options.to).toBe("/app");
-    expect(r.options.search?.mode).toBe("write");
-    expect(r.options.replace).toBe(true);
-  });
-
-  it("redirect target route (/app) accepteert beide modi zonder terug te wijzen", async () => {
+  it("de doelroute accepteert elke oude search zonder terug te wijzen", async () => {
     const { validateAppSearch } = await import("@/routes/app.search");
-    for (const mode of ["check", "write"] as const) {
-      expect(validateAppSearch({ mode }).mode).toBe(mode);
-    }
-    // Oude links blijven werken en landen in het nakijkscherm.
-    expect(validateAppSearch({ mode: "quick" }).mode).toBe("check");
-    expect(validateAppSearch({ mode: "start" }).mode).toBe("check");
-    // Onbekende mode valt terug op check. Geen redirect-loop.
-    expect(validateAppSearch({ mode: "bogus" }).mode).toBe("check");
+    expect(validateAppSearch({ mode: "check" })).toEqual({});
+    expect(validateAppSearch({ mode: "bogus" })).toEqual({});
   });
 });

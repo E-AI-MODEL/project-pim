@@ -1,10 +1,9 @@
-import { normalizeProductMode, type ProductMode } from "@/components/pim/product/types";
-
 /**
- * Lokale, dependencyvrije validator voor de ?mode= search param op /app.
- * Accepteert "check" | "write"; oude waarden "quick"/"start" worden
- * genormaliseerd naar "check". Fallback = "check".
+ * /app heeft geen modi meer: er is één werkruimte. Oude links met ?mode=...
+ * blijven werken, de parameter wordt simpelweg genegeerd en weggelaten.
  */
-export function validateAppSearch(input: Record<string, unknown>): { mode: ProductMode } {
-  return { mode: normalizeProductMode(input?.mode) };
+export type AppSearch = Record<string, never>;
+
+export function validateAppSearch(_input?: Record<string, unknown>): AppSearch {
+  return {};
 }
