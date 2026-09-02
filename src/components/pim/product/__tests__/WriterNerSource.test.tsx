@@ -77,19 +77,22 @@ describe("WriterWorkspace publiceert NER-bron via ProductShell", () => {
     }
   });
 
-  it("wist de NER-bron wanneer de werkruimte unmount", async () => {
+  it("een verse werkruimte start met een lege NER-bron", async () => {
     nerInputs.length = 0;
     let unmount!: () => void;
     await act(async () => {
       const r = render(<ProductShell />);
       unmount = r.unmount;
     });
+    expect(nerInputs[0]).toBe("");
     expect(nerInputs).toContain("John mailt vandaag.");
+    await act(async () => unmount());
+
+    nerInputs.length = 0;
     await act(async () => {
-      unmount();
+      render(<ProductShell />);
     });
-    // Na unmount is setNerSourceText("") aangeroepen; er blijft geen
-    // schrijftekst achter als NER-bron.
-    expect(nerInputs[nerInputs.length - 1]).not.toBe("John mailt vandaag.");
+    // Geen schrijftekst uit de vorige sessie: de bron begint weer leeg.
+    expect(nerInputs[0]).toBe("");
   });
 });
