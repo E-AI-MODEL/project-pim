@@ -45,3 +45,17 @@ Eén scherm, met een naam die zowel plakken als schrijven dekt: **Werkruimte** (
 - Bestaande modus-tests (`twoModes`, `mobileLight`, `checkModeEditedCopy`, `routeChrome`, `appSearch`) omgeschreven naar de enkele werkruimte.
 - Nieuwe tests: bestand met .txt-inhoud landt in de editor, vervangen via de bubbel past de tekst aan, kopiëren loopt door de poort, `?mode=check` en `/try` komen op de werkruimte uit.
 - E2E-privacytest aangepast aan het nieuwe scherm; klembord- en fail-closed-assertions blijven ongewijzigd.
+
+## Aparte herschrijffunctie (opt-in, na downloaden van het taalmodel)
+
+De motor hiervoor bestaat al (`src/lib/pim/rewriteLlm.ts`: laden met voortgang, streaming herschrijven, ontdubbelen). Wat ontbreekt is een duidelijke plek in de werkruimte. Die maken we bewust apart van de arcering, zodat er geen tweede "veilige versie" in het hoofdscherm ontstaat.
+
+Verloop:
+
+1. In de werkruimte staat naast de acties een rustige knop "Tekst laten herschrijven". Zolang het model er niet is, opent die eerst een uitleg: wat het doet, dat het model eenmalig gedownload wordt (ongeveer 400 MB), dat alles lokaal blijft en dat het experimenteel is. Pas na expliciet akkoord start de download, met voortgangsbalk.
+2. Is het model geladen, dan opent een apart venster (zijpaneel op desktop, volledig scherm op mobiel) met links de huidige geanonimiseerde tekst en rechts het herschreven voorstel dat live binnenkomt.
+3. Onder het voorstel: "Overnemen in mijn tekst", "Opnieuw proberen" en "Sluiten". Overnemen zet de tekst terug in de editor en start een nieuwe controle; niets gaat automatisch mee.
+4. Harde grens: herschrijven mag alleen op een anonieme tekst. Bevat de tekst pseudoniemtokens, of is er nog geen schone versie, dan is de knop uitgeschakeld met de reden erbij.
+5. Het resultaat gaat altijd terug door de bestaande controle en de egress-poort. Zolang het model in de catalogus op `design-only` staat, blijft het venster gemarkeerd als experimenteel en blijft versturen naar buiten vanuit dit venster geblokkeerd; kopiëren en downloaden lopen via de gewone actiebalk na een nieuwe controle.
+
+Techniek: nieuw `RewritePanel.tsx` naast de werkruimte, gevoed door `onRewriteStatus` en `rewriteAnonymousDraftStream`; toestand (open, voortgang, voorstel) in de shell-context zodat het venster de editor niet blokkeert. Tests: knop uitgeschakeld zonder schone tekst, download start pas na akkoord, streaming voorstel verschijnt, overnemen vervangt de editorinhoud en zet de analyse op verouderd.
