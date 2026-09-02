@@ -49,10 +49,7 @@ function HomePage() {
         </div>
 
         <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 text-[14px]">
-          <Link
-            to="/app"
-            className="text-[#6d4aff] font-medium hover:underline underline-offset-4"
-          >
+          <Link to="/app" className="text-[#6d4aff] font-medium hover:underline underline-offset-4">
             Open de werkruimte &rarr;
           </Link>
 

@@ -331,7 +331,8 @@ export function WriterWorkspace() {
           .map((para) => `<p>${escapeHtml(para).replace(/\n/g, "<br />")}</p>`)
           .join("");
         editor.commands.setContent(html || "<p></p>");
-        if (doc.truncated) setImportWarnings(["Het bestand is lang, PiM heeft het begin ingeladen."]);
+        if (doc.truncated)
+          setImportWarnings(["Het bestand is lang, PiM heeft het begin ingeladen."]);
       }
     } catch (err) {
       setImportError(err instanceof Error ? err.message : "Kon document niet lezen.");
@@ -985,10 +986,7 @@ function ActionRow({
 }
 
 function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 function ModeChoice({
@@ -1008,9 +1006,7 @@ function ModeChoice({
       onClick={onClick}
       aria-pressed={active}
       className={`rounded-lg border px-2.5 py-1.5 text-left transition-colors ${
-        active
-          ? "border-[#6d4aff] bg-[#6d4aff]/5"
-          : "border-[#e5e7ef] bg-white hover:bg-[#f6f7fb]"
+        active ? "border-[#6d4aff] bg-[#6d4aff]/5" : "border-[#e5e7ef] bg-white hover:bg-[#f6f7fb]"
       }`}
     >
       <span className="block text-[12px] font-semibold text-[#0f172a]">{title}</span>
