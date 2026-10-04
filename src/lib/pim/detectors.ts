@@ -954,6 +954,24 @@ export function detectPii(text: string, disabledCategories?: ReadonlySet<PiiCate
  * Die echo's worden alsnog gemarkeerd, hoofdletterongevoelig en met een
  * lagere zekerheid, zolang ze niet in een bestaande span vallen.
  */
+// Tussenvoegsels horen bij een naam, maar zijn los geen naam.
+const NAME_PARTICLES = new Set([
+  "van",
+  "der",
+  "den",
+  "ter",
+  "ten",
+  "het",
+  "von",
+  "del",
+  "della",
+  "dos",
+  "das",
+  "bin",
+  "ben",
+  "abu",
+]);
+
 function withNameEchoes(
   text: string,
   spans: PiiSpan[],
@@ -965,7 +983,11 @@ function withNameEchoes(
     if (s.category !== "name") continue;
     for (const w of s.text.split(/[\s,]+/)) {
       const clean = w.replace(/[^\p{L}'’-]/gu, "");
-      if (clean.length >= 3 && !NAME_STOP_WORDS.includes(clean.toLowerCase() as never)) {
+      if (
+        clean.length >= 3 &&
+        !NAME_STOP_WORDS.includes(clean.toLowerCase() as never) &&
+        !NAME_PARTICLES.has(clean.toLowerCase())
+      ) {
         words.add(clean.toLowerCase());
       }
     }
