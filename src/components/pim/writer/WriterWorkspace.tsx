@@ -61,6 +61,7 @@ import { extractDocument, rejectionReason } from "@/lib/pim/documentReader";
 import { EXAMPLES } from "@/components/pim/start-go/ExamplePicker";
 import { MappingViewer } from "@/components/pim/start-go/MappingViewer";
 import { RewritePanel } from "@/components/pim/product/RewritePanel";
+import { RestorePanel } from "@/components/pim/product/RestorePanel";
 import { isValidBsn, isValidIban, isValidLicensePlate, hasStudentIdContext } from "./validators";
 
 interface ClickedSpan {
@@ -116,6 +117,7 @@ export function WriterWorkspace() {
   const [hasAnalyzed, setHasAnalyzed] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [rewriteOpen, setRewriteOpen] = useState(false);
+  const [restoreOpen, setRestoreOpen] = useState(false);
   const isMobile = useIsMobile();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -494,6 +496,17 @@ export function WriterWorkspace() {
           Tekst laten herschrijven
         </button>
       </div>
+      {pimMode === "pseudonymous" && pseudoMapping && pseudoMapping.size > 0 && (
+        <button
+          type="button"
+          data-testid="open-restore"
+          onClick={() => setRestoreOpen(true)}
+          className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#e5e7ef] bg-white px-3 py-2 text-[12px] font-medium text-[#334155] hover:bg-[#f6f7fb]"
+        >
+          <Undo2 className="h-3.5 w-3.5" />
+          AI-antwoord terugzetten naar namen
+        </button>
+      )}
       {pseudoMapping && pseudoMapping.size > 0 && <MappingViewer mapping={pseudoMapping} />}
     </>
   );
@@ -640,6 +653,7 @@ export function WriterWorkspace() {
           runAnalysis();
         }}
       />
+      <RestorePanel open={restoreOpen} onOpenChange={setRestoreOpen} mapping={pseudoMapping} />
       {clicked && (
         <div
           style={{ position: "absolute", left: clicked.x, top: clicked.y }}
