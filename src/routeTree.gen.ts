@@ -9,27 +9,23 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SiteRouteImport } from './routes/_site'
-import { Route as AppRouteImport } from './routes/app'
-import { Route as SchrijvenRouteImport } from './routes/schrijven'
 import { Route as TryRouteImport } from './routes/try'
+import { Route as SchrijvenRouteImport } from './routes/schrijven'
+import { Route as AppRouteImport } from './routes/app'
+import { Route as SiteRouteImport } from './routes/_site'
 import { Route as SiteIndexRouteImport } from './routes/_site.index'
-import { Route as SiteArchitectureRouteImport } from './routes/_site.architecture'
-import { Route as SiteComplianceRouteImport } from './routes/_site.compliance'
-import { Route as SiteFlagsRouteImport } from './routes/_site.flags'
-import { Route as SiteModesRouteImport } from './routes/_site.modes'
-import { Route as SiteOverRouteImport } from './routes/_site.over'
-import { Route as SitePipelineRouteImport } from './routes/_site.pipeline'
-import { Route as SiteScenariosRouteImport } from './routes/_site.scenarios'
 import { Route as SiteTrustRouteImport } from './routes/_site.trust'
+import { Route as SiteScenariosRouteImport } from './routes/_site.scenarios'
+import { Route as SitePipelineRouteImport } from './routes/_site.pipeline'
+import { Route as SiteOverRouteImport } from './routes/_site.over'
+import { Route as SiteModesRouteImport } from './routes/_site.modes'
+import { Route as SiteFlagsRouteImport } from './routes/_site.flags'
+import { Route as SiteComplianceRouteImport } from './routes/_site.compliance'
+import { Route as SiteArchitectureRouteImport } from './routes/_site.architecture'
 
-const SiteRoute = SiteRouteImport.update({
-  id: '/_site',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppRoute = AppRouteImport.update({
-  id: '/app',
-  path: '/app',
+const TryRoute = TryRouteImport.update({
+  id: '/try',
+  path: '/try',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SchrijvenRoute = SchrijvenRouteImport.update({
@@ -37,9 +33,13 @@ const SchrijvenRoute = SchrijvenRouteImport.update({
   path: '/schrijven',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TryRoute = TryRouteImport.update({
-  id: '/try',
-  path: '/try',
+const AppRoute = AppRouteImport.update({
+  id: '/app',
+  path: '/app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SiteRoute = SiteRouteImport.update({
+  id: '/_site',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SiteIndexRoute = SiteIndexRouteImport.update({
@@ -47,34 +47,9 @@ const SiteIndexRoute = SiteIndexRouteImport.update({
   path: '/',
   getParentRoute: () => SiteRoute,
 } as any)
-const SiteArchitectureRoute = SiteArchitectureRouteImport.update({
-  id: '/architecture',
-  path: '/architecture',
-  getParentRoute: () => SiteRoute,
-} as any)
-const SiteComplianceRoute = SiteComplianceRouteImport.update({
-  id: '/compliance',
-  path: '/compliance',
-  getParentRoute: () => SiteRoute,
-} as any)
-const SiteFlagsRoute = SiteFlagsRouteImport.update({
-  id: '/flags',
-  path: '/flags',
-  getParentRoute: () => SiteRoute,
-} as any)
-const SiteModesRoute = SiteModesRouteImport.update({
-  id: '/modes',
-  path: '/modes',
-  getParentRoute: () => SiteRoute,
-} as any)
-const SiteOverRoute = SiteOverRouteImport.update({
-  id: '/over',
-  path: '/over',
-  getParentRoute: () => SiteRoute,
-} as any)
-const SitePipelineRoute = SitePipelineRouteImport.update({
-  id: '/pipeline',
-  path: '/pipeline',
+const SiteTrustRoute = SiteTrustRouteImport.update({
+  id: '/trust',
+  path: '/trust',
   getParentRoute: () => SiteRoute,
 } as any)
 const SiteScenariosRoute = SiteScenariosRouteImport.update({
@@ -82,9 +57,34 @@ const SiteScenariosRoute = SiteScenariosRouteImport.update({
   path: '/scenarios',
   getParentRoute: () => SiteRoute,
 } as any)
-const SiteTrustRoute = SiteTrustRouteImport.update({
-  id: '/trust',
-  path: '/trust',
+const SitePipelineRoute = SitePipelineRouteImport.update({
+  id: '/pipeline',
+  path: '/pipeline',
+  getParentRoute: () => SiteRoute,
+} as any)
+const SiteOverRoute = SiteOverRouteImport.update({
+  id: '/over',
+  path: '/over',
+  getParentRoute: () => SiteRoute,
+} as any)
+const SiteModesRoute = SiteModesRouteImport.update({
+  id: '/modes',
+  path: '/modes',
+  getParentRoute: () => SiteRoute,
+} as any)
+const SiteFlagsRoute = SiteFlagsRouteImport.update({
+  id: '/flags',
+  path: '/flags',
+  getParentRoute: () => SiteRoute,
+} as any)
+const SiteComplianceRoute = SiteComplianceRouteImport.update({
+  id: '/compliance',
+  path: '/compliance',
+  getParentRoute: () => SiteRoute,
+} as any)
+const SiteArchitectureRoute = SiteArchitectureRouteImport.update({
+  id: '/architecture',
+  path: '/architecture',
   getParentRoute: () => SiteRoute,
 } as any)
 
@@ -187,18 +187,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/_site': {
-      id: '/_site'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof SiteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/app': {
-      id: '/app'
-      path: '/app'
-      fullPath: '/app'
-      preLoaderRoute: typeof AppRouteImport
+    '/try': {
+      id: '/try'
+      path: '/try'
+      fullPath: '/try'
+      preLoaderRoute: typeof TryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/schrijven': {
@@ -208,11 +201,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SchrijvenRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/try': {
-      id: '/try'
-      path: '/try'
-      fullPath: '/try'
-      preLoaderRoute: typeof TryRouteImport
+    '/app': {
+      id: '/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_site': {
+      id: '/_site'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof SiteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_site/': {
@@ -222,46 +222,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SiteIndexRouteImport
       parentRoute: typeof SiteRoute
     }
-    '/_site/architecture': {
-      id: '/_site/architecture'
-      path: '/architecture'
-      fullPath: '/architecture'
-      preLoaderRoute: typeof SiteArchitectureRouteImport
-      parentRoute: typeof SiteRoute
-    }
-    '/_site/compliance': {
-      id: '/_site/compliance'
-      path: '/compliance'
-      fullPath: '/compliance'
-      preLoaderRoute: typeof SiteComplianceRouteImport
-      parentRoute: typeof SiteRoute
-    }
-    '/_site/flags': {
-      id: '/_site/flags'
-      path: '/flags'
-      fullPath: '/flags'
-      preLoaderRoute: typeof SiteFlagsRouteImport
-      parentRoute: typeof SiteRoute
-    }
-    '/_site/modes': {
-      id: '/_site/modes'
-      path: '/modes'
-      fullPath: '/modes'
-      preLoaderRoute: typeof SiteModesRouteImport
-      parentRoute: typeof SiteRoute
-    }
-    '/_site/over': {
-      id: '/_site/over'
-      path: '/over'
-      fullPath: '/over'
-      preLoaderRoute: typeof SiteOverRouteImport
-      parentRoute: typeof SiteRoute
-    }
-    '/_site/pipeline': {
-      id: '/_site/pipeline'
-      path: '/pipeline'
-      fullPath: '/pipeline'
-      preLoaderRoute: typeof SitePipelineRouteImport
+    '/_site/trust': {
+      id: '/_site/trust'
+      path: '/trust'
+      fullPath: '/trust'
+      preLoaderRoute: typeof SiteTrustRouteImport
       parentRoute: typeof SiteRoute
     }
     '/_site/scenarios': {
@@ -271,11 +236,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SiteScenariosRouteImport
       parentRoute: typeof SiteRoute
     }
-    '/_site/trust': {
-      id: '/_site/trust'
-      path: '/trust'
-      fullPath: '/trust'
-      preLoaderRoute: typeof SiteTrustRouteImport
+    '/_site/pipeline': {
+      id: '/_site/pipeline'
+      path: '/pipeline'
+      fullPath: '/pipeline'
+      preLoaderRoute: typeof SitePipelineRouteImport
+      parentRoute: typeof SiteRoute
+    }
+    '/_site/over': {
+      id: '/_site/over'
+      path: '/over'
+      fullPath: '/over'
+      preLoaderRoute: typeof SiteOverRouteImport
+      parentRoute: typeof SiteRoute
+    }
+    '/_site/modes': {
+      id: '/_site/modes'
+      path: '/modes'
+      fullPath: '/modes'
+      preLoaderRoute: typeof SiteModesRouteImport
+      parentRoute: typeof SiteRoute
+    }
+    '/_site/flags': {
+      id: '/_site/flags'
+      path: '/flags'
+      fullPath: '/flags'
+      preLoaderRoute: typeof SiteFlagsRouteImport
+      parentRoute: typeof SiteRoute
+    }
+    '/_site/compliance': {
+      id: '/_site/compliance'
+      path: '/compliance'
+      fullPath: '/compliance'
+      preLoaderRoute: typeof SiteComplianceRouteImport
+      parentRoute: typeof SiteRoute
+    }
+    '/_site/architecture': {
+      id: '/_site/architecture'
+      path: '/architecture'
+      fullPath: '/architecture'
+      preLoaderRoute: typeof SiteArchitectureRouteImport
       parentRoute: typeof SiteRoute
     }
   }
