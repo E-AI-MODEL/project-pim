@@ -42,7 +42,10 @@ export function RestorePanel({ open, onOpenChange, mapping }: Props) {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-lg bg-white text-[#0f172a] overflow-y-auto">
+      <SheetContent
+        side="right"
+        className="w-full sm:max-w-lg bg-white text-[#0f172a] overflow-y-auto"
+      >
         <SheetHeader>
           <SheetTitle className="text-[#0f172a]">Namen terugzetten</SheetTitle>
         </SheetHeader>
