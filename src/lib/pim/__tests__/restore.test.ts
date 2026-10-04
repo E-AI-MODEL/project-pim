@@ -10,7 +10,10 @@ const mapping = new Map([
 
 describe("restoreTextWithMapping", () => {
   it("zet exacte codes terug", () => {
-    const r = restoreTextWithMapping("[NAME_001] en [NAME_002] zitten in [CLASS_CODE_001].", mapping);
+    const r = restoreTextWithMapping(
+      "[NAME_001] en [NAME_002] zitten in [CLASS_CODE_001].",
+      mapping,
+    );
     expect(r.text).toBe("Milan en Sophie zitten in groep 7B.");
     expect(r.restored).toBe(3);
     expect(r.unknown).toEqual([]);

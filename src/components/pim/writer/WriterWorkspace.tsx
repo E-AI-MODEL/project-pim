@@ -201,7 +201,6 @@ export function WriterWorkspace() {
       const r = spanToRange(s, map);
       if (!r) continue;
       if (autoRedactActive && autoRedact.has(s.category)) {
-
         if (r.to + 1 <= cursorFrom)
           toReplace.push({ ...r, label: GENERALIZATIONS[s.category] ?? "[geredacteerd]" });
         else toMark.push(s);

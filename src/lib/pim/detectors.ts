@@ -885,14 +885,14 @@ const RULES: RuleDef[] = [
     regex:
       /\b(?:cito\s*[me]\s*[1-8]|[me][1-8]\s*(?:niveau\s*)?(?:i{1,3}|iv|v)\b|avi[-\s]?(?:niveau\s*)?(?:start|plus|[me][1-7])|dmt[-\s]?score|niveau\s*(?:i{1,3}|iv|v)\b)/gi,
     contextual: true,
-    confidence: 0.6,
+    confidence: 0.72,
   },
   // Onderwijs-DNA: herleidbare familieconstructies.
   {
     id: "ctx.edu_family",
     category: "context_family",
     regex:
-      /\b(?:pleegmoeder|pleegvader|(?:de |haar |zijn )?nieuwe partner van (?:moeder|vader)|(?:tweeling)?(?:broer|zus)(?:je)?\s+in\s+groep\s*[1-8][a-z]?)\b/gi,
+      /\b(?:pleegmoeder|pleegvader|(?:de |haar |zijn )?nieuwe partner van (?:moeder|vader)|(?:tweeling)?(?:broer|zus)(?:tje|je)?\s+in\s+groep\s*[1-8][a-z]?)\b/gi,
     contextual: true,
     confidence: 0.7,
   },
