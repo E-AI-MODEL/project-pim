@@ -860,6 +860,42 @@ const RULES: RuleDef[] = [
     contextual: true,
     confidence: 0.75,
   },
+  // Onderwijs-DNA: instanties en hulpverleners rond een leerling.
+  {
+    id: "ctx.edu_care_instance",
+    category: "context_care",
+    regex:
+      /\b(?:cjg|centrum voor jeugd en gezin|wijkteam|jeugdteam|kentalis|auris|samenwerkingsverband|swv|leerplicht(?:ambtenaar)?|jeugdarts|jeugdverpleegkundige|ggd|logopedist(?:e)?|kindercoach|speltherapeut|ambulant begeleider|ambulante begeleiding|orthopedagoog|kinderpsycholoog|schoolmaatschappelijk werk(?:er)?|smw'?er)\b/gi,
+    contextual: true,
+    confidence: 0.7,
+  },
+  // Onderwijs-DNA: arrangementen, indicaties en verklaringen.
+  {
+    id: "ctx.edu_arrangement",
+    category: "context_care",
+    regex:
+      /\b(?:tlv|toelaatbaarheidsverklaring|dyscalculieverklaring|rugzakje|arrangement (?:basis|licht|medium|intensief|niveau\s*[1-4])|plusklas|meerbegaafdheidstraject|eigen leerlijn|sbo-?indicatie)\b/gi,
+    contextual: true,
+    confidence: 0.7,
+  },
+  // Onderwijs-DNA: toetsresultaten die een kind binnen een klas typeren.
+  {
+    id: "ctx.edu_score",
+    category: "context_performance",
+    regex:
+      /\b(?:cito\s*[me]\s*[1-8]|[me][1-8]\s*(?:niveau\s*)?(?:i{1,3}|iv|v)\b|avi[-\s]?(?:niveau\s*)?(?:start|plus|[me][1-7])|dmt[-\s]?score|niveau\s*(?:i{1,3}|iv|v)\b)/gi,
+    contextual: true,
+    confidence: 0.6,
+  },
+  // Onderwijs-DNA: herleidbare familieconstructies.
+  {
+    id: "ctx.edu_family",
+    category: "context_family",
+    regex:
+      /\b(?:pleegmoeder|pleegvader|(?:de |haar |zijn )?nieuwe partner van (?:moeder|vader)|(?:tweeling)?(?:broer|zus)(?:je)?\s+in\s+groep\s*[1-8][a-z]?)\b/gi,
+    contextual: true,
+    confidence: 0.7,
+  },
 ];
 
 export function detectPii(text: string, disabledCategories?: ReadonlySet<PiiCategory>): PiiSpan[] {
